@@ -1,2 +1,4 @@
 # sg-jira-bridge
-Standalone Shotgun &lt;--> Jira synchronization system
+
+A simple synchronization system between Shotgun and Jira
+
