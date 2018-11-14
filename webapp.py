@@ -16,6 +16,9 @@ A simple web app frontend to the SG Jira bridge.
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
+        """
+        Handle a GET request.
+        """
         self.send_response(200, "The server is alive")
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -23,15 +26,37 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.close()
 
     def do_POST(self):
+        """
+        Handle a POST request.
+        """
         try:
+            # Extract path components from the path, ignore leading '/' and
+            # discard empty values coming from '/' at the end or multiple
+            # contiguous '/'
+            path_parts = [x for x in self.path[1:].split("/") if x]
+            if not path_parts:
+                self.send_error(400, "Invalid request path %s" % self.path)
+                return
+            # Basic routing: extract the synch direction and additional values
+            # from the path
+            if path_parts[0] == "sg2jira":
+                pass
+            elif path_parts[0] == "jira2sg":
+                pass
+            else:
+                self.send_error(400, "Invalid request path %s" % self.path)
+                return
             parsed = urlparse.urlparse(self.path)
             content_len = int(self.headers.getheader("content-length", 0))
             post_body = self.rfile.read(content_len)
             self.send_response(200, "Post request successfull")
         except Exception as e:
-            self.send_error(400, e.message)
+            self.send_error(500, e.message)
 
 def run_server(port=9000):
+    """
+    Run the server until a shutdown is requested.
+    """
     httpd = BaseHTTPServer.HTTPServer(
         ("localhost", port), RequestHandler
     )
@@ -39,6 +64,9 @@ def run_server(port=9000):
 
 
 def main():
+    """
+    Retrieve command line arguments and start the server.
+    """
     parser = argparse.ArgumentParser(
         description=DESCRIPTION
     )
