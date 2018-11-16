@@ -7,6 +7,7 @@
 
 import os
 import logging
+import requests
 
 """
 A simple Shotgun event daemon plugin which sends all events to the SG/Jira bridge.
@@ -21,9 +22,12 @@ def registerCallbacks(reg):
 
     :param reg: A Shotgun Event Daemon Registrar instance.
     """
-    # We don't filter out any event and let the bridge deal with events which
-    # should be ignored or processed.
-    event_filter = None
+    # Narrow down the list of events we pass to the bridge
+    event_filter = {
+        "Shotgun_Task_Change": ["*"]
+        "Shotgun_Ticket_Change": ["*"]
+        "Shotgun_Project_Change": ["*"]
+    }
     reg.registerCallback(
         os.environ["SGDAEMON_SGJIRA_NAME"],
         os.environ["SGDAEMON_SGJIRA_KEY"],
