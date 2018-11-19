@@ -7,14 +7,55 @@
 
 import os
 import imp
-import inspect
+import logging
+import logging.config
 
 import jira
+from jira import JIRA, JIRAError
+from shotgun_api3 import Shotgun
+
+logger = logging.getLogger(__name__)
+# Ensure basic logging is always enabled
+logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 
 class Bridge(object):
     """
     A brigde between Shotgun and Jira.
     """
+    def __init__(self, sg_site, sg_script, sg_script_key, jira_site, jira_user, jira_secret):
+        """
+        Instatiate a new bridge between the given SG site and Jira site.
+        """
+        super(Bridge, self).__init__()
+        self._shotgun = Shotgun(
+            sg_site,
+            script_name=sg_script,
+            api_key=sg_script_key,
+        )
+        logger.info("Connected to %s..." % sg_site)
+        try:
+            self._jira = JIRA(
+                jira_site,
+                basic_auth=(
+                        jira_user,
+                        jira_secret
+                    ),
+            )
+        except JIRAError as e:
+            # Jira puts some huge html / java script code in the exception
+            # string so we catch it to issue a more reasonable message.
+            logger.debug(
+                "Unable to connect to %s: %s" % (jira_site, e),
+                exc_info=True
+            )
+            # Check the status code, it is a string
+            if e.status_code == 401:
+                raise RuntimeError(
+                    "Unable to connect to %s, please check your credentials" % (jira_site)
+                )
+            raise RuntimeError("Unable to connect to %s" % (jira_site))
+        logger.info("Connected to %s..." % jira_site)
+
     @classmethod
     def get_bridge(cls, settings_file):
         """
@@ -22,7 +63,35 @@ class Bridge(object):
         """
         # Read settings
         settings = cls.read_settings(settings_file)
-        return cls()
+
+        # Set logging from settings
+        logger_settings = getattr(settings, "LOGGING") or {}
+        if logger_settings:
+            logging.config.dictConfig(logger_settings)
+
+        # Retrieve how to connect to Shotgun
+        shotgun_settings = getattr(settings, "SHOTGUN") or {}
+        if not shotgun_settings:
+            raise ValueError("Missing Shotgun settings in %s" % settings_file)
+
+        # Retrieve how to connect to Jira
+        jira_settings = getattr(settings, "JIRA") or {}
+        if not jira_settings:
+            raise ValueError("Missing Jira settings in %s" % settings_file)
+
+        logger.info("Successfully read settings from %s" % settings_file)
+        try:
+            return cls(
+                shotgun_settings.get("site"),
+                shotgun_settings.get("script_name"),
+                shotgun_settings.get("script_key"),
+                jira_settings.get("site"),
+                jira_settings.get("user"),
+                jira_settings.get("secret"),
+            )
+        except Exception as e:
+            logger.exception(e)
+            raise
 
     @classmethod
     def read_settings(cls, settings_file):
@@ -48,10 +117,7 @@ class Bridge(object):
             pathname,
             description
         )
-        for setting in (s for s in dir(module) if not s.startswith('_')):
-            setting_value = getattr(module, setting)
-            if not inspect.ismodule(setting_value):
-                result[setting] = setting_value
+        return module
 
     def sync_in_jira(self, project_name, entity_type, entity_id):
         """

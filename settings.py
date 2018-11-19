@@ -9,14 +9,28 @@ Shotgun Jira sync settings
 """
 import os
 
-# Shotgun credentials
-SHOTGUN_SITE = os.environ.get("SG_JIRA_SG_SITE")
-SHOTGUN_SCRIPT_NAME = os.environ.get("SG_JIRA_SG_SCRIPT_NAME")
-SHOTGUN_SCRIPT_KEY = os.environ.get("SG_JIRA_SG_SCRIPT_KEY")
-# Jira credentials
-JIRA_SITE = os.environ.get("SG_JIRA_JIRA_SITE")
-JIRA_USER = os.environ.get("SG_JIRA_JIRA_USER")
-JIRA_USER_SECRET = os.environ.get("SG_JIRA_JIRA_USER_SECRET")
+try:
+    # Allow users to define their sensible data in a .env file and
+    # load them in environment variables with python-dotenv.
+    # https://pypi.org/project/python-dotenv/
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
+except ImportError:
+    pass
+
+# Shotgun site and credentials
+SHOTGUN = {
+    "site": os.environ.get("SG_JIRA_SG_SITE"),
+    "script_name": os.environ.get("SG_JIRA_SG_SCRIPT_NAME"),
+    "script_key": os.environ.get("SG_JIRA_SG_SCRIPT_KEY"),
+}
+# Jira site and credentials, the user name needs to be an email address or
+# the user login name, e.g. ford_escort for "Ford Escort".
+JIRA = {
+    "site": os.environ.get("SG_JIRA_JIRA_SITE"),
+    "user": os.environ.get("SG_JIRA_JIRA_USER"),
+    "secret": os.environ.get("SG_JIRA_JIRA_USER_SECRET"),
+}
 
 # Define logging
 LOGGING = {
@@ -31,6 +45,15 @@ LOGGING = {
             "console", "file"
         ],
     },
+    # Some formatters, mainly as examples
+    "formatters": {
+        "verbose": {
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+        },
+        "simple": {
+            "format": "%(levelname)s:%(name)s:%(message)s"
+        },
+    },
     # Define the logging handlers
     "handlers": {
         # Print out any message to stdout
@@ -42,7 +65,7 @@ LOGGING = {
         "file": {
             "level": "INFO",
             "class" : "logging.handlers.RotatingFileHandler",
-            "formatter": "precise",
+            "formatter": "simple",
             "filename": "/tmp/sg_jira.log",
             "maxBytes": 1024,
             "backupCount": 5
