@@ -1,0 +1,55 @@
+# Copyright 2018 GPL Solutions, LLC.  All rights reserved.
+#
+# Use of this software is subject to the terms of the GPL Solutions license
+# agreement provided at the time of installation or download, or which otherwise
+# accompanies this software in either electronic or hard copy form.
+#
+
+# Flake 8 PEP and lint configuration - https://gitlab.com/pycqa/flake8
+#
+# This defines the official lint and PEP8 rules for this repository
+#
+# You can run this locally by doing pep install flake8 and then
+# >flake8 .
+
+[flake8]
+
+# Things we don't want to lint
+exclude =
+    .tox,
+    .git,
+    .flake8,
+    .gitignore,
+    .travis.yml,
+    .cache,
+    .eggs,
+    *.rst,
+    *.yml,
+    *.pyc,
+    *.pyo,
+    *.egg-info,
+    __pycache__,
+    # Those are our third parties, do not lint them
+    vendors,
+    # Skip __init__.py files, to not have a lot of 'xxx' imported but unused
+    python/__init__.py,
+    python/*/__init__.py,
+    # Skip the auto-generated ui file.
+    python/*/ui,
+    tests
+
+# Ignore some errors
+#
+# E501 line too long (112 > 79 characters)
+# W291 trailing whitespace
+# W293 blank line contains whitespace
+# W391 blank line at end of file
+# E221 multiple spaces before operator
+# E261 two whitespaces before end of line comment.
+# E402 module level import not top of file
+# N802 Variables should be lower case. (clashes with Qt naming conventions)
+# N806 Variables should be lower case. (clashes with Qt naming conventions)
+# E999 SyntaxError: invalid syntax (hack for hound CI which runs python 3.x)
+
+ignore = E501, W291, W293, W391, E221, E261, E402, N802, N806, E999
+

@@ -9,6 +9,7 @@ import os
 import imp
 import logging
 import logging.config
+import fnmatch
 
 import jira
 from jira import JIRA, JIRAError
@@ -22,7 +23,16 @@ class Bridge(object):
     """
     A brigde between Shotgun and Jira.
     """
-    def __init__(self, sg_site, sg_script, sg_script_key, jira_site, jira_user, jira_secret):
+    def __init__(
+        self,
+        sg_site,
+        sg_script,
+        sg_script_key,
+        jira_site,
+        jira_user,
+        jira_secret,
+        sync_settings=None,
+    ):
         """
         Instatiate a new bridge between the given SG site and Jira site.
         """
@@ -55,6 +65,7 @@ class Bridge(object):
                 )
             raise RuntimeError("Unable to connect to %s" % (jira_site))
         logger.info("Connected to %s..." % jira_site)
+        self._sync_settings = sync_settings
 
     @classmethod
     def get_bridge(cls, settings_file):
@@ -79,6 +90,10 @@ class Bridge(object):
         if not jira_settings:
             raise ValueError("Missing Jira settings in %s" % settings_file)
 
+        sync_settings = getattr(settings, "SYNC") or {}
+        if not sync_settings:
+            raise ValueError("Missing sync settings in %s" % settings_file)
+
         logger.info("Successfully read settings from %s" % settings_file)
         try:
             return cls(
@@ -88,6 +103,7 @@ class Bridge(object):
                 jira_settings.get("site"),
                 jira_settings.get("user"),
                 jira_settings.get("secret"),
+                sync_settings,
             )
         except Exception as e:
             logger.exception(e)
@@ -95,6 +111,14 @@ class Bridge(object):
 
     @classmethod
     def read_settings(cls, settings_file):
+        """
+        Read the given settings file.
+
+        :param str settings_file: Path to a settings Python file.
+        :returns: A Python module with the loaded settings.
+        :raises: ValueError if the file does not exist or its name does not end
+                 with .py.
+        """
         result = {}
         full_path = os.path.abspath(settings_file)
         if not os.path.exists(settings_file):
@@ -107,26 +131,55 @@ class Bridge(object):
         folder, name = os.path.split(full_path)
 
         mfile, pathname, description = imp.find_module(
-            # Strip the extension if dealing with a .py
+            # Strip the .py extension
             os.path.splitext(name)[0],
             [folder]
         )
-        module = imp.load_module(
-            "%s.settings" % __name__,
-            mfile,
-            pathname,
-            description
-        )
+        try:
+            module = imp.load_module(
+                "%s.settings" % __name__,
+                mfile,
+                pathname,
+                description
+            )
+        finally:
+            if mfile:
+                mfile.close()
         return module
 
     def sync_in_jira(self, project_name, entity_type, entity_id):
         """
         Sync the given Shotgun Entity into Jira.
         """
-        pass
+        try:
+            settings = self._get_settings_for_project(project_name)
+        except Exception as e:
+            # Catch the exception to log it and let it bubble up
+            logger.exception(e)
+            raise
 
     def sync_in_shotgun(self, project_name, resource_type, resource_id):
         """
         Sync the given Jira Resource into Shotgun.
         """
-        pass
+        try:
+            settings = self._get_settings_for_project(project_name)
+        except Exception as e:
+            # Catch the exception to log it and let it bubble up
+            logger.exception(e)
+            raise
+
+    def _get_settings_for_project(self, project_name):
+        """
+        Retrieve the setting for the given project_name.
+        """
+        # If we have the exact name in our keys, use it. Otherwise use the
+        # first one which matches
+        if project_name in self._sync_settings:
+            logger.info("Using %s settings for %s" % (project_name, project_name))
+            return self._sync_settings[project_name]
+        for name in self._sync_settings:
+            if fnmatch.fnmatch(project_name, name):
+                logger.info("Using %s settings for %s" % (name, project_name))
+                return self._sync_settings[name]
+        return None

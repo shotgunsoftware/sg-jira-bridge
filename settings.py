@@ -64,11 +64,20 @@ LOGGING = {
         },
         "file": {
             "level": "INFO",
-            "class" : "logging.handlers.RotatingFileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "formatter": "simple",
             "filename": "/tmp/sg_jira.log",
             "maxBytes": 1024,
             "backupCount": 5
         },
     },
+}
+# Sync settings. Keys are Unix shell style wildcards
+SYNC = {
+    "*": {
+
+    },
+    "test": {
+
+    }
 }

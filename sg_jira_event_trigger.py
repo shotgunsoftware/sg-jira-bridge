@@ -13,6 +13,7 @@ import requests
 A simple Shotgun event daemon plugin which sends all events to the SG/Jira bridge.
 """
 
+
 def registerCallbacks(reg):
     """
     Register all necessary or appropriate callbacks for this plugin.
@@ -51,6 +52,10 @@ def process_event(sg, logger, event, args):
     :param event: A Shotgun EventLogEntry entity dictionary.
     :param args: Any additional misc arguments passed through this plugin.
     """
-    import sg_jira
-    sg_jira.treat_sg_event(event)
     logger.debug("Processing %s" % event)
+    response = requests.post(
+        "https://httpbin.org/post",
+        data=payload
+    )
+    response.raise_for_status()
+    logger.debug("Event successfully processed.")
