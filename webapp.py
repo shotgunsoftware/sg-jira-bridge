@@ -8,7 +8,6 @@
 import argparse
 import urlparse
 import BaseHTTPServer
-import SocketServer
 
 
 import sg_jira
@@ -16,6 +15,8 @@ import sg_jira
 DESCRIPTION = """
 A simple web app frontend to the SG Jira bridge.
 """
+
+
 class Server(BaseHTTPServer.HTTPServer):
     def __init__(self, settings, *args, **kwargs):
         # Note: BaseHTTPServer.HTTPServer is not a new style class so we can't use
@@ -28,6 +29,7 @@ class Server(BaseHTTPServer.HTTPServer):
 
     def sync_in_shotgun(self, *args, **kwargs):
         return self._sg_jira.sync_in_shotgun(*args, **kwargs)
+
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -118,6 +120,7 @@ def main():
         port=args.port,
         settings=args.settings,
     )
+
 
 if __name__ == "__main__":
     main()
