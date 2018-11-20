@@ -15,6 +15,10 @@ import jira
 from jira import JIRA, JIRAError
 from shotgun_api3 import Shotgun
 
+from .constants import ALL_SETTINGS_KEYS
+from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
+from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
+
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
@@ -76,33 +80,48 @@ class Bridge(object):
         settings = cls.read_settings(settings_file)
 
         # Set logging from settings
-        logger_settings = getattr(settings, "LOGGING") or {}
+        logger_settings = settings[LOGGING_SETTINGS_KEY]
         if logger_settings:
             logging.config.dictConfig(logger_settings)
 
         # Retrieve how to connect to Shotgun
-        shotgun_settings = getattr(settings, "SHOTGUN") or {}
+        shotgun_settings = settings[SHOTGUN_SETTINGS_KEY]
         if not shotgun_settings:
             raise ValueError("Missing Shotgun settings in %s" % settings_file)
+        missing = [
+            name for name in ["site", "script_name", "script_key"] if not shotgun_settings.get(name)
+        ]
+        if missing:
+            raise ValueError(
+                "Missing Shotgun setting values %s in %s" % (str(missing), settings_file)
+            )
 
         # Retrieve how to connect to Jira
-        jira_settings = getattr(settings, "JIRA") or {}
+        jira_settings = settings[JIRA_SETTINGS_KEY]
         if not jira_settings:
             raise ValueError("Missing Jira settings in %s" % settings_file)
 
-        sync_settings = getattr(settings, "SYNC") or {}
+        missing = [
+            name for name in ["site", "user", "secret"] if not jira_settings.get(name)
+        ]
+        if missing:
+            raise ValueError(
+                "Missing Jira setting values %s in %s" % (str(missing), settings_file)
+            )
+
+        sync_settings = settings[SYNC_SETTINGS_KEY]
         if not sync_settings:
             raise ValueError("Missing sync settings in %s" % settings_file)
 
         logger.info("Successfully read settings from %s" % settings_file)
         try:
             return cls(
-                shotgun_settings.get("site"),
-                shotgun_settings.get("script_name"),
-                shotgun_settings.get("script_key"),
-                jira_settings.get("site"),
-                jira_settings.get("user"),
-                jira_settings.get("secret"),
+                shotgun_settings["site"],
+                shotgun_settings["script_name"],
+                shotgun_settings["script_key"],
+                jira_settings["site"],
+                jira_settings["user"],
+                jira_settings["secret"],
                 sync_settings,
             )
         except Exception as e:
@@ -115,7 +134,7 @@ class Bridge(object):
         Read the given settings file.
 
         :param str settings_file: Path to a settings Python file.
-        :returns: A Python module with the loaded settings.
+        :returns: A dictionary with the settings.
         :raises: ValueError if the file does not exist or its name does not end
                  with .py.
         """
@@ -145,25 +164,41 @@ class Bridge(object):
         finally:
             if mfile:
                 mfile.close()
-        return module
+        # Retrieve all properties we handle and provide empty values if missing
+        result = dict(
+            [(name, getattr(module, name, None)) for name in ALL_SETTINGS_KEYS]
+        )
+        return result
 
-    def sync_in_jira(self, project_name, entity_type, entity_id):
+    def sync_in_jira(self, project_name, entity_type, entity_id, event):
         """
         Sync the given Shotgun Entity into Jira.
         """
         try:
             settings = self._get_settings_for_project(project_name)
+            logger.info("% synching in Jira %s(%d) for event %s" % (
+                project_name,
+                entity_type,
+                entity_id,
+                event
+            ))
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
             raise
 
-    def sync_in_shotgun(self, project_name, resource_type, resource_id):
+    def sync_in_shotgun(self, project_name, resource_type, resource_id, event):
         """
         Sync the given Jira Resource into Shotgun.
         """
         try:
             settings = self._get_settings_for_project(project_name)
+            logger.info("% synching in SG %s(%s) for event %s" % (
+                project_name,
+                resource_type,
+                resource_id,
+                event
+            ))
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)

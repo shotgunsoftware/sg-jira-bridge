@@ -8,7 +8,7 @@
 import argparse
 import urlparse
 import BaseHTTPServer
-
+import json
 
 import sg_jira
 
@@ -60,8 +60,20 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             parameters = {}
             if parsed.query:
                 parameters = urlparse.parse_qs(parsed.query, True, True)
+            content_type = self.headers.getheader("content-type")
+            # Check the content type, if not set we assume json.
+            if content_type and content_type != "application/json":
+                self.send_error(
+                    400,
+                    "Invalid content %s, it must be 'application/json'" % content_type
+                )
+                return
             content_len = int(self.headers.getheader("content-length", 0))
-            post_body = self.rfile.read(content_len)
+            body = self.rfile.read(content_len)
+            payload = {}
+            if body:
+                payload = json.loads(body)
+
             # Basic routing: extract the synch direction and additional values
             # from the path
             if path_parts[0] == "sg2jira":
@@ -70,6 +82,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     path_parts[1],
                     path_parts[2],
                     int(path_parts[3]),
+                    event=payload,
                 )
             elif path_parts[0] == "jira2sg":
                 # Jira Project name/Jira Resource type/Jira Resource key
@@ -77,6 +90,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     path_parts[1],
                     path_parts[2],
                     path_parts[3],
+                    event=payload,
                 )
             else:
                 self.send_error(400, "Invalid request path %s" % self.path)
