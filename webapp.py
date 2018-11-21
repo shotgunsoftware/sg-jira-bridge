@@ -25,9 +25,15 @@ class Server(BaseHTTPServer.HTTPServer):
         self._sg_jira = sg_jira.Bridge.get_bridge(settings)
 
     def sync_in_jira(self, *args, **kwargs):
+        """
+        Just pass the given parameters to the SG Jira Brige method.
+        """
         return self._sg_jira.sync_in_jira(*args, **kwargs)
 
     def sync_in_shotgun(self, *args, **kwargs):
+        """
+        Just pass the given parameters to the SG Jira Brige method.
+        """
         return self._sg_jira.sync_in_shotgun(*args, **kwargs)
 
 
@@ -77,7 +83,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # Basic routing: extract the synch direction and additional values
             # from the path
             if path_parts[0] == "sg2jira":
-                # SG Project name/SG Entity type/SG Entity id
+                # Settings name/SG Entity type/SG Entity id
                 self.server.sync_in_jira(
                     path_parts[1],
                     path_parts[2],
@@ -85,7 +91,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     event=payload,
                 )
             elif path_parts[0] == "jira2sg":
-                # Jira Project name/Jira Resource type/Jira Resource key
+                # Settings name/Jira Resource type/Jira Resource key
                 self.server.sync_in_shotgun(
                     path_parts[1],
                     path_parts[2],

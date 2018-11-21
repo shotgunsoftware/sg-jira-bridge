@@ -74,8 +74,8 @@ LOGGING = {
 }
 # Sync settings. Keys are Unix shell style wildcards
 SYNC = {
-    "*": {
-
+    "default": {
+        "foo": "blah",
     },
     "test": {
 

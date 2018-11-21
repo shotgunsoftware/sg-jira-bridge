@@ -170,14 +170,16 @@ class Bridge(object):
         )
         return result
 
-    def sync_in_jira(self, project_name, entity_type, entity_id, event):
+    def sync_in_jira(self, settings_name, entity_type, entity_id, event):
         """
         Sync the given Shotgun Entity into Jira.
         """
         try:
-            settings = self._get_settings_for_project(project_name)
-            logger.info("% synching in Jira %s(%d) for event %s" % (
-                project_name,
+            settings = self._sync_settings.get(settings_name)
+            if not settings:
+                raise ValueError("Unknown settings name '%s'" % settings_name)
+            logger.info("%s synching in Jira %s(%d) for event %s" % (
+                settings_name,
                 entity_type,
                 entity_id,
                 event
@@ -187,14 +189,16 @@ class Bridge(object):
             logger.exception(e)
             raise
 
-    def sync_in_shotgun(self, project_name, resource_type, resource_id, event):
+    def sync_in_shotgun(self, settings_name, resource_type, resource_id, event):
         """
         Sync the given Jira Resource into Shotgun.
         """
         try:
-            settings = self._get_settings_for_project(project_name)
-            logger.info("% synching in SG %s(%s) for event %s" % (
-                project_name,
+            settings = self._sync_settings.get(settings_name)
+            if not settings:
+                raise ValueError("Unknown settings name '%s'" % settings_name)
+            logger.info("%s synching in SG %s(%s) for event %s" % (
+                settings_name,
                 resource_type,
                 resource_id,
                 event
@@ -203,18 +207,3 @@ class Bridge(object):
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
             raise
-
-    def _get_settings_for_project(self, project_name):
-        """
-        Retrieve the setting for the given project_name.
-        """
-        # If we have the exact name in our keys, use it. Otherwise use the
-        # first one which matches
-        if project_name in self._sync_settings:
-            logger.info("Using %s settings for %s" % (project_name, project_name))
-            return self._sync_settings[project_name]
-        for name in self._sync_settings:
-            if fnmatch.fnmatch(project_name, name):
-                logger.info("Using %s settings for %s" % (name, project_name))
-                return self._sync_settings[name]
-        return None
