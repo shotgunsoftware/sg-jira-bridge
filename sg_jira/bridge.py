@@ -9,7 +9,6 @@ import os
 import imp
 import logging
 import logging.config
-import fnmatch
 
 import jira
 from jira import JIRA, JIRAError
@@ -62,10 +61,11 @@ class Bridge(object):
                 "Unable to connect to %s: %s" % (jira_site, e),
                 exc_info=True
             )
-            # Check the status code, it is a string
+            # Check the status code
             if e.status_code == 401:
                 raise RuntimeError(
-                    "Unable to connect to %s, please check your credentials" % (jira_site)
+                    "Unable to connect to %s, "
+                    "please check your credentials" % (jira_site)
                 )
             raise RuntimeError("Unable to connect to %s" % (jira_site))
         logger.info("Connected to %s..." % jira_site)
@@ -75,6 +75,9 @@ class Bridge(object):
     def get_bridge(cls, settings_file):
         """
         Read the given settings and intantiate a new Bridge with them.
+
+        :param str settings_file: Path to a settings Python file.
+        :raises: ValueError on missing required settings.
         """
         # Read settings
         settings = cls.read_settings(settings_file)
@@ -173,6 +176,11 @@ class Bridge(object):
     def sync_in_jira(self, settings_name, entity_type, entity_id, event):
         """
         Sync the given Shotgun Entity into Jira.
+
+        :param str settings_name: The name of the settings to use for this sync.
+        :param str entity_type: The Shotgun Entity type to sync.
+        :param int entity_id: The id of the Shotgun Entityto sync.
+        :param event: A dictionary with the event meta data for the change.
         """
         try:
             settings = self._sync_settings.get(settings_name)
