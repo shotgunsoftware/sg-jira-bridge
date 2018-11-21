@@ -93,7 +93,10 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     event=payload,
                 )
             else:
-                self.send_error(400, "Invalid request path %s" % self.path)
+                self.send_error(
+                    400,
+                    "Invalid request path %s, don't know how ot handle %s" % (self.path, path_parts[0])
+                )
                 return
             self.send_response(200, "Post request successfull")
         except Exception as e:

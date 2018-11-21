@@ -28,9 +28,9 @@ def registerCallbacks(reg):
     """
     # Narrow down the list of events we pass to the bridge
     event_filter = {
-        "Shotgun_Task_Change": ["*"]
-        "Shotgun_Ticket_Change": ["*"]
-        "Shotgun_Project_Change": ["*"]
+        "Shotgun_Task_Change": ["*"],
+        "Shotgun_Ticket_Change": ["*"],
+        "Shotgun_Project_Change": ["*"],
     }
     # Define a dictionary which is persisted by the framework and will collect
     # routing from Shotgun Projects.
@@ -107,16 +107,26 @@ def process_event(sg, logger, event, dispatch_routes):
             sync_url = sg_project.get("sg_jira_sync_url").get("url")
         dispatch_routes[sg_project["id"]] = sync_url
 
-    sync_url = dispatch_routes[project["id"]]
-    if not sync_url:
+    sync_server_url = dispatch_routes[project["id"]]
+    if not sync_server_url:
         logger.debug("Ignoring Jira sync for Project %d" % project["id"])
         return
-
-    # Just send a POST request with the event as payload.
-    logger.debug("Posting event %s to %s" % (event, sync_url))
+    meta = event["meta"]
+    entity_type = meta.get("entity_type")
+    entity_id = meta.get("entity_id")
+    if not entity_type or not entity_id:
+        logger.debug("Ignoring event %s without valid Entity meta data.")
+        return
+    # Just send a POST request with the event meta data as payload.
+    if sync_server_url.endswith("/"):
+        sync_url = "%s%s/%d" % (sync_server_url, entity_type, entity_id)
+    else:
+        sync_url = "%s/%s/%d" % (sync_server_url, entity_type, entity_id)
+    logger.debug("Posting event %s to %s" % (meta, sync_url))
+    # Post application/json request
     response = requests.post(
         sync_url,
-        data=payload
+        json=meta,
     )
     response.raise_for_status()
     logger.debug("Event successfully processed.")
