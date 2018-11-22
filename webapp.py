@@ -89,6 +89,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     path_parts[2],
                     int(path_parts[3]),
                     event=payload,
+                    **parameters
                 )
             elif path_parts[0] == "jira2sg":
                 # Settings name/Jira Resource type/Jira Resource key
@@ -97,6 +98,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     path_parts[2],
                     path_parts[3],
                     event=payload,
+                    **parameters
                 )
             else:
                 self.send_error(

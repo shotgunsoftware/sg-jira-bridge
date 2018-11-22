@@ -177,7 +177,7 @@ class Bridge(object):
         )
         return result
 
-    def sync_in_jira(self, settings_name, entity_type, entity_id, event):
+    def sync_in_jira(self, settings_name, entity_type, entity_id, event, **kwargs):
         """
         Sync the given Shotgun Entity into Jira.
 
@@ -201,7 +201,7 @@ class Bridge(object):
             logger.exception(e)
             raise
 
-    def sync_in_shotgun(self, settings_name, resource_type, resource_id, event):
+    def sync_in_shotgun(self, settings_name, resource_type, resource_id, event, **kwargs):
         """
         Sync the given Jira Resource into Shotgun.
 
