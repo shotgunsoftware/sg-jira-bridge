@@ -10,7 +10,7 @@ import imp
 import logging
 import logging.config
 
-import jira
+# import jira
 from jira import JIRA, JIRAError
 from shotgun_api3 import Shotgun
 
@@ -22,9 +22,13 @@ logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 
+
 class Bridge(object):
     """
     A brigde between Shotgun and Jira.
+
+    The bridge handles connections to the Shotgun and Jira servers and dispatches
+    sync events.
     """
     def __init__(
         self,
@@ -50,9 +54,9 @@ class Bridge(object):
             self._jira = JIRA(
                 jira_site,
                 basic_auth=(
-                        jira_user,
-                        jira_secret
-                    ),
+                    jira_user,
+                    jira_secret
+                ),
             )
         except JIRAError as e:
             # Jira puts some huge html / java script code in the exception
@@ -74,7 +78,7 @@ class Bridge(object):
     @classmethod
     def get_bridge(cls, settings_file):
         """
-        Read the given settings and intantiate a new Bridge with them.
+        Read the given settings and instantiate a new :class:`Bridge` with them.
 
         :param str settings_file: Path to a settings Python file.
         :raises: ValueError on missing required settings.
@@ -138,7 +142,7 @@ class Bridge(object):
 
         :param str settings_file: Path to a settings Python file.
         :returns: A dictionary with the settings.
-        :raises: ValueError if the file does not exist or its name does not end
+        :raises: ValueError if the file does not exist or if its name does not end
                  with .py.
         """
         result = {}
@@ -169,7 +173,7 @@ class Bridge(object):
                 mfile.close()
         # Retrieve all properties we handle and provide empty values if missing
         result = dict(
-            [(name, getattr(module, name, None)) for name in ALL_SETTINGS_KEYS]
+            [(prop_name, getattr(module, prop_name, None)) for prop_name in ALL_SETTINGS_KEYS]
         )
         return result
 
@@ -200,6 +204,11 @@ class Bridge(object):
     def sync_in_shotgun(self, settings_name, resource_type, resource_id, event):
         """
         Sync the given Jira Resource into Shotgun.
+
+        :param str settings_name: The name of the settings to use for this sync.
+        :param str resource_type: The type of Jira resource sync, e.g. Issue.
+        :param str resource_id: The id of the Jira resource to sync.
+        :param event: A dictionary with the event meta data for the change.
         """
         try:
             settings = self._sync_settings.get(settings_name)

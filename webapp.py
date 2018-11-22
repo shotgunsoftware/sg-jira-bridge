@@ -62,10 +62,10 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 return
             # Extract additional query parameters
             parsed = urlparse.urlparse(self.path)
-            # Read the body to get the payload
             parameters = {}
             if parsed.query:
                 parameters = urlparse.parse_qs(parsed.query, True, True)
+            # Read the body to get the payload
             content_type = self.headers.getheader("content-type")
             # Check the content type, if not set we assume json.
             if content_type and content_type != "application/json":
@@ -107,6 +107,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response(200, "Post request successfull")
         except Exception as e:
             self.send_error(500, e.message)
+
 
 def run_server(port, settings):
     """

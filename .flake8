@@ -29,13 +29,11 @@ exclude =
     *.pyo,
     *.egg-info,
     __pycache__,
+    venv,
     # Those are our third parties, do not lint them
     vendors,
     # Skip __init__.py files, to not have a lot of 'xxx' imported but unused
-    python/__init__.py,
-    python/*/__init__.py,
-    # Skip the auto-generated ui file.
-    python/*/ui,
+    sg_jira/__init__.py,
     tests
 
 # Ignore some errors
