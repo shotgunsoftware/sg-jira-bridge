@@ -17,6 +17,7 @@ from shotgun_api3 import Shotgun
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
+from .syncher import Syncher
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -73,7 +74,8 @@ class Bridge(object):
                 )
             raise RuntimeError("Unable to connect to %s" % (jira_site))
         logger.info("Connected to %s..." % jira_site)
-        self._sync_settings = sync_settings
+        self._sync_settings = sync_settings or {}
+        self._synchers = {}
 
     @classmethod
     def get_bridge(cls, settings_file):
@@ -184,6 +186,20 @@ class Bridge(object):
         """
         return self._sync_settings.keys()
 
+    def get_syncher(self, name):
+        if name not in self._synchers:
+            # Create the syncher from the settings
+            if name not in self._sync_settings:
+                raise ValueError("Unknown sync settings %s" % name)
+            self._synchers[name] = Syncher(
+                name,
+                self._shotgun,
+                self._jira,
+                **self._sync_settings[name]
+            )
+
+        return self._synchers[name]
+
     def sync_in_jira(self, settings_name, entity_type, entity_id, event, **kwargs):
         """
         Sync the given Shotgun Entity into Jira.
@@ -194,15 +210,9 @@ class Bridge(object):
         :param event: A dictionary with the event meta data for the change.
         """
         try:
-            settings = self._sync_settings.get(settings_name)
-            if not settings:
-                raise ValueError("Unknown settings name '%s'" % settings_name)
-            logger.info("%s synching in Jira %s(%d) for event %s" % (
-                settings_name,
-                entity_type,
-                entity_id,
-                event
-            ))
+            syncher = self.get_syncher(settings_name)
+            if syncher.accept_shotgun_event(entity_type, entity_id, event):
+                syncher.process_shotgun_event(entity_type, entity_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
@@ -218,15 +228,9 @@ class Bridge(object):
         :param event: A dictionary with the event meta data for the change.
         """
         try:
-            settings = self._sync_settings.get(settings_name)
-            if not settings:
-                raise ValueError("Unknown settings name '%s'" % settings_name)
-            logger.info("%s synching in SG %s(%s) for event %s" % (
-                settings_name,
-                resource_type,
-                resource_id,
-                event
-            ))
+            syncher = self.get_syncher(settings_name)
+            if syncher.accept_jira_event(resource_type, resource_id, event):
+                syncher.process_jira_event(resource_type, resource_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
