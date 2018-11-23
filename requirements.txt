@@ -10,3 +10,5 @@ jira==2.0.0
 # Install Shotgun API 3 from archive
 https://github.com/shotgunsoftware/python-api/archive/v3.0.37.zip
 
+# Needed to run the Linux service.
+daemonize==2.4.7
