@@ -9,6 +9,7 @@ import argparse
 import urlparse
 import BaseHTTPServer
 import json
+import ssl
 
 import sg_jira
 
@@ -40,6 +41,9 @@ HMTL_TEMPLATE = """
 
 
 class Server(BaseHTTPServer.HTTPServer):
+    """
+    A web server
+    """
     def __init__(self, settings, *args, **kwargs):
         # Note: BaseHTTPServer.HTTPServer is not a new style class so we can't use
         # super here
@@ -161,7 +165,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_error(500, e.message)
 
 
-def run_server(port, settings):
+def run_server(port, settings, keyfile=None, certfile=None):
     """
     Run the server until a shutdown is requested.
     """
@@ -169,6 +173,14 @@ def run_server(port, settings):
         settings,
         ("localhost", port), RequestHandler
     )
+    if keyfile and certfile:
+        # Activate https
+        httpd.socket = ssl.wrap_socket(
+            httpd.socket,
+            keyfile=keyfile,
+            certfile=certfile,
+            server_side=True
+        )
     httpd.serve_forever()
 
 
@@ -191,10 +203,24 @@ def main():
         help="Full path to settings file.",
         required=True
     )
+    parser.add_argument(
+        "--ssl_context",
+        help="A key and certificate file pair to run the server in https mode.",
+        nargs=2,
+    )
+
     args = parser.parse_args()
+
+    keyfile = None
+    certfile = None
+    if args.ssl_context:
+        keyfile, certfile = args.ssl_context
+
     run_server(
         port=args.port,
         settings=args.settings,
+        keyfile=keyfile,
+        certfile=certfile,
     )
 
 
