@@ -26,6 +26,7 @@ logger = logging.getLogger("service")
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 logger.setLevel(logging.DEBUG)
 
+
 def status(pid_file):
     """
     Check if the service is running and returns its pid if it is the case.
@@ -47,8 +48,10 @@ def status(pid_file):
     try:
         os.kill(pid, 0)
     except OSError as e:
+        logger.debug("%s" % e, exc_info=True)
         return None
     return pid
+
 
 def start(pid_file, port_number, settings, log_file=None):
     """
@@ -90,6 +93,7 @@ def start(pid_file, port_number, settings, log_file=None):
     )
     daemon.start()
 
+
 def stop(pid_file):
     """
     Stop the service if it is running.
@@ -121,6 +125,7 @@ def stop(pid_file):
     # Clean up
     if os.path.exists(pid_file):
         os.remove(pid_file)
+
 
 def main():
     parser = argparse.ArgumentParser(

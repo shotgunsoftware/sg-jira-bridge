@@ -29,7 +29,7 @@ exclude =
     *.pyo,
     *.egg-info,
     __pycache__,
-    venv,
+    *venv,
     # Those are our third parties, do not lint them
     vendors,
     # Skip __init__.py files, to not have a lot of 'xxx' imported but unused
