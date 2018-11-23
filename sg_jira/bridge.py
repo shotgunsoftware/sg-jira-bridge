@@ -177,6 +177,13 @@ class Bridge(object):
         )
         return result
 
+    @property
+    def sync_settings_names(self):
+        """
+        Return the list of sync settings this bridge handles.
+        """
+        return self._sync_settings.keys()
+
     def sync_in_jira(self, settings_name, entity_type, entity_id, event, **kwargs):
         """
         Sync the given Shotgun Entity into Jira.

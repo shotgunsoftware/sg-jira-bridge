@@ -16,6 +16,28 @@ DESCRIPTION = """
 A simple web app frontend to the SG Jira bridge.
 """
 
+HMTL_TEMPLATE = """
+<html>
+    <head>
+        <title>%s</title>
+        <style>
+            body {background-color: #525252;}
+            h1   {
+                background-color: #2C93E2;
+                color: whitesmoke;
+                text-align: center;
+                border-radius: 5px;
+            }
+            p    {color: whitesmoke; text-align: center;}
+        </style>
+    </head>
+    <body >
+        <h1>%s</h1>
+        <p>%s</p>
+    </body>
+</html>
+"""
+
 
 class Server(BaseHTTPServer.HTTPServer):
     def __init__(self, settings, *args, **kwargs):
@@ -36,6 +58,13 @@ class Server(BaseHTTPServer.HTTPServer):
         """
         return self._sg_jira.sync_in_shotgun(*args, **kwargs)
 
+    @property
+    def sync_settings_names(self):
+        """
+        Return the list of sync settings this server handles.
+        """
+        return self._sg_jira.sync_settings_names
+
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -45,7 +74,28 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(200, "The server is alive")
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write("<html><body>The server is alive</body<></html>")
+
+        path_parts = [x for x in self.path[1:].split("/") if x]
+        if len(path_parts) < 2:
+            self.send_error(400, "Invalid request path %s" % self.path)
+            return
+        if path_parts[0] == "sg2jira":
+            title = "Shotgun to Jira"
+        elif path_parts[0] == "jira2sg":
+            title = "Jira to Shotgun"
+        else:
+            self.send_error(400, "Invalid action %s" % path_parts[0])
+            return
+        settings_name = path_parts[1]
+        if settings_name not in self.server.sync_settings_names:
+            self.send_error(400, "Invalid settings name %s" % settings_name)
+            return
+
+        self.wfile.write(HMTL_TEMPLATE % (
+            title,
+            title,
+            "Synching with %s settings." % settings_name
+        ))
         self.wfile.close()
 
     def do_POST(self):
@@ -103,7 +153,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:
                 self.send_error(
                     400,
-                    "Invalid request path %s, don't know how ot handle %s" % (self.path, path_parts[0])
+                    "Invalid request path %s, don't know how to handle %s" % (self.path, path_parts[0])
                 )
                 return
             self.send_response(200, "Post request successfull")
