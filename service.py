@@ -107,7 +107,6 @@ def stop(pid_file):
     if not pid:
         return
 
-    # Check if the process is still running
     try:
         os.kill(pid, signal.SIGTERM)
         # Give the process some time to exit nicely
