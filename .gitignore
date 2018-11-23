@@ -46,7 +46,7 @@ coverage.xml
 .ropeproject
 
 # Execution environment files
-venv
+*venv
 *.pyc
 staticfiles
 local.env
