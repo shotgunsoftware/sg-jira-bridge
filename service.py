@@ -70,6 +70,8 @@ def start(pid_file, port_number, settings, log_file=None):
         logger.addHandler(fh)
         keep_fds = [fh.stream.fileno()]
 
+    # Inline function so we can pass a callable to Daemonize with our parameters
+    # set.
     def start_wep_app():
         import logging
         logger = logging.getLogger("sg_jira")
