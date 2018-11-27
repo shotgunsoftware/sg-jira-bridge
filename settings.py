@@ -72,7 +72,7 @@ LOGGING = {
         },
     },
 }
-# Sync settings. Keys are Unix shell style wildcards
+# Sync settings. Keys are settings name.
 SYNC = {
     "default": {
         "foo": "blah",
