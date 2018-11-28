@@ -7,4 +7,4 @@ A simple synchronization setup between Shotgun and Jira.
 - **webapp.py**: A simple web app used as a frontend for the synchronisation.
 - **service.py**: A script to run the web app as a service on Linux platforms.
 - **win_service.py**:  (TODO) A script to run the web app as a service on Windows.
-- **sg_jira**: Python package handling the synchronisation between Shotgun and Jira.
+- **sg_jira**: Python package for handling the synchronization between Shotgun and Jira.
