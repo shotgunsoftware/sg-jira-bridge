@@ -160,7 +160,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     "Invalid request path %s, don't know how to handle %s" % (self.path, path_parts[0])
                 )
                 return
-            self.send_response(200, "Post request successfull")
+            self.send_response(200, "POST request successful")
         except Exception as e:
             self.send_error(500, e.message)
 
