@@ -65,3 +65,9 @@ docs/_build/
 
 # Pickle files
 *.pickle
+
+# PyCharm
+.idea/
+# VSCode
+.vscode/
+

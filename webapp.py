@@ -105,6 +105,10 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_POST(self):
         """
         Handle a POST request.
+
+        Post url paths need to have the forms:
+          sg2jira/Settings name/SG Entity type/SG Entity id
+          jira2sg/Settings name/Jira Resource type/Jira Resource key
         """
         try:
             # Extract path components from the path, ignore leading '/' and
@@ -115,6 +119,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.send_error(400, "Invalid request path %s" % self.path)
                 return
             # Extract additional query parameters
+            # what they could be is still TBD, may be things like `dry_run=1`?
             parsed = urlparse.urlparse(self.path)
             parameters = {}
             if parsed.query:
@@ -168,6 +173,11 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 def run_server(port, settings, keyfile=None, certfile=None):
     """
     Run the server until a shutdown is requested.
+
+    :param int port: A port number to listen to.
+    :param str settings: Path to settings file.
+    :param str keyfile: Optional path to a PEM key file to run in https mode.
+    :param str certfile:  Optional path to a PEM certificate file to run in https mode.
     """
     httpd = Server(
         settings,
@@ -194,9 +204,8 @@ def main():
     parser.add_argument(
         "--port",
         type=int,
-        default=9000,
+        default=9090,
         help="The port number to listen to.",
-        required=True
     )
     parser.add_argument(
         "--settings",
