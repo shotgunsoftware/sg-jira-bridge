@@ -75,9 +75,15 @@ LOGGING = {
 # Sync settings. Keys are settings name.
 SYNC = {
     "default": {
-        "foo": "blah",
+        "settings": {
+            "foo": "blah"
+        },
+        "syncer": "sg_jira.syncher.Syncher",
     },
     "test": {
-
+        "settings": {
+            "bar": 1
+        },
+        "syncer": "sg_jira.syncher.Syncher",
     }
 }

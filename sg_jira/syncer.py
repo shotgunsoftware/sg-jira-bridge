@@ -8,18 +8,18 @@
 import logging
 
 
-class Syncher(object):
+class Syncer(object):
     """
-    A class handling synching between Shotgun and Jira
+    A class handling syncing between Shotgun and Jira
     """
 
     def __init__(self, name, shotgun, jira, **kwargs):
-        super(Syncher, self).__init__()
+        super(Syncer, self).__init__()
         self._name = name
         self._shotgun = shotgun
         self._jira = jira
         # Set a logger per instance: this allows to filter logs with the
-        # syncher name, or even have log file handlers per syncher
+        # syncer name, or even have log file handlers per syncer
         self._logger = logging.getLogger(__name__).getChild(self._name)
 
     def setup(self):
@@ -42,7 +42,7 @@ class Syncher(object):
         :param int entity_id: The id of the Shotgun Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         """
-        self._logger.info("synching in Jira %s(%d) for event %s" % (
+        self._logger.info("syncing in Jira %s(%d) for event %s" % (
             entity_type,
             entity_id,
             event
@@ -62,7 +62,7 @@ class Syncher(object):
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
         """
-        self._logger.info("synching in SG %s(%s) for event %s" % (
+        self._logger.info("syncing in SG %s(%s) for event %s" % (
             resource_type,
             resource_id,
             event
