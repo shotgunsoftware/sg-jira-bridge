@@ -8,6 +8,7 @@
 Shotgun Jira sync settings
 """
 import os
+import sys
 
 try:
     # Allow users to define their sensible data in a .env file and
@@ -73,17 +74,24 @@ LOGGING = {
     },
 }
 # Sync settings. Keys are settings name.
+
+# Add the examples folder to the Python path so the syncers can be loaded.
+# Additional paths can be added for custom syncers
+sys.path.append(os.path.abspath("./examples"))
+
 SYNC = {
     "default": {
+        # The syncer class to use
+        "syncer": "sg_jira.TaskIssueSyncher",
+        # And its specific settings which are passed to its __init__ method
         "settings": {
             "foo": "blah"
         },
-        "syncer": "sg_jira.syncher.Syncher",
     },
     "test": {
         "settings": {
             "bar": 1
         },
-        "syncer": "sg_jira.syncher.Syncher",
+        "syncer": "example_sync.ExampleSync",
     }
 }

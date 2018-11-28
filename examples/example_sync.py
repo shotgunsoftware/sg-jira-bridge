@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
-from .bridge import Bridge
-from .syncer import Syncer
-from .task_issue_syncer import TaskIssueSyncer
+from sg_jira import Syncer
+
+class ExampleSync(Syncer):
+    pass

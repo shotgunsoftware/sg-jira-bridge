@@ -5,6 +5,13 @@
 # this software in either electronic or hard copy form.
 #
 
-from .bridge import Bridge
 from .syncer import Syncer
-from .task_issue_syncer import TaskIssueSyncer
+
+class TaskIssueSyncer(Syncer):
+    """
+    Sync Shotgun Tasks as Jira Issues.
+    """
+    def process_shotgun_event(self, entity_type, entity_id, event):
+        # Find a matching Issue in Jira
+        # Create it if needed
+        # Update it

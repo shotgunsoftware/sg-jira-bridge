@@ -9,6 +9,7 @@ import os
 import imp
 import logging
 import logging.config
+import importlib
 
 # import jira
 from jira import JIRA, JIRAError
@@ -200,18 +201,48 @@ class Bridge(object):
         Returns a :class:`Syncer` instance for the given settings name.
 
         :param str: A settings name.
-        :raises: ValueError for invalid settings name.
+        :raises: ValueError for invalid settings.
         """
         if name not in self._syncers:
             # Create the syncer from the settings
-            if name not in self._sync_settings:
+            sync_settings = self._sync_settings.get(name)
+            if sync_settings is None:
                 raise ValueError("Unknown sync settings %s" % name)
+            if not isinstance(sync_settings, dict):
+                raise ValueError(
+                    "Invalid sync settings %s, it must be dictionary." % name
+                )
             # Retrieve the syncer
-            self._syncers[name] = Syncer(
+            syncer_name = sync_settings.get("syncer")
+            if not syncer_name:
+                raise ValueError("Missing `syncer` setting for %s" % name)
+            if "." not in syncer_name:
+                raise ValueError(
+                    "Invalid `syncer` setting %s for %s: "
+                    "it must be a <module path>.<class name>" % (
+                        syncer_name,
+                        name
+                    )
+                )
+            module_name, class_name = syncer_name.rsplit(".", 1)
+            module = importlib.import_module(module_name)
+            try:
+                syncer_class = getattr(module, class_name)
+            except AttributeError as e:
+                logger.debug("%s" % e, exc_info=True)
+                raise ValueError(
+                    "Unable to retrieve a %s class from module %s" % (
+                        class_name,
+                        module,
+                    )
+                )
+            # Retrieve the settings for the syncer
+            settings = sync_settings.get("settins") or {}
+            self._syncers[name] = syncer_class(
                 name,
                 self._shotgun,
                 self._jira,
-                **self._sync_settings[name]
+                **settings
             )
 
         return self._syncers[name]
