@@ -18,7 +18,6 @@ from shotgun_api3 import Shotgun
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
-from .syncer import Syncer
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled

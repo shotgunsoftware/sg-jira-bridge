@@ -39,11 +39,17 @@ def status(pid_file):
 
     pid = None
     with open(pid_file, "r") as pf:
-        pid = int(pf.read().strip())
+        pid = pf.read().strip()
 
     if not pid:
         logger.error("Unable to retrieve pid from %s" % pid_file)
         return None
+
+    if not pid.isdigit():
+        logger.error("Invalid pid %s read from %s" % (pid, pid_file))
+        return None
+
+    pid = int(pid)
 
     try:
         # Send 0 signal to check if the process is alive.
@@ -75,7 +81,8 @@ def start(pid_file, port_number, settings, log_file=None):
     # set.
     def start_wep_app():
         import logging
-        logger = logging.getLogger("sg_jira")
+        logger = logging.getLogger("service").getChild("sg_jira")
+        logger.info("Starting wep app...")
         try:
             import webapp
             webapp.run_server(
@@ -86,6 +93,7 @@ def start(pid_file, port_number, settings, log_file=None):
             logger.exception(e)
         logger.warning("bye")
 
+    logger.info("Starting daemon with pid file %s" % pid_file)
     daemon = Daemonize(
         app="sg_jira",
         pid=pid_file,

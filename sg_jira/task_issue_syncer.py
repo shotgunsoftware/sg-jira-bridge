@@ -7,6 +7,7 @@
 
 from .syncer import Syncer
 
+
 class TaskIssueSyncer(Syncer):
     """
     Sync Shotgun Tasks as Jira Issues.
