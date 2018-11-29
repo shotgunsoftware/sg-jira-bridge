@@ -66,7 +66,7 @@ def run_tests():
     )
     parser.add_argument(
         "--xmlout",
-        help="",
+        help="Output directory for xml reports",
     )
     args, other_args = parser.parse_known_args()
     runner = TestRunner(args.xmlout)
