@@ -15,3 +15,4 @@ class TaskIssueSyncer(Syncer):
         # Find a matching Issue in Jira
         # Create it if needed
         # Update it
+        pass

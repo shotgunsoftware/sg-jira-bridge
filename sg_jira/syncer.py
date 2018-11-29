@@ -22,6 +22,13 @@ class Syncer(object):
         # syncer name, or even have log file handlers per syncer
         self._logger = logging.getLogger(__name__).getChild(self._name)
 
+    @property
+    def logger(self):
+        """
+        Returns the logger used by this syncer.
+        """
+        return self._logger
+
     def setup(self):
         """
         TBD: could be used to check sites, create custom fields, etc...

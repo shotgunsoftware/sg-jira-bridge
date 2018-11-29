@@ -236,12 +236,14 @@ class Bridge(object):
                         module,
                     )
                 )
-            # Retrieve the settings for the syncer
-            settings = sync_settings.get("settins") or {}
+            # Retrieve the settings for the syncer, if any
+            settings = sync_settings.get("settings") or {}
+            # Instantiate the syncer with our standard parameters and any
+            # additional settings as parameters.
             self._syncers[name] = syncer_class(
-                name,
-                self._shotgun,
-                self._jira,
+                name=name,
+                shotgun=self._shotgun,
+                jira=self._jira,
                 **settings
             )
 

@@ -9,6 +9,7 @@ Shotgun Jira sync settings
 """
 import os
 import sys
+import logging
 
 try:
     # Allow users to define their sensible data in a .env file and
@@ -89,9 +90,11 @@ SYNC = {
         },
     },
     "test": {
-        "settings": {
-            "bar": 1
-        },
+        # Example of a custom syncer with an additional parameter to define
+        # a log level.
         "syncer": "example_sync.ExampleSync",
+        "settings": {
+            "log_level": logging.DEBUG
+        },
     }
 }
