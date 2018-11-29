@@ -1,0 +1,24 @@
+# Copyright 2018 Autodesk, Inc.  All rights reserved.
+#
+# Use of this software is subject to the terms of the Autodesk license agreement
+# provided at the time of installation or download, or which otherwise accompanies
+# this software in either electronic or hard copy form.
+#
+
+pool:
+  vmImage: 'Ubuntu 16.04'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: 2.7
+    architecture: 'x64'
+
+- script: |
+    python -m pip install --upgrade pip setuptools wheel
+  displayName: 'Install prerequisites'
+
+- script: |
+    python -m pip install flake8
+    flake8 .
+  displayName: 'Run flake8'

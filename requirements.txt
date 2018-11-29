@@ -1,0 +1,14 @@
+# Copyright 2018 Autodesk, Inc.  All rights reserved.
+#
+# Use of this software is subject to the terms of the Autodesk license agreement
+# provided at the time of installation or download, or which otherwise accompanies
+# this software in either electronic or hard copy form.
+#
+# List of Python packages needed by this stack
+# Python Jira api
+jira==2.0.0
+# Install Shotgun API 3 from archive
+https://github.com/shotgunsoftware/python-api/archive/v3.0.37.zip
+
+# Needed to run the Linux service.
+daemonize==2.4.7
