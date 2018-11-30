@@ -12,7 +12,8 @@ import tempfile
 import time
 from multiprocessing import Process
 
-import service
+if not sys.platform.startswith("win"):
+    import service
 
 
 @unittest.skipIf(sys.platform.startswith("win"), "Requires Linux/Osx")
