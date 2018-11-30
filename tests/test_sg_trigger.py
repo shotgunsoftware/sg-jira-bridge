@@ -9,7 +9,6 @@ import os
 import logging
 import datetime
 import requests
-import unittest2 as unittest
 import mock
 
 from shotgun_api3.lib import mockgun
@@ -53,11 +52,11 @@ def mocked_requests_post(*args, **kwargs):
     Mock requests.post made the trigger and return a Response with the url
     and the payload.
     """
-    #raise ValueError("%s %s" % (args, kwargs))
     response = requests.Response()
     response.url = args[0]
     response._contents = kwargs
     return response
+
 
 class TestSGTrigger(TestBase):
     """
@@ -127,8 +126,8 @@ class TestSGTrigger(TestBase):
         shotgun.update(
             PROJECT["type"],
             PROJECT["id"],
-            data = {
-                "sg_jira_sync_url" : {
+            data={
+                "sg_jira_sync_url": {
                     "content_type": "string",
                     "link_type": "web",
                     "name": "test",

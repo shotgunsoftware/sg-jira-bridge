@@ -14,6 +14,7 @@ import os
 from shotgun_api3 import Shotgun
 from shotgun_api3.lib import mockgun
 
+
 def main():
     parser = argparse.ArgumentParser(
         description=DESCRIPTION
@@ -41,6 +42,7 @@ def main():
         os.path.join(schema_dir, "schema.pickle"),
         os.path.join(schema_dir, "schema_entity.pickle")
     )
+
 
 if __name__ == "__main__":
     main()
