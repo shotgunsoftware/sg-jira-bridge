@@ -6,9 +6,12 @@
 #
 
 import os
-import unittest2 as unittest
 import logging
 import datetime
+import requests
+import unittest2 as unittest
+import mock
+
 from shotgun_api3.lib import mockgun
 
 from test_base import TestBase
@@ -25,20 +28,36 @@ EVENT = {
     "entity": {"id": 11793, "name": "Art", "type": "Task"},
     "event_type": "Shotgun_Task_Change",
     "id": 4044184,
-    "meta": {"attribute_name": "sg_status_list",
-            "entity_id": 11793,
-            "entity_type": "Task",
-            "field_data_type": "status_list",
-            "new_value": "wtg",
-            "old_value": "fin",
-            "type": "attribute_change"},
+    "meta": {
+        "attribute_name": "sg_status_list",
+        "entity_id": 11793,
+        "entity_type": "Task",
+        "field_data_type": "status_list",
+        "new_value": "wtg",
+        "old_value": "fin",
+        "type": "attribute_change"
+    },
     "project": PROJECT,
     "session_uuid": "e8b61250-f31b-11e8-bb75-0242ac110004",
     "type": "EventLogEntry",
-    "user": {"id": 42,
-            "name": "Ford Escort",
-            "type": "HumanUser"}
+    "user": {
+        "id": 42,
+        "name": "Ford Escort",
+        "type": "HumanUser"
     }
+}
+
+
+def mocked_requests_post(*args, **kwargs):
+    """
+    Mock requests.post made the trigger and return a Response with the url
+    and the payload.
+    """
+    #raise ValueError("%s %s" % (args, kwargs))
+    response = requests.Response()
+    response.url = args[0]
+    response._contents = kwargs
+    return response
 
 class TestSGTrigger(TestBase):
     """
@@ -79,7 +98,8 @@ class TestSGTrigger(TestBase):
         )
         self.assertTrue(PROJECT["id"] in routing)
 
-    def test_project_sync_url(self):
+    @mock.patch("requests.post", side_effect=mocked_requests_post)
+    def test_project_sync_url(self, mocked):
         """
         Test retrieving the dispatch url for a Project.
         """
@@ -103,6 +123,7 @@ class TestSGTrigger(TestBase):
         self.assertTrue(PROJECT["id"] in routing)
         self.assertIsNone(routing[PROJECT["id"]])
         routing = {}
+        url = "http://localhost/default/sg2jira"
         shotgun.update(
             PROJECT["type"],
             PROJECT["id"],
@@ -122,4 +143,48 @@ class TestSGTrigger(TestBase):
             routing
         )
         self.assertTrue(PROJECT["id"] in routing)
-        self.assertIsNone(routing[PROJECT["id"]])
+        self.assertTrue(routing[PROJECT["id"]].startswith(url))
+        mocked.assert_called_once()
+        self.assertTrue(mocked.call_args[0][0].startswith(url))
+        # Check the trigger clear its routing cache if the sync url is changed
+        project_event = {
+            "event_type": "Shotgun_Project_Change",
+            "entity": PROJECT,
+            "project": None,
+            "attribute_name": "sg_jira_sync_url",
+            "meta": {
+                "type": "attribute_change",
+                "attribute_name": "sg_jira_sync_url",
+                "entity_type": PROJECT["type"],
+                "entity_id": PROJECT["id"],
+                "field_data_type": "url",
+                "old_value": None,
+                "new_value": {
+                    "attachment_id": 1416,
+                    "attachment_type": "http_url",
+                    "display_name": "Jira Sync",
+                    "icon_url": "/images/filetypes/filetype_icon_misc.png",
+                    "icon_class": "icon_web",
+                    "url": "http://localhost/default/sg2jira",
+                    "attachment_uuid": "abcdefg"
+                }
+            }
+        }
+        sg_jira_event_trigger.process_event(
+            shotgun,
+            logger,
+            project_event,
+            routing
+        )
+        self.assertFalse(PROJECT["id"] in routing)
+        # Processing the Task event should cache the routing again
+        sg_jira_event_trigger.process_event(
+            shotgun,
+            logger,
+            EVENT,
+            routing
+        )
+        self.assertTrue(PROJECT["id"] in routing)
+        self.assertTrue(routing[PROJECT["id"]].startswith(url))
+        mocked.assert_called()
+        self.assertTrue(mocked.call_args[0][0].startswith(url))

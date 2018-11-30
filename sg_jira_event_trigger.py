@@ -60,6 +60,18 @@ def process_event(sg, logger, event, dispatch_routes):
     """
     logger.debug("Processing %s" % event)
 
+    # Sometimes rogue events from the site creation can be retrieved by the
+    # event daemon: this is why we use a `get` in various places instead of
+    # accessing data with the expected key directly.
+    if event.get("event_type") == "Shotgun_Project_Change":
+        # Check if the sg_jira_sync_url field was modified.
+        if event.get("attribute_name") == "sg_jira_sync_url":
+            entity = event.get("entity")
+            if entity and entity["id"] in dispatch_routes:
+                # Just clear the cache which will be re-populated later.
+                del dispatch_routes[entity["id"]]
+        return
+
     # Check the Project and get the routing
     project = event.get("project")
     # If there is no Project associated with the event, just ignore it
