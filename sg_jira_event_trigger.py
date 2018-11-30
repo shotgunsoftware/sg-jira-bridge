@@ -103,8 +103,12 @@ def process_event(sg, logger, event, dispatch_routes):
 
         # Default value if we can't retrieve a valid value
         sync_url = None
-        if isinstance(sg_project.get("sg_jira_sync_url"), dict):
-            sync_url = sg_project.get("sg_jira_sync_url").get("url")
+        project_sync_value = sg_project.get("sg_jira_sync_url")
+        if isinstance(project_sync_value, dict):
+            if project_sync_value.get("link_type") == "web":
+                sync_url = sg_project.get("sg_jira_sync_url").get("url")
+                if sync_url and sync_url.endswith("/"):
+                    sync_url = sync_url[:-1]
         dispatch_routes[sg_project["id"]] = sync_url
 
     sync_server_url = dispatch_routes[project["id"]]
@@ -118,10 +122,7 @@ def process_event(sg, logger, event, dispatch_routes):
         logger.debug("Ignoring event %s without valid Entity meta data.")
         return
     # Just send a POST request with the event meta data as payload.
-    if sync_server_url.endswith("/"):
-        sync_url = "%s%s/%d" % (sync_server_url, entity_type, entity_id)
-    else:
-        sync_url = "%s/%s/%d" % (sync_server_url, entity_type, entity_id)
+    sync_url = "%s/%s/%d" % (sync_server_url, entity_type, entity_id)
     logger.debug("Posting event %s to %s" % (meta, sync_url))
     # Post application/json request
     response = requests.post(
