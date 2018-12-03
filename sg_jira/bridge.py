@@ -14,10 +14,13 @@ import importlib
 # import jira
 from jira import JIRA, JIRAError
 from shotgun_api3 import Shotgun
+import shotgun_api3
 
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
+from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD
+from .constants import SHOTGUN_JIRA_TYPE_FIELD, SHOTGUN_JIRA_ID_FIELD
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -54,7 +57,7 @@ class Bridge(object):
         :param sync_settings: A dictionary where keys are settings names.
         """
         super(Bridge, self).__init__()
-        self._shotgun = Shotgun(
+        self._shotgun = shotgun_api3.Shotgun(
             sg_site,
             script_name=sg_script,
             api_key=sg_script_key,
@@ -63,7 +66,7 @@ class Bridge(object):
         try:
             self._jira = JIRA(
                 jira_site,
-                basic_auth=(
+                auth=(
                     jira_user,
                     jira_secret
                 ),
@@ -85,6 +88,10 @@ class Bridge(object):
         logger.info("Connected to %s..." % jira_site)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
+        # A dictionary where keys are Jira field name and values are their field id.
+        self._jira_fields_map = {}
+        self._jira_setup()
+        self._shotgun_setup()
 
     @classmethod
     def get_bridge(cls, settings_file):
@@ -189,6 +196,20 @@ class Bridge(object):
         return result
 
     @property
+    def shotgun(self):
+        """
+        Return a connected Shotgun handle.
+        """
+        return self._shotgun
+
+    @property
+    def jira(self):
+        """
+        Return a connected Jira handle.
+        """
+        return self._jira
+
+    @property
     def sync_settings_names(self):
         """
         Return the list of sync settings this bridge handles.
@@ -241,8 +262,7 @@ class Bridge(object):
             # additional settings as parameters.
             self._syncers[name] = syncer_class(
                 name=name,
-                shotgun=self._shotgun,
-                jira=self._jira,
+                bridge=self,
                 **settings
             )
 
@@ -283,3 +303,47 @@ class Bridge(object):
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
             raise
+
+    def _jira_setup(self):
+        """
+        Check the Jira site and cache site level values.
+
+        :raises: RuntimeError if the Jira site was not correctly configured to
+                 be used with this bridge.
+        """
+        # Build a mapping from Jira field names to their id for fast lookup.
+        for jira_field in self._jira.fields():
+            self._jira_fields_map[jira_field["name"].lower()] = jira_field["id"]
+        if not self._jira_fields_map.get(JIRA_SHOTGUN_TYPE_FIELD.lower()):
+            raise RuntimeError(
+                "Missing required custom Jira field %s" % JIRA_SHOTGUN_TYPE_FIELD
+            )
+        if not self._jira_fields_map.get(JIRA_SHOTGUN_ID_FIELD.lower()):
+            raise RuntimeError(
+                "Missing required custom Jira field %s" % JIRA_SHOTGUN_ID_FIELD
+            )
+
+    def get_jira_field_id(self, name):
+        """
+        Return the Jira field id for the Issue field with the given name.
+
+        :returns: The id as a string or None if the field is unknown.
+        """
+        return self._jira_fields_map.get(name.lower())
+
+    def _shotgun_setup(self):
+        project_schema = self._shotgun.schema_field_read("Project")
+        # Check we have a field on Projects where we can store and retrieve a
+        # Jira Project key.
+        field = project_schema.get(SHOTGUN_JIRA_ID_FIELD)
+        if not field:
+            raise RuntimeError(
+                "Missing required custom Shotgun Project field %s" % SHOTGUN_JIRA_ID_FIELD
+            )
+        if field["data_type"]["value"] != "text":
+            raise RuntimeError(
+                "Invalid type '%s' for Project.%s, it must be 'text'" % (
+                    field["data_type"]["value"],
+                    SHOTGUN_JIRA_ID_FIELD
+                )
+            )

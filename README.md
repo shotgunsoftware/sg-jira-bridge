@@ -10,10 +10,18 @@ A simple synchronization setup between Shotgun and Jira.
 - **sg_jira**: Python package for handling the synchronization between Shotgun and Jira.
 
 
+## Jira setup
+
+The "Shotgun Type" and "Shotgun Id" custom string fields need to be added to Issues in Jira
+and made available in Boards. 
+
+## Shotgun setup
+The "Jira Type" and "Jira Id" custom string fields need to be added to Entities in Shotgun.
+
 ## Running the setup locally for testing
  
- A _requirements.txt_ file is provided to install all needed packages and the web app can be
- run from the command line with Python 2.7
+ A _requirements.txt_ file is provided to install all needed packages. 
+ The web app can be run from the command line with Python 2.7:
  - Create a virtualenv: `virtualenv venv`.
  - Activate the virtualenv: `source venv/bin/activate`.
    - On Windows `venv/Scripts/activate` in a Power shell.

@@ -20,6 +20,7 @@ if not sys.platform.startswith("win"):
 class TestService(unittest.TestCase):
 
     def setUp(self):
+        super(TestService, self).setUp()
         self._fixtures_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "fixtures")
         )

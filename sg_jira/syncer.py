@@ -7,17 +7,24 @@
 
 import logging
 
+from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD
+
 
 class Syncer(object):
     """
     A class handling syncing between Shotgun and Jira
     """
 
-    def __init__(self, name, shotgun, jira, **kwargs):
+    def __init__(self, name, bridge, **kwargs):
+        """
+        Instatiate a new syncer for the given bridge.
+
+        :param str name: A unique name for the syncer.
+        :param bridge: A :class:`sg_jira.Bridge` instance.
+        """
         super(Syncer, self).__init__()
         self._name = name
-        self._shotgun = shotgun
-        self._jira = jira
+        self._bridge = bridge
         # Set a logger per instance: this allows to filter logs with the
         # syncer name, or even have log file handlers per syncer
         self._logger = logging.getLogger(__name__).getChild(self._name)
@@ -31,9 +38,33 @@ class Syncer(object):
 
     def setup(self):
         """
-        TBD: could be used to check sites, create custom fields, etc...
+        Check the Jira and Shotgun site, ensure that the sync can safely happen
+        and cache any value which is slow to retrieve.
         """
         pass
+
+    def match_jira_ressource(self, entity_type, entity_id, name):
+        """
+        Return a matching Jira resource for the given Shotgun Entity, if any.
+
+        This base implementation matches resources by name and only handles Projects
+        and mapping a Shotgun Task to a Jira Issue
+
+        :param str entity_type: A Shotgun Entity type.
+        :param int entity_id: A Shotgun Entity id.
+        :param str name: A name to match, typically the Shotgun Entity name.
+        """
+        if entity_type == "Project":
+            for jira_project in self._bridge.jira.projects():
+                if jira_project.name.lower() == name.lower():
+                    return jira_project
+
+        elif entity_type == "Task":
+            pass
+        else:
+            raise ValueError("Unsupported Entity type %s" % entity_type)
+
+        return None
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """

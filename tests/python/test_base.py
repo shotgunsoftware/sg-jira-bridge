@@ -15,6 +15,12 @@ class TestBase(unittest.TestCase):
     """
     A TestCase class with some helpers to mock SG calls.
     """
+    def setUp(self):
+        super(TestBase, self).setUp()
+        self._fixtures_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "fixtures")
+        )
+
     def set_sg_mock_schema(self, path):
         """
         Set the SG mock schema from files in the given folder.
