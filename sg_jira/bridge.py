@@ -332,6 +332,12 @@ class Bridge(object):
         return self._jira_fields_map.get(name.lower())
 
     def _shotgun_setup(self):
+        """
+        Check the Shotgun site and cache site level values.
+
+        :raises: RuntimeError if the Shotgun site was not correctly configured to
+                 be used with this bridge.
+        """
         project_schema = self._shotgun.schema_field_read("Project")
         # Check we have a field on Projects where we can store and retrieve a
         # Jira Project key.

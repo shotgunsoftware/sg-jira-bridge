@@ -137,9 +137,14 @@ def process_event(sg, logger, event, dispatch_routes):
     sync_url = "%s/%s/%d" % (sync_server_url, entity_type, entity_id)
     logger.debug("Posting event %s to %s" % (meta, sync_url))
     # Post application/json request
+    payload = {
+        "meta": meta,
+        "session_uuid": event.get("session_uuid"),
+        "user": event.get("user")
+    }
     response = requests.post(
         sync_url,
-        json=meta,
+        json=payload,
     )
     response.raise_for_status()
     logger.debug("Event successfully processed.")

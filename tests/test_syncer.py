@@ -44,8 +44,3 @@ class TestJiraSyncer(TestBase):
         syncer = bridge.get_syncer("default")
         jira_projects = bridge._jira.projects()
         syncer.match_jira_ressource("Project", 1, jira_projects[0].name)
-
-
-
-
-

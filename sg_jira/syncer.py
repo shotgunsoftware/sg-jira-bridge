@@ -80,7 +80,7 @@ class Syncer(object):
         :param int entity_id: The id of the Shotgun Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         """
-        self._logger.info("syncing in Jira %s(%d) for event %s" % (
+        self._logger.info("Syncing in Jira %s(%d) for event %s" % (
             entity_type,
             entity_id,
             event
@@ -100,7 +100,7 @@ class Syncer(object):
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
         """
-        self._logger.info("syncing in SG %s(%s) for event %s" % (
+        self._logger.info("Syncing in SG %s(%s) for event %s" % (
             resource_type,
             resource_id,
             event
