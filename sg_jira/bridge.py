@@ -13,14 +13,13 @@ import importlib
 
 # import jira
 from jira import JIRA, JIRAError
-from shotgun_api3 import Shotgun
 import shotgun_api3
 
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
 from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD
-from .constants import SHOTGUN_JIRA_TYPE_FIELD, SHOTGUN_JIRA_ID_FIELD
+from .constants import SHOTGUN_JIRA_ID_FIELD
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -99,7 +98,9 @@ class Bridge(object):
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
         self._jira_setup()
+        self._shotgun_schemas = {} # A cache for retrieved Shotgun schemas
         self._shotgun_setup()
+
 
     @classmethod
     def get_bridge(cls, settings_file):
@@ -280,7 +281,16 @@ class Bridge(object):
                 bridge=self,
                 **settings
             )
-
+            try:
+                self._syncers[name].setup()
+            except Exception as e:
+                logger.warning("Unable to setup syncer %s, disabling it: %s" % (name, e))
+                # Log the traceback for debug purpose
+                logger.debug("%s" % e, exc_info=True)
+                # TODO: check what we should do, another option would be to keep
+                # setting it up each time it is needed, in case the problem was
+                # fixed?
+                self._syncers[name] = None
         return self._syncers[name]
 
     def sync_in_jira(self, settings_name, entity_type, entity_id, event, **kwargs):
@@ -353,18 +363,41 @@ class Bridge(object):
         :raises: RuntimeError if the Shotgun site was not correctly configured to
                  be used with this bridge.
         """
-        project_schema = self._shotgun.schema_field_read("Project")
-        # Check we have a field on Projects where we can store and retrieve a
-        # Jira Project key.
-        field = project_schema.get(SHOTGUN_JIRA_ID_FIELD)
+        self.assert_shotgun_field(
+            "Project",
+            SHOTGUN_JIRA_ID_FIELD,
+            "text"
+        )
+
+    def assert_shotgun_field(self, entity_type, field_name, field_type):
+        """
+        Check if the given field with the given type exists for the given Shotgun
+        Entity type.
+
+        :param str entity_type: A Shotgun Entity type.
+        :param str field_name: A Shotgun field name, e.g. 'sg_my_precious'.
+        :param str field_type: A Shotgun field type, e.g. 'text'.
+        :raises: RuntimeError if the field does not exist or does not have the
+                 expected type.
+        """
+        if entity_type not in self._shotgun_schemas:
+            self._shotgun_schemas[entity_type] = self._shotgun.schema_field_read(
+                entity_type
+            )
+        field = self._shotgun_schemas[entity_type].get(field_name)
         if not field:
             raise RuntimeError(
-                "Missing required custom Shotgun Project field %s" % SHOTGUN_JIRA_ID_FIELD
-            )
-        if field["data_type"]["value"] != "text":
-            raise RuntimeError(
-                "Invalid type '%s' for Project.%s, it must be 'text'" % (
-                    field["data_type"]["value"],
-                    SHOTGUN_JIRA_ID_FIELD
+                "Missing required custom Shotgun %s field %s" % (
+                    entity_type, field_name,
                 )
             )
+        if field["data_type"]["value"] != field_type:
+            raise RuntimeError(
+                "Invalid type '%s' for %s.%s, it must be '%s'" % (
+                    field["data_type"]["value"],
+                    entity_type,
+                    field_name,
+                    field_type
+                )
+            )
+

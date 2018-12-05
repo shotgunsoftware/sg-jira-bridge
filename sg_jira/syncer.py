@@ -7,8 +7,6 @@
 
 import logging
 
-from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD
-
 
 class Syncer(object):
     """
@@ -35,6 +33,13 @@ class Syncer(object):
         Returns the logger used by this syncer.
         """
         return self._logger
+
+    @property
+    def bridge(self):
+        """
+        Returns the :class:`sg_jira.Bridge` instance used by this syncer.
+        """
+        return self._bridge
 
     def setup(self):
         """

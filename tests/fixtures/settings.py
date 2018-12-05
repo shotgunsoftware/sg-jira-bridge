@@ -79,9 +79,13 @@ LOGGING = {
 # Add the examples folder to the Python path so the syncers can be loaded.
 # Additional paths can be added for custom syncers
 sys.path.append(os.path.abspath("./examples"))
-
+# Add the ./ folder to the Python path so they can be loaded by unit tests
+sys.path.append(os.path.abspath(
+    os.path.dirname(__file__),
+))
+#raise ValueError(sys.path)
 SYNC = {
-    "default": {
+    "task_issue": {
         # The syncer class to use
         "syncer": "sg_jira.TaskIssueSyncer",
         # And its specific settings which are passed to its __init__ method
@@ -89,7 +93,15 @@ SYNC = {
             "foo": "blah"
         },
     },
-    "test": {
+    "bad_setup": {
+        # Example of a custom syncer with an additional parameter to define
+        # a log level.
+        "syncer": "syncers.bad_syncer.BadSyncer",
+        "settings": {
+            "fail_on_setup": True,
+        },
+    },
+    "example": {
         # Example of a custom syncer with an additional parameter to define
         # a log level.
         "syncer": "example_sync.ExampleSync",
