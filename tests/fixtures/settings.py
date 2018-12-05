@@ -83,7 +83,7 @@ sys.path.append(os.path.abspath("./examples"))
 sys.path.append(os.path.abspath(
     os.path.dirname(__file__),
 ))
-#raise ValueError(sys.path)
+
 SYNC = {
     "task_issue": {
         # The syncer class to use

@@ -55,9 +55,9 @@ class TestJiraSyncer(TestBase):
         syncer = bridge.get_syncer(name)
         return syncer, bridge
 
-    def test_project_match(self, mocked):
-        syncer, _ = self._get_syncer(mocked)
-        jira_projects = syncer._bridge._jira.projects()
+#    def test_project_match(self, mocked):
+#        syncer, bridge = self._get_syncer(mocked)
+#        jira_projects = bridge._jira.projects()
 
     def test_bad_syncer(self, mocked):
         """

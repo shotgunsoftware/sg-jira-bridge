@@ -101,7 +101,6 @@ class Bridge(object):
         self._shotgun_schemas = {} # A cache for retrieved Shotgun schemas
         self._shotgun_setup()
 
-
     @classmethod
     def get_bridge(cls, settings_file):
         """
