@@ -62,7 +62,15 @@ class Bridge(object):
             script_name=sg_script,
             api_key=sg_script_key,
         )
-        logger.info("Connected to %s..." % sg_site)
+        # Retrieve our current login, this does not seem to be available from
+        # the connection?
+        self._shotgun_user = self._shotgun.find_one(
+            "ApiUser",
+            [["firstname", "is", sg_script]],
+            ["firstname"]
+        )
+        logger.info("Connected to %s." % sg_site)
+
         try:
             self._jira = JIRA(
                 jira_site,
@@ -85,7 +93,7 @@ class Bridge(object):
                     "please check your credentials" % jira_site
                 )
             raise RuntimeError("Unable to connect to %s" % jira_site)
-        logger.info("Connected to %s..." % jira_site)
+        logger.info("Connected to %s." % jira_site)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
         # A dictionary where keys are Jira field name and values are their field id.
@@ -201,6 +209,13 @@ class Bridge(object):
         Return a connected Shotgun handle.
         """
         return self._shotgun
+
+    @property
+    def current_shotgun_user(self):
+        """
+        Return the Shotgun user used for the connection.
+        """
+        return self._shotgun_user
 
     @property
     def jira(self):

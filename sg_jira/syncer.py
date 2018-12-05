@@ -68,8 +68,27 @@ class Syncer(object):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        TBD: could be used to implement special logic to ignore some events
+        Accept or reject the given event for the given Shotgun Entity.
+
+        :returns: True if the event is accepted for processing, False otherwise.
         """
+
+        if not event:
+            return False
+
+        # Check we have a Project
+        if not event.get("project"):
+            self._logger.debug("Rejecting event %s with no project." % event)
+            return False
+
+        # Check we didn't trigger the event to avoid infinite loops.
+        user = event.get("user")
+        current_user = self._bridge.current_shotgun_user
+        if user and current_user:
+            if user["type"] == current_user["type"] and user["id"] == current_user["id"]:
+                self._logger.debug("Rejecting event %s created by us." % event)
+                return False
+
         return True
 
     def process_shotgun_event(self, entity_type, entity_id, event):

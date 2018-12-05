@@ -140,7 +140,8 @@ def process_event(sg, logger, event, dispatch_routes):
     payload = {
         "meta": meta,
         "session_uuid": event.get("session_uuid"),
-        "user": event.get("user")
+        "user": event.get("user"),
+        "project": event["project"]
     }
     response = requests.post(
         sync_url,
