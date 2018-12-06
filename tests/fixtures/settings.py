@@ -76,10 +76,7 @@ LOGGING = {
 }
 # Sync settings. Keys are settings name.
 
-# Add the examples folder to the Python path so the syncers can be loaded.
-# Additional paths can be added for custom syncers
-sys.path.append(os.path.abspath("./examples"))
-# Add the ./ folder to the Python path so they can be loaded by unit tests
+# Add the ./ folder to the Python path so test syncers can be loaded by unit tests
 sys.path.append(os.path.abspath(
     os.path.dirname(__file__),
 ))
@@ -94,11 +91,17 @@ SYNC = {
         },
     },
     "bad_setup": {
-        # Example of a custom syncer with an additional parameter to define
-        # a log level.
+        # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
         "settings": {
             "fail_on_setup": True,
+        },
+    },
+    "bad_sg_sync": {
+        # A syncer which fails in various stages
+        "syncer": "syncers.bad_syncer.BadSyncer",
+        "settings": {
+            "fail_on_sg_sync": True,
         },
     },
     "example": {

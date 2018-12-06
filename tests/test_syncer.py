@@ -61,13 +61,28 @@ class TestJiraSyncer(TestBase):
 
     def test_bad_syncer(self, mocked):
         """
-        Test we handle problems gracefully.
+        Test we handle problems gracefully and that syncers settings are
+        correctly handled.
         """
         # The syncer should be disabled because of its bad setup call.
         syncer, bridge = self._get_syncer(mocked, "bad_setup")
         self.assertIsNone(syncer)
-        # It shoudl be registered in loaded syncers
+        # It should be registered in loaded syncers
         self.assertTrue("bad_setup" in bridge._syncers)
+        # 
+        self.assertRaisesRegexp(
+            RuntimeError,
+            "Sorry, I'm bad!",
+            bridge.sync_in_jira,
+            "bad_sg_sync",
+            "Task",
+            123,
+            {
+                "user": bridge.current_shotgun_user,
+                "project": {"type": "Project", "id": 1},
+                "meta": SG_EVENT_META
+            }
+        )
 
     @mock.patch(
         "sg_jira.Bridge.current_shotgun_user",
@@ -78,7 +93,7 @@ class TestJiraSyncer(TestBase):
         Test syncer accepts the right Shotgun events.
         """
         mocked_cur_user.return_value = {"type": "ApiUser", "id": 1}
-        syncer, _ = self._get_syncer(mocked)
+        syncer, bridge = self._get_syncer(mocked)
         syncer.logger.setLevel(logging.DEBUG)
         # Empty events should be rejected
         self.assertFalse(
@@ -117,7 +132,7 @@ class TestJiraSyncer(TestBase):
                 "Task",
                 123,
                 event={
-                    "user": syncer._bridge.current_shotgun_user,
+                    "user": bridge.current_shotgun_user,
                     "project": {"type": "Project", "id": 1},
                     "meta": SG_EVENT_META
                 }
