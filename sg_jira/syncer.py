@@ -41,6 +41,20 @@ class Syncer(object):
         """
         return self._bridge
 
+    @property
+    def shotgun(self):
+        """
+        Return a connected Shotgun handle.
+        """
+        return self._bridge.shotgun
+
+    @property
+    def jira(self):
+        """
+        Return a connected Jira handle.
+        """
+        return self._bridge.jira
+
     def setup(self):
         """
         Check the Jira and Shotgun site, ensure that the sync can safely happen
@@ -48,28 +62,37 @@ class Syncer(object):
         """
         pass
 
-    def match_jira_ressource(self, entity_type, entity_id, name):
+    def get_jira_project(self, project_key):
         """
-        Return a matching Jira resource for the given Shotgun Entity, if any.
+        Retrieve the Jira Project with the given key, if any.
 
-        This base implementation matches resources by name and only handles Projects
-        and mapping a Shotgun Task to a Jira Issue
-
-        :param str entity_type: A Shotgun Entity type.
-        :param int entity_id: A Shotgun Entity id.
-        :param str name: A name to match, typically the Shotgun Entity name.
+        :returns: A :class:`jira.resource.Project` instance or None.
         """
-        if entity_type == "Project":
-            for jira_project in self._bridge.jira.projects():
-                if jira_project.name.lower() == name.lower():
-                    return jira_project
-
-        elif entity_type == "Task":
-            pass
-        else:
-            raise ValueError("Unsupported Entity type %s" % entity_type)
-
+        for jira_project in self._bridge.jira.projects():
+            if jira_project.key == project_key:
+                return jira_project
         return None
+
+    def get_jira_issue(self, issue_key):
+        """
+        Retrieve the Jira Issue with the given key, if any.
+
+        :param str issue_key: A Jira Issue key to look for.
+        :returns: A :class:`jira.resource.Issue` instance or None.
+        :raises: UserWarning if the Issue if not bound to any Project.
+        """
+        jira_issue = None
+        try:
+            jira_issue = self.jira.issue(issue_key)
+            if not jira_issue.fields.project:
+                raise UserWarning(
+                    "Jira Issue %s is not bound to any Project." % name
+                )
+        except JIRAError as e:
+            if e.status_code == 404:
+                pass
+            else:
+                raise
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -78,6 +101,7 @@ class Syncer(object):
         :returns: True if the event is accepted for processing, False otherwise.
         """
 
+        # We require a non empty event.
         if not event:
             return False
 
@@ -100,15 +124,13 @@ class Syncer(object):
         """
         Process the given Shotgun event for the given Shotgun Entity
 
+        Must be re-implemented in deriving classes.
+
         :param str entity_type: The Shotgun Entity type to sync.
         :param int entity_id: The id of the Shotgun Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         """
-        self._logger.info("Syncing in Jira %s(%d) for event %s" % (
-            entity_type,
-            entity_id,
-            event
-        ))
+        raise NotImplementedError
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """

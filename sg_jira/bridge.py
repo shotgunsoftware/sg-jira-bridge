@@ -300,15 +300,19 @@ class Bridge(object):
         :param str entity_type: The Shotgun Entity type to sync.
         :param int entity_id: The id of the Shotgun Entity to sync.
         :param event: A dictionary with the event meta data for the change.
+        :returns: True if the Entity was actually synced in Jira, False if
+                  syncing was skipped for any reason.
         """
+        synced = False
         try:
             syncer = self.get_syncer(settings_name)
             if syncer.accept_shotgun_event(entity_type, entity_id, event):
-                syncer.process_shotgun_event(entity_type, entity_id, event)
+                synced = syncer.process_shotgun_event(entity_type, entity_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
             raise
+        return synced
 
     def sync_in_shotgun(self, settings_name, resource_type, resource_id, event, **kwargs):
         """
@@ -318,15 +322,19 @@ class Bridge(object):
         :param str resource_type: The type of Jira resource sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
+        :returns: True if the resource was actually synced in Shotgun, False if
+                  syncing was skipped for any reason.
         """
+        synced = False
         try:
             syncer = self.get_syncer(settings_name)
             if syncer.accept_jira_event(resource_type, resource_id, event):
-                syncer.process_jira_event(resource_type, resource_id, event)
+                synced = syncer.process_jira_event(resource_type, resource_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
             raise
+        return synced
 
     def _jira_setup(self):
         """

@@ -15,7 +15,33 @@ from shotgun_api3.lib import mockgun
 from test_base import TestBase
 
 import sg_jira
+from sg_jira.constants import SHOTGUN_JIRA_TYPE_FIELD, SHOTGUN_JIRA_ID_FIELD
+from jira.resources import Project as JiraProject
 
+# A list of Shotgun Projects
+SG_PROJECTS = [
+    {"id": 1, "name": "No Sync", "type": "Project"},
+    {"id": 2, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: "UTest"}
+]
+
+# A list of Shotgun Tasks
+SG_TASKS = [
+    {
+        "type": "Task",
+        "id": 1,
+        "content": "Task One/1",
+        "task_assignees": [],
+        "project": SG_PROJECTS[0]
+    },
+    {
+        "type": "Task",
+        "id": 2,
+        "content": "Task One/2",
+        "task_assignees": [],
+        "project": SG_PROJECTS[1]
+    },
+]
+# Faked event meta data
 SG_EVENT_META = {
     "attribute_name": "sg_status_list",
     "entity_id": 11793,
@@ -38,26 +64,42 @@ SG_EVENT_META = {
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
 class TestJiraSyncer(TestBase):
-
-    def _get_syncer(self, mocked, name="task_issue"):
-        self.set_sg_mock_schema(os.path.join(
-            os.path.dirname(__file__),
-            "fixtures", "schemas", "sg-jira",
-        ))
-        mocked.return_value = mockgun.Shotgun(
+    """
+    Test syncing from Shotgun to Jira.
+    """
+    def _get_mocked_sg_handle(self):
+        """
+        Return a mocked SG handle.
+        """
+        return mockgun.Shotgun(
             "https://mocked.my.com",
             "Ford Escort",
             "xxxxxxxxxx",
         )
+
+    def _get_syncer(self, mocked, name="task_issue"):
+        """
+        Helper to get a syncer and a bridge with a mocked Shotgun.
+
+        :param mocked: Mocked shotgun_api3.Shotgun.
+        :parma str name: A syncer name.
+        """
+        mocked.return_value = self._get_mocked_sg_handle()
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
         )
         syncer = bridge.get_syncer(name)
         return syncer, bridge
 
-#    def test_project_match(self, mocked):
-#        syncer, bridge = self._get_syncer(mocked)
-#        jira_projects = bridge._jira.projects()
+    def setUp(self):
+        """
+        Test setup.
+        """
+        super(TestJiraSyncer, self).setUp()
+        self.set_sg_mock_schema(os.path.join(
+            os.path.dirname(__file__),
+            "fixtures", "schemas", "sg-jira",
+        ))
 
     def test_bad_syncer(self, mocked):
         """
@@ -69,7 +111,7 @@ class TestJiraSyncer(TestBase):
         self.assertIsNone(syncer)
         # It should be registered in loaded syncers
         self.assertTrue("bad_setup" in bridge._syncers)
-        # 
+        #
         self.assertRaisesRegexp(
             RuntimeError,
             "Sorry, I'm bad!",
@@ -150,3 +192,67 @@ class TestJiraSyncer(TestBase):
                 }
             )
         )
+
+    def test_project_match(self, mocked):
+        """
+        """
+        syncer, bridge = self._get_syncer(mocked)
+        syncer.logger.setLevel(logging.DEBUG)
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS)
+
+        ret = bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            1,
+            event = {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 1},
+                "meta": SG_EVENT_META
+            }
+        )
+        self.assertFalse(ret)
+        jira_projects = bridge._jira.projects()
+        #raise ValueError(jira_projects[0].raw)
+        # An error should be raised If the Project is linked to a bad Jira
+        # Project
+        self.assertRaisesRegexp(
+            RuntimeError,
+            "Unable to retrieve a Jira Project",
+            bridge.sync_in_jira,
+            "task_issue",
+            "Task",
+            2,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": SG_EVENT_META
+            }
+        )
+        jira_project = JiraProject(
+            jira_projects[0]._options,
+            jira_projects[0]._session,
+            raw={
+                "name": "Tasks unit test",
+                "self": "https://mocked.faked.com/rest/api/2/project/10400",
+                "projectTypeKey": "software",
+                "simplified": False,
+                "key": "UTest",
+                "isPrivate": False,
+                "id": "12345",
+                "expand": "description,lead,issueTypes,url,projectKeys"
+            }
+        )
+        with mock.patch.object(syncer, "get_jira_project", return_value=[jira_project]) as m_projects:
+            ret = bridge.sync_in_jira(
+                "task_issue",
+                "Task",
+                2,
+                event = {
+                    "user": {"type": "HumanUser", "id": 1},
+                    "project": {"type": "Project", "id": 2},
+                    "meta": SG_EVENT_META
+                }
+            )
+            self.assertTrue(ret)
+

@@ -42,11 +42,17 @@ class BadSyncer(Syncer):
         return super(BadSyncer, self).setup()
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
+        """
+        Raise RuntimeError if set to do it.
+        """
         if self._fail_on_sg_accept:
             raise RuntimeError("Sorry, I'm bad!")
         return super(BadSyncer, self).accept_shotgun_event(entity_type, entity_id, event)
 
     def process_shotgun_event(self, entity_type, entity_id, event):
+        """
+        Raise RuntimeError if set to do it.
+        """
         if self._fail_on_sg_sync:
             raise RuntimeError("Sorry, I'm bad!")
         return super(BadSyncer, self).process_shotgun_event(entity_type, entity_id, event)
