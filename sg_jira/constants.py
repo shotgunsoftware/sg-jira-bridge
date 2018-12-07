@@ -19,7 +19,7 @@ ALL_SETTINGS_KEYS = [
     SYNC_SETTINGS_KEY
 ]
 
-# Names of the Jira custom fields used to store a referencen to a linked Shotgun
+# Names of the Jira custom fields used to store a reference to a linked Shotgun
 # Entity.
 JIRA_SHOTGUN_TYPE_FIELD = "Shotgun Type"
 JIRA_SHOTGUN_ID_FIELD = "Shotgun Id"

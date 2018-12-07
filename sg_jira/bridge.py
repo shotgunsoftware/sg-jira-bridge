@@ -377,7 +377,7 @@ class Bridge(object):
     @property
     def jira_shotgun_type_field(self):
         """
-        Return the id of Jira field used to store the type of a linked Shotgun
+        Return the id of the Jira field used to store the type of a linked Shotgun
         Entity.
         """
         return self._jira_shotgun_type_field
@@ -385,7 +385,7 @@ class Bridge(object):
     @property
     def jira_shotgun_id_field(self):
         """
-        Return the id of Jira field used to store the id of a linked Shotgun
+        Return the id of the Jira field used to store the id of a linked Shotgun
         Entity.
         """
         return self._jira_shotgun_id_field

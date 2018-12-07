@@ -16,7 +16,9 @@ The "Shotgun Type" and "Shotgun Id" custom string fields need to be added to Iss
 and made available in Boards. 
 
 ## Shotgun setup
-The "Jira Type" and "Jira Id" custom string fields need to be added to Entities in Shotgun.
+- A "Jira Sync Url" File/Link field must be added to Projects, and the url set to 'http://<server host>/<settings name>/sg2jira'.
+- A "Jira Id" string field must be added to Shotgun Projects. Only Entities under a Project with a value set will be synced. 
+- "Jira Type" and "Jira Id" custom string fields need to be added to Shotgun Entities meant to be synced.
 
 ## Running the setup locally for testing
  
@@ -27,6 +29,35 @@ The "Jira Type" and "Jira Id" custom string fields need to be added to Entities 
    - On Windows `venv/Scripts/activate` in a Power shell.
 - Install needed packages: `pip install -r requirements.txt`.
 - Run the web app: `python webapp.py --settings <path to your settings> --port 9090`
+
+## Custom syncing logic
+
+Custom syncers can be referenced in the settings file with their module path and their specific
+settings.
+For example:
+```
+# Additional paths can be added for custom syncers
+sys.path.append(os.path.abspath("./examples"))
+
+SYNC = {
+    "default": {
+        # The syncer class to use
+        "syncer": "sg_jira.TaskIssueSyncher",
+        # And its specific settings which are passed to its __init__ method
+        "settings": {
+            "foo": "blah"
+        },
+    },
+    "test": {
+        # Example of a custom syncer with an additional parameter to define
+        # a log level.
+        "syncer": "example_sync.ExampleSync",
+        "settings": {
+            "log_level": logging.DEBUG
+        },
+    }
+}
+```
 
 ## Unit tests and CI
 Unit tests are in the _tests_ folder and can be run with `python run_tests.py`.
