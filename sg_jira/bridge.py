@@ -218,6 +218,13 @@ class Bridge(object):
         return self._shotgun_user
 
     @property
+    def current_jira_username(self):
+        """
+        Return the username of the current Jira user.
+        """
+        return self.jira.current_user()
+
+    @property
     def jira(self):
         """
         Return a connected Jira handle.
@@ -346,11 +353,15 @@ class Bridge(object):
         # Build a mapping from Jira field names to their id for fast lookup.
         for jira_field in self._jira.fields():
             self._jira_fields_map[jira_field["name"].lower()] = jira_field["id"]
-        if not self._jira_fields_map.get(JIRA_SHOTGUN_TYPE_FIELD.lower()):
+        self._jira_shotgun_type_field = self._jira_fields_map.get(
+            JIRA_SHOTGUN_TYPE_FIELD.lower()
+        )
+        if not self._jira_shotgun_type_field:
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_TYPE_FIELD
             )
-        if not self._jira_fields_map.get(JIRA_SHOTGUN_ID_FIELD.lower()):
+        self._jira_shotgun_id_field = self._jira_fields_map.get(JIRA_SHOTGUN_ID_FIELD.lower())
+        if not self._jira_shotgun_id_field:
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_ID_FIELD
             )
@@ -362,6 +373,22 @@ class Bridge(object):
         :returns: The id as a string or None if the field is unknown.
         """
         return self._jira_fields_map.get(name.lower())
+
+    @property
+    def jira_shotgun_type_field(self):
+        """
+        Return the id of Jira field used to store the type of a linked Shotgun
+        Entity.
+        """
+        return self._jira_shotgun_type_field
+
+    @property
+    def jira_shotgun_id_field(self):
+        """
+        Return the id of Jira field used to store the id of a linked Shotgun
+        Entity.
+        """
+        return self._jira_shotgun_id_field
 
     def _shotgun_setup(self):
         """

@@ -15,13 +15,15 @@ from shotgun_api3.lib import mockgun
 from test_base import TestBase
 
 import sg_jira
-from sg_jira.constants import SHOTGUN_JIRA_TYPE_FIELD, SHOTGUN_JIRA_ID_FIELD
+from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD
 from jira.resources import Project as JiraProject
 
+# A faked Jira Project key
+JIRA_PROJECT_KEY = "UTest"
 # A list of Shotgun Projects
 SG_PROJECTS = [
     {"id": 1, "name": "No Sync", "type": "Project"},
-    {"id": 2, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: "UTest"}
+    {"id": 2, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY}
 ]
 
 # A list of Shotgun Tasks
@@ -205,15 +207,15 @@ class TestJiraSyncer(TestBase):
             "task_issue",
             "Task",
             1,
-            event = {
+            event={
                 "user": {"type": "HumanUser", "id": 1},
                 "project": {"type": "Project", "id": 1},
                 "meta": SG_EVENT_META
             }
         )
         self.assertFalse(ret)
-        jira_projects = bridge._jira.projects()
-        #raise ValueError(jira_projects[0].raw)
+        # Just make sure our faked Project does not really exist.
+        self.assertFalse(syncer.get_jira_project(JIRA_PROJECT_KEY))
         # An error should be raised If the Project is linked to a bad Jira
         # Project
         self.assertRaisesRegexp(
@@ -229,30 +231,41 @@ class TestJiraSyncer(TestBase):
                 "meta": SG_EVENT_META
             }
         )
+        # Faked Jira project
         jira_project = JiraProject(
-            jira_projects[0]._options,
-            jira_projects[0]._session,
+            None,
+            None,
             raw={
                 "name": "Tasks unit test",
                 "self": "https://mocked.faked.com/rest/api/2/project/10400",
                 "projectTypeKey": "software",
                 "simplified": False,
-                "key": "UTest",
+                "key": JIRA_PROJECT_KEY,
                 "isPrivate": False,
                 "id": "12345",
                 "expand": "description,lead,issueTypes,url,projectKeys"
             }
         )
-        with mock.patch.object(syncer, "get_jira_project", return_value=[jira_project]) as m_projects:
-            ret = bridge.sync_in_jira(
-                "task_issue",
-                "Task",
-                2,
-                event = {
-                    "user": {"type": "HumanUser", "id": 1},
-                    "project": {"type": "Project", "id": 2},
-                    "meta": SG_EVENT_META
-                }
-            )
-            self.assertTrue(ret)
+        # Faked Jira create meta data with a required field with no default value.
+        createmeta = {"projects": [
+            {"issuetypes": [
+                {"fields": {"faked": {"name": "Faked", "required": True, "hasDefaultValue": False}}}
+            ]}
+        ]}
+        with mock.patch.object(syncer, "get_jira_project", return_value=jira_project) as m_project: # noqa
+            with mock.patch.object(syncer.jira, "createmeta", return_value=createmeta) as m_cmeta:  # noqa
+                # This should fail because of missing data for the required "Faked" field
+                self.assertRaisesRegexp(
+                    ValueError,
+                    r"The following data is missing in order to create a Jira Task Issue: \['Faked'\]",
+                    bridge.sync_in_jira,
+                    "task_issue",
+                    "Task",
+                    2,
+                    {
+                        "user": {"type": "HumanUser", "id": 1},
+                        "project": {"type": "Project", "id": 2},
+                        "meta": SG_EVENT_META
+                    }
+                )
 

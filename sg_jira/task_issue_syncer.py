@@ -89,17 +89,28 @@ class TaskIssueSyncer(Syncer):
                     jira_project_key,
                     sg_entity["project"],
                 )
-        )
+            )
         jira_issue = None
         if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
             # Retrieve the Jira Issue
             jira_issue = self.get_jira_issue(sg_entity[SHOTGUN_JIRA_ID_FIELD])
         # Create it if needed
+        if not jira_issue:
+            self._logger.info("Creating Jira Issue in %s for %s" % (
+                jira_project,
+                sg_entity,
+            ))
+            jira_issue = self.create_jira_issue_for_entity(
+                sg_entity,
+                jira_project,
+                "Task",
+                summary="foo"
+            )
         # Update it
-        self._logger.info("Syncing in Jira %s(%d) for event %s" % (
+        self._logger.info("Syncing in Jira %s(%d) to %s for event %s" % (
             entity_type,
             entity_id,
+            jira_issue,
             event
         ))
-
         return True
