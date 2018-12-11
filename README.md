@@ -16,7 +16,7 @@ The "Shotgun Type" and "Shotgun Id" custom string fields need to be added to Iss
 and made available in Boards. 
 
 ## Shotgun setup
-- A "Jira Sync Url" File/Link field must be added to Projects, and the url set to 'http://<server host>/<settings name>/sg2jira'.
+- A "Jira Sync Url" File/Link field (`sg_jira_sync_url`) must be added to Projects, and the URL set to `http://<server host>/<settings name>/sg2jira`.
 - A "Jira Id" string field must be added to Shotgun Projects. Only Entities under a Project with a value set will be synced. 
 - "Jira Type" and "Jira Id" custom string fields need to be added to Shotgun Entities meant to be synced.
 
