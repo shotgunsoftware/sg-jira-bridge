@@ -62,7 +62,7 @@ SYNC = {
 ## Unit tests and CI
 Unit tests are in the _tests_ folder and can be run with `python run_tests.py`.
 
-[Azure Pipelines](https://github.com/marketplace/azure-pipelines) are used for the continuous integration and run the following validation:
+[Azure Pipelines](https://github.com/marketplace/azure-pipelines) are used for the continuous integration and run the following validations:
 - Enforce PEP-8 conventions with Flake8.
 - Run unit tests on Linux, Mac and Windows with Python 2.7.
 
