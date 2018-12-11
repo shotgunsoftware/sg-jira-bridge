@@ -249,7 +249,7 @@ class Bridge(object):
             # Create the syncer from the settings
             sync_settings = self._sync_settings.get(name)
             if sync_settings is None:
-                raise ValueError("Unknown sync settings %s" % name)
+                raise ValueError("Missing sync settings for %s" % name)
             if not isinstance(sync_settings, dict):
                 raise ValueError(
                     "Invalid sync settings %s, it must be dictionary." % name
