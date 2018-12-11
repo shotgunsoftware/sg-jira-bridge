@@ -60,7 +60,7 @@ def process_event(sg, logger, event, dispatch_routes):
     """
     logger.debug("Processing %s" % event)
 
-    # Sometimes rogue events from the site creation can be retrieved by the
+    # Sometimes rogue events caused by Shotgun server updates and maintenance are retrieved by the
     # event daemon: this is why we use a `get` in various places instead of
     # accessing data with the expected key directly.
     if event.get("event_type") == "Shotgun_Project_Change":
