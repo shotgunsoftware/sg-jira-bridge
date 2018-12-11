@@ -22,7 +22,7 @@ and made available in Boards.
 
 ## Running the setup locally for testing
  
- A _requirements.txt_ file is provided to install all needed packages. 
+ A _requirements.txt_ file is provided to install all required packages. 
  The web app can be run from the command line with Python 2.7:
  - Create a virtualenv: `virtualenv venv`.
  - Activate the virtualenv: `source venv/bin/activate`.
