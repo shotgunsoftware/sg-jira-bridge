@@ -83,7 +83,7 @@ sys.path.append(os.path.abspath("./examples"))
 SYNC = {
     "default": {
         # The syncer class to use
-        "syncer": "sg_jira.TaskIssueSyncher",
+        "syncer": "sg_jira.TaskIssueSyncer",
         # And its specific settings which are passed to its __init__ method
         "settings": {
             "foo": "blah"
