@@ -18,7 +18,7 @@ and made available in Boards.
 ## Shotgun setup
 - A "Jira Sync Url" File/Link field (`sg_jira_sync_url`) must be added to Projects, and the URL set to `http://<server host>/<settings name>/sg2jira`.
 - A "Jira Id" string field (`sg_jira_id`) must be added to Shotgun Projects. Entities will only be synced if they have a "Jira Id" value and are linked to a Project.
-- "Jira Type" and "Jira Id" custom string fields need to be added to Shotgun Entities meant to be synced.
+- "Jira Type" (`sg_jira_type`) and "Jira Id" (`sg_jira_id`) text fields need to be added to any Shotgun Entity types you want to be synced.
 
 ## Running the setup locally for testing
  
