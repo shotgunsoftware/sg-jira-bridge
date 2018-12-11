@@ -35,7 +35,7 @@ and made available in Boards.
 Custom syncers can be referenced in the settings file with their module path and their specific
 settings.
 For example:
-```
+```python
 # Additional paths can be added for custom syncers
 sys.path.append(os.path.abspath("./examples"))
 
