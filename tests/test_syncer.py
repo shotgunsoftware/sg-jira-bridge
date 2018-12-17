@@ -118,6 +118,19 @@ class TestJiraSyncer(TestBase):
             RuntimeError,
             "Sorry, I'm bad!",
             bridge.sync_in_jira,
+            "bad_sg_accept",
+            "Task",
+            123,
+            {
+                "user": bridge.current_shotgun_user,
+                "project": {"type": "Project", "id": 1},
+                "meta": SG_EVENT_META
+            }
+        )
+        self.assertRaisesRegexp(
+            RuntimeError,
+            "Sorry, I'm bad!",
+            bridge.sync_in_jira,
             "bad_sg_sync",
             "Task",
             123,
@@ -197,6 +210,8 @@ class TestJiraSyncer(TestBase):
 
     def test_project_match(self, mocked):
         """
+        Test matching a Project between Shotgun and Jira and handling Jira
+        create meta data.
         """
         syncer, bridge = self._get_syncer(mocked)
         syncer.logger.setLevel(logging.DEBUG)

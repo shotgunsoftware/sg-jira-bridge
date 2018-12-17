@@ -97,6 +97,13 @@ SYNC = {
             "fail_on_setup": True,
         },
     },
+    "bad_sg_accept": {
+        # A syncer which fails in various stages
+        "syncer": "syncers.bad_syncer.BadSyncer",
+        "settings": {
+            "fail_on_sg_accept": True,
+        },
+    },
     "bad_sg_sync": {
         # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
