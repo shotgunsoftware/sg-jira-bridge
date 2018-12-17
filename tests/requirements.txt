@@ -5,6 +5,9 @@
 # this software in either electronic or hard copy form.
 #
 
-from .bridge import Bridge
-from .syncer import Syncer
-from .task_issue_syncer import TaskIssueSyncer
+
+# List of Python packages needed to run the tests
+mock==2.0.0
+unittest2==1.1.0
+unittest-xml-reporting==2.2.0
+
