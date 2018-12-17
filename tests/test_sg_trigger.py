@@ -145,7 +145,7 @@ class TestSGTrigger(TestBase):
         self.assertTrue(routing[PROJECT["id"]].startswith(url))
         mocked.assert_called_once()
         self.assertTrue(mocked.call_args[0][0].startswith(url))
-        # Check the trigger clear its routing cache if the sync url is changed
+        # Check the trigger clears its routing cache if the sync url is changed
         project_event = {
             "event_type": "Shotgun_Project_Change",
             "entity": PROJECT,
