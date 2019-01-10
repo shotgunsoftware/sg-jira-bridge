@@ -137,11 +137,33 @@ def process_event(sg, logger, event, dispatch_routes):
     sync_url = "%s/%s/%d" % (sync_server_url, entity_type, entity_id)
     logger.debug("Posting event %s to %s" % (meta, sync_url))
     # Post application/json request
+    # We should mimic the payload send by Shotgun webhooks
+#    {
+#      "id": 5,
+#      "meta": {
+#        "type": "attribute_change",
+#        "entity_id": 1402,
+#        "new_value": "helloasdasd",
+#        "old_value": "hello",
+#        "entity_type": "Asset",
+#        "attribute_name": "code",
+#        "field_data_type": "text"
+#      },
+#      "user_id": 88,
+#      "entity_id": 1402,
+#      "operation": "update",
+#      "user_type": "HumanUser",
+#      "created_at": "2018-12-20 20:35:15.61203",
+#      "project_id": 86,
+#      "entity_type": "Asset"
+#    }
     payload = {
         "meta": meta,
         "session_uuid": event.get("session_uuid"),
         "user": event.get("user"),
-        "project": event["project"]
+        "project": event["project"],
+        "entity_type": entity_type,
+        "entity_id": entity_id,
     }
     response = requests.post(
         sync_url,

@@ -25,5 +25,4 @@ JIRA_SHOTGUN_TYPE_FIELD = "Shotgun Type"
 JIRA_SHOTGUN_ID_FIELD = "Shotgun Id"
 # Names of the Shotgun custom fields used to store a reference to a linked Jira
 # Entity.
-SHOTGUN_JIRA_TYPE_FIELD = "sg_jira_type"
 SHOTGUN_JIRA_ID_FIELD = "sg_jira_key"

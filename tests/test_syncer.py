@@ -7,16 +7,15 @@
 
 import os
 import logging
-import unittest2 as unittest
 import mock
 
 from shotgun_api3.lib import mockgun
 
 from test_base import TestBase
+from mock_jira import MockedJira
 
 import sg_jira
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD
-from jira.resources import Project as JiraProject
 
 # A faked Jira Project key
 JIRA_PROJECT_KEY = "UTest"
@@ -43,7 +42,7 @@ SG_TASKS = [
         "project": SG_PROJECTS[1]
     },
 ]
-# Faked event meta data
+# Faked SG event meta data
 SG_EVENT_META = {
     "attribute_name": "sg_status_list",
     "entity_id": 11793,
@@ -54,17 +53,154 @@ SG_EVENT_META = {
     "type": "attribute_change"
 }
 
+# Faked Jira Project, Issue, change log and event
+JIRA_PROJECT = {
+    "name": "Tasks unit test",
+    "self": "https://mocked.faked.com/rest/api/2/project/10400",
+    "projectTypeKey": "software",
+    "simplified": False,
+    "key": JIRA_PROJECT_KEY,
+    "isPrivate": False,
+    "id": "12345",
+    "expand": "description,lead,issueTypes,url,projectKeys"
+}
 
-# We need a valid connection to Jira, Shotgun is mocked
-@unittest.skipUnless(
-    os.environ.get("SG_JIRA_JIRA_SITE")
-    and os.environ.get("SG_JIRA_JIRA_USER")
-    and os.environ.get("SG_JIRA_JIRA_USER_SECRET"),
-    "Requires SG_JIRA_JIRA_SITE, SG_JIRA_JIRA_USER, SG_JIRA_JIRA_USER_SECRET env vars."
-)
+JIRA_SUMMARY_CHANGE = {
+    "field": "summary",
+    "fieldId": "summary",
+    "fieldtype": "jira",
+    "from": None,
+    "fromString": "foo ba",
+    "to": None,
+    "toString": "foo bar"
+}
+
+JIRA_ISSUE_FIELDS = {
+    "assignee": {
+        "accountId": "abdc123456",
+        "active": True,
+        "displayName": "Ford Prefect",
+        "emailAddress": "fprefect@weefree.com",
+        "key": "ford.prefect1",
+        "name": "ford.prefect1",
+        "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=abdc123456",
+        "timeZone": "Europe/Paris"
+    },
+    "attachment": [],
+    "components": [],
+    "created": "2018-12-18T06:15:05.626-0500",
+    "creator": {
+        "accountId": "557058:aecf5cfd-e13d-45a4-8db5-59da3ad254ce",
+        "active": True,
+        "displayName": "Sync Sync",
+        "emailAddress": "syncsync@blah.com",
+        "key": "syncsync",
+        "name": "syncsync",
+        "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=123456%3Aaecf5cfd-e13d-abcdef",
+        "timeZone": "America/New_York"
+    },
+    "customfield_11501": "11794",
+    "customfield_11502": "Task",
+    "description": "Task (11794)",
+    "duedate": None,
+    "environment": None,
+    "fixVersions": [],
+    "issuelinks": [],
+    "issuetype": {
+        "avatarId": 10318,
+        "description": "A task that needs to be done.",
+        "iconUrl": "https://myjira.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10318&avatarType=issuetype",
+        "id": "10000",
+        "name": "Task",
+        "self": "https://myjira.atlassian.net/rest/api/2/issuetype/10000",
+        "subtask": False
+    },
+    "labels": [],
+    "lastViewed": "2018-12-18T09:44:27.653-0500",
+    "priority": {
+        "iconUrl": "https://myjira.atlassian.net/images/icons/priorities/medium.svg",
+        "id": "3",
+        "name": "Medium",
+        "self": "https://myjira.atlassian.net/rest/api/2/priority/3"
+    },
+    "project": JIRA_PROJECT,
+    "reporter": {
+        "accountId": "557058:aecf5cfd-e13d-45a4-8db5-59da3ad254ce",
+        "active": True,
+        "displayName": "Shotgun Synch",
+        "emailAddress": "stephane.deverly@shotgunsoftware.com",
+        "key": "shotgun-synch",
+        "name": "shotgun-synch",
+        "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=557058%3Aaecf5cfd-e13d-45a4-8db5-59da3ad254ce",
+        "timeZone": "America/New_York"
+    },
+    "resolution": None,
+    "resolutiondate": None,
+    "security": None,
+    "status": {
+        "description": "",
+        "iconUrl": "https://myjira.atlassian.net/",
+        "id": "10204",
+        "name": "Backlog",
+        "self": "https://myjira.atlassian.net/rest/api/2/status/10204",
+        "statusCategory": {
+            "colorName": "blue-gray",
+            "id": 2,
+            "key": "new",
+            "name": "New",
+            "self": "https://myjira.atlassian.net/rest/api/2/statuscategory/2"
+        }
+    },
+    "subtasks": [],
+    "summary": "foo bar",
+    "updated": "2018-12-18T09:44:27.572-0500",
+    "versions": [],
+    "votes": {
+        "hasVoted": False,
+        "self": "https://myjira.atlassian.net/rest/api/2/issue/ST3-4/votes",
+        "votes": 0
+    },
+    "watches": {
+        "isWatching": False,
+        "self": "https://myjira.atlassian.net/rest/api/2/issue/ST3-4/watchers",
+        "watchCount": 1
+    },
+    "workratio": -1
+}
+
+JIRA_EVENT = {
+    "changelog": {
+        "id": "123456",
+        "items": [JIRA_SUMMARY_CHANGE]
+    },
+    "issue": {
+        "fields": JIRA_ISSUE_FIELDS,
+        "id": "16642",
+        "key": "ST3-4",
+        "self": "https://myjira.atlassian.net/rest/api/2/issue/16642"
+    },
+    "issue_event_type_name": "issue_updated",
+    "timestamp": 1545144267596,
+    "user": {
+        "accountId": "5b2be739a85c485354681b3b",
+        "active": True,
+        "displayName": "Marvin Paranoid",
+        "emailAddress": "mparanoid@weefree.com",
+        "key": "marvin.paranoid",
+        "name": "marvin.paranoid",
+        "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=5b2be739abcdef",
+        "timeZone": "Europe/Paris"
+    },
+    "webhookEvent": "jira:issue_updated"
+}
+
+
 # Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
+# Mock Jira with MockedJira, this works only if the code uses jira.client.JIRA
+# and does not use `from jira import JIRA` and then `jira_handle = JIRA(...)`
+@mock.patch("jira.client.JIRA")
 class TestJiraSyncer(TestBase):
     """
     Test syncing from Shotgun to Jira.
@@ -75,22 +211,26 @@ class TestJiraSyncer(TestBase):
         """
         return mockgun.Shotgun(
             "https://mocked.my.com",
-            "Ford Escort",
+            "Ford Prefect",
             "xxxxxxxxxx",
         )
 
-    def _get_syncer(self, mocked, name="task_issue"):
+    def _get_syncer(self, mocked_jira, mocked_sg, name="task_issue"):
         """
         Helper to get a syncer and a bridge with a mocked Shotgun.
 
-        :param mocked: Mocked shotgun_api3.Shotgun.
+        :param mocked_jira: Mocked jira.client.JIRA.
+        :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.
         """
-        mocked.return_value = self._get_mocked_sg_handle()
+        mocked_jira.return_value = MockedJira()
+        mocked_sg.return_value = self._get_mocked_sg_handle()
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
         )
         syncer = bridge.get_syncer(name)
+        if syncer:
+            syncer.logger.setLevel(logging.DEBUG)
         return syncer, bridge
 
     def setUp(self):
@@ -103,13 +243,13 @@ class TestJiraSyncer(TestBase):
             "fixtures", "schemas", "sg-jira",
         ))
 
-    def test_bad_syncer(self, mocked):
+    def test_bad_syncer(self, mocked_jira, mocked_sg):
         """
         Test we handle problems gracefully and that syncers settings are
         correctly handled.
         """
         # The syncer should be disabled because of its bad setup call.
-        syncer, bridge = self._get_syncer(mocked, "bad_setup")
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg, "bad_setup")
         self.assertIsNone(syncer)
         # It should be registered in loaded syncers
         self.assertTrue("bad_setup" in bridge._syncers)
@@ -145,13 +285,12 @@ class TestJiraSyncer(TestBase):
         "sg_jira.Bridge.current_shotgun_user",
         new_callable=mock.PropertyMock
     )
-    def test_event_accept(self, mocked_cur_user, mocked):
+    def test_shotgun_event_accept(self, mocked_cur_user, mocked_jira, mocked_sg):
         """
         Test syncer accepts the right Shotgun events.
         """
         mocked_cur_user.return_value = {"type": "ApiUser", "id": 1}
-        syncer, bridge = self._get_syncer(mocked)
-        syncer.logger.setLevel(logging.DEBUG)
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
         # Empty events should be rejected
         self.assertFalse(
             syncer.accept_shotgun_event(
@@ -208,13 +347,81 @@ class TestJiraSyncer(TestBase):
             )
         )
 
-    def test_project_match(self, mocked):
+    def test_jira_event_accept(self, mocked_jira, mocked_sg):
         """
-        Test matching a Project between Shotgun and Jira and handling Jira
-        create meta data.
+        Test syncer accepts the right Jira events.
         """
-        syncer, bridge = self._get_syncer(mocked)
-        syncer.logger.setLevel(logging.DEBUG)
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        # Check an empty event does not cause problems
+        self.assertFalse(
+            syncer.accept_jira_event(
+                "Issue",
+                "FAKED-001",
+                event={}
+            )
+        )
+        # Check a valid event is accepted
+        self.assertTrue(
+            syncer.accept_jira_event(
+                "Issue",
+                "FAKED-001",
+                event=JIRA_EVENT
+            )
+        )
+
+        # Events without a webhookEvent key should be rejected
+        event = dict(JIRA_EVENT)
+        del event["webhookEvent"]
+        self.assertFalse(
+            syncer.accept_jira_event(
+                "Issue",
+                "FAKED-001",
+                event=event
+            )
+        )
+        # We support only a couple of webhook events.
+        event = dict(JIRA_EVENT)
+        event["webhookEvent"] = "this is not valid"
+        self.assertFalse(
+            syncer.accept_jira_event(
+                "Issue",
+                "FAKED-001",
+                event=event
+            )
+        )
+        # A changelog is needed
+        event = dict(JIRA_EVENT)
+        del event["changelog"]
+        self.assertFalse(
+            syncer.accept_jira_event(
+                "Issue",
+                "FAKED-001",
+                event=event
+            )
+        )
+        # Events triggered by the syncer should be ignored
+        event = dict(JIRA_EVENT)
+        event["user"] = {
+            "accountId": "5b2be739a85c485354681b3b",
+            "active": True,
+            "emailAddress": "foo@blah.com",
+            "key": bridge.current_jira_username,
+            "name": bridge.current_jira_username,
+        }
+        self.assertFalse(
+            syncer.accept_jira_event(
+                "Issue",
+                "FAKED-001",
+                event=event
+            )
+        )
+
+    def test_project_match(self, mocked_jira, mocked_sg):
+        """
+        Test matching a Project between Shotgun and Jira, handling Jira
+        create meta data and creating an Issue.
+        """
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
         self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS)
 
@@ -247,40 +454,84 @@ class TestJiraSyncer(TestBase):
             }
         )
         # Faked Jira project
-        jira_project = JiraProject(
-            None,
-            None,
-            raw={
-                "name": "Tasks unit test",
-                "self": "https://mocked.faked.com/rest/api/2/project/10400",
-                "projectTypeKey": "software",
-                "simplified": False,
-                "key": JIRA_PROJECT_KEY,
-                "isPrivate": False,
-                "id": "12345",
-                "expand": "description,lead,issueTypes,url,projectKeys"
+        bridge.jira.set_projects([JIRA_PROJECT])
+        # Faked Jira create meta data with a required field with no default value.
+        createmeta = {
+            "projects": [
+                {"issuetypes": [
+                    {"fields": {"faked": {"name": "Faked", "required": True, "hasDefaultValue": False}}}
+                ]}
+            ]
+        }
+        # Test missing values in data
+        with mock.patch.object(syncer.jira, "createmeta", return_value=createmeta) as m_cmeta:  # noqa
+            # This should fail because of missing data for the required "Faked" field
+            self.assertRaisesRegexp(
+                ValueError,
+                r"The following data is missing in order to create a Jira Task Issue: \['Faked'\]",
+                bridge.sync_in_jira,
+                "task_issue",
+                "Task",
+                2,
+                {
+                    "user": {"type": "HumanUser", "id": 1},
+                    "project": {"type": "Project", "id": 2},
+                    "meta": SG_EVENT_META
+                }
+            )
+        # Test valid values in data
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            2,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": SG_EVENT_META
             }
         )
-        # Faked Jira create meta data with a required field with no default value.
-        createmeta = {"projects": [
-            {"issuetypes": [
-                {"fields": {"faked": {"name": "Faked", "required": True, "hasDefaultValue": False}}}
-            ]}
-        ]}
-        with mock.patch.object(syncer, "get_jira_project", return_value=jira_project) as m_project: # noqa
-            with mock.patch.object(syncer.jira, "createmeta", return_value=createmeta) as m_cmeta:  # noqa
-                # This should fail because of missing data for the required "Faked" field
-                self.assertRaisesRegexp(
-                    ValueError,
-                    r"The following data is missing in order to create a Jira Task Issue: \['Faked'\]",
-                    bridge.sync_in_jira,
-                    "task_issue",
-                    "Task",
-                    2,
-                    {
-                        "user": {"type": "HumanUser", "id": 1},
-                        "project": {"type": "Project", "id": 2},
-                        "meta": SG_EVENT_META
-                    }
-                )
+
+    def test_jira_2_shotgun(self, mocked_jira, mocked_sg):
+        """
+        Test syncing from Jira to Shotgun
+        """
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        # Syncing without the target entities shouldn't cause problems
+        sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
+        sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
+        self.assertEqual(
+            [],
+            bridge.shotgun.find(sg_entity_type, [["id", "is", sg_entity_id]])
+        )
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                JIRA_EVENT,
+            )
+        )
+        # No new entity should be created
+        self.assertEqual(
+            [],
+            bridge.shotgun.find(sg_entity_type, [["id", "is", sg_entity_id]])
+        )
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": sg_entity_type,
+                "id": sg_entity_id,
+                "content": "%s (%d)" % (sg_entity_type, sg_entity_id),
+                "task_assignees": [],
+                "project": SG_PROJECTS[0]
+            }
+        )
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                JIRA_EVENT,
+            )
+        )
 

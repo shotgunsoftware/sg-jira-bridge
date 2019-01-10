@@ -22,16 +22,16 @@ except ImportError:
 
 # Shotgun site and credentials
 SHOTGUN = {
-    "site": os.environ.get("SG_JIRA_SG_SITE"),
-    "script_name": os.environ.get("SG_JIRA_SG_SCRIPT_NAME"),
-    "script_key": os.environ.get("SG_JIRA_SG_SCRIPT_KEY"),
+    "site": os.environ.get("SG_JIRA_SG_SITE") or "https://sg.faked.com",
+    "script_name": os.environ.get("SG_JIRA_SG_SCRIPT_NAME") or "faked",
+    "script_key": os.environ.get("SG_JIRA_SG_SCRIPT_KEY") or "xxxxxxx",
 }
 # Jira site and credentials, the user name needs to be an email address or
 # the user login name, e.g. ford_escort for "Ford Escort".
 JIRA = {
-    "site": os.environ.get("SG_JIRA_JIRA_SITE"),
-    "user": os.environ.get("SG_JIRA_JIRA_USER"),
-    "secret": os.environ.get("SG_JIRA_JIRA_USER_SECRET"),
+    "site": os.environ.get("SG_JIRA_JIRA_SITE") or "https://jira.faked.com",
+    "user": os.environ.get("SG_JIRA_JIRA_USER") or "faked",
+    "secret": os.environ.get("SG_JIRA_JIRA_USER_SECRET") or "xxxxxxx",
 }
 
 # Define logging
@@ -40,11 +40,10 @@ LOGGING = {
     "disable_existing_loggers": False,
     # Settings for the parent of all loggers
     "root": {
-        # Set default logging level for all loggers and add the console and
-        # file handlers
+        # Set default logging level for all loggers and add the console handler
         "level": "INFO",
         "handlers": [
-            "console", "file"
+            "console"
         ],
     },
     # Some formatters, mainly as examples
@@ -63,14 +62,6 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "simple"
-        },
-        "file": {
-            "level": "INFO",
-            "class": "logging.handlers.RotatingFileHandler",
-            "formatter": "simple",
-            "filename": "/tmp/sg_jira.log",
-            "maxBytes": 1024,
-            "backupCount": 5
         },
     },
 }

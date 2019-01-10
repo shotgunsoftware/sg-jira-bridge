@@ -12,7 +12,8 @@ import logging.config
 import importlib
 
 # import jira
-from jira import JIRA, JIRAError
+from jira import JIRAError
+import jira
 import shotgun_api3
 
 from .constants import ALL_SETTINGS_KEYS
@@ -71,7 +72,7 @@ class Bridge(object):
         logger.info("Connected to %s." % sg_site)
 
         try:
-            self._jira = JIRA(
+            self._jira = jira.client.JIRA(
                 jira_site,
                 auth=(
                     jira_user,

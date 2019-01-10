@@ -42,7 +42,7 @@ LOGGING = {
     "root": {
         # Set default logging level for all loggers and add the console and
         # file handlers
-        "level": "INFO",
+        "level": "DEBUG",
         "handlers": [
             "console", "file"
         ],
@@ -86,7 +86,7 @@ SYNC = {
         "syncer": "sg_jira.TaskIssueSyncer",
         # And its specific settings which are passed to its __init__ method
         "settings": {
-            "foo": "blah"
+            "issue_type": "Task"
         },
     },
     "test": {
