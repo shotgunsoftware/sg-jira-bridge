@@ -41,6 +41,16 @@ class BadSyncer(Syncer):
             raise RuntimeError("Sorry, I'm bad!")
         return super(BadSyncer, self).setup()
 
+    @property
+    def sg_jira_statuses_mapping(self):
+        return {}
+
+    def supported_shotgun_fields(self, shotgun_entity_type):
+        return ["sg_status_list"]
+
+    def get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
+        return None
+
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
         Raise RuntimeError if set to do it.

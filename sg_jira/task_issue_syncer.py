@@ -8,11 +8,28 @@
 from .syncer import Syncer
 from .constants import SHOTGUN_JIRA_ID_FIELD
 
+from .errors import UnsuitableShotgunValue
+
 
 class TaskIssueSyncer(Syncer):
     """
     Sync Shotgun Tasks as Jira Issues.
     """
+    # Define the mapping between Shotgun Task fields and Jira Issue fields
+    # if the Jira target is None, it means the target field is not settable
+    # directly.
+    __TASK_FIELDS_MAPPING = {
+        "content": "summary",
+        "sg_description": "description",
+        "sg_status_list": None,
+        "task_assignees": "assignee",
+        "tags": "labels",
+        "created_by": "reporter",
+        "due_date": "duedate",
+        "est_in_mins": "timetracking", # time tracking needs to be enabled in Jira.
+        "addressings_cc": None
+    }
+
     def __init__(self, issue_type="Task", **kwargs):
         """
         Instatiate a new Task/Issue syncer for the given bridge.
@@ -21,6 +38,41 @@ class TaskIssueSyncer(Syncer):
         """
         self._issue_type = issue_type
         super(TaskIssueSyncer, self).__init__(**kwargs)
+
+    @property
+    def sg_jira_statuses_mapping(self):
+        """
+        Return a dictionary where keys are Shotgun status short codes and values
+        Jira Issue status names.
+        """
+        return {
+            "ip": "In Progress",
+            "fin": "Done",
+            "res": "Done",
+            "rdy": "Selected for Development", # Used to be "To Do" ?
+            "wtg": "Selected for Development",
+            "hld": "Backlog",
+        }
+
+    def supported_shotgun_fields(self, shotgun_entity_type):
+        """
+        Return the list of Shotgun fields that this syncer can process for the
+        given Shotgun Entity type.
+        """
+        if shotgun_entity_type != "Task":
+            return []
+        return self.__TASK_FIELDS_MAPPING.keys()
+
+    def get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
+        """
+        Returns the Jira Issue field id to use to sync the given Shotgun Entity
+        type field.
+
+        :returns: A string or `None`.
+        """
+        if shotgun_entity_type != "Task":
+            return None
+        return self.__TASK_FIELDS_MAPPING.get(shotgun_field)
 
     def setup(self):
         """
@@ -62,6 +114,7 @@ class TaskIssueSyncer(Syncer):
         task_fields = [
             "content",
             "task_assignees",
+            "created_by",
             "project",
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
             "project.Project.name",
@@ -121,13 +174,65 @@ class TaskIssueSyncer(Syncer):
                 {SHOTGUN_JIRA_ID_FIELD: jira_issue.key}
             )
         # Update it
-        self._logger.info("Syncing in Jira %s(%d) to %s for event %s" % (
+        self._logger.debug("Syncing in Jira %s(%d) to %s for event %s." % (
             entity_type,
             entity_id,
             jira_issue,
             event
         ))
-        return True
+        sg_field = event["meta"]["attribute_name"]
+
+        try:
+            # Note: the returned jira_field will be None for the special cases handled
+            # below.
+            jira_field, jira_value = self.get_jira_issue_field_sync_value(
+                jira_project,
+                jira_issue,
+                sg_entity["type"],
+                sg_field,
+                event["meta"]
+            )
+        except UnsuitableShotgunValue as e:
+            self.logger.warning(
+                "Unable to update Jira %s for event %s: %s" % (
+                    jira_issue,
+                    event,
+                    e,
+                )
+            )
+            self.logger.debug("%s" % e, exc_info=True)
+            return False
+
+        if jira_field:
+            self._logger.debug("Updating Jira %s with %s: %s" % (
+                jira_issue,
+                jira_field,
+                jira_value
+            ))
+            jira_issue.update(fields={jira_field: jira_value})
+            return True
+
+        # Specials cases not handled by a direct update
+        if sg_field == "sg_status_list":
+            shotgun_status = event["meta"]["new_value"]
+            return self.sync_shotgun_status_to_jira(
+                jira_issue,
+                shotgun_status,
+                "Updated from Shotgun %s(%d) moving to %s" % (
+                    entity_type,
+                    entity_id,
+                    shotgun_status
+                )
+
+            )
+        if sg_field == "addressings_cc":
+            self.sync_shotgun_cced_changes_to_jira(
+                jira_issue,
+                event["meta"]["added"],
+                event["meta"]["removed"],
+            )
+            return True
+        return False
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """

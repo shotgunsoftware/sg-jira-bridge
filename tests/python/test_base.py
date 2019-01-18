@@ -59,7 +59,8 @@ class TestBase(unittest.TestCase):
 
             # special retired flag for mockgun
             entity["__retired"] = False
-
+            # set a created by
+            entity["created_by"] = {"type": "HumanUser", "id": 1}
             # turn any dicts into proper type/id/name refs
             for x in entity:
                 # special case: EventLogEntry.meta is not an entity link dict

@@ -13,12 +13,10 @@ from shotgun_api3.lib import mockgun
 
 from test_base import TestBase
 from mock_jira import MockedJira
-
+from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 import sg_jira
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD
 
-# A faked Jira Project key
-JIRA_PROJECT_KEY = "UTest"
 # A list of Shotgun Projects
 SG_PROJECTS = [
     {"id": 1, "name": "No Sync", "type": "Project"},
@@ -53,18 +51,6 @@ SG_EVENT_META = {
     "type": "attribute_change"
 }
 
-# Faked Jira Project, Issue, change log and event
-JIRA_PROJECT = {
-    "name": "Tasks unit test",
-    "self": "https://mocked.faked.com/rest/api/2/project/10400",
-    "projectTypeKey": "software",
-    "simplified": False,
-    "key": JIRA_PROJECT_KEY,
-    "isPrivate": False,
-    "id": "12345",
-    "expand": "description,lead,issueTypes,url,projectKeys"
-}
-
 JIRA_SUMMARY_CHANGE = {
     "field": "summary",
     "fieldId": "summary",
@@ -76,16 +62,7 @@ JIRA_SUMMARY_CHANGE = {
 }
 
 JIRA_ISSUE_FIELDS = {
-    "assignee": {
-        "accountId": "abdc123456",
-        "active": True,
-        "displayName": "Ford Prefect",
-        "emailAddress": "fprefect@weefree.com",
-        "key": "ford.prefect1",
-        "name": "ford.prefect1",
-        "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=abdc123456",
-        "timeZone": "Europe/Paris"
-    },
+    "assignee": JIRA_USER,
     "attachment": [],
     "components": [],
     "created": "2018-12-18T06:15:05.626-0500",
@@ -195,6 +172,17 @@ JIRA_EVENT = {
 }
 
 
+class ExtMockgun(mockgun.Shotgun):
+    """
+    Add missing mocked methods to mockgun.Shotgun
+    """
+    def add_user_agent(*args, **kwargs):
+        pass
+
+    def set_session_uuid(*args, **kwargs):
+        pass
+
+
 # Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
@@ -209,7 +197,7 @@ class TestJiraSyncer(TestBase):
         """
         Return a mocked SG handle.
         """
-        return mockgun.Shotgun(
+        return ExtMockgun(
             "https://mocked.my.com",
             "Ford Prefect",
             "xxxxxxxxxx",
@@ -490,6 +478,155 @@ class TestJiraSyncer(TestBase):
                 "meta": SG_EVENT_META
             }
         )
+
+    def test_shotgun_assignee(self, mocked_jira, mocked_sg):
+        """
+        Test matching Shotgun assignment to Jira.
+        """
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS)
+        self.add_to_sg_mock_db(bridge.shotgun, {
+            "status": "act",
+            "valid": "valid",
+            "type": "HumanUser",
+            "name": "Ford Prefect",
+            "id": 1,
+            "email": JIRA_USER["emailAddress"]
+        })
+        self.add_to_sg_mock_db(bridge.shotgun, {
+            "status": "act",
+            "valid": "valid",
+            "type": "HumanUser",
+            "name": "Sync sync",
+            "id": 2,
+            "email": JIRA_USER_2["emailAddress"]
+        })
+        bridge.jira.set_projects([JIRA_PROJECT])
+        # Remove the user used when the Issue is created
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            2,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "added": [],
+                    "attribute_name": "task_assignees",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "removed": [
+                        {"status": "act", "valid": "valid", "type": "HumanUser", "id": 1}
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", 2]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+        issue = bridge.jira.issue(task[SHOTGUN_JIRA_ID_FIELD])
+        self.assertIsNone(issue.fields.assignee)
+        # Add an assignee
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            2,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "removed": [],
+                    "attribute_name": "task_assignees",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "added": [
+                        {"status": "act", "valid": "valid", "type": "HumanUser", "id": 1}
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        self.assertEqual(issue.fields.assignee.key, JIRA_USER["key"])
+        # Replace the current assignee
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            2,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "removed": [
+                        {"status": "act", "valid": "valid", "type": "HumanUser", "id": 1}
+                    ],
+                    "attribute_name": "task_assignees",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "added": [
+                        {"status": "act", "valid": "valid", "type": "HumanUser", "id": 2}
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        self.assertEqual(issue.fields.assignee.key, JIRA_USER_2["key"])
+        # Change the Issue assignee
+        issue.update(fields={"assignee": JIRA_USER})
+        self.assertEqual(issue.fields.assignee.key, JIRA_USER["key"])
+        # An update with another assignee shouldn't remove the value
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            2,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "removed": [
+                        {"status": "act", "valid": "valid", "type": "HumanUser", "id": 2}
+                    ],
+                    "attribute_name": "task_assignees",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "added": [
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        self.assertEqual(issue.fields.assignee.key, JIRA_USER["key"])
+        # An update with the assignee should remove the value
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            2,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "removed": [
+                        {"status": "act", "valid": "valid", "type": "HumanUser", "id": 2},
+                        {"status": "act", "valid": "valid", "type": "HumanUser", "id": 1},
+                    ],
+                    "attribute_name": "task_assignees",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "added": [
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        self.assertIsNone(issue.fields.assignee)
 
     def test_jira_2_shotgun(self, mocked_jira, mocked_sg):
         """

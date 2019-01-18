@@ -4,7 +4,45 @@
 # provided at the time of installation or download, or which otherwise accompanies
 # this software in either electronic or hard copy form.
 #
-from jira.resources import Project as JiraProject, IssueType, Issue
+
+import copy
+from jira.resources import Project as JiraProject
+from jira.resources import IssueType, Issue, User
+
+# Faked Jira Project, Issue, change log and event
+JIRA_PROJECT_KEY = "UTest"
+JIRA_PROJECT = {
+    "name": "Tasks unit test",
+    "self": "https://mocked.faked.com/rest/api/2/project/10400",
+    "projectTypeKey": "software",
+    "simplified": False,
+    "key": JIRA_PROJECT_KEY,
+    "isPrivate": False,
+    "id": "12345",
+    "expand": "description,lead,issueTypes,url,projectKeys"
+}
+
+JIRA_USER = {
+    "accountId": "abdc123456",
+    "active": True,
+    "displayName": "Ford Prefect",
+    "emailAddress": "fprefect@weefree.com",
+    "key": "ford.prefect1",
+    "name": "ford.prefect1",
+    "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=abdc123456",
+    "timeZone": "Europe/Paris"
+}
+
+JIRA_USER_2 = {
+    "accountId": "12343456778",
+    "active": True,
+    "displayName": "Sync Sync",
+    "emailAddress": "syncsync.@foo.com",
+    "key": "sync-sync",
+    "name": "sync-sync",
+    "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=12343456778",
+    "timeZone": "America/New_York"
+}
 
 ISSUE_FIELDS = {
     "assignee": {
@@ -254,6 +292,130 @@ TASK_CREATE_META = {
     "subtask": False
 }
 
+TASK_EDIT_META = {
+    "fields": ISSUE_FIELDS
+}
+
+ISSUE_BASE_RAW = {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "fields": {
+        "assignee": JIRA_USER,
+        "attachment": [],
+        "components": [],
+        "created": "2018-12-18T06:15:05.626-0500",
+        "creator": {
+            "accountId": "123456%3Aaecf5cfd-e13d-abcdef",
+            "active": True,
+            "displayName": "Sync Sync",
+            "emailAddress": "syncsync@blah.com",
+            "key": "syncsync",
+            "name": "syncsync",
+            "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=123456%3Aaecf5cfd-e13d-abcdef",
+            "timeZone": "America/New_York"
+        },
+        "customfield_11501": "11794",
+        "customfield_11502": "Task",
+        "description": "Task (11794)",
+        "duedate": None,
+        "environment": None,
+        "fixVersions": [],
+        "issuelinks": [],
+        "issuetype": {
+            "avatarId": 10318,
+            "description": "A task that needs to be done.",
+            "iconUrl": "https://myjira.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10318&avatarType=issuetype",
+            "id": "10000",
+            "name": "Task",
+            "self": "https://myjira.atlassian.net/rest/api/2/issuetype/10000",
+            "subtask": False
+        },
+        "labels": [],
+        "lastViewed": "2018-12-18T09:44:27.653-0500",
+        "priority": {
+            "iconUrl": "https://myjira.atlassian.net/images/icons/priorities/medium.svg",
+            "id": "3",
+            "name": "Medium",
+            "self": "https://myjira.atlassian.net/rest/api/2/priority/3"
+        },
+        "project": JIRA_PROJECT,
+        "reporter": {
+            "accountId": "12343456778",
+            "active": True,
+            "displayName": "Sync Sync",
+            "emailAddress": "syncsync.@foo.com",
+            "key": "sync-sync",
+            "name": "sync-sync",
+            "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=12343456778",
+            "timeZone": "America/New_York"
+        },
+        "resolution": None,
+        "resolutiondate": None,
+        "security": None,
+        "status": {
+            "description": "",
+            "iconUrl": "https://myjira.atlassian.net/",
+            "id": "10204",
+            "name": "Backlog",
+            "self": "https://myjira.atlassian.net/rest/api/2/status/10204",
+            "statusCategory": {
+                "colorName": "blue-gray",
+                "id": 2,
+                "key": "new",
+                "name": "New",
+                "self": "https://myjira.atlassian.net/rest/api/2/statuscategory/2"
+            }
+        },
+        "subtasks": [],
+        "summary": "foo bar",
+        "updated": "2018-12-18T09:44:27.572-0500",
+        "versions": [],
+        "votes": {
+            "hasVoted": False,
+            "self": "https://myjira.atlassian.net/rest/api/2/issue/ST3-4/votes",
+            "votes": 0
+        },
+        "watches": {
+            "isWatching": False,
+            "self": "https://myjira.atlassian.net/rest/api/2/issue/ST3-4/watchers",
+            "watchCount": 1
+        },
+        "workratio": -1
+    },
+}
+
+RESOURCE_OPTIONS = {
+    u'rest_api_version': u'2',
+    u'agile_rest_api_version': u'1.0',
+    u'verify': True,
+    u'context_path': u'/',
+    u'agile_rest_path':
+    u'greenhopper',
+    u'server': u'https://sgpipeline.atlassian.net',
+    u'check_update': False,
+    u'headers': {u'Content-Type': u'application/json', u'X-Atlassian-Token': u'no-check', u'Cache-Control': u'no-cache'},
+    u'auth_url': u'/rest/auth/1/session',
+    u'async_workers': 5,
+    u'resilient': True,
+    u'async': False,
+    u'client_cert': None,
+    u'rest_path': u'api'
+}
+
+
+class MockedSession(object):
+    def put(self, *args, **kwargs):
+        pass
+
+    def get(self, *args, **kwargs):
+        return {}
+
+
+class MockedIssue(Issue):
+    def update(self, fields, *args, **kwargs):
+        raw = self.raw
+        raw["fields"].update(fields)
+        self._parse_raw(raw)
+
 
 class MockedJira(object):
     """
@@ -320,6 +482,13 @@ class MockedJira(object):
             "expand": "projects",
             "projects": projects_meta,
         }
+
+    def editmeta(self, issue):
+        """
+        Mocked Jira method.
+        Return a dictionary with edit metadata for the given issue.
+        """
+        return TASK_EDIT_META
 
     def issue_type_by_name(self, name):
         """
@@ -426,11 +595,42 @@ class MockedJira(object):
         Return a :class:`JiraIssue`.
         """
         issue_key = "FAKED-%03d" % len(self._issues)
-        self._issues[issue_key] = Issue(
-            None,
-            None,
-            raw=fields,
+        raw = copy.deepcopy(ISSUE_BASE_RAW)
+        raw["fields"].update(fields)
+        raw["id"] = "%s" % len(self._issues)
+        raw["key"] = issue_key
+        raw["self"] = "https://mocked.faked.com/rest/api/2/issue/%s" % raw["id"]
+
+        self._issues[issue_key] = MockedIssue(
+            RESOURCE_OPTIONS,
+            MockedSession(),
+            raw=raw,
         )
         self._issues[issue_key].key = issue_key
         self._issues[issue_key].id = len(self._issues)
         return self._issues[issue_key]
+
+    def issue(self, issue_key, *args, **kwargs):
+        """
+        Mocked Jira method.
+        """
+        return self._issues.get(issue_key)
+
+    def transitions(self, *args, **kwargs):
+        """
+        Mocked Jira method.
+        """
+        return []
+
+    def search_assignable_users_for_issues(self, name, startAt=0, maxResults=20, *args, **kwargs):
+        """
+        Mocked Jira method.
+        Return a list :class:`JiraUser`.
+        """
+        if name:
+            # Mock Jira REST api bug
+            return []
+
+        if startAt == 0:
+            return [User(None, None, JIRA_USER_2)] * maxResults
+        return [User(None, None, JIRA_USER)]
