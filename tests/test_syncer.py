@@ -218,7 +218,7 @@ class TestJiraSyncer(TestBase):
         )
         syncer = bridge.get_syncer(name)
         if syncer:
-            syncer.logger.setLevel(logging.DEBUG)
+            syncer._logger.setLevel(logging.DEBUG)
         return syncer, bridge
 
     def setUp(self):
@@ -236,12 +236,19 @@ class TestJiraSyncer(TestBase):
         Test we handle problems gracefully and that syncers settings are
         correctly handled.
         """
-        # The syncer should be disabled because of its bad setup call.
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg, "bad_setup")
-        self.assertIsNone(syncer)
-        # It should be registered in loaded syncers
-        self.assertTrue("bad_setup" in bridge._syncers)
-        #
+        # Bad setup should raise an exception
+        self.assertRaisesRegexp(
+            RuntimeError,
+            "Sorry, I'm bad!",
+            self._get_syncer,
+            mocked_jira,
+            mocked_sg,
+            "bad_setup"
+        )
+
+        bridge = sg_jira.Bridge.get_bridge(
+            os.path.join(self._fixtures_path, "settings.py")
+        )
         self.assertRaisesRegexp(
             RuntimeError,
             "Sorry, I'm bad!",

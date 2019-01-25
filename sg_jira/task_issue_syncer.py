@@ -193,14 +193,14 @@ class TaskIssueSyncer(Syncer):
                 event["meta"]
             )
         except UnsuitableShotgunValue as e:
-            self.logger.warning(
+            self._logger.warning(
                 "Unable to update Jira %s for event %s: %s" % (
                     jira_issue,
                     event,
                     e,
                 )
             )
-            self.logger.debug("%s" % e, exc_info=True)
+            self._logger.debug("%s" % e, exc_info=True)
             return False
 
         if jira_field:

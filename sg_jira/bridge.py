@@ -43,6 +43,7 @@ class Bridge(object):
         jira_user,
         jira_secret,
         sync_settings=None,
+        sg_http_proxy=None,
     ):
         """
         Instatiate a new bridge between the given SG site and Jira site.
@@ -55,12 +56,15 @@ class Bridge(object):
                               name.
         :param str jira_secret: The Jira user password.
         :param sync_settings: A dictionary where keys are settings names.
+        :param str sg_http_proxy: Optional, a http proxy to use for the Shotgun
+                                  connection, or None.
         """
         super(Bridge, self).__init__()
         self._shotgun = shotgun_api3.Shotgun(
             sg_site,
             script_name=sg_script,
             api_key=sg_script_key,
+            http_proxy=sg_http_proxy,
         )
         self._shotgun.add_user_agent("sg_jira_sync")
         # Retrieve our current login, this does not seem to be available from
@@ -90,8 +94,11 @@ class Bridge(object):
             # Check the status code
             if e.status_code == 401:
                 raise RuntimeError(
-                    "Unable to connect to %s, "
-                    "please check your credentials" % jira_site
+                    "Unable to connect to %s (error code %d), "
+                    "please check your credentials" % (
+                        jira_site,
+                        e.status_code,
+                    )
                 )
             raise RuntimeError("Unable to connect to %s" % jira_site)
         logger.info("Connected to %s." % jira_site)
@@ -158,6 +165,7 @@ class Bridge(object):
                 jira_settings["user"],
                 jira_settings["secret"],
                 sync_settings,
+                sg_http_proxy=shotgun_settings.get("http_proxy"),
             )
         except Exception as e:
             logger.exception(e)
@@ -216,6 +224,8 @@ class Bridge(object):
     def current_shotgun_user(self):
         """
         Return the Shotgun user used for the connection.
+
+        :returns: A Shotgun record dictionary with an `id` key and a `type` key.
         """
         return self._shotgun_user
 
@@ -223,6 +233,8 @@ class Bridge(object):
     def current_jira_username(self):
         """
         Return the username of the current Jira user.
+
+        :returns: A string with the username.
         """
         return self.jira.current_user()
 
@@ -289,16 +301,7 @@ class Bridge(object):
                 bridge=self,
                 **settings
             )
-            try:
-                self._syncers[name].setup()
-            except Exception as e:
-                logger.warning("Unable to setup syncer %s, disabling it: %s" % (name, e))
-                # Log the traceback for debug purpose
-                logger.debug("%s" % e, exc_info=True)
-                # TODO: check what we should do, another option would be to keep
-                # setting it up each time it is needed, in case the problem was
-                # fixed?
-                self._syncers[name] = None
+            self._syncers[name].setup()
         return self._syncers[name]
 
     def sync_in_jira(self, settings_name, entity_type, entity_id, event, **kwargs):
@@ -356,25 +359,25 @@ class Bridge(object):
         # Build a mapping from Jira field names to their id for fast lookup.
         for jira_field in self._jira.fields():
             self._jira_fields_map[jira_field["name"].lower()] = jira_field["id"]
-        self._jira_shotgun_type_field = self._jira_fields_map.get(
+        self._jira_shotgun_type_field = self.get_jira_issue_field_id(
             JIRA_SHOTGUN_TYPE_FIELD.lower()
         )
         if not self._jira_shotgun_type_field:
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_TYPE_FIELD
             )
-        self._jira_shotgun_id_field = self._jira_fields_map.get(JIRA_SHOTGUN_ID_FIELD.lower())
+        self._jira_shotgun_id_field = self.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower())
         if not self._jira_shotgun_id_field:
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_ID_FIELD
             )
-        self._jira_shotgun_url_field = self._jira_fields_map.get(JIRA_SHOTGUN_URL_FIELD.lower())
+        self._jira_shotgun_url_field = self.get_jira_issue_field_id(JIRA_SHOTGUN_URL_FIELD.lower())
         if not self._jira_shotgun_url_field:
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
             )
 
-    def get_jira_field_id(self, name):
+    def get_jira_issue_field_id(self, name):
         """
         Return the Jira field id for the Issue field with the given name.
 
@@ -387,6 +390,10 @@ class Bridge(object):
         """
         Return the id of the Jira field used to store the type of a linked Shotgun
         Entity.
+
+        Two custom fields are used in Jira to store a reference to a Shotgun
+        Entity: its Shotgun Entity type and id. This method returns the id of
+        the Jira field used to store the Shotgun type.
         """
         return self._jira_shotgun_type_field
 
@@ -395,6 +402,10 @@ class Bridge(object):
         """
         Return the id of the Jira field used to store the id of a linked Shotgun
         Entity.
+
+        Two custom fields are used in Jira to store a reference to a Shotgun
+        Entity: its Shotgun Entity type and id. This method returns the id of
+        the Jira field used to store the Shotgun id.
         """
         return self._jira_shotgun_id_field
 
@@ -430,10 +441,6 @@ class Bridge(object):
         :raises: RuntimeError if the field does not exist or does not have the
                  expected type.
         """
-        if entity_type not in self._shotgun_schemas:
-            self._shotgun_schemas[entity_type] = self._shotgun.schema_field_read(
-                entity_type
-            )
         field = self.get_shotgun_field_schema(entity_type, field_name)
         if not field:
             raise RuntimeError(
@@ -454,6 +461,9 @@ class Bridge(object):
     def get_shotgun_field_schema(self, entity_type, field_name):
         """
         Return the Shotgun schema for the given Entity field.
+
+        .. note:: Shotgun schemas are cached and the bridge needs to be restarted
+                  if schemas are changed in Shotgun.
 
         :returns: The Shotgun schema for the given field as a dictionary or `None`.
         """

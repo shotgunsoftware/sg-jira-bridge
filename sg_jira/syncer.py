@@ -32,13 +32,6 @@ class Syncer(object):
         self._logger = logging.getLogger(__name__).getChild(self._name)
 
     @property
-    def logger(self):
-        """
-        Returns the logger used by this syncer.
-        """
-        return self._logger
-
-    @property
     def bridge(self):
         """
         Returns the :class:`sg_jira.Bridge` instance used by this syncer.
@@ -110,6 +103,8 @@ class Syncer(object):
                     "Jira Issue %s is not bound to any Project." % issue_key
                 )
         except JIRAError as e:
+            # Jira raises a 404 error if it can't find the Issue: catch the
+            # error and let the method return None in that case.
             if e.status_code == 404:
                 pass
             else:
@@ -173,9 +168,9 @@ class Syncer(object):
             expand="projects.issuetypes.fields"
         )
         # We asked for a single project / single issue type, so we can just pick
-        # the first entry, if it exists
+        # the first entry, if it exists.
         if not create_meta_data["projects"] or not create_meta_data["projects"][0]["issuetypes"]:
-            self.logger.debug("Create meta data: %s" % create_meta_data)
+            self._logger.debug("Create meta data: %s" % create_meta_data)
             raise RuntimeError(
                 "Unable to retrieve create meta data for Project %s Issue type %s."  % (
                     jira_project,
@@ -196,8 +191,15 @@ class Syncer(object):
                     user_email,
                     jira_project=jira_project,
                 )
+                # If we found a Jira user, use his name as the reporter name,
+                # otherwise use the reporter name retrieve from the user used
+                # to run the bridge.
                 if jira_user:
                     reporter_name = jira_user.name
+        else:
+            self._logger.debug(
+                "Ignoring created by %s which is not a HumanUser." % created_by
+            )
 
         shotgun_url = "%s/detail/%s/%d" % (
             self.shotgun.base_url, sg_entity["type"], sg_entity["id"]
@@ -239,7 +241,7 @@ class Syncer(object):
         for k in data_keys:
             # Filter out anything which can't be used in creation.
             if k not in fields_createmeta:
-                self.logger.warning(
+                self._logger.warning(
                     "Disabling %s in issue creation which can't be set in Jira" % k
                 )
                 del data[k]
@@ -249,7 +251,7 @@ class Syncer(object):
                     # Empty field data which Jira will set default values for should be removed in
                     # order for Jira to properly set the default. Jira will complain if we leave it
                     # in.
-                    self.logger.info(
+                    self._logger.info(
                         "Removing %s from data payload since it has an empty value. Jira will "
                         "now set a default value." % k
                     )
@@ -264,7 +266,7 @@ class Syncer(object):
                 "be empty: %s" % invalid_fields
             )
 
-        self.logger.info("Creating Jira issue for %s with %s" % (
+        self._logger.info("Creating Jira issue for %s with %s" % (
             sg_entity, data
         ))
 
@@ -316,7 +318,7 @@ class Syncer(object):
                     if value in current_value:
                         current_value.remove(value)
                     else:
-                        self.logger.debug(
+                        self._logger.debug(
                             "Unable to remove %s mapped to %s from current Jira value %s" % (
                                 removed,
                                 value,
@@ -353,7 +355,7 @@ class Syncer(object):
                         current_value = None
                         break
                 else:
-                    self.logger.debug(
+                    self._logger.debug(
                         "Current Jira value %s unaffected by %s removal." % (
                             current_value,
                             shotgun_removed,
@@ -365,7 +367,7 @@ class Syncer(object):
                 # a single one in Jira, so we have to arbitrarily pick one if we
                 # have multiple values.
                 for sg_value in shotgun_added:
-                    self.logger.debug("Treating %s" % sg_value)
+                    self._logger.debug("Treating %s" % sg_value)
                     value = self.get_jira_value_for_shotgun_value(
                         jira_project,
                         jira_issue,
@@ -377,7 +379,7 @@ class Syncer(object):
                         current_value = value
                         added_count = len(shotgun_added)
                         if added_count > 1:
-                            self.logger.warning(
+                            self._logger.warning(
                                 "Only a single value is accepted by Jira, got "
                                 "%d values, using %s mapped to %s" % (
                                     added_count,
@@ -424,7 +426,7 @@ class Syncer(object):
                 missing,
             )
             if not consolidated:
-                self.logger.warning(
+                self._logger.warning(
                     "Unable to retrieve %s %d in Shotgun." % (
                         shotgun_entity["type"],
                         shotgun_entity["id"],
@@ -485,7 +487,7 @@ class Syncer(object):
 
         allowed_values = jira_field_schema.get("allowedValues")
         if allowed_values:
-            self.logger.debug(
+            self._logger.debug(
                 "Allowed values for %s are %s, type is %s" % (
                     jira_field,
                     allowed_values,
@@ -509,7 +511,7 @@ class Syncer(object):
                 else: # Assume a string
                     if allowed_value.lower() == sg_value_name:
                         return allowed_value
-            self.logger.warning(
+            self._logger.warning(
                 "Shotgun value '%s' for Jira field %s is not in the list of "
                 "allowed values: %s." % (
                     shotgun_value,
@@ -527,7 +529,7 @@ class Syncer(object):
                 if isinstance(shotgun_value, dict):
                     email_address = shotgun_value.get("email")
                     if not email_address:
-                        self.logger.warning(
+                        self._logger.warning(
                             "Unable to update Jira %s field from Shotgun value '%s'. "
                             "An email address is required." % (
                                 jira_field,
@@ -599,7 +601,7 @@ class Syncer(object):
         )
         # Bail out if we couldn't find a target Jira field
         if not jira_field:
-            self.logger.debug(
+            self._logger.debug(
                 "Don't know how to sync Shotgun %s %s field to Jira" % (
                     shotgun_entity_type,
                     shotgun_field
@@ -612,7 +614,7 @@ class Syncer(object):
 
         # Bail out if the target Jira field is not editable
         if jira_field not in jira_fields:
-            self.logger.debug(
+            self._logger.debug(
                 "Target Jira %s %s field for Shotgun %s %s field is not editable" % (
                     jira_issue.fields.issuetype,
                     jira_field,
@@ -629,7 +631,7 @@ class Syncer(object):
             is_array = True
             jira_value = []
         if "added" in shotgun_event_meta or "removed" in shotgun_event_meta:
-            self.logger.debug(
+            self._logger.debug(
                 "Dealing with list changes added %s" % (
                     shotgun_event_meta,
                 )
@@ -687,7 +689,7 @@ class Syncer(object):
                 jira_value, jira_fields[jira_field]
             )
         except UserWarning as e:
-            self.logger.warning(e)
+            self._logger.warning(e)
             # Cancel update
             return None, None
         return jira_field, jira_value
@@ -726,13 +728,13 @@ class Syncer(object):
             # com.atlassian.jira.plugin.system.customfieldtypes:textarea
             if jira_field_schema["schema"].get("custom") == "com.atlassian.jira.plugin.system.customfieldtypes:textfield":
                 if len(jira_value) > 255:
-                    self.logger.warning(
+                    self._logger.warning(
                         "String data is too long (> 255 chars). Truncating for display in Jira."
                     )
                     message = "... [see Shotgun]."
                     jira_value = jira_value[:(255 - len(message))] + message
 
-        self.logger.debug(
+        self._logger.debug(
             "Sanitized value for %s is %s" % (
                 jira_field_schema["name"],
                 jira_value,
@@ -839,7 +841,7 @@ class Syncer(object):
         jira_assignee = None
 
         # Direct user search with their email
-        self.logger.debug("Looking up %s in assignable users" % user_email)
+        self._logger.debug("Looking up %s in assignable users" % user_email)
         jira_users = search_method(
             user_email,
             project=jira_project,
@@ -849,24 +851,24 @@ class Syncer(object):
         if jira_users:
             jira_assignee = jira_users[0]
             if len(jira_users) > 1:
-                self.logger.warning(
+                self._logger.warning(
                     "Found multiple assignable Jira users with email address %s. "
                     "Using the first one: %s" % (
                         user_email,
                         jira_users
                     )
                 )
-            self.logger.debug("Found Jira Assignee %s" % jira_assignee)
+            self._logger.debug("Found Jira Assignee %s" % jira_assignee)
             return jira_assignee
 
         # Because of the bug mentioned above, fall back on matching users ourself.
-        self.logger.debug(
+        self._logger.debug(
             "No assignable users found matching %s. Searching all assignable users "
             "manually" % user_email
         )
         uemail = user_email.lower()
         start_idx = 0
-        self.logger.debug("Querying assignable users starting at #%d" % start_idx)
+        self._logger.debug("Querying assignable users starting at #%d" % start_idx)
         jira_users = search_method(
             None,
             project=jira_project,
@@ -883,7 +885,7 @@ class Syncer(object):
                 break
             else:
                 start_idx += len(jira_users)
-                self.logger.debug(
+                self._logger.debug(
                     "Querying assignable users starting at #%d" % start_idx
                 )
                 jira_users = search_method(
@@ -893,25 +895,25 @@ class Syncer(object):
                     maxResults=2000,
                     startAt=start_idx,
                 )
-                self.logger.debug("Found %s users" % (len(jira_users)))
+                self._logger.debug("Found %s users" % (len(jira_users)))
 
         if not jira_assignee:
             if jira_issue:
-                self.logger.warning(
+                self._logger.warning(
                     "Unable to retrieve a Jira user with email %s for Issue %s" % (
                         user_email,
                         jira_issue,
                     )
                 )
             else:
-                self.logger.warning(
+                self._logger.warning(
                     "Unable to retrieve a Jira user with email %s for Project %s" % (
                         user_email,
                         jira_project,
                     )
                 )
 
-        self.logger.debug("Found Jira Assignee %s" % jira_assignee)
+        self._logger.debug("Found Jira Assignee %s" % jira_assignee)
         return jira_assignee
 
     def sync_shotgun_status_to_jira(self, jira_issue, shotgun_status, comment):
@@ -925,13 +927,13 @@ class Syncer(object):
         """
         jira_status = self.sg_jira_statuses_mapping.get(shotgun_status)
         if not jira_status:
-            self.logger.warning(
+            self._logger.warning(
                 "Unable to retrieve corresponding Jira status for %s" % shotgun_status
             )
             return False
 
         if jira_issue.fields.status.name == jira_status:
-            self.logger.debug("Jira issue %s is already '%s'" % (
+            self._logger.debug("Jira issue %s is already '%s'" % (
                 jira_issue, jira_status
             ))
             return True
@@ -945,7 +947,7 @@ class Syncer(object):
         for tra in jira_transitions:
             # Match a transition with the expected status name
             if tra["to"]["name"] == jira_status:
-                self.logger.info(
+                self._logger.info(
                     "Found transition to %s for %s: %s" % (
                         jira_status,
                         jira_issue,
@@ -979,7 +981,7 @@ class Syncer(object):
                             # allowed value.
                             if details["schema"]["type"] == "resolution":
                                 fields[field_name] = details["allowedValues"][0]
-                                self.logger.info(
+                                self._logger.info(
                                     "Setting resolution to first allowedValue: %s" %
                                     details["allowedValues"][0]
                                 )
@@ -1000,7 +1002,7 @@ class Syncer(object):
                 if fields:
                     params["fields"] = fields
 
-                self.logger.info("Transitioning Issue %s to %s. Params: %s" % (
+                self._logger.info("Transitioning Issue %s to %s. Params: %s" % (
                     jira_issue,
                     tra["name"],
                     params
@@ -1012,10 +1014,10 @@ class Syncer(object):
                 )
                 return True
 
-        self.logger.warning(
+        self._logger.warning(
             "Couldn't find any Jira transition with %s as target" % jira_status
         )
-        self.logger.debug("Available transitions are %s" % jira_transitions)
+        self._logger.debug("Available transitions are %s" % jira_transitions)
         return False
 
     def sync_shotgun_cced_changes_to_jira(self, jira_issue, added, removed):
@@ -1068,20 +1070,20 @@ class Syncer(object):
 
         # Check we have a Project
         if not event.get("project"):
-            self.logger.debug("Rejecting event %s with no project." % event)
+            self._logger.debug("Rejecting event %s with no project." % event)
             return False
 
         # Check the event meta data
         meta = event.get("meta")
         if not meta:
-            self.logger.debug("Rejecting event %s with no meta data." % event)
+            self._logger.debug("Rejecting event %s with no meta data." % event)
             return False
         if meta.get("type") != "attribute_change":
-            self.logger.debug("Rejecting event %s with wrong or missing type." % event)
+            self._logger.debug("Rejecting event %s with wrong or missing type." % event)
             return False
         field = meta.get("attribute_name")
         if field not in self.supported_shotgun_fields(entity_type):
-            self.logger.debug(
+            self._logger.debug(
                 "Rejecting event %s with unsupported or missing field %s." % (
                     event, field
                 )
@@ -1093,7 +1095,7 @@ class Syncer(object):
         current_user = self._bridge.current_shotgun_user
         if user and current_user:
             if user["type"] == current_user["type"] and user["id"] == current_user["id"]:
-                self.logger.debug("Rejecting event %s created by us." % event)
+                self._logger.debug("Rejecting event %s created by us." % event)
                 return False
 
         return True
@@ -1123,13 +1125,13 @@ class Syncer(object):
         user = event.get("user")
         if user:
             if user["name"].lower() == self.bridge.current_jira_username.lower():
-                self.logger.debug("Rejecting event %s triggered by us (%s)" % (
+                self._logger.debug("Rejecting event %s triggered by us (%s)" % (
                     event,
                     user["name"],
                 ))
                 return False
             if user["emailAddress"].lower() == self.bridge.current_jira_username.lower():
-                self.logger.debug("Rejecting event %s triggered by us (%s)" % (
+                self._logger.debug("Rejecting event %s triggered by us (%s)" % (
                     event,
                     user["emailAddress"],
                 ))
@@ -1144,7 +1146,7 @@ class Syncer(object):
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
         """
-        self.logger.info("Syncing in SG %s(%s) for event %s" % (
+        self._logger.info("Syncing in SG %s(%s) for event %s" % (
             resource_type,
             resource_id,
             event

@@ -114,14 +114,14 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         the provided payload.
         """
         try:
-            # Extract path components from the path, ignore leading '/' and
-            # discard empty values coming from '/' at the end or multiple
-            # contiguous '/'
             direction = None
             settings_name = None
             entity_type = None
             entity_key = None
             parsed = urlparse.urlparse(self.path)
+            # Extract path components from the path, ignore leading '/' and
+            # discard empty values coming from '/' at the end or multiple
+            # contiguous '/'
             path_parts = [x for x in parsed.path[1:].split("/") if x]
             if len(path_parts) == 4:
                 direction, settings_name, entity_type, entity_key = path_parts
