@@ -206,9 +206,9 @@ class Syncer(object):
         )
 
         # Note that JIRA raises an error if there are new line characters in the
-        # summary for an Issue or if the description field is empty.
-        if not description:
-            description = "%s (%d)" % (sg_entity["type"], sg_entity["id"])
+        # summary for an Issue or if the description field is not set.
+        if description is None:
+            description = ""
         data = {
             "project": jira_project.raw,
             "summary": summary.replace("\n", "").replace("\r", ""),
