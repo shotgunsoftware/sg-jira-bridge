@@ -93,13 +93,16 @@ class Syncer(object):
 
         :param str issue_key: A Jira Issue key to look for.
         :returns: A :class:`jira.resources.Issue` instance or None.
-        :raises: UserWarning if the Issue if not bound to any Project.
+        :raises: RuntimeError if the Issue if not bound to any Project.
         """
         jira_issue = None
         try:
             jira_issue = self.jira.issue(issue_key)
             if not jira_issue.fields.project:
-                raise UserWarning(
+                # This should never happen as it does not seem possible to
+                # have Issues not linked to a project. Report the error if it
+                # does happen.
+                raise RuntimeError(
                     "Jira Issue %s is not bound to any Project." % issue_key
                 )
         except JIRAError as e:
