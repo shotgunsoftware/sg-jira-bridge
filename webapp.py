@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
+import re
 import argparse
 import urlparse
 import BaseHTTPServer
@@ -94,40 +95,52 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if settings_name not in self.server.sync_settings_names:
             self.send_error(400, "Invalid settings name %s" % settings_name)
             return
-
-        self.wfile.write(HMTL_TEMPLATE % (
+        # Success, send a basic html page
+        self.send_response(200, HMTL_TEMPLATE % (
             title,
             title,
-            "Synching with %s settings." % settings_name
+            "Syncing with %s settings." % settings_name
         ))
-        self.wfile.close()
 
     def do_POST(self):
         """
         Handle a POST request.
 
         Post url paths need to have the forms:
-          sg2jira/Settings name/SG Entity type/SG Entity id
+          sg2jira/Settings name[/SG Entity type/SG Entity id]
           jira2sg/Settings name/Jira Resource type/Jira Resource key
+
+        If the SG Entity is not specified in the path, it must be specified in
+        the provided payload.
         """
         try:
+            direction = None
+            settings_name = None
+            entity_type = None
+            entity_key = None
+            parsed = urlparse.urlparse(self.path)
             # Extract path components from the path, ignore leading '/' and
             # discard empty values coming from '/' at the end or multiple
             # contiguous '/'
-            path_parts = [x for x in self.path[1:].split("/") if x]
-            if len(path_parts) != 4:
+            path_parts = [x for x in parsed.path[1:].split("/") if x]
+            if len(path_parts) == 4:
+                direction, settings_name, entity_type, entity_key = path_parts
+            elif len(path_parts) == 2:
+                direction, settings_name = path_parts
+            else:
                 self.send_error(400, "Invalid request path %s" % self.path)
                 return
             # Extract additional query parameters
             # what they could be is still TBD, may be things like `dry_run=1`?
-            parsed = urlparse.urlparse(self.path)
             parameters = {}
             if parsed.query:
                 parameters = urlparse.parse_qs(parsed.query, True, True)
             # Read the body to get the payload
             content_type = self.headers.getheader("content-type")
             # Check the content type, if not set we assume json.
-            if content_type and content_type != "application/json":
+            # We can have a charset just after the content type, e.g.
+            # application/json; charset=UTF-8
+            if content_type and not re.search(r"\s*application/json\s*;?", content_type):
                 self.send_error(
                     400,
                     "Invalid content %s, it must be 'application/json'" % content_type
@@ -141,28 +154,61 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # Basic routing: extract the synch direction and additional values
             # from the path
-            if path_parts[0] == "sg2jira":
-                # Settings name/SG Entity type/SG Entity id
+            if direction == "sg2jira":
+                if not entity_type or not entity_key:
+                    # We need to retrieve this from the payload
+                    entity_type = payload.get("entity_type")
+                    entity_key = payload.get("entity_id")
+                if not entity_type or not entity_key:
+                    self.send_error(
+                        400,
+                        "Invalid request payload %s, unable to retrieve "
+                        "a Shotgun Entity type and its id." % (payload)
+                    )
+                    return
+                if not entity_key.isdigit():
+                    self.send_error(
+                        400,
+                        "Invalid Shotgun %s id %s, it must be a number." % (
+                            entity_type,
+                            entity_key,
+                        )
+                    )
+                    return
+
                 self.server.sync_in_jira(
-                    path_parts[1],
-                    path_parts[2],
-                    int(path_parts[3]),
+                    settings_name,
+                    entity_type,
+                    int(entity_key),
                     event=payload,
                     **parameters
                 )
-            elif path_parts[0] == "jira2sg":
+            elif direction == "jira2sg":
+                if not entity_type or not entity_key:
+                    # We can't retrieve this easily from the webhook payload without
+                    # hard coding a list of supported resource types, so we require
+                    # it to be specified in the path for the time being.
+                    self.send_error(
+                        400,
+                        "Invalid request path %s, it must include a Jira resource "
+                        "type and its key" % self.path
+                    )
+                    return
                 # Settings name/Jira Resource type/Jira Resource key
                 self.server.sync_in_shotgun(
-                    path_parts[1],
-                    path_parts[2],
-                    path_parts[3],
+                    settings_name,
+                    entity_type,
+                    entity_key,
                     event=payload,
                     **parameters
                 )
             else:
                 self.send_error(
                     400,
-                    "Invalid request path %s, don't know how to handle %s" % (self.path, path_parts[0])
+                    "Invalid request path %s, don't know how to handle %s" % (
+                        self.path,
+                        direction
+                    )
                 )
                 return
             self.send_response(200, "POST request successful")
