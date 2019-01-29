@@ -410,7 +410,7 @@ class Syncer(object):
         if entity_type == "HumanUser":
             needed_fields = ["email", "name"]
         elif entity_type == "Task":
-            needed_fields = ["content"]
+            needed_fields = ["content", "task_assignees"]
         elif entity_type == "Note":
             needed_fields = ["subject"]
         elif entity_type == "Delivery":
@@ -696,6 +696,348 @@ class Syncer(object):
             # Cancel update
             return None, None
         return jira_field, jira_value
+
+    def get_shotgun_entity_field_sync_value(self, shotgun_entity, jira_issue, jira_field_id, change):
+        """
+        Retrieve the Shotgun Entity field and the value to set from the given Jira
+        Issue field value.
+
+        :param shotgun_entity: A Shotgun Entity dictionary with at least a type
+                               and an id.
+        :param jira_issue: A raw Jira Issue dictionary.
+        :param jira_field_id: A Jira field id as a string.
+        :param change: A dictionary with the field change retrieved from the
+                       event change log.
+        :returns: A tuple with a Jira field id and a Jira value usable for an
+                  update. The returned field id is `None` if no valid field or
+                  value could be retrieved.
+        :raises: UnsuitableJiraValue if the Jira value can't be translated
+                 into a valid Shotgun value.
+        :raises: ValueError if the target Shotgun field schema does not allow
+                 any update.
+        """
+
+        # Retrieve the Shotgun field to update
+        shotgun_field = self.get_shotgun_entity_field_for_issue_field(
+            "Issue",
+            jira_field_id,
+        )
+        if not shotgun_field:
+            self._logger.debug(
+                "Don't know how to sync Jira field %s to Shotgun." % jira_field_id
+            )
+            return None, None
+
+        # TODO: handle Shotgun Project specific fields?
+        shotgun_field_schema = self.bridge.get_shotgun_field_schema(
+            shotgun_entity["type"],
+            shotgun_field
+        )
+        if not shotgun_field_schema:
+            raise ValueError("Unknown Shotgun %s %s field" % (
+                shotgun_entity["type"], shotgun_field,
+            ))
+
+        if not shotgun_field_schema["editable"]["value"]:
+            self._logger.debug("Shotgun field %s.%s is not editable" % (
+                shotgun_entity["type"], shotgun_field,
+            ))
+            return None, None
+
+        # Special cases
+        if jira_field_id == "assignee":
+            shotgun_value = self.get_shotgun_assignment_from_jira_issue_change(
+                shotgun_entity,
+                shotgun_field,
+                shotgun_field_schema,
+                jira_issue,
+                change
+            )
+            return shotgun_field, shotgun_value
+        # General case
+        shotgun_value = self.get_shotgun_value_from_jira_value(
+            shotgun_entity,
+            shotgun_field,
+            shotgun_field_schema,
+            jira_issue,
+            change
+        )
+        return shotgun_field, shotgun_value
+
+    def get_shotgun_assignment_from_jira_issue_change(
+        self,
+        shotgun_entity,
+        shotgun_field,
+        shotgun_field_schema,
+        jira_issue,
+        change,
+    ):
+        """
+        Retrieve a Shotgun assignmemnt value from the given Jira change.
+
+        This method supports single entity and multi entity fields.
+
+        :returns: The updated value to set in Shotgun for the given field.
+        :raises: ValueError if the target Shotgun field is not suitable
+        """
+        # Change log example
+        # {
+        # u'from': u'ford.prefect1',
+        # u'to': None,
+        # u'fromString': u'Ford Prefect',
+        # u'field': u'assignee',
+        # u'toString': None,
+        # u'fieldtype': u'jira',
+        # u'fieldId': u'assignee'
+        # }
+
+        data_type = shotgun_field_schema["data_type"]["value"]
+        if data_type not in ["multi_entity", "entity"]:
+            raise ValueError(
+                "Don't know how to handle %s field type for Shotgun %s.%s assignements" % (
+                    data_type,
+                    shotgun_entity["type"],
+                    shotgun_field
+                )
+            )
+
+        sg_valid_types = shotgun_field_schema["properties"]["valid_types"]["value"]
+        if "HumanUser" not in sg_valid_types:
+            raise ValueError(
+                "Shotgun %s.%s assignemnt field does not accept HumanUser but %s" % (
+                    shotgun_entity["type"],
+                    shotgun_field,
+                    sg_valid_types
+                )
+            )
+        current_sg_assignment = shotgun_entity.get(shotgun_field)
+        from_assignee = change["from"]
+        to_assignee = change["to"]
+        if data_type == "multi_entity":
+            if from_assignee:
+                # Try to remove the old assignee from the Shotgun assignment
+                jira_user = self.jira.user(from_assignee)
+                sg_user = self.shotgun.find_one(
+                    "HumanUser",
+                    [["email", "is", jira_user.emailAddress]],
+                    ["email", "name"]
+                )
+                if not sg_user:
+                    self._logger.debug(
+                        "Unable to retrieve a Shotgun user with email address %s" % (
+                            jira_user.emailAddress
+                        )
+                    )
+                else:
+                    for i, current_sg in enumerate(current_sg_assignment):
+                        if current_sg["type"] == sg_user["type"] and current_sg["id"] == sg_user["id"]:
+                            self._logger.debug(
+                                "Removing user %s from Shotgun assignment" % (
+                                    sg_user
+                                )
+                            )
+                            del current_sg_assignment[i]
+                            # Note: we're assuming there is no duplicates in the
+                            # list. Otherwise we would have to ensure we use an
+                            # iterator allowing the list to be modified while
+                            # iterating
+                            break
+            if to_assignee:
+                # Try to add the new assignee to the Shotgun assignment
+                # Use the Issue assignee value to avoid a Jira user query
+                jira_user = jira_issue["fields"]["assignee"]
+                sg_user = self.shotgun.find_one(
+                    "HumanUser",
+                    [["email", "is", jira_user["emailAddress"]]],
+                    ["email", "name"]
+                )
+                if not sg_user:
+                    raise UnsuitableJiraValue(
+                        "Unable to retrieve a Shotgun user with email address %s" % (
+                            jira_user.emailAddress
+                        )
+                    )
+                for current_sg_user in current_sg_assignment:
+                    if current_sg_user["type"] == sg_user["type"] and current_sg_user["id"] == sg_user["id"]:
+                        break
+                else:
+                    self._logger.debug(
+                        "Adding user %s to Shotgun assignment %s" % (
+                            sg_user, current_sg_assignment
+                        )
+                    )
+                    current_sg_assignment.append(sg_user)
+        else: # data_type == "entity":
+            if from_assignee:
+                # Try to remove the old assignee from the Shotgun assignment
+                jira_user = self.jira.user(from_assignee)
+                sg_user = self.shotgun.find_one(
+                    "HumanUser",
+                    [["email", "is", jira_user.emailAddress]],
+                    ["email", "name"]
+                )
+                if not sg_user:
+                    self._logger.debug(
+                        "Unable to retrieve a Shotgun user with email address %s" % (
+                            jira_user.emailAddress
+                        )
+                    )
+                else:
+                    if current_sg_assignment["type"] == sg_user["type"] and current_sg_assignment["id"] == sg_user["id"]:
+                        self._logger.debug(
+                            "Removing user %s from Shotgun assignment" % (
+                                sg_user
+                            )
+                        )
+                        current_sg_assignment = None
+
+            if to_assignee and not current_sg_assignment:
+                # Try to set the new assignee to the Shotgun assignment
+                # Use the Issue assignee value to avoid a Jira user query
+                # Note that we are dealing here with a Jira raw value dict, not
+                # a jira.resources.Resource instance.
+                jira_user = jira_issue["fields"]["assignee"]
+                sg_user = self.shotgun.find_one(
+                    "HumanUser",
+                    [["email", "is", jira_user["emailAddress"]]],
+                    ["email", "name"]
+                )
+                if not sg_user:
+                    raise UnsuitableJiraValue(
+                        "Unable to retrieve a Shotgun user with email address %s" % (
+                            jira_user.emailAddress
+                        )
+                    )
+                current_sg_assignment = sg_user
+        return current_sg_assignment
+
+    def get_shotgun_value_from_jira_value(
+        self,
+        shotgun_entity,
+        shotgun_field,
+        shotgun_field_schema,
+        jira_issue,
+        change,
+    ):
+        """
+
+        """
+        data_type = shotgun_field_schema["data_type"]["value"]
+        if data_type == "text":
+            return change["toString"]
+
+        if data_type == "list":
+            value = change["toString"]
+            if not value:
+                return ""
+            # Make sure the value is available in the list of possible values
+            all_allowed = shotgun_field_schema["properties"]["valid_values"]["value"]
+            for allowed in all_allowed:
+                if value.lower() == allowed.lower():
+                    return allowed
+            # The value is not allowed, update the schema to allow it. This is
+            # provided as a convenience, otherwise keeping the list of allowed
+            # values on both side could be very painful. An other option here
+            # would be to raise an UnsuitableJiraValue
+            all_allowed.append(value)
+            self._logger.info(
+                "Updating %s.%s schema with %s valid values" % (
+                    all_allowed
+                )
+            )
+            self.shotgun.schema_field_update(
+                shotgun_entity["type"],
+                shotgun_field,
+                {"valid_values" : all_allowed}
+            )
+            # Clear the schema to take into account the change we just made.
+            self.bridge.clear_cached_shotgun_field_schema(shotgun_entity["type"])
+            return value
+
+        if data_type == "status_list":
+            value = change["toString"]
+            if not value:
+                # Unset the status in Shotgun
+                return None
+            # Look up a matching Shotgun status from our mapping
+            # Please note that if we have multiple matching values the first
+            # one will be arbitrarily returned.
+            for sg_code, jira_name in self.sg_jira_statuses_mapping.iteritems():
+                if value.lower() == jira_name.lower():
+                    return sg_code
+            # No match.
+            raise UnsuitableJiraValue(
+                "Unable to find a matching Shotgun status for %s from %s" % (
+                    value,
+                    self.sg_jira_statuses_mapping
+                )
+            )
+
+        if data_type == "multi_entity":
+            # If the Jira field is an array we will get the list of resource
+            # names in a string, separated by spaces.
+            # We're assuming here that if someone maps a Jira simple field to
+            # a Shotgun multi entity field the same convention will be applied
+            # and spaces will be used as separators.
+            allowed_entities = shotgun_field_schema["properties"]["valid_types"]["value"]
+            old_list = set()
+            new_list = set()
+            if change["fromString"]:
+                old_list = set(change["fromString"].split(" "))
+            if change["toString"]:
+                new_list = set(change["toString"].split(" "))
+            removed_list = old_list - new_list
+            added_list = new_list - old_list
+            current_sg_value = shotgun_entity.get(shotgun_field)
+            for removed in removed_list:
+                # Try to remove the entries from the Shotgun value. We make a
+                # copy of the list so we can delete entries while iterating
+                for i, sg_value in enumerate(list(current_sg_value)):
+                    # Match the SG entity name, because this is retrieved
+                    # from the entity holding the list, we do have a "name" key
+                    # even if the linked Entities use another field to store their
+                    # name e.g. "code"
+                    if removed.lower() == sg_value["name"].lower():
+                        self._logger.debug(
+                            "Removing %s for %s from Shotgun value %s" % (
+                                sg_value, removed, current_sg_value,
+                            )
+                        )
+                        del current_sg_value[i]
+            for added in added_list:
+                # Check if the value is already there
+                for sg_value in current_sg_value:
+                    # Match the SG entity name, because this is retrieved
+                    # from the entity holding the list, we do have a "name" key
+                    # even if the linked Entities use another field to store their
+                    # name e.g. "code"
+                    if added.lower() == sg_value["name"].lower():
+                        break
+                else:
+                    # We need to retrieve a matching Entity from Shotgun and
+                    # add it to the list, if we found one.
+                    for allowed_entity in allowed_entities:
+                        name_field = self.bridge.get_sg_entity_name_field(
+                            allowed_entity
+                        )
+                        sg_value = self.shotgun.find_one(
+                            allowed_entity,
+                            [[name_field, "is", added]]
+                        )
+                        if sg_value:
+                            self._logger.debug(
+                                "Adding %s for %s to Shotgun value %s" % (
+                                    sg_value, added, current_sg_value,
+                                )
+                            )
+                            current_sg_value.append(sg_value)
+                            break
+            return current_sg_value
+        raise ValueError("%s Change %s" % (data_type, change))
+
+        if data_type == "entity":
+            pass
+
 
     def sanitize_jira_update_value(self, jira_value, jira_field_schema):
         """

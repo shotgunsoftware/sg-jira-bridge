@@ -6,10 +6,10 @@
 #
 
 
-class UnsuitableShotgunValue(ValueError):
+class UnsuitableSyncValue(ValueError):
     """
-    An exception raised when a Shotgun value can't be translated to a valid
-    Jira value for a given field.
+    Base class for exceptions raised when a value can't be translated to a valid
+    value for a given field.
     """
     def __init__(self, field, value, *args, **kwargs):
         """
@@ -33,3 +33,17 @@ class UnsuitableShotgunValue(ValueError):
         Return the value for which the exception was raised.
         """
         return self._value
+
+class UnsuitableShotgunValue(UnsuitableSyncValue):
+    """
+    An exception raised when a Shotgun value can't be translated to a valid
+    Jira value for a given field.
+    """
+    pass
+
+class UnsuitableJiraValue(UnsuitableSyncValue):
+    """
+    An exception raised when a Jira value can't be translated to a valid
+    Shotgun value for a given field.
+    """
+    pass

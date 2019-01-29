@@ -8,7 +8,7 @@
 from .syncer import Syncer
 from .constants import SHOTGUN_JIRA_ID_FIELD
 
-from .errors import UnsuitableShotgunValue
+from .errors import UnsuitableShotgunValue, UnsuitableJiraValue
 
 
 class TaskIssueSyncer(Syncer):
@@ -28,6 +28,20 @@ class TaskIssueSyncer(Syncer):
         "due_date": "duedate",
         "est_in_mins": "timetracking", # time tracking needs to be enabled in Jira.
         "addressings_cc": None
+    }
+
+    # Define the mapping between Jira Issue fields and Shotgun Task fields
+    # if the Shotgun target is None, it means the target field is not settable
+    # directly.
+    __ISSUE_FIELDS_MAPPING = {
+        "summary": "content",
+        "description": "sg_description",
+        "status": "sg_status_list",
+        "assignee": "task_assignees",
+        "labels": "tags",
+        "duedate": "due_date",
+        "timetracking": "est_in_mins", # time tracking needs to be enabled in Jira.
+        "watches": "addressings_cc"
     }
 
     def __init__(self, issue_type="Task", **kwargs):
@@ -68,11 +82,25 @@ class TaskIssueSyncer(Syncer):
         Returns the Jira Issue field id to use to sync the given Shotgun Entity
         type field.
 
+        :param str shotgun_entity_type: A Shotgun Entity type, e.g. 'Task'.
+        :param str shotgun_field: A Shotgun Entity field name, e.g. 'sg_status_list'.
         :returns: A string or `None`.
         """
         if shotgun_entity_type != "Task":
             return None
         return self.__TASK_FIELDS_MAPPING.get(shotgun_field)
+
+    def get_shotgun_entity_field_for_issue_field(self, jira_resource_type, jira_field_id):
+        """
+        Returns the Shotgun field name to use to sync the given Jira Issue field.
+
+        :param str jira_resource_type: A Jira resource type, e.g. 'Issue'.
+        :param str jira_field_id: A Jira resource field id, e.g. 'summary'.
+        :returns: A string or `None`.
+        """
+        if jira_resource_type != "Issue":
+            return None
+        return self.__ISSUE_FIELDS_MAPPING.get(jira_field_id)
 
     def setup(self):
         """
@@ -272,7 +300,7 @@ class TaskIssueSyncer(Syncer):
 
         issue_type = fields.get("issuetype")
         if not issue_type:
-            self._logger.debug("Rejecting event %s without an unknown issue type" % event)
+            self._logger.debug("Rejecting event %s with an unknown issue type" % event)
             return False
         if issue_type["name"] != self._issue_type:
             self._logger.debug("Rejecting event %s without a %s issue type" % (event, issue_type["name"]))
@@ -314,22 +342,76 @@ class TaskIssueSyncer(Syncer):
                 "Invalid Shotgun id %s, it should be an integer" % shotgun_id
             )
         shotgun_type = fields.get(self.bridge.jira_shotgun_type_field)
+        sg_fields = [field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field]
         sg_entity = self.bridge.shotgun.find_one(
             shotgun_type,
-            [["id", "is", int(shotgun_id)]]
+            [["id", "is", int(shotgun_id)]],
+            sg_fields,
         )
         if not sg_entity:
+            # Note: For the time being we don't allow Jira to create new Shotgun
+            # Entities.
             self._logger.warning("Unable to retrieve Shotgun %s (%s)" % (
                 shotgun_type,
                 shotgun_id
             ))
             return False
 
-        self._logger.info("Syncing %s(%s) to Shotgun %s for event %s" % (
+        self._logger.info("Syncing %s(%s) to Shotgun %s(%d) for event %s" % (
             issue_type["name"],
             resource_id,
-            sg_entity,
+            sg_entity["type"],
+            sg_entity["id"],
             event
         ))
-        return True
+
+        # The presence of the changelog key has been validated by the accept method.
+        changes = event["changelog"]["items"]
+        shotgun_data = {}
+        for change in changes:
+            # Depending on the Jira server version, we can get the Jira field id
+            # in the change payload or just the field nmae.
+            # If we don't have the field id, retrieve it from our internal mapping.
+            field_id = change.get("fieldId") or self.bridge.get_jira_issue_field_id(
+                change["field"]
+            )
+            self._logger.debug(
+                "Treating change %s for field %s" % (
+                    change, field_id
+                )
+            )
+            try:
+                shotgun_field, shotgun_value = self.get_shotgun_entity_field_sync_value(
+                    sg_entity,
+                    jira_issue,
+                    field_id,
+                    change,
+                )
+                if shotgun_field:
+                    shotgun_data[shotgun_field] = shotgun_value
+            except UnsuitableJiraValue as e:
+                self._logger.warning(
+                    "Unable to update Shotgun %s for event %s: %s" % (
+                        jira_issue,
+                        event,
+                        e,
+                    )
+                )
+
+        if shotgun_data:
+            self._logger.debug(
+                "Updating Shotgun %s (%d) with %s" % (
+                    sg_entity["type"],
+                    sg_entity["id"],
+                    shotgun_data,
+                )
+            )
+            self.bridge.shotgun.update(
+                sg_entity["type"],
+                sg_entity["id"],
+                shotgun_data,
+            )
+            return True
+
+        return False
 

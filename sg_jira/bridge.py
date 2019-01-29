@@ -21,6 +21,7 @@ from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
 from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD
 from .constants import SHOTGUN_JIRA_ID_FIELD
+from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -473,3 +474,30 @@ class Bridge(object):
             )
         field = self._shotgun_schemas[entity_type].get(field_name)
         return field
+
+    def clear_cached_shotgun_field_schema(self, entity_type=None):
+        """
+        Clear all cached Shotgun schema or just the cached schema for the given
+        Shotgun Entity type.
+
+        :param str entity_type: A Shotgun Entity type or None.
+        """
+        if entity_type:
+            logger.debug("Clearing cached Shotgun schema for %s" % entity_type)
+            if entity_type in self._shotgun_schemas:
+                del self._shotgun_schemas[entity_type]
+        else:
+            logger.debug("Clearing all cached Shotgun schemas")
+            self._shotgun_schemas = {}
+
+
+    @staticmethod
+    def get_sg_entity_name_field(entity_type):
+        """
+        Return the Shotgun name field to use for the specified entity type.
+
+        :param str entity_type: The entity type to get the name field for.
+        :returns: The name field for the specified entity type.
+        """
+        # Deal with some known special cases and assume "code" for anything else.
+        return SG_ENTITY_SPECIAL_NAME_FIELDS.get(entity_type, "code")

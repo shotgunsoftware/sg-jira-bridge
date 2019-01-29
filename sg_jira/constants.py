@@ -32,3 +32,16 @@ SHOTGUN_JIRA_ID_FIELD = "sg_jira_key"
 SHOTGUN_LIST_FIELDS = [
     "multi_entity"
 ]
+
+# Note: this was taken from tk-core with the Tag addition
+# A dictionary for Shotgun entities which do not store their name
+# in the standard "code" field.
+SG_ENTITY_SPECIAL_NAME_FIELDS = {
+    "Project": "name",
+    "Task": "content",
+    "HumanUser": "name",
+    "Note": "subject",
+    "Department": "name",
+    "Delivery": "title",
+    "Tag": "name",
+}
