@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
+import datetime
 import logging
 from jira import JIRAError
 import jira
@@ -755,7 +756,8 @@ class Syncer(object):
             shotgun_entity,
             shotgun_field,
             shotgun_field_schema,
-            change
+            change,
+            jira_issue["fields"][jira_field_id]
         )
         return shotgun_field, shotgun_value
 
@@ -907,6 +909,8 @@ class Syncer(object):
                 )
                 if not sg_user:
                     raise UnsuitableJiraValue(
+                        shotgun_field,
+                        jira_user,
                         "Unable to retrieve a Shotgun user with email address %s" % (
                             jira_user.emailAddress
                         )
@@ -920,6 +924,7 @@ class Syncer(object):
         shotgun_field,
         shotgun_field_schema,
         change,
+        jira_value,
     ):
         """
         Return a Shotgun value suitable to update the given Shotgun Entity field
@@ -929,9 +934,10 @@ class Syncer(object):
                                    Shotgun.
         :param str shotgun_field: The Shotgun Entity field to get a value for.
         :param shotgun_field_schema: The Shotgun Entity field schema.
-        :param change: A Jira event changelog dictionary with 'fromString' and
-                       'toString' keys.
+        :param change: A Jira event changelog dictionary with 'fromString',
+                       'toString', 'from' and 'to' keys.
         :raises: RuntimeError if the Shotgun Entity can't be retrieved from Shotgun.
+        :raises: ValueError for unsupported Shotgun data types.
         """
         data_type = shotgun_field_schema["data_type"]["value"]
         if data_type == "text":
@@ -978,6 +984,8 @@ class Syncer(object):
                     return sg_code
             # No match.
             raise UnsuitableJiraValue(
+                shotgun_field,
+                value,
                 "Unable to find a matching Shotgun status for %s from %s" % (
                     value,
                     self.sg_jira_statuses_mapping
@@ -1068,7 +1076,40 @@ class Syncer(object):
                         )
 
             return current_sg_value
-        raise ValueError("%s Change %s" % (data_type, change))
+
+        if data_type == "date":
+            # We use the "to" value here as the toString value includes some
+            # time with the date e.g. "2019-01-31 00:00:00.0"
+            if not change["to"]:
+                return None
+            try:
+                # Validate the date string
+                datetime.datetime.strptime(change["to"], "%Y-%m-%d")
+                return change["to"]
+            except ValueError as e:
+                message = "Unable to parse %s as a date: %s" % (
+                    change["to"], e
+                )
+                # Log the original error with a traceback for debug purpose
+                self._logger.debug(
+                    message,
+                    exc_info=True,
+                )
+                # Notify the caller that the value is not right
+                raise UnsuitableJiraValue(
+                    shotgun_field,
+                    change["to"],
+                    message
+                )
+
+        raise ValueError(
+            "Unsupported data type %s for %s.%s change %s" % (
+                data_type,
+                shotgun_entity["type"],
+                shotgun_field,
+                change
+            )
+        )
 
         if data_type == "entity":
             pass
