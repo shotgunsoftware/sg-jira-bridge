@@ -81,6 +81,26 @@ JIRA_ASSIGNEE_CHANGE = {
     "fieldId": "assignee"
 }
 
+JIRA_UNLABEL_CHANGE = {
+    "from": None,
+    "to": None,
+    "fromString": "foo bar",
+    "field": "labels",
+    "toString": "",
+    "fieldtype": "jira",
+    "fieldId": "labels"
+}
+
+JIRA_LABEL_CHANGE = {
+    "from": None,
+    "to": None,
+    "fromString": "foo",
+    "field": "labels",
+    "toString": "bar blah",
+    "fieldtype": "jira",
+    "fieldId": "labels"
+}
+
 JIRA_ISSUE_FIELDS = {
     "assignee": JIRA_USER,
     "attachment": [],
@@ -802,6 +822,125 @@ class TestJiraSyncer(TestBase):
                 [["id", "is", sg_entity_id]],
                 ["task_assignees"]
             )["task_assignees"]
+        )
+
+    def test_jira_labels(self, mocked_jira, mocked_sg):
+        """
+        Test syncing Jira labels to Shotgun
+        """
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
+        sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
+
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": "Tag",
+                "id": 1,
+                "name": "foo",
+            }
+        )
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": "Tag",
+                "id": 2,
+                "name": "bar",
+            }
+        )
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": "Tag",
+                "id": 3,
+                "name": "precious",
+            }
+        )
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": sg_entity_type,
+                "id": sg_entity_id,
+                "content": "%s (%d)" % (sg_entity_type, sg_entity_id),
+                "tags": [{ "type": "Tag", "id": 1, "name": "foo"}],
+                "project": SG_PROJECTS[0]
+            }
+        )
+        jira_event = dict(JIRA_EVENT)
+        jira_event["changelog"] = {
+            "id": "123456",
+            "items": [JIRA_UNLABEL_CHANGE]
+        }
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        self.assertEqual(
+            [],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["tags"]
+            )["tags"]
+        )
+        jira_event["changelog"] = {
+            "id": "123456",
+            "items": [JIRA_LABEL_CHANGE]
+        }
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        self.assertEqual(
+            [{"id": 2, "type": "Tag"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["tags"]
+            )["tags"]
+        )
+        # Mockgun update and find behave differently than the Shotgun api which
+        # includes a "name" key for all linked entities. We use add_to_sg_mock_db
+        # to set the value with a "name" key.
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": sg_entity_type,
+                "id": sg_entity_id,
+                "content": "%s (%d)" % (sg_entity_type, sg_entity_id),
+                "tags": [{ "type": "Tag", "id": 3, "name": "precious"}],
+                "project": SG_PROJECTS[0]
+            }
+        )
+
+        self.assertEqual(
+            [{"id": 3, "type": "Tag", "name": "precious"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["tags"]
+            )["tags"]
+        )
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        # Existing tag should have been preserved, the known one added.
+        self.assertEqual(
+            [{"id": 3, "type": "Tag"}, {"id": 2, "type": "Tag"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["tags"]
+            )["tags"]
         )
 
     def test_jira_2_shotgun(self, mocked_jira, mocked_sg):
