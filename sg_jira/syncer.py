@@ -1103,7 +1103,6 @@ class Syncer(object):
                 )
             return value
 
-
         if data_type in ["duration", "number"]:
             # Note: int Jira field changes are not available from the "to" key.
             value = change["toString"]
