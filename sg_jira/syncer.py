@@ -1080,15 +1080,15 @@ class Syncer(object):
         if data_type == "date":
             # We use the "to" value here as the toString value includes some
             # time with the date e.g. "2019-01-31 00:00:00.0"
-            if not change["to"]:
+            value = change["to"]
+            if not value:
                 return None
             try:
                 # Validate the date string
-                datetime.datetime.strptime(change["to"], "%Y-%m-%d")
-                return change["to"]
+                datetime.datetime.strptime(value, "%Y-%m-%d")
             except ValueError as e:
                 message = "Unable to parse %s as a date: %s" % (
-                    change["to"], e
+                    value, e
                 )
                 # Log the original error with a traceback for debug purpose
                 self._logger.debug(
@@ -1098,9 +1098,38 @@ class Syncer(object):
                 # Notify the caller that the value is not right
                 raise UnsuitableJiraValue(
                     shotgun_field,
-                    change["to"],
+                    value,
                     message
                 )
+            return value
+
+
+        if data_type in ["duration", "number"]:
+            # Note: int Jira field changes are not available from the "to" key.
+            value = change["toString"]
+            if value is None:
+                return None
+            # Validate the int value
+            try:
+                return int(value)
+            except ValueError as e:
+                message = "%s is not a valid integer: %s" % (
+                    value, e
+                )
+                # Log the original error with a traceback for debug purpose
+                self._logger.debug(
+                    message,
+                    exc_info=True,
+                )
+                # Notify the caller that the value is not right
+                raise UnsuitableJiraValue(
+                    shotgun_field,
+                    value,
+                    message
+                )
+
+        if data_type == "checkbox":
+            return bool(change["toString"])
 
         raise ValueError(
             "Unsupported data type %s for %s.%s change %s" % (
@@ -1110,9 +1139,6 @@ class Syncer(object):
                 change
             )
         )
-
-        if data_type == "entity":
-            pass
 
     def match_shotgun_entity_by_name(self, name, entity_types, shotgun_project):
         """
