@@ -61,6 +61,26 @@ JIRA_SUMMARY_CHANGE = {
     "toString": "foo bar"
 }
 
+JIRA_UNASSIGNEE_CHANGE = {
+    "from": JIRA_USER["key"],
+    "to": None,
+    "fromString": JIRA_USER["displayName"],
+    "field": "assignee",
+    "toString": None,
+    "fieldtype": "jira",
+    "fieldId": "assignee"
+}
+
+JIRA_ASSIGNEE_CHANGE = {
+    "from": JIRA_USER_2["key"],
+    "to": JIRA_USER["key"],
+    "fromString": JIRA_USER_2["displayName"],
+    "field": "assignee",
+    "toString": JIRA_USER["displayName"],
+    "fieldtype": "jira",
+    "fieldId": "assignee"
+}
+
 JIRA_ISSUE_FIELDS = {
     "assignee": JIRA_USER,
     "attachment": [],
@@ -635,6 +655,155 @@ class TestJiraSyncer(TestBase):
         )
         self.assertIsNone(issue.fields.assignee)
 
+    def test_jira_assignment(self, mocked_jira, mocked_sg):
+        """
+        Test syncing Jira assignment to Shotgun
+        """
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+
+        self.add_to_sg_mock_db(bridge.shotgun, {
+            "status": "act",
+            "valid": "valid",
+            "type": "HumanUser",
+            "name": "Ford Prefect",
+            "id": 1,
+            "email": JIRA_USER["emailAddress"]
+        })
+        self.add_to_sg_mock_db(bridge.shotgun, {
+            "status": "act",
+            "valid": "valid",
+            "type": "HumanUser",
+            "name": "Sync sync",
+            "id": 2,
+            "email": JIRA_USER_2["emailAddress"]
+        })
+
+        self.add_to_sg_mock_db(bridge.shotgun, {
+            "status": "act",
+            "valid": "valid",
+            "type": "HumanUser",
+            "name": "Unknown in Jira",
+            "id": 3,
+            "email": "youdontknow@me.com"
+        })
+
+        sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
+        sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
+
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": sg_entity_type,
+                "id": sg_entity_id,
+                "content": "%s (%d)" % (sg_entity_type, sg_entity_id),
+                "task_assignees": [{ "type": "HumanUser", "id": 1}],
+                "project": SG_PROJECTS[0]
+            }
+        )
+        jira_event = dict(JIRA_EVENT)
+        jira_event["changelog"] = {
+            "id": "123456",
+            "items": [JIRA_UNASSIGNEE_CHANGE]
+        }
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        # The matching assignment should have been removed
+        self.assertEqual(
+            [],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["task_assignees"]
+            )["task_assignees"]
+        )
+        jira_event["changelog"] = {
+            "id": "123456",
+            "items": [JIRA_ASSIGNEE_CHANGE]
+        }
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        # The assignment should have been set
+        self.assertEqual(
+            [{"id": 1, "type": "HumanUser"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["task_assignees"]
+            )["task_assignees"]
+        )
+        bridge.shotgun.update(
+            sg_entity_type, sg_entity_id,
+            { "task_assignees": [{ "type": "HumanUser", "id": 3}]}
+        )
+        # Assign the Task to a user which is not known in Jira
+        self.assertEqual(
+            [{"id": 3, "type": "HumanUser"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["task_assignees"]
+            )["task_assignees"]
+        )
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        # The unknown user should have been preserved
+        self.assertEqual(
+            [{"id": 3, "type": "HumanUser"}, {"id": 1, "type": "HumanUser"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["task_assignees"]
+            )["task_assignees"]
+        )
+        # Assign the Task to a user which is not known in Jira
+        bridge.shotgun.update(
+            sg_entity_type, sg_entity_id,
+            { "task_assignees": [{ "type": "HumanUser", "id": 2}]}
+        )
+        self.assertEqual(
+            [{"id": 2, "type": "HumanUser"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["task_assignees"]
+            )["task_assignees"]
+        )
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        # the known user should have been removed and the new assignee added
+        self.assertEqual(
+            [{"id": 1, "type": "HumanUser"}],
+            bridge.shotgun.find_one(
+                sg_entity_type,
+                [["id", "is", sg_entity_id]],
+                ["task_assignees"]
+            )["task_assignees"]
+        )
+
     def test_jira_2_shotgun(self, mocked_jira, mocked_sg):
         """
         Test syncing from Jira to Shotgun
@@ -678,4 +847,3 @@ class TestJiraSyncer(TestBase):
                 JIRA_EVENT,
             )
         )
-
