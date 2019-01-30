@@ -466,6 +466,8 @@ class Bridge(object):
         .. note:: Shotgun schemas are cached and the bridge needs to be restarted
                   if schemas are changed in Shotgun.
 
+        :param str entity_type: A Shotgun Entity type.
+        :param str field_name: A Shotgun field name, e.g. 'sg_my_precious'.
         :returns: The Shotgun schema for the given field as a dictionary or `None`.
         """
         if entity_type not in self._shotgun_schemas:
@@ -490,7 +492,6 @@ class Bridge(object):
             logger.debug("Clearing all cached Shotgun schemas")
             self._shotgun_schemas = {}
 
-
     @staticmethod
     def get_sg_entity_name_field(entity_type):
         """
@@ -501,3 +502,24 @@ class Bridge(object):
         """
         # Deal with some known special cases and assume "code" for anything else.
         return SG_ENTITY_SPECIAL_NAME_FIELDS.get(entity_type, "code")
+
+    def is_project_shotgun_entity(self, entity_type):
+        """
+        Return `True` if the given Shotgun Entity type is a project Entity,
+        `False` if it is a non-project Entity.
+
+        :param str entity_type: A Shotgun Entity type.
+        """
+        if entity_type not in self._shotgun_schemas:
+            self._shotgun_schemas[entity_type] = self._shotgun.schema_field_read(
+                entity_type
+            )
+        # We only check for standard Shotgun project field
+        field_schema = self._shotgun_schemas[entity_type].get("project")
+        if not field_schema:
+            return False
+        # We don't need to check the field data type: it is not possible to
+        # to create a custom "project" field (it would be sg_project) and it
+        # is very unlikely that anyone would even try to tweak this critical
+        # standard field.
+        return True

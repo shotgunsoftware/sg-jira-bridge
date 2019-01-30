@@ -148,10 +148,9 @@ class TaskIssueSyncer(Syncer):
             "project.Project.name",
             SHOTGUN_JIRA_ID_FIELD
         ]
-        sg_entity = self.shotgun.find_one(
-            entity_type,
-            [["id", "is", entity_id]],
-            task_fields
+        sg_entity = self.consolidate_shotgun_entity(
+            {"type": entity_type, "id": entity_id},
+            fields=task_fields
         )
         if not sg_entity:
             self._logger.warning("Unable to retrieve a %s with id %d" % (
@@ -343,10 +342,9 @@ class TaskIssueSyncer(Syncer):
             )
         shotgun_type = fields.get(self.bridge.jira_shotgun_type_field)
         sg_fields = [field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field]
-        sg_entity = self.bridge.shotgun.find_one(
-            shotgun_type,
-            [["id", "is", int(shotgun_id)]],
-            sg_fields,
+        sg_entity = self.consolidate_shotgun_entity(
+            {"type": shotgun_type, "id": int(shotgun_id)},
+            fields=sg_fields,
         )
         if not sg_entity:
             # Note: For the time being we don't allow Jira to create new Shotgun

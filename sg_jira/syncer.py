@@ -9,7 +9,7 @@ import logging
 from jira import JIRAError
 import jira
 
-from .errors import UnsuitableShotgunValue
+from .errors import UnsuitableShotgunValue, UnsuitableJiraValue
 
 
 class Syncer(object):
@@ -394,31 +394,34 @@ class Syncer(object):
         # Return the modified current value
         return current_value
 
-    def consolidate_shotgun_entity(self, shotgun_entity):
+    def consolidate_shotgun_entity(self, shotgun_entity, fields=None):
         """
         Consolidate the given Shotgun Entity: collect additional field values,
         ensure the Entity name is available under a "name" key.
 
         :param shotgun_entity: A Shotgun Entity dictionary with at least its id
                                and its type.
+        :param fields: An optional list of fields to add to the query.
         :returns: The consolidated Shotgun Entity or `None` if it can't be retrieved.
         """
 
         # Define the fields we need to handle the Entity type.
         needed_fields = []
         entity_type = shotgun_entity["type"]
+        name_field = self.bridge.get_sg_entity_name_field(entity_type)
+
         if entity_type == "HumanUser":
-            needed_fields = ["email", "name"]
+            needed_fields = [name_field, "email"]
         elif entity_type == "Task":
-            needed_fields = ["content", "task_assignees"]
-        elif entity_type == "Note":
-            needed_fields = ["subject"]
-        elif entity_type == "Delivery":
-            needed_fields = ["title"]
-        elif entity_type in ["Project", "Department", "Tag"]:
-            needed_fields = ["name"]
+            needed_fields = [name_field, "task_assignees"]
         else:
-            needed_fields = ["code"]
+            needed_fields = [name_field]
+
+        if self.is_project_shotgun_entity(shotgun_entity["type"]):
+            needed_fields.append("project")
+
+        if fields:
+            needed_fields.extend(fields)
 
         # Do a Shotgun query if any field is missing
         missing = [needed for needed in needed_fields if needed not in shotgun_entity]
@@ -426,7 +429,7 @@ class Syncer(object):
             consolidated = self.bridge.shotgun.find_one(
                 shotgun_entity["type"],
                 [["id", "is", shotgun_entity["id"]]],
-                missing,
+                missing + shotgun_entity.keys(),
             )
             if not consolidated:
                 self._logger.warning(
@@ -439,14 +442,8 @@ class Syncer(object):
             shotgun_entity = consolidated
 
         # Ensure a consistent way to retrieve the Entity name
-        if entity_type == "Task":
-            shotgun_entity["name"] = shotgun_entity["content"]
-        elif entity_type == "Note":
-            shotgun_entity["name"] = shotgun_entity["subject"]
-        elif entity_type == "Delivery":
-            shotgun_entity["name"] = shotgun_entity["title"]
-        elif entity_type not in ["HumanUser", "Project", "Department", "Tag"]:
-            shotgun_entity["name"] = shotgun_entity["code"]
+        if name_field != "name":
+            shotgun_entity["name"] = shotgun_entity[name_field]
         return shotgun_entity
 
     def get_jira_value_for_shotgun_value(
@@ -704,7 +701,7 @@ class Syncer(object):
 
         :param shotgun_entity: A Shotgun Entity dictionary with at least a type
                                and an id.
-        :param jira_issue: A raw Jira Issue dictionary.
+        :param jira_issue: A Jira Issue raw dictionary.
         :param jira_field_id: A Jira field id as a string.
         :param change: A dictionary with the field change retrieved from the
                        event change log.
@@ -713,8 +710,7 @@ class Syncer(object):
                   value could be retrieved.
         :raises: UnsuitableJiraValue if the Jira value can't be translated
                  into a valid Shotgun value.
-        :raises: ValueError if the target Shotgun field schema does not allow
-                 any update.
+        :raises: ValueError if the target Shotgun field is not valid.
         """
 
         # Retrieve the Shotgun field to update
@@ -755,11 +751,10 @@ class Syncer(object):
             )
             return shotgun_field, shotgun_value
         # General case
-        shotgun_value = self.get_shotgun_value_from_jira_value(
+        shotgun_value = self.get_shotgun_value_from_jira_issue_change(
             shotgun_entity,
             shotgun_field,
             shotgun_field_schema,
-            jira_issue,
             change
         )
         return shotgun_field, shotgun_value
@@ -776,6 +771,14 @@ class Syncer(object):
         Retrieve a Shotgun assignmemnt value from the given Jira change.
 
         This method supports single entity and multi entity fields.
+
+        :param str shotgun_entity: A Shotgun Entity dictionary as retrieved from
+                                   Shotgun.
+        :param str shotgun_field: The Shotgun Entity field to get a value for.
+        :param shotgun_field_schema: The Shotgun Entity field schema.
+        :param jira_issue: A Jira Issue raw dictionary.
+        :param change: A Jira event changelog dictionary with 'from' and
+                       'to' keys.
 
         :returns: The updated value to set in Shotgun for the given field.
         :raises: ValueError if the target Shotgun field is not suitable
@@ -911,16 +914,24 @@ class Syncer(object):
                 current_sg_assignment = sg_user
         return current_sg_assignment
 
-    def get_shotgun_value_from_jira_value(
+    def get_shotgun_value_from_jira_issue_change(
         self,
         shotgun_entity,
         shotgun_field,
         shotgun_field_schema,
-        jira_issue,
         change,
     ):
         """
+        Return a Shotgun value suitable to update the given Shotgun Entity field
+        from the given Jira change.
 
+        :param str shotgun_entity: A Shotgun Entity dictionary as retrieved from
+                                   Shotgun.
+        :param str shotgun_field: The Shotgun Entity field to get a value for.
+        :param shotgun_field_schema: The Shotgun Entity field schema.
+        :param change: A Jira event changelog dictionary with 'fromString' and
+                       'toString' keys.
+        :raises: RuntimeError if the Shotgun Entity can't be retrieved from Shotgun.
         """
         data_type = shotgun_field_schema["data_type"]["value"]
         if data_type == "text":
@@ -948,7 +959,7 @@ class Syncer(object):
             self.shotgun.schema_field_update(
                 shotgun_entity["type"],
                 shotgun_field,
-                {"valid_values" : all_allowed}
+                {"valid_values": all_allowed}
             )
             # Clear the schema to take into account the change we just made.
             self.bridge.clear_cached_shotgun_field_schema(shotgun_entity["type"])
@@ -988,7 +999,19 @@ class Syncer(object):
                 new_list = set(change["toString"].split(" "))
             removed_list = old_list - new_list
             added_list = new_list - old_list
-            current_sg_value = shotgun_entity.get(shotgun_field)
+            # Make sure we have the current value and the Shotgun project
+            consolidated = self.consolidate_shotgun_entity(
+                shotgun_entity,
+                fields=[shotgun_field, "project"]
+            )
+            if not consolidated:
+                raise RuntimeError(
+                    "Unable to retrieve the %s with the id %d from Shotgun" % (
+                        shotgun_entity["type"],
+                        shotgun_entity["id"]
+                    )
+                )
+            current_sg_value = consolidated[shotgun_field]
             for removed in removed_list:
                 # Try to remove the entries from the Shotgun value. We make a
                 # copy of the list so we can delete entries while iterating
@@ -1006,38 +1029,81 @@ class Syncer(object):
                         del current_sg_value[i]
             for added in added_list:
                 # Check if the value is already there
+                self._logger.debug("Checking %s against %s" % (
+                    added, current_sg_value,
+                ))
                 for sg_value in current_sg_value:
                     # Match the SG entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
                     # even if the linked Entities use another field to store their
                     # name e.g. "code"
                     if added.lower() == sg_value["name"].lower():
+                        self._logger.debug(
+                            "%s is already in current value as %s" % (
+                                added, sg_value,
+                            )
+                        )
                         break
                 else:
                     # We need to retrieve a matching Entity from Shotgun and
                     # add it to the list, if we found one.
-                    for allowed_entity in allowed_entities:
-                        name_field = self.bridge.get_sg_entity_name_field(
-                            allowed_entity
-                        )
-                        sg_value = self.shotgun.find_one(
-                            allowed_entity,
-                            [[name_field, "is", added]]
-                        )
-                        if sg_value:
-                            self._logger.debug(
-                                "Adding %s for %s to Shotgun value %s" % (
-                                    sg_value, added, current_sg_value,
-                                )
+                    sg_value = self.match_shotgun_entity_by_name(
+                        added,
+                        allowed_entities,
+                        consolidated["project"]
+                    )
+                    if sg_value:
+                        self._logger.debug(
+                            "Adding %s for %s to Shotgun value %s" % (
+                                sg_value, added, current_sg_value,
                             )
-                            current_sg_value.append(sg_value)
-                            break
+                        )
+                        current_sg_value.append(sg_value)
+                    else:
+                        self._logger.debug(
+                            "Couldn't retrieve a %s named '%s'" % (
+                                " or a ".join(allowed_entities),
+                                added
+                            )
+                        )
+
             return current_sg_value
         raise ValueError("%s Change %s" % (data_type, change))
 
         if data_type == "entity":
             pass
 
+    def match_shotgun_entity_by_name(self, name, entity_types, shotgun_project):
+        """
+        Retrieve a Shotgun Entity with the given name from the given list of
+        Entity types.
+
+        Project Shotgun Entities are restricted to the given Shotgun Project.
+
+        :param str name: A name to match.
+        :param entity_types: A list of Shotgun Entity types to consider.
+        :param shotgun_project: A Shotgun Project dictionary.
+        :return: A Shotgun Entity dictionary or `None`.
+        """
+        for entity_type in entity_types:
+            name_field = self.bridge.get_sg_entity_name_field(
+                entity_type
+            )
+            filter = [[name_field, "is", name]]
+            fields = [name_field]
+            if self.is_project_shotgun_entity(entity_type):
+                filter.append(
+                    ["project", "is", shotgun_project]
+                )
+                fields.append("project")
+            sg_value = self.shotgun.find_one(
+                entity_type,
+                filter,
+                fields,
+            )
+            if sg_value:
+                return self.consolidate_shotgun_entity(sg_value)
+        return None
 
     def sanitize_jira_update_value(self, jira_value, jira_field_schema):
         """
@@ -1496,3 +1562,12 @@ class Syncer(object):
             resource_id,
             event
         ))
+
+    def is_project_shotgun_entity(self, entity_type):
+        """
+        Return `True` if the given Shotgun Entity type is a project Entity,
+        `False` if it is a non-project Entity.
+
+        :param str entity_type: A Shotgun Entity type.
+        """
+        return self.bridge.is_project_shotgun_entity(entity_type)

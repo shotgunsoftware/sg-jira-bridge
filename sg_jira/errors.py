@@ -34,12 +34,14 @@ class UnsuitableSyncValue(ValueError):
         """
         return self._value
 
+
 class UnsuitableShotgunValue(UnsuitableSyncValue):
     """
     An exception raised when a Shotgun value can't be translated to a valid
     Jira value for a given field.
     """
     pass
+
 
 class UnsuitableJiraValue(UnsuitableSyncValue):
     """
