@@ -634,3 +634,14 @@ class MockedJira(object):
         if startAt == 0:
             return [User(None, None, JIRA_USER_2)] * maxResults
         return [User(None, None, JIRA_USER)]
+
+    def user(self, id):
+        """
+        Mocked Jira method.
+        Return :class:`JiraUser`.
+        """
+        if id == JIRA_USER["key"]:
+            return User(None, None, JIRA_USER)
+        if id == JIRA_USER_2["key"]:
+            return User(None, None, JIRA_USER_2)
+        return None
