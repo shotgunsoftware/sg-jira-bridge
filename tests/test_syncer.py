@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2018 Autodesk, Inc.  All rights reserved.
 #
 # Use of this software is subject to the terms of the Autodesk license agreement
@@ -1070,3 +1071,64 @@ class TestJiraSyncer(TestBase):
                 JIRA_EVENT,
             )
         )
+
+
+    def test_unicode(self, mocked_jira, mocked_sg):
+        """
+        Test unicode values are correclty handled.
+        """
+        unicode_string = u"No Sync unicode_îéö_😀"
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        # Faked Jira project
+        bridge.jira.set_projects([JIRA_PROJECT])
+        # Values we get back from Shotgun are never unicode
+        sg_project = {"id": 2, "name": unicode_string.encode("utf-8"), "type": "Project", SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY}
+        self.add_to_sg_mock_db(
+            bridge.shotgun,
+            sg_project,
+        )
+        sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
+        sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
+        self.assertEqual(
+            [],
+            bridge.shotgun.find(sg_entity_type, [["id", "is", sg_entity_id]])
+        )
+        self.add_to_sg_mock_db(
+            bridge.shotgun, {
+                "type": sg_entity_type,
+                "id": sg_entity_id,
+                "content": "%s %s (%d)" % (
+                    sg_entity_type,
+                    unicode_string.encode("utf-8"),
+                    sg_entity_id
+                ),
+                "task_assignees": [],
+                "project": sg_project,
+            }
+        )
+        bridge.sync_in_jira(
+            "task_issue",
+            sg_entity_type,
+            sg_entity_id,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 1},
+                "meta": {
+                    "type": "attribute_change",
+                    "entity_id": sg_entity_id,
+                    "attribute_name": "content",
+                    "entity_type": sg_entity_type,
+                    "field_data_type": "text",
+                    "new_value": unicode_string.encode("utf-8"),
+                    "old_value": "",
+                }
+            }
+        )
+#        self.assertTrue(
+#            bridge.sync_in_shotgun(
+#                "task_issue",
+#                "Issue",
+#                "FAKED-01",
+#                JIRA_EVENT,
+#            )
+#        )

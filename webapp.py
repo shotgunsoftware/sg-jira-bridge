@@ -76,11 +76,16 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         Handle a GET request.
         """
-        self.send_response(200, "The server is alive")
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
+        # Extract path components from the path, ignore leading '/' and
+        # discard empty values coming from '/' at the end or multiple
+        # contiguous '/'
         path_parts = [x for x in self.path[1:].split("/") if x]
+        if not path_parts:
+            self.send_response(200, "The server is alive")
+            return
         if len(path_parts) < 2:
             self.send_error(400, "Invalid request path %s" % self.path)
             return
