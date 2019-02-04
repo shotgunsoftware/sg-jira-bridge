@@ -38,14 +38,14 @@ class TestService(unittest.TestCase):
             service.status(pid_f.name)
 
     @unittest.skipUnless(
-        os.environ.get("SG_JIRA_SG_SITE")
-        and os.environ.get("SG_JIRA_SG_SCRIPT_NAME")
-        and os.environ.get("SG_JIRA_SG_SCRIPT_KEY")
-        and os.environ.get("SG_JIRA_JIRA_SITE")
-        and os.environ.get("SG_JIRA_JIRA_USER")
-        and os.environ.get("SG_JIRA_JIRA_USER_SECRET"),
-        "Requires SG_JIRA_SG_SITE, SG_JIRA_SG_SCRIPT_NAME, SG_JIRA_SG_SCRIPT_KEY, "
-        "SG_JIRA_JIRA_SITE, SG_JIRA_JIRA_USER, SG_JIRA_JIRA_USER_SECRET env vars."
+        os.environ.get("SGJIRA_SG_SITE")
+        and os.environ.get("SGJIRA_SG_SCRIPT_NAME")
+        and os.environ.get("SGJIRA_SG_SCRIPT_KEY")
+        and os.environ.get("SGJIRA_JIRA_SITE")
+        and os.environ.get("SGJIRA_JIRA_USER")
+        and os.environ.get("SGJIRA_JIRA_USER_SECRET"),
+        "Requires SGJIRA_SG_SITE, SGJIRA_SG_SCRIPT_NAME, SGJIRA_SG_SCRIPT_KEY, "
+        "SGJIRA_JIRA_SITE, SGJIRA_JIRA_USER, SGJIRA_JIRA_USER_SECRET env vars."
     )
     def test_service_start_stop(self):
         """
