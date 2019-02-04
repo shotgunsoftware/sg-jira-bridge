@@ -25,12 +25,12 @@ and made available in Boards.
  ### Setting up Shotgun and Jira credentials
  
  Credentials are retrieved by default from environment variables:
- - SG_JIRA_SG_SITE: the Shotgun site url.
- - SG_JIRA_SG_SCRIPT_NAME: a Shotgun script user name.
- - SG_JIRA_SG_SCRIPT_KEY: the Shotgun script user secret key.
- - SG_JIRA_JIRA_SITE: the Jira server url.
- - SG_JIRA_JIRA_USER: a Jira user system name (not a display name).
- - SG_JIRA_JIRA_USER_SECRET: the Jira user password.
+ - SGJIRA_SG_SITE: the Shotgun site url.
+ - SGJIRA_SG_SCRIPT_NAME: a Shotgun script user name.
+ - SGJIRA_SG_SCRIPT_KEY: the Shotgun script user secret key.
+ - SGJIRA_JIRA_SITE: the Jira server url.
+ - SGJIRA_JIRA_USER: a Jira user system name (not a display name).
+ - SGJIRA_JIRA_USER_SECRET: the Jira user password.
  
  These values can be defined in a `.env` file if https://pypi.org/project/python-dotenv is installed on your machine. 
  
@@ -51,18 +51,18 @@ The trigger uses the following environment variables to retrieve Shotgun credent
 - SGDAEMON_SGJIRA_NAME: a Shotgun script user name.
 - SGDAEMON_SGJIRA_KEY: the Shotgun script user secret key.
 
-Add `sg_jira_sync_url` url field to Projects in Shotgun and set it to `http://localhost:9090/sg2jira/default`
+Add a _Jira Sync Url_ File/Link field (system name `sg_jira_sync_url`) to Projects in Shotgun and set it to `http://localhost:9090/sg2jira/default`
 on the Project you want to use for your tests.
 
-### Setting up the Jira web hook
+### Setting up the Jira webhook
 
 If using a cloud Jira server, you can use ngrok https://ngrok.com to allow it to access your
 local machine: `ngrok http 9090`.
 
-Go to the Jira system settings and enable a web hook target with something like: `https://c66cdcc6.ngrok.io/jira2sg/default/issue/${issue.key}`
+Go to the Jira system settings and enable a webhook target with something like: `https://c66cdcc6.ngrok.io/jira2sg/default/issue/${issue.key}`
 
 Subscribe to Issue created, deleted, updated events and make sure that Exclude body is **not** on.
-You can restrict the web hook to a particular Jira project by having a JQL query like `project = "My test project"`
+You can restrict the webhook to a particular Jira project by having a JQL query like `project = "My test project"`
 
 ## Custom syncing logic
 

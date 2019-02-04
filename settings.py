@@ -22,17 +22,17 @@ except ImportError:
 
 # Shotgun site and credentials
 SHOTGUN = {
-    "site": os.environ.get("SG_JIRA_SG_SITE"),
-    "script_name": os.environ.get("SG_JIRA_SG_SCRIPT_NAME"),
-    "script_key": os.environ.get("SG_JIRA_SG_SCRIPT_KEY"),
+    "site": os.environ.get("SGJIRA_SG_SITE"),
+    "script_name": os.environ.get("SGJIRA_SG_SCRIPT_NAME"),
+    "script_key": os.environ.get("SGJIRA_SG_SCRIPT_KEY"),
     "http_proxy": None, # If set, the Shotgun connection is done through this proxy.
 }
 # Jira site and credentials, the user name needs to be an email address or
 # the user login name, e.g. ford_escort for "Ford Escort".
 JIRA = {
-    "site": os.environ.get("SG_JIRA_JIRA_SITE"),
-    "user": os.environ.get("SG_JIRA_JIRA_USER"),
-    "secret": os.environ.get("SG_JIRA_JIRA_USER_SECRET"),
+    "site": os.environ.get("SGJIRA_JIRA_SITE"),
+    "user": os.environ.get("SGJIRA_JIRA_USER"),
+    "secret": os.environ.get("SGJIRA_JIRA_USER_SECRET"),
 }
 
 # Define logging
