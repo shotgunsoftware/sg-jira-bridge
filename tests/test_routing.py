@@ -30,6 +30,7 @@ Content-Length: %d
 UNICODE_STRING = u"unicode_îéö_😀"
 UTF8_ENCODED_STRING = UNICODE_STRING.encode("utf-8")
 
+
 class MockServer(object):
     """
     Mock some of the web server methods.
