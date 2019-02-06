@@ -14,14 +14,15 @@ import importlib
 # import jira
 from jira import JIRAError
 import jira
-import shotgun_api3
 
+from .shotgun_session import ShotgunSession
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
 from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD
 from .constants import SHOTGUN_JIRA_ID_FIELD
 from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
+from .utils import utf8_decode
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -61,7 +62,7 @@ class Bridge(object):
                                   connection, or None.
         """
         super(Bridge, self).__init__()
-        self._shotgun = shotgun_api3.Shotgun(
+        self._shotgun = ShotgunSession(
             sg_site,
             script_name=sg_script,
             api_key=sg_script_key,
@@ -318,10 +319,17 @@ class Bridge(object):
         """
         synced = False
         try:
+            # Shotgun events might contain utf-8 encoded strings, convert them
+            # to unicode before processing.
+            safe_event = utf8_decode(event)
             syncer = self.get_syncer(settings_name)
-            if syncer.accept_shotgun_event(entity_type, entity_id, event):
-                self._shotgun.set_session_uuid(event.get("session_uuid"))
-                synced = syncer.process_shotgun_event(entity_type, entity_id, event)
+            if syncer.accept_shotgun_event(entity_type, entity_id, safe_event):
+                self._shotgun.set_session_uuid(safe_event.get("session_uuid"))
+                synced = syncer.process_shotgun_event(
+                    entity_type,
+                    entity_id,
+                    safe_event
+                )
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)

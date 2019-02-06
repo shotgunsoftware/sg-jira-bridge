@@ -1072,12 +1072,12 @@ class TestJiraSyncer(TestBase):
             )
         )
 
-
     def test_unicode(self, mocked_jira, mocked_sg):
         """
         Test unicode values are correclty handled.
         """
         unicode_string = u"No Sync unicode_îéö_😀"
+        encoded_string = unicode_string.encode("utf-8")
         syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
         # Faked Jira project
         bridge.jira.set_projects([JIRA_PROJECT])
@@ -1087,32 +1087,45 @@ class TestJiraSyncer(TestBase):
             bridge.shotgun,
             sg_project,
         )
+        sg_user = {
+            "status": "act",
+            "valid": "valid",
+            "type": "HumanUser",
+            "name": "Ford Prefect %s" % encoded_string,
+            "id": 1,
+            "email": JIRA_USER["emailAddress"]
+        }
+        self.add_to_sg_mock_db(
+            bridge.shotgun,
+            [sg_project, sg_user],
+        )
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
         sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
         self.assertEqual(
             [],
             bridge.shotgun.find(sg_entity_type, [["id", "is", sg_entity_id]])
         )
+        sg_task = {
+            "type": sg_entity_type,
+            "id": sg_entity_id,
+            "content": "%s %s (%d)" % (
+                sg_entity_type,
+                encoded_string,
+                sg_entity_id
+            ),
+            "task_assignees": [sg_user],
+            "project": sg_project,
+        }
         self.add_to_sg_mock_db(
-            bridge.shotgun, {
-                "type": sg_entity_type,
-                "id": sg_entity_id,
-                "content": "%s %s (%d)" % (
-                    sg_entity_type,
-                    unicode_string.encode("utf-8"),
-                    sg_entity_id
-                ),
-                "task_assignees": [],
-                "project": sg_project,
-            }
+            bridge.shotgun, sg_task
         )
         bridge.sync_in_jira(
             "task_issue",
             sg_entity_type,
             sg_entity_id,
             {
-                "user": {"type": "HumanUser", "id": 1},
-                "project": {"type": "Project", "id": 1},
+                "user": sg_user,
+                "project": sg_project,
                 "meta": {
                     "type": "attribute_change",
                     "entity_id": sg_entity_id,
@@ -1124,11 +1137,52 @@ class TestJiraSyncer(TestBase):
                 }
             }
         )
-#        self.assertTrue(
-#            bridge.sync_in_shotgun(
-#                "task_issue",
-#                "Issue",
-#                "FAKED-01",
-#                JIRA_EVENT,
-#            )
-#        )
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                JIRA_EVENT,
+            )
+        )
+        jira_event = dict(JIRA_EVENT)
+        jira_event["changelog"] = {
+            "id": "123456",
+            "items": [{
+                "from": JIRA_USER_2["key"],
+                "to": JIRA_USER["key"],
+                "fromString": JIRA_USER_2["displayName"],
+                "field": "assignee",
+                "toString": sg_user["name"].decode("utf-8"),
+                "fieldtype": "jira",
+                "fieldId": "assignee"
+            }, {
+                "field": "summary",
+                "fieldId": "summary",
+                "fieldtype": "jira",
+                "from": None,
+                "fromString": "foo ba",
+                "to": None,
+                "toString": "foo bar %s" % unicode_string
+            }]
+        }
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
+        )
+        # Retrieve the updated Task and check it
+        updated_task = bridge.shotgun.find_one(
+            sg_task["type"],
+            [["id", "is", sg_task["id"]]],
+            fields=sg_task.keys()
+        )
+        for k, v in updated_task.iteritems():
+            # All keys should be unicode
+            self.assertTrue(isinstance(k, unicode))
+            # We shouldn't have any string value, just unicode
+            self.assertFalse(isinstance(v, str))
