@@ -1,0 +1,210 @@
+# Copyright 2018 Autodesk, Inc.  All rights reserved.
+#
+# Use of this software is subject to the terms of the Autodesk license agreement
+# provided at the time of installation or download, or which otherwise accompanies
+# this software in either electronic or hard copy form.
+#
+
+import logging
+import shotgun_api3
+
+from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
+from .utils import utf8_decode, utf8_encode
+
+logger = logging.getLogger(__name__)
+
+
+class ShotgunSession(object):
+    """
+    Wrap a :class:`shotgun_api3.Shotgun` instance and provide some helpers and
+    session caches.
+
+    Ensure all the values we get from Shotgun are unicode and not utf-8 encoded
+    strings. Utf-8 encode unicode values before sending them to Shotgun.
+    """
+
+    # The list of Shotgun methods we need to wrap.
+    _WRAP_SHOTGUN_METHODS = [
+        "authenticate_human_user",
+        "create",
+        "find_one",
+        "find",
+        "update",
+        "batch",
+        "upload",
+        "upload_thumbnail",
+        "upload_filmstrip_thumbnail",
+        "download_attachment",
+        "get_attachment_download_url",
+        "schema_entity_read",
+        "schema_field_create",
+        "schema_field_delete",
+        "schema_field_read",
+        "schema_field_update",
+        "schema_read",
+        "share_thumbnail",
+    ]
+
+    def __init__(self, base_url, script_name=None, *args, **kwargs):
+        """
+        Instantiate a :class:`shotgun_api3.Shotgun` with the sanitized parameters.
+        """
+        # Note: we use composition rather than inheritance to wrap the Shotgun
+        # instance. Otherwise we would have to redefine all the methods we need
+        # to wrap with some very similar code which would encode all params,
+        # blindly call the original method, decode and return the result.
+
+        safe_args = utf8_encode(args)
+        safe_kwargs = utf8_encode(kwargs)
+        self._shotgun = shotgun_api3.Shotgun(
+            utf8_encode(base_url),
+            utf8_encode(script_name),
+            *safe_args,
+            **safe_kwargs
+        )
+
+        self._shotgun_schemas = {}
+        # Retrieve our current login, this does not seem to be available from
+        # the connection?
+        self._shotgun_user = self.find_one(
+            "ApiUser",
+            [["firstname", "is", script_name]],
+            ["firstname"]
+        )
+        logger.info("Connected to %s." % base_url)
+
+    @property
+    def current_user(self):
+        """
+        Return the Shotgun user used for the connection.
+
+        :returns: A Shotgun record dictionary with an `id` key and a `type` key.
+        """
+        return self._shotgun_user
+
+    def assert_field(self, entity_type, field_name, field_type):
+        """
+        Check if the given field with the given type exists for the given Shotgun
+        Entity type.
+
+        :param str entity_type: A Shotgun Entity type.
+        :param str field_name: A Shotgun field name, e.g. 'sg_my_precious'.
+        :param str field_type: A Shotgun field type, e.g. 'text'.
+        :raises: RuntimeError if the field does not exist or does not have the
+                 expected type.
+        """
+        field = self.get_field_schema(entity_type, field_name)
+        if not field:
+            raise RuntimeError(
+                "Missing required custom Shotgun %s field %s" % (
+                    entity_type, field_name,
+                )
+            )
+        if field["data_type"]["value"] != field_type:
+            raise RuntimeError(
+                "Invalid type '%s' for %s.%s, it must be '%s'" % (
+                    field["data_type"]["value"],
+                    entity_type,
+                    field_name,
+                    field_type
+                )
+            )
+
+    def get_field_schema(self, entity_type, field_name):
+        """
+        Return the Shotgun schema for the given Entity field.
+
+        .. note:: Shotgun schemas are cached and the bridge needs to be restarted
+                  if schemas are changed in Shotgun.
+
+        :param str entity_type: A Shotgun Entity type.
+        :param str field_name: A Shotgun field name, e.g. 'sg_my_precious'.
+        :returns: The Shotgun schema for the given field as a dictionary or `None`.
+        """
+        if entity_type not in self._shotgun_schemas:
+            self._shotgun_schemas[entity_type] = self._shotgun.schema_field_read(
+                entity_type
+            )
+        field = self._shotgun_schemas[entity_type].get(field_name)
+        return field
+
+    def clear_cached_field_schema(self, entity_type=None):
+        """
+        Clear all cached Shotgun schema or just the cached schema for the given
+        Shotgun Entity type.
+
+        :param str entity_type: A Shotgun Entity type or None.
+        """
+        if entity_type:
+            logger.debug("Clearing cached Shotgun schema for %s" % entity_type)
+            if entity_type in self._shotgun_schemas:
+                del self._shotgun_schemas[entity_type]
+        else:
+            logger.debug("Clearing all cached Shotgun schemas")
+            self._shotgun_schemas = {}
+
+    @staticmethod
+    def get_entity_name_field(entity_type):
+        """
+        Return the Shotgun name field to use for the specified entity type.
+
+        :param str entity_type: The entity type to get the name field for.
+        :returns: The name field for the specified entity type.
+        """
+        # Deal with some known special cases and assume "code" for anything else.
+        return SG_ENTITY_SPECIAL_NAME_FIELDS.get(entity_type, "code")
+
+    def is_project_entity(self, entity_type):
+        """
+        Return `True` if the given Shotgun Entity type is a project Entity,
+        that is an Entity linked to a Project, `False` if it is a non-project
+        Entity.
+
+        :param str entity_type: A Shotgun Entity type.
+        """
+        if entity_type not in self._shotgun_schemas:
+            self._shotgun_schemas[entity_type] = self._shotgun.schema_field_read(
+                entity_type
+            )
+        # We only check for standard Shotgun project field
+        field_schema = self._shotgun_schemas[entity_type].get("project")
+        if not field_schema:
+            return False
+        # We don't need to check the field data type: it is not possible to
+        # to create a custom "project" field (it would be sg_project) and it
+        # is very unlikely that anyone would even try to tweak this critical
+        # standard field.
+        return True
+
+    def _get_wrapped_shotgun_method(self, method_name):
+        """
+        Return a wrapped Shotgun method which encodes all parameters and decodes
+        the result before returning it.
+
+        :param str method_name: A :class:`shotgun_api3.Shotgun` method name.
+        """
+        method_to_wrap = getattr(self._shotgun, method_name)
+
+        def wrapped(*args, **kwargs):
+            safe_args = utf8_encode(args)
+            safe_kwargs = utf8_encode(kwargs)
+            result = method_to_wrap(*safe_args, **safe_kwargs)
+            return utf8_decode(result)
+
+        return wrapped
+
+    def __getattr__(self, attribute_name):
+        """
+        Called when an attribute can't be found on this class instance.
+
+        Check if the name is one of the Shotgun method names we need to wrap,
+        return a wrapped method if it is the case.
+        Return the :class:`shotgun_api3.Shotgun` attribute otherwise.
+
+        :param str attribute_name: The attribute name to retrieve.
+        """
+        if attribute_name in self._WRAP_SHOTGUN_METHODS:
+            return self._get_wrapped_shotgun_method(attribute_name)
+        return getattr(self._shotgun, attribute_name)
+
+

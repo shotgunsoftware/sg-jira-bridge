@@ -11,6 +11,7 @@ import urlparse
 import BaseHTTPServer
 import json
 import ssl
+import logging
 
 import sg_jira
 
@@ -39,6 +40,9 @@ HMTL_TEMPLATE = """
     </body>
 </html>
 """
+
+# Please note that we can't use __name__ here as it would be __main__
+logger = logging.getLogger("webapp")
 
 
 class Server(BaseHTTPServer.HTTPServer):
@@ -76,11 +80,16 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         Handle a GET request.
         """
-        self.send_response(200, "The server is alive")
         self.send_header("Content-type", "text/html")
         self.end_headers()
 
+        # Extract path components from the path, ignore leading '/' and
+        # discard empty values coming from '/' at the end or multiple
+        # contiguous '/'
         path_parts = [x for x in self.path[1:].split("/") if x]
+        if not path_parts:
+            self.send_response(200, "The server is alive")
+            return
         if len(path_parts) < 2:
             self.send_error(400, "Invalid request path %s" % self.path)
             return
@@ -214,6 +223,28 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response(200, "POST request successful")
         except Exception as e:
             self.send_error(500, e.message)
+
+    def log_message(self, format, *args):
+        """
+        Override :class:`BaseHTTPServer.BaseHTTPRequestHandler` method to use a
+        standard logger.
+
+        :param str format: A format string, e.g. '%s %s'.
+        :param args: Arbitrary list of arguments to use with the format string.
+        """
+        message = "%s - %s" % (self.client_address[0], format % args)
+        logger.info(message)
+
+    def log_error(self, format, *args):
+        """
+        Override :class:`BaseHTTPServer.BaseHTTPRequestHandler` method to use a
+        standard logger.
+
+        :param str format: A format string, e.g. '%s %s'.
+        :param args: Arbitrary list of arguments to use with the format string.
+        """
+        message = "%s - %s" % (self.client_address[0], format % args)
+        logger.error(message)
 
 
 def run_server(port, settings, keyfile=None, certfile=None):

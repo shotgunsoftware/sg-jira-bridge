@@ -107,7 +107,7 @@ class TaskIssueSyncer(Syncer):
         Check the Jira and Shotgun site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
-        self.bridge.assert_shotgun_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
+        self.shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -409,7 +409,7 @@ class TaskIssueSyncer(Syncer):
                     shotgun_data,
                 )
             )
-            self.bridge.shotgun.update(
+            self.shotgun.update(
                 sg_entity["type"],
                 sg_entity["id"],
                 shotgun_data,

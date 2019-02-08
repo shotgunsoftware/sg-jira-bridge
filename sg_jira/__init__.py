@@ -8,3 +8,4 @@
 from .bridge import Bridge
 from .syncer import Syncer
 from .task_issue_syncer import TaskIssueSyncer
+from .utils import utf8_decode, utf8_encode

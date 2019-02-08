@@ -409,7 +409,7 @@ class Syncer(object):
         # Define the fields we need to handle the Entity type.
         needed_fields = []
         entity_type = shotgun_entity["type"]
-        name_field = self.bridge.get_sg_entity_name_field(entity_type)
+        name_field = self.shotgun.get_entity_name_field(entity_type)
 
         if entity_type == "HumanUser":
             needed_fields = [name_field, "email"]
@@ -418,7 +418,7 @@ class Syncer(object):
         else:
             needed_fields = [name_field]
 
-        if self.bridge.is_shotgun_project_entity(shotgun_entity["type"]):
+        if self.shotgun.is_project_entity(shotgun_entity["type"]):
             needed_fields.append("project")
 
         if fields:
@@ -427,7 +427,7 @@ class Syncer(object):
         # Do a Shotgun query if any field is missing
         missing = [needed for needed in needed_fields if needed not in shotgun_entity]
         if missing:
-            consolidated = self.bridge.shotgun.find_one(
+            consolidated = self.shotgun.find_one(
                 shotgun_entity["type"],
                 [["id", "is", shotgun_entity["id"]]],
                 missing + shotgun_entity.keys(),
@@ -587,7 +587,7 @@ class Syncer(object):
         :raises: InvalidShotgunValue if the Shotgun value can't be translated
                  into a valid Jira value.
         """
-        field_schema = self.bridge.get_shotgun_field_schema(
+        field_schema = self.shotgun.get_field_schema(
             shotgun_entity_type,
             shotgun_field
         )
@@ -736,7 +736,7 @@ class Syncer(object):
             return None, None
 
         # TODO: handle Shotgun Project specific fields?
-        shotgun_field_schema = self.bridge.get_shotgun_field_schema(
+        shotgun_field_schema = self.shotgun.get_field_schema(
             shotgun_entity["type"],
             shotgun_field
         )
@@ -996,7 +996,7 @@ class Syncer(object):
                 {"valid_values": all_allowed}
             )
             # Clear the schema to take into account the change we just made.
-            self.bridge.clear_cached_shotgun_field_schema(shotgun_entity["type"])
+            self.shotgun.clear_cached_field_schema(shotgun_entity["type"])
             return value
 
         if data_type == "status_list":
@@ -1180,12 +1180,12 @@ class Syncer(object):
         :return: A Shotgun Entity dictionary or `None`.
         """
         for entity_type in entity_types:
-            name_field = self.bridge.get_sg_entity_name_field(
+            name_field = self.shotgun.get_entity_name_field(
                 entity_type
             )
             filter = [[name_field, "is", name]]
             fields = [name_field]
-            if self.bridge.is_shotgun_project_entity(entity_type):
+            if self.shotgun.is_project_entity(entity_type):
                 filter.append(
                     ["project", "is", shotgun_project]
                 )

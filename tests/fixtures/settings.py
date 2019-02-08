@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright 2018 Autodesk, Inc.  All rights reserved.
 #
 # Use of this software is subject to the terms of the Autodesk license agreement
@@ -109,5 +111,14 @@ SYNC = {
         "settings": {
             "log_level": logging.DEBUG
         },
+    },
+    "unicode_😀": {
+        # The syncer class to use
+        "syncer": "sg_jira.TaskIssueSyncer",
+        # And its specific settings which are passed to its __init__ method
+        "settings": {
+            "foo_îéö😀": "blah_îéö😀"
+        },
+
     }
 }
