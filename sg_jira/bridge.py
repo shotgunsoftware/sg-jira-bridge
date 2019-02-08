@@ -314,9 +314,10 @@ class Bridge(object):
             # to unicode before processing.
             safe_event = utf8_decode(event)
             syncer = self.get_syncer(settings_name)
-            if syncer.accept_shotgun_event(entity_type, entity_id, safe_event):
+            handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
+            if handler:
                 self._shotgun.set_session_uuid(safe_event.get("session_uuid"))
-                synced = syncer.process_shotgun_event(
+                synced = handler.process_shotgun_event(
                     entity_type,
                     entity_id,
                     safe_event
