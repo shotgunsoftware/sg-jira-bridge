@@ -42,7 +42,7 @@ class Syncer(object):
     @property
     def shotgun(self):
         """
-        Return a connected Shotgun handle.
+        Return a connected :class:`ShotgunSession` instance.
         """
         return self._bridge.shotgun
 
@@ -605,6 +605,10 @@ class Syncer(object):
             if handler.accept_shotgun_event(entity_type, entity_id, event):
                 return handler
 
+        self._logger.debug("Event %s was rejected by all handlers %s" % (
+            event,
+            self.handlers,
+        ))
         return None
 
     def accept_jira_event(self, resource_type, resource_id, event):
@@ -614,7 +618,8 @@ class Syncer(object):
         :param str resource_type: The type of Jira resource sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
-        :returns: True if the event is accepted for processing, False otherwise.
+        :returns: A :class:`SyncHandler` instance if the event is accepted for
+                  processing, `None` otherwise.
         """
         # Check we didn't trigger the event to avoid infinite loops.
         user = event.get("user")
@@ -624,14 +629,26 @@ class Syncer(object):
                     event,
                     user["name"],
                 ))
-                return False
+                return None
             if user["emailAddress"].lower() == self.bridge.current_jira_username.lower():
                 self._logger.debug("Rejecting event %s triggered by us (%s)" % (
                     event,
                     user["emailAddress"],
                 ))
-                return False
-        return True
+                return None
+
+        # Loop over all handlers and return the first one which accepts the
+        # event for the given entity
+        for handler in self.handlers:
+            if handler.accept_jira_event(resource_type, resource_id, event):
+                self._logger.debug("Dispatching event to %s" % handler)
+                return handler
+
+        self._logger.debug("Event %s was rejected by all handlers %s" % (
+            event,
+            self.handlers,
+        ))
+        return None
 
     def process_jira_event(self, resource_type, resource_id, event):
         """

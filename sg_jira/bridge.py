@@ -342,7 +342,8 @@ class Bridge(object):
         synced = False
         try:
             syncer = self.get_syncer(settings_name)
-            if syncer.accept_jira_event(resource_type, resource_id, event):
+            handler = syncer.accept_jira_event(resource_type, resource_id, event)
+            if handler:
                 synced = syncer.process_jira_event(resource_type, resource_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up

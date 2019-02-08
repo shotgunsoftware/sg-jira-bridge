@@ -44,7 +44,10 @@ class TaskIssueSyncer(Syncer):
         """
         Return a list of :class:`SyncHandler` instances.
         """
-        return [TaskIssueHandler(self), NoteCommentHandler(self)]
+        return [
+            TaskIssueHandler(self, self._issue_type),
+            NoteCommentHandler(self)
+        ]
 
     @property
     def sg_jira_statuses_mapping(self):
@@ -79,68 +82,6 @@ class TaskIssueSyncer(Syncer):
         and cache any value which is slow to retrieve.
         """
         self.shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
-
-    def accept_jira_event(self, resource_type, resource_id, event):
-        """
-        Accept or reject the given event for the given Jira resource.
-
-        :param str resource_type: The type of Jira resource sync, e.g. Issue.
-        :param str resource_id: The id of the Jira resource to sync.
-        :param event: A dictionary with the event meta data for the change.
-        :returns: True if the event is accepted for processing, False otherwise.
-        """
-        if resource_type.lower() != "issue":
-            self._logger.debug("Rejecting event for a %s Jira resource" % resource_type)
-            return False
-        # Check the event payload and reject the event if we don't have what we
-        # expect
-        jira_issue = event.get("issue")
-        if not jira_issue:
-            self._logger.debug("Rejecting event %s without an issue" % event)
-            return False
-
-        webhook_event = event.get("webhookEvent")
-        if not webhook_event or webhook_event not in ["jira:issue_updated", "jira:issue_created"]:
-            self._logger.debug(
-                "Rejecting event %s with an unsupported webhook event %s" % (event, webhook_event)
-            )
-            return False
-
-        changelog = event.get("changelog")
-        if not changelog:
-            self._logger.debug("Rejecting event %s without a changelog" % event)
-            return False
-
-        fields = jira_issue.get("fields")
-        if not fields:
-            self._logger.debug("Rejecting event %s without issue fields" % event)
-            return False
-
-        issue_type = fields.get("issuetype")
-        if not issue_type:
-            self._logger.debug("Rejecting event %s with an unknown issue type" % event)
-            return False
-        if issue_type["name"] != self._issue_type:
-            self._logger.debug("Rejecting event %s without a %s issue type" % (event, issue_type["name"]))
-            return False
-
-        shotgun_id = fields.get(self.bridge.jira_shotgun_id_field)
-        shotgun_type = fields.get(self.bridge.jira_shotgun_type_field)
-        if not shotgun_id or not shotgun_type:
-            self._logger.debug(
-                "Rejecting event %s for %s %s not linked to a Shotgun Entity" % (
-                    event,
-                    issue_type["name"],
-                    resource_id,
-                )
-            )
-            return False
-
-        return super(TaskIssueSyncer, self).accept_jira_event(
-            resource_type,
-            resource_id,
-            event
-        )
 
     def process_jira_event(self, resource_type, resource_id, event):
         """
