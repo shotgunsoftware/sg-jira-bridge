@@ -96,7 +96,7 @@ Credentials are retrieved by default from environment variables:
  - `SGJIRA_SG_SCRIPT_NAME`: a Shotgun script user name (_sg-jira-sync_)
  - `SGJIRA_SG_SCRIPT_KEY`: the Shotgun script user Application Key (_rrtOzkn@pkwlhak5witgugjdd_)
  - `SGJIRA_JIRA_SITE`: the Jira server url (_https://mystudio.atlassian.net_)
- - `SGJIRA_JIRA_USER`: the system name of the Jira user used to connect for the sync (_richard.hendricks_)  *[Need help finding this?]()
+ - `SGJIRA_JIRA_USER`: the system name of the Jira user used to connect for the sync (_richard.hendricks@piedpiper.com_)  This is usually the email address you sign in to Jira with. Jira does not have a concept of a "script" user so this will need to be the designated user account that will control the sync updates. It will need appropriate permissions to make any changes required.
  - `SGJIRA_JIRA_USER_SECRET`: the Jira user password (_youkn0wwh@tapa$5word1smAKeitag0odone3_)
  
 You may set these in your environment. However for testing, we recommend installing [dotenv](https://pypi.org/project/python-dotenv) (included in the _requirements.txt_) and defining these in a `.env` file. 
@@ -109,8 +109,8 @@ SGJIRA_SG_SCRIPT_KEY='01234567@abcdef0123456789'
 
 # Jira credentials
 SGJIRA_JIRA_SITE='https://mystudio.atlassian.net'
-SGJIRA_JIRA_USER='richard.hendricksbot'
-SGJIRA_JIRA_USER_SECRET='some-secure-password-here'
+SGJIRA_JIRA_USER='richard.hendricks@piedpiper.com'
+SGJIRA_JIRA_USER_SECRET='youkn0wwh@tapa$5word1smAKeitag0odone3'
 ```
 
 ##### Logging
@@ -287,33 +287,3 @@ Unit tests are in the `/tests` folder and can be run with `python run_tests.py`.
 - Run unit tests on Linux, Mac and Windows with Python 2.7.
 
 Azure Pipelines jobs are defined by the description files in the `/azure-pipelines` folder.
-
-
-### Misc
-
-#### Getting the system name of your Jira user account
-
-Jira doesn't make it easy to obtain the system name for a user (it's not the display name or email). Often times the user system name is the first part of your email. So it the email you use to sign in is `richard.hendricks@piedpiper.com`, your username _may_ be `richard.hendricks`. 
-
-If you have trouble finding the system name, you can view your user record via the API by folowing these steps:
-
-- Login to Jira with the user you wish to find the system name for
-- Click your user icon in the lower left and select "Profile"
-- The URL in your browser will be something like: `https://yoursite.atlassian.net/people/6b6fa9db22c86c231f123456`
-- Note your `accountId` which would be `6b6fa9db22c86c231f123456`
-- Enter this URL in your browser (substituting your actual `accountId`) 
-https://yoursite.atlassian.net/rest/api/3/user?accountId=6b6fa9db22c86c231f123456
-- The resulting page should display a JSON result similar to this. The `name` field contains the system user name for this user:  
-```json
-{
-    self: "https://sgpipeline.atlassian.net/rest/api/3/user?accountId=6b6fa9db22c86c231f123456",
-    key: "richard.hendricks",
-    accountId: "6b6fa9db22c86c231f123456",
-    name: "richard.hendricks",  # <---- YOUR SYSTEM USER NAME
-    emailAddress: "richard.hendricks@piedpiper.com",
-    ...
-    ...
-}
-```
- 
-
