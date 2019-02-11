@@ -92,33 +92,6 @@ class EntityIssueHandler(SyncHandler):
 
         return True
 
-    def get_jira_issue(self, issue_key):
-        """
-        Retrieve the Jira Issue with the given key, if any.
-
-        :param str issue_key: A Jira Issue key to look for.
-        :returns: A :class:`jira.resources.Issue` instance or None.
-        :raises: RuntimeError if the Issue if not bound to any Project.
-        """
-        jira_issue = None
-        try:
-            jira_issue = self.jira.issue(issue_key)
-            if not jira_issue.fields.project:
-                # This should never happen as it does not seem possible to
-                # have Issues not linked to a project. Report the error if it
-                # does happen.
-                raise RuntimeError(
-                    "Jira Issue %s is not bound to any Project." % issue_key
-                )
-        except JIRAError as e:
-            # Jira raises a 404 error if it can't find the Issue: catch the
-            # error and let the method return None in that case.
-            if e.status_code == 404:
-                pass
-            else:
-                raise
-        return jira_issue
-
     def create_jira_issue_for_entity(
         self,
         sg_entity,

@@ -64,7 +64,12 @@ class Syncer(object):
         Check the Jira and Shotgun site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
-        pass
+        self._logger.debug(
+            "Checking if the Shotgun site and the Jira server are correctly "
+            "configured."
+        )
+        for handler in self.handlers:
+            handler.setup()
 
     def get_jira_project(self, project_key):
         """

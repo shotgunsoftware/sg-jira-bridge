@@ -73,6 +73,13 @@ class TaskIssueHandler(EntityIssueHandler):
             field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field
         ]
 
+    def setup(self):
+        """
+        Check the Jira and Shotgun site, ensure that the sync can safely happen
+        and cache any value which is slow to retrieve.
+        """
+        self.shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
+
     def supported_shotgun_fields_for_shotgun_event(self):
         """
         Return the list of Shotgun fields that this handler can process for a

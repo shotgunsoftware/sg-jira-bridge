@@ -32,10 +32,3 @@ class TaskIssueSyncer(Syncer):
             TaskIssueHandler(self, self._issue_type),
             NoteCommentHandler(self)
         ]
-
-    def setup(self):
-        """
-        Check the Jira and Shotgun site, ensure that the sync can safely happen
-        and cache any value which is slow to retrieve.
-        """
-        self.shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
