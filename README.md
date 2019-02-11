@@ -12,62 +12,131 @@ A simple synchronization setup between Shotgun and Jira.
 
 ## Jira setup
 
-The "Shotgun Type" and "Shotgun Id" custom string fields need to be added to Issues in Jira
-and made available in Boards. 
+The following Issue fields must be created in Jira and made available in Boards:
+
+- `Shotgun Type`
+- `Shotgun Id`  
+- `Shotgun URL`
 
 ## Shotgun setup
-- A "Jira Sync Url" File/Link field (`sg_jira_sync_url`) must be added to Projects, and the URL set to `http://<server host>/<settings name>/sg2jira`.
-- A "Jira Id" string field (`sg_jira_id`) must be added to Shotgun Projects. Entities will only be synced if they have a "Jira Id" value and are linked to a Project.
-- "Jira Type" (`sg_jira_type`) and "Jira Id" (`sg_jira_id`) text fields need to be added to any Shotgun Entity types you want to be synced.
+
+The following fields must be created in Shotgun:
+
+#### Project
+- **Jira Sync Url** - `sg_jira_sync_url` (_File/Link_)
+- **Jira Key** - `sg_jira_key` (_Text_)
+
+Any Project you want to enable for syncing should have the **Jira Sync Url** value set to `http://<server host>:9090/<settings name>/sg2jira`.  
+Where `<server host>` is the host of the SG Jira Bridge web server and `<settings name>` is the name of the settings defined in your settings file.  
+For example, if you're running a server on _localhost_ and using settings named _default_, you would enter `http://localhost:9090/default/sg2jira`
+
+#### All Entity Types to be Synced
+- **Jira Type** - `sg_jira_type` (_Text_)
+- **Jira Key** - `sg_jira_key` (_Text_)
+
+
+Entities will only be synced if they have a **Jira Key** value and are linked to a Project. 
+
+
 
 ## Running the setup locally for testing
+
+### Install required packages
+
+**Python 2.7** is required.
+
+You may install the required packages using `pip` or `pipenv`.
  
- ### Setting up Shotgun and Jira credentials
- 
- Credentials are retrieved by default from environment variables:
- - SGJIRA_SG_SITE: the Shotgun site url.
- - SGJIRA_SG_SCRIPT_NAME: a Shotgun script user name.
- - SGJIRA_SG_SCRIPT_KEY: the Shotgun script user secret key.
- - SGJIRA_JIRA_SITE: the Jira server url.
- - SGJIRA_JIRA_USER: a Jira user system name (not a display name).
- - SGJIRA_JIRA_USER_SECRET: the Jira user password.
- 
- These values can be defined in a `.env` file if https://pypi.org/project/python-dotenv is installed on your machine. 
- 
- ### Running the web app:
+##### Using pip
+
  A _requirements.txt_ file is provided to install all required packages. 
- The web app can be run from the command line with Python 2.7:
- - Create a virtualenv: `virtualenv venv`.
- - Activate the virtualenv: `source venv/bin/activate`.
-   - On Windows `venv/Scripts/activate` in a Power shell.
-- Install needed packages: `pip install -r requirements.txt`.
-- Run the web app: `python webapp.py --settings <path to your settings> --port 9090`
+ 
+ 
+```bash
+# create a virtualenv
+$ virtualenv venv
 
-### Setting up the event daemon trigger
-Install the Shotgun event daemon https://github.com/shotgunsoftware/shotgunEvents and copy
-the  `sg_jira_event_trigger.py` file in a place where the event daemon can find it.
+# Activate the virtualenv
+# On MacOS/Linux:
+$ source venv/bin/activate
+# On Windows (using PowerShell)
+$ venv/Scripts/activate
 
-The trigger uses the following environment variables to retrieve Shotgun credentials:
-- SGDAEMON_SGJIRA_NAME: a Shotgun script user name.
-- SGDAEMON_SGJIRA_KEY: the Shotgun script user secret key.
+# Install required packages
+pip install -r requirements.txt
 
-Add a _Jira Sync Url_ File/Link field (system name `sg_jira_sync_url`) to Projects in Shotgun and set it to `http://localhost:9090/sg2jira/default`
-on the Project you want to use for your tests.
+```
 
-### Setting up the Jira webhook
+##### Using pipenv
+Alternately, if you're using `pipenv` (https://pipenv.readthedocs.io) follow these instructions:
 
-If using a cloud Jira server, you can use ngrok https://ngrok.com to allow it to access your
-local machine: `ngrok http 9090`.
+```bash
+# create a virtualenv (the shell will be activated automatically)
+$ pipenv --python 27
 
-Go to the Jira system settings and enable a webhook target with something like: `https://c66cdcc6.ngrok.io/jira2sg/default/issue/${issue.key}`
+# Install the required packages
+$ pipenv install
+```
+This will install everything specified in the `requirements.txt` and generate a `Pipfile` and `Pipfile.lock`. 
+    
+If you already have a `Pipfile` or `Pipfile.lock` you can specify you wish to import the contents of the _requirements.txt_ file with 
 
-Subscribe to Issue created, deleted, updated events and make sure that Exclude body is **not** on.
-You can restrict the webhook to a particular Jira project by having a JQL query like `project = "My test project"`
+```bash
+$ pipenv install -r path/to/requirements.txt
+```
 
-## Custom syncing logic
+### Settings
+Settings are defined in the `settings.py` file in the root of the repo. Since the settings are stored in a Python file, it allows for a lot of flexiblity to adapt to your specific environment requirements if needed. The settings file contains three main sections:
+
+##### Authentication
+  
+Credentials are retrieved by default from environment variables:
+ 
+ - `SGJIRA_SG_SITE`: the Shotgun site url (_https://mysite.shotgunstudio.com_).
+ - `SGJIRA_SG_SCRIPT_NAME`: a Shotgun script user name (_sg-jira-sync_)
+ - `SGJIRA_SG_SCRIPT_KEY`: the Shotgun script user Application Key (_rrtOzkn@pkwlhak5witgugjdd_)
+ - `SGJIRA_JIRA_SITE`: the Jira server url (_https://mystudio.atlassian.net_)
+ - `SGJIRA_JIRA_USER`: the system name of the Jira user used to connect for the sync (_richard.hendricks_)  *[Need help finding this?]()
+ - `SGJIRA_JIRA_USER_SECRET`: the Jira user password (_youkn0wwh@tapa$5word1smAKeitag0odone3_)
+ 
+You may set these in your environment. However for testing, we recommend installing [dotenv](https://pypi.org/project/python-dotenv) (included in the _requirements.txt_) and defining these in a `.env` file. 
+
+```
+# Shotgun credentials
+SGJIRA_SG_SITE='https://mysite.shotgunstudio.com'
+SGJIRA_SG_SCRIPT_NAME='sg-jira-bridge'
+SGJIRA_SG_SCRIPT_KEY='01234567@abcdef0123456789'
+
+# Jira credentials
+SGJIRA_JIRA_SITE='https://mystudio.atlassian.net'
+SGJIRA_JIRA_USER='richard.hendricksbot'
+SGJIRA_JIRA_USER_SECRET='some-secure-password-here'
+```
+
+##### Logging
+
+The SG-Jira-Bridge uses standard Python logging. The logging configuration is stored in a `LOGGING` _dict_ [using the standard `logging.config` format](https://docs.python.org/2/library/logging.config.html#module-logging.config)
+
+##### Sync Settings
+
+The sync settings are stored in a `SYNC` _dict_ in the format:
+
+```python
+SYNC = {
+    "my_settings": {
+        # The syncer class to use
+        "syncer": "sg_jira.MyCustomSyncer",
+        # And the specific settings which are passed to its __init__() method
+        "settings": {
+            "my_setting_name": "My Setting Value"
+        },
+    }
+}
+```
 
 Custom syncers can be referenced in the settings file with their module path and their specific
 settings.
+
 For example:
 ```python
 # Additional paths can be added for custom syncers
@@ -77,7 +146,7 @@ SYNC = {
     "default": {
         # The syncer class to use
         "syncer": "sg_jira.TaskIssueSyncher",
-        # And its specific settings which are passed to its __init__ method
+        # And the specific settings which are passed to its __init__() method
         "settings": {
             "foo": "blah"
         },
@@ -93,11 +162,158 @@ SYNC = {
 }
 ```
 
+### Running the web app:
+
+```
+python webapp.py --settings <path to your settings> --port 9090
+```
+
+
+### Setting up the Shotgun Event Daemon trigger
+
+The [Shotgun event daemon](https://github.com/shotgunsoftware/shotgunEvents) is used to poll events from Shotgun and dispatch them to the trigger that initiates the sync to Jira for that event. 
+
+- Install the Shotgun event daemon from https://github.com/shotgunsoftware/shotgunEvents (instructions are available in the repo)
+- Once it's installed correctly, copy the `sg_jira_event_trigger.py` file to the directory configured for your triggers
+
+The trigger uses the following environment variables to retrieve Shotgun credentials:
+
+- `SGDAEMON_SGJIRA_NAME`: a Shotgun script user name
+- `SGDAEMON_SGJIRA_KEY`: the Shotgun script user application key.
+
+_Note: The trigger uses it's own authentication to Shotgun, independent of the auth used in the SG Jira Bridge Server. We highly recommend you add an additional Script User in Shotgun solely for this trigger and use those auth details here._
+
+#### Required Python modules
+The shotgunEventDaemon requires the Shotgun Python API. 
+The trigger requires the `requests` module. 
+
+##### Create a virtual env
+We recommend creating a virtual env. However, you can skip this if you decide to install the packages globally or from your existing library. 
+
+The easiest way to install the required packages is using `pip` or `pipenv`.
+ 
+##### Using pip
+
+```bash
+# create a virtualenv
+$ virtualenv venv
+
+# Activate the virtualenv
+# On MacOS/Linux:
+$ source venv/bin/activate
+# On Windows (using PowerShell)
+$ venv/Scripts/activate
+
+# Install required packages
+pip install requests https://github.com/shotgunsoftware/python-api/archive/v3.0.37.zip
+
+```
+
+##### Using pipenv
+Alternately, if you're using `pipenv` (https://pipenv.readthedocs.io) follow these instructions:
+
+```bash
+# create a virtualenv (the shell will be activated automatically)
+$ pipenv --python 27
+
+# Install the required packages
+$ pipenv install requests https://github.com/shotgunsoftware/python-api/archive/v3.0.37.zip
+```
+
+### Setting up the Jira webhook
+
+SG Jira Bridge uses the jira webhooks to respond to updates from Jira. When an event occurs that requires a sync to Shotgun, the webhook fires and notifies the SG Jira Bridge server, which then updates Shotgun. You need to configure Jira to point to your SG Jira Bridge server address and respond to the right event types.
+
+
+##### ngrok
+
+When testing locally, it likely your machine isn't accessible from the Jira server (especially if you're using a Jira cloud server). However, you can use ngrok https://ngrok.com to allow it to securely access your local machine for testing: `ngrok http 9090`.
+
+- Sign up for a free account at ngrok.com
+- Download and install ngrok ([detailed instructions here](https://ngrok.com/download)). If you use a package manager like [Homebrew](https://brew.sh/), you may be able to install from there as well.
+- run `ngrok authtoken <your auth token>` where `<your auth token>` is the auth token assigned to your ngrok account. You can get the token from https://dashboard.ngrok.com/auth
+
+##### Jira
+
+- Navigate to the Jira system settings (_Settings > System > WebHooks_)
+- Click "Create Webhook"
+- Add the following values:
+    - **Name**: eg. "SG Jira Bridge Test"
+    - **URL**: eg. `https://c66cdcc6.ngrok.io/jira2sg/default/issue/${issue.key}`.  
+    URL in the form `<fqdn>/jira2sg/<settings name>/issue/${issue.key}`. This will be the address of the server running on your machine with the name of the settings you're using in the path.
+        - `<fqdn>`: The scheme, host and domain name for your server. If using ngrok, it should match the value that ngrok assigned when you started it (eg. https://c66cdcc6.ngrok.io)
+        - `<settings name>`: The name of the settings to use from your `settings.py` file. (eg. default)
+        - `${issue.key}`: this is a Jira token variable and should be entered as it is here.
+    - **Description**: (optional) eg. "Webhook that syncs Jira data with Shotgun using the SG Jira Bridge"
+    - **Events**
+        - **JQL**: eg. `project = "My test project"`  
+        You can specify a JQL query to restrict the webhook to a particular project if you have multiple projects in Jira and you only want specific projects to sync with Shotgun
+        - **Issue Related Events**  
+        Check only the specified events listed below
+            - ✅ Issue: created
+            - ✅ Issue: updated
+            - ✅ Issue: deleted  
+    
+    
+    - **Exclude Body**: This must be **unchecked** in order for the required JSON payload to be delivered
+
+## Starting Everything Up
+
+#### Shotgun Event Daemon
+
+```
+./shotgunEventDaemon.py start
+```
+
+#### SG Jira Bridge Web Server
+
+```
+python webapp.py --settings <path to your settings> --port 9090
+```
+
+#### ngrok
+
+```
+ngrok http 9090
+```
+**Note**: Each time you start ngrok, it assigns a random hostname to your connection. This means you'll need to update the Jira Webhook you setup to point to the correct hostname each time. ngrok does have a paid plan that allows you to specify the hostname you wish to use, but that's up to you. 😄
+
 ## Unit tests and CI
-Unit tests are in the _tests_ folder and can be run with `python run_tests.py`.
+Unit tests are in the `/tests` folder and can be run with `python run_tests.py`.
 
 [Azure Pipelines](https://github.com/marketplace/azure-pipelines) are used for the continuous integration and run the following validations:
+
 - Enforce reasonable PEP-8 conventions with Flake8.
 - Run unit tests on Linux, Mac and Windows with Python 2.7.
 
-Azure Pipelines jobs are defined by the description files in the _azure-pipelines_ folder.
+Azure Pipelines jobs are defined by the description files in the `/azure-pipelines` folder.
+
+
+### Misc
+
+#### Getting the system name of your Jira user account
+
+Jira doesn't make it easy to obtain the system name for a user (it's not the display name or email). Often times the user system name is the first part of your email. So it the email you use to sign in is `richard.hendricks@piedpiper.com`, your username _may_ be `richard.hendricks`. 
+
+If you have trouble finding the system name, you can view your user record via the API by folowing these steps:
+
+- Login to Jira with the user you wish to find the system name for
+- Click your user icon in the lower left and select "Profile"
+- The URL in your browser will be something like: `https://yoursite.atlassian.net/people/6b6fa9db22c86c231f123456`
+- Note your `accountId` which would be `6b6fa9db22c86c231f123456`
+- Enter this URL in your browser (substituting your actual `accountId`) 
+https://yoursite.atlassian.net/rest/api/3/user?accountId=6b6fa9db22c86c231f123456
+- The resulting page should display a JSON result similar to this. The `name` field contains the system user name for this user:  
+```json
+{
+    self: "https://sgpipeline.atlassian.net/rest/api/3/user?accountId=6b6fa9db22c86c231f123456",
+    key: "richard.hendricks",
+    accountId: "6b6fa9db22c86c231f123456",
+    name: "richard.hendricks",  # <---- YOUR SYSTEM USER NAME
+    emailAddress: "richard.hendricks@piedpiper.com",
+    ...
+    ...
+}
+```
+ 
+
