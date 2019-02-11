@@ -3,14 +3,43 @@
 A simple synchronization setup between Shotgun and Jira.
 
 
--  **sg_jira_event_trigger.py**: A Shotgun event trigger which can be used with the [Shotgun Event Daemon](https://github.com/shotgunsoftware/shotgunEvents)
+- **sg_jira_event_trigger.py**: A Shotgun event trigger which can be used with the [Shotgun Event Daemon](https://github.com/shotgunsoftware/shotgunEvents)
 - **webapp.py**: A simple web app used as a frontend for the synchronisation.
 - **service.py**: A script to run the web app as a service on Linux and MacOS platforms.
 - **win_service.py**:  (TODO) A script to run the web app as a service on Windows.
 - **sg_jira**: Python package for handling the synchronization between Shotgun and Jira.
 
+Table of contents
+=================
 
-## Jira setup
+
+* [JIRA Setup](#jira-setup)
+* [Shotgun Setup](#shotgun-setup)
+    * [Project](#project)
+    * [All Entity Types to be Synced](#all-entity-types-to-be-synced)
+* [Running the setup locally for testing](#running-the-setup-locally-for-testing)
+    * [Install required packages](#install-required-packages)
+        * [Using pip](#using-pip)
+        * [Using pipenv](#using-pipenv)
+    * [Settings](#settings)
+        * [Authentication](#authentication)
+        * [Logging](#logging)
+        * [Sync settings](#sync-settings)
+    * [Setting up the Shotgun Event Daemon trigger](#setting-up-the-shotgun-event-daemon-trigger)
+        * [Install required Python modules](#install-required-python-modules)
+            * [pip](#pip)
+            * [pipenv](#pipenv)
+    * [Setting up the Jira webhook](#setting-up-the-jira-webhook)
+        * [ngrok](#ngrok)
+        * [Jira](#jira)
+    * [Starting everything up](#starting-everything-up)
+        * [ngrok](#starting-ngrok)
+        * [SG Jira Bridge Web Server](#starting-the-sg-jira-bridge-web-server)
+        * [Shotgun Event Daemon](#starting-the-shotgun-event-daemon)
+* [Unit tests and CI](#unit-tests-and-ci)
+    
+
+# Jira setup
 
 The following Issue fields must be created in Jira and made available in Boards:
 
@@ -18,11 +47,11 @@ The following Issue fields must be created in Jira and made available in Boards:
 - `Shotgun Id`  
 - `Shotgun URL`
 
-## Shotgun setup
+# Shotgun setup
 
 The following fields must be created in Shotgun:
 
-#### Project
+## Project
 - **Jira Sync Url** - `sg_jira_sync_url` (_File/Link_)
 - **Jira Key** - `sg_jira_key` (_Text_)
 
@@ -30,7 +59,7 @@ Any Project you want to enable for syncing should have the **Jira Sync Url** val
 Where `<server host>` is the host of the SG Jira Bridge web server and `<settings name>` is the name of the settings defined in your settings file.  
 For example, if you're running a server on _localhost_ and using settings named _default_, you would enter `http://localhost:9090/default/sg2jira`
 
-#### All Entity Types to be Synced
+## All Entity Types to be Synced
 - **Jira Type** - `sg_jira_type` (_Text_)
 - **Jira Key** - `sg_jira_key` (_Text_)
 
@@ -39,15 +68,15 @@ Entities will only be synced if they have a **Jira Key** value and are linked to
 
 
 
-## Running the setup locally for testing
+# Running the setup locally for testing
 
-### Install required packages
+## Install required packages
 
 **Python 2.7** is required.
 
 You may install the required packages using `pip` or `pipenv`.
  
-##### Using pip
+### Using pip
 
  A _requirements.txt_ file is provided to install all required packages. 
  
@@ -67,7 +96,7 @@ pip install -r requirements.txt
 
 ```
 
-##### Using pipenv
+### Using pipenv
 Alternately, if you're using `pipenv` (https://pipenv.readthedocs.io) follow these instructions:
 
 ```bash
@@ -85,10 +114,10 @@ If you already have a `Pipfile` or `Pipfile.lock` you can specify you wish to im
 $ pipenv install -r path/to/requirements.txt
 ```
 
-### Settings
+## Settings
 Settings are defined in the `settings.py` file in the root of the repo. Since the settings are stored in a Python file, it allows for a lot of flexiblity to adapt to your specific environment requirements if needed. The settings file contains three main sections:
 
-##### Authentication
+### Authentication
   
 Credentials are retrieved by default from environment variables:
  
@@ -113,11 +142,11 @@ SGJIRA_JIRA_USER='richard.hendricks@piedpiper.com'
 SGJIRA_JIRA_USER_SECRET='youkn0wwh@tapa$5word1smAKeitag0odone3'
 ```
 
-##### Logging
+### Logging
 
 The SG-Jira-Bridge uses standard Python logging. The logging configuration is stored in a `LOGGING` _dict_ [using the standard `logging.config` format](https://docs.python.org/2/library/logging.config.html#module-logging.config)
 
-##### Sync Settings
+### Sync Settings
 
 The sync settings are stored in a `SYNC` _dict_ in the format:
 
@@ -162,14 +191,8 @@ SYNC = {
 }
 ```
 
-### Running the web app:
 
-```
-python webapp.py --settings <path to your settings> --port 9090
-```
-
-
-### Setting up the Shotgun Event Daemon trigger
+## Setting up the Shotgun Event Daemon trigger
 
 The [Shotgun event daemon](https://github.com/shotgunsoftware/shotgunEvents) is used to poll events from Shotgun and dispatch them to the trigger that initiates the sync to Jira for that event. 
 
@@ -183,16 +206,16 @@ The trigger uses the following environment variables to retrieve Shotgun credent
 
 _Note: The trigger uses it's own authentication to Shotgun, independent of the auth used in the SG Jira Bridge Server. We highly recommend you add an additional Script User in Shotgun solely for this trigger and use those auth details here._
 
-#### Required Python modules
-The shotgunEventDaemon requires the Shotgun Python API. 
-The trigger requires the `requests` module. 
+### Install required Python modules
 
-##### Create a virtual env
+The shotgunEventDaemon requires the [Shotgun Python API](https://github.com/shotgunsoftware/python-api). 
+The trigger requires the [`requests` module](http://docs.python-requests.org). 
+
 We recommend creating a virtual env. However, you can skip this if you decide to install the packages globally or from your existing library. 
 
 The easiest way to install the required packages is using `pip` or `pipenv`.
  
-##### Using pip
+#### pip
 
 ```bash
 # create a virtualenv
@@ -209,7 +232,7 @@ pip install requests https://github.com/shotgunsoftware/python-api/archive/v3.0.
 
 ```
 
-##### Using pipenv
+#### pipenv
 Alternately, if you're using `pipenv` (https://pipenv.readthedocs.io) follow these instructions:
 
 ```bash
@@ -220,12 +243,12 @@ $ pipenv --python 27
 $ pipenv install requests https://github.com/shotgunsoftware/python-api/archive/v3.0.37.zip
 ```
 
-### Setting up the Jira webhook
+## Setting up the Jira webhook
 
 SG Jira Bridge uses the jira webhooks to respond to updates from Jira. When an event occurs that requires a sync to Shotgun, the webhook fires and notifies the SG Jira Bridge server, which then updates Shotgun. You need to configure Jira to point to your SG Jira Bridge server address and respond to the right event types.
 
 
-##### ngrok
+### ngrok
 
 When testing locally, it likely your machine isn't accessible from the Jira server (especially if you're using a Jira cloud server). However, you can use ngrok https://ngrok.com to allow it to securely access your local machine for testing: `ngrok http 9090`.
 
@@ -233,7 +256,7 @@ When testing locally, it likely your machine isn't accessible from the Jira serv
 - Download and install ngrok ([detailed instructions here](https://ngrok.com/download)). If you use a package manager like [Homebrew](https://brew.sh/), you may be able to install from there as well.
 - run `ngrok authtoken <your auth token>` where `<your auth token>` is the auth token assigned to your ngrok account. You can get the token from https://dashboard.ngrok.com/auth
 
-##### Jira
+### Jira
 
 - Navigate to the Jira system settings (_Settings > System > WebHooks_)
 - Click "Create Webhook"
@@ -259,26 +282,26 @@ When testing locally, it likely your machine isn't accessible from the Jira serv
 
 ## Starting Everything Up
 
-#### Shotgun Event Daemon
+### Starting ngrok
 
 ```
-./shotgunEventDaemon.py start
+ngrok http 9090
 ```
+_**Note**: Each time you start ngrok, it assigns a random hostname to your connection. This means you'll need to update the Jira Webhook you setup to point to the correct hostname each time. ngrok does have a paid plan that allows you to specify the hostname you wish to use, but that's up to you. 😄_
 
-#### SG Jira Bridge Web Server
+### Starting the SG Jira Bridge Web Server
 
 ```
 python webapp.py --settings <path to your settings> --port 9090
 ```
 
-#### ngrok
+### Starting the Shotgun Event Daemon
 
 ```
-ngrok http 9090
+./shotgunEventDaemon.py start
 ```
-**Note**: Each time you start ngrok, it assigns a random hostname to your connection. This means you'll need to update the Jira Webhook you setup to point to the correct hostname each time. ngrok does have a paid plan that allows you to specify the hostname you wish to use, but that's up to you. 😄
 
-## Unit tests and CI
+# Unit tests and CI
 Unit tests are in the `/tests` folder and can be run with `python run_tests.py`.
 
 [Azure Pipelines](https://github.com/marketplace/azure-pipelines) are used for the continuous integration and run the following validations:
