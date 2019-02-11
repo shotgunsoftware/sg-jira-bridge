@@ -6,7 +6,7 @@
 #
 
 from ..constants import SHOTGUN_JIRA_ID_FIELD
-from ..errors import InvalidShotgunValue, InvalidJiraValue
+from ..errors import InvalidShotgunValue
 from .entity_issue_handler import EntityIssueHandler
 
 
@@ -58,10 +58,25 @@ class TaskIssueHandler(EntityIssueHandler):
             "hld": "Backlog",
         }
 
-    def supported_shotgun_fields(self):
+    @property
+    def supported_shotgun_fields_for_jira_event(self):
+        """"
+        Return the list of fields this handler can process for a Jira event.
+
+        :returns: A list of strings.
         """
-        Return the list of Shotgun fields that this syncer can process for the
-        given Shotgun Entity type.
+        # By convention we might have `None` as values in our mapping dictionary
+        # meaning that we handle a specific Jira field but there is not a direct
+        # mapping to a Shotgun field and a special logic must be implemented
+        # and called to perform the update to Shotgun.
+        return [
+            field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field
+        ]
+
+    def supported_shotgun_fields_for_shotgun_event(self):
+        """
+        Return the list of Shotgun fields that this handler can process for a
+        Shotgun to Jira event.
         """
         return self.__TASK_FIELDS_MAPPING.keys()
 
@@ -77,7 +92,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
         meta = event["meta"]
         field = meta["attribute_name"]
-        if field not in self.supported_shotgun_fields():
+        if field not in self.supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
                 "Rejecting event %s with unsupported or missing field %s." % (
                     event, field
@@ -105,7 +120,7 @@ class TaskIssueHandler(EntityIssueHandler):
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
             "project.Project.name",
             SHOTGUN_JIRA_ID_FIELD
-        ]
+        ] + self.__TASK_FIELDS_MAPPING.keys()
         sg_entity = self.shotgun.consolidate_entity(
             {"type": entity_type, "id": entity_id},
             fields=task_fields
@@ -129,7 +144,7 @@ class TaskIssueHandler(EntityIssueHandler):
                 )
             )
             return False
-        jira_project = self._syncer.get_jira_project(jira_project_key)
+        jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
             raise RuntimeError(
                 "Unable to retrieve a Jira Project %s for Shotgun Project %s" % (
@@ -151,7 +166,10 @@ class TaskIssueHandler(EntityIssueHandler):
                 sg_entity,
                 jira_project,
                 self._issue_type,
-                summary=sg_entity["content"]
+                summary=sg_entity["content"],
+                timetracking={
+                    "originalEstimate": "%d m" % (sg_entity["est_in_mins"] or 0)
+               }
             )
             self.shotgun.update(
                 sg_entity["type"],
@@ -231,3 +249,12 @@ class TaskIssueHandler(EntityIssueHandler):
         if shotgun_entity_type != "Task":
             return None
         return self.__TASK_FIELDS_MAPPING.get(shotgun_field)
+
+    def get_shotgun_entity_field_for_issue_field(self, jira_field_id):
+        """
+        Returns the Shotgun field name to use to sync the given Jira Issue field.
+
+        :param str jira_field_id: A Jira Issue field id, e.g. 'summary'.
+        :returns: A string or `None`.
+        """
+        return self.__ISSUE_FIELDS_MAPPING.get(jira_field_id)
