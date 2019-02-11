@@ -169,7 +169,7 @@ class TaskIssueHandler(EntityIssueHandler):
                 summary=sg_entity["content"],
                 timetracking={
                     "originalEstimate": "%d m" % (sg_entity["est_in_mins"] or 0)
-               }
+                }
             )
             self.shotgun.update(
                 sg_entity["type"],

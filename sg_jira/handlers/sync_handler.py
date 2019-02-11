@@ -50,10 +50,7 @@ class SyncHandler(object):
 
         :returns: A :class:`jira.resources.Project` instance or None.
         """
-        for jira_project in self.jira.projects():
-            if jira_project.key == project_key:
-                return jira_project
-        return None
+        return self._syncer.get_jira_project(project_key)
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """

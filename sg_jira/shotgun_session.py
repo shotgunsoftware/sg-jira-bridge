@@ -214,7 +214,7 @@ class ShotgunSession(object):
                 missing + shotgun_entity.keys(),
             )
             if not consolidated:
-                self._logger.warning(
+                logger.warning(
                     "Unable to retrieve %s %d in Shotgun." % (
                         shotgun_entity["type"],
                         shotgun_entity["id"],

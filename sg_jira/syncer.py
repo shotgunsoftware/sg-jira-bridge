@@ -66,6 +66,17 @@ class Syncer(object):
         """
         pass
 
+    def get_jira_project(self, project_key):
+        """
+        Retrieve the Jira Project with the given key, if any.
+
+        :returns: A :class:`jira.resources.Project` instance or None.
+        """
+        for jira_project in self.jira.projects():
+            if jira_project.key == project_key:
+                return jira_project
+        return None
+
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
         Accept or reject the given event for the given Shotgun Entity.
