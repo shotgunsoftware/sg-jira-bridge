@@ -124,7 +124,8 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 title,
                 title,
                 "Syncing with %s settings." % settings_name
-        ))
+            )
+        )
 
     def do_POST(self):
         """

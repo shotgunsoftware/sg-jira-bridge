@@ -6,7 +6,6 @@
 #
 
 from .syncer import Syncer
-from .constants import SHOTGUN_JIRA_ID_FIELD
 from .handlers import TaskIssueHandler, NoteCommentHandler
 
 
@@ -22,6 +21,8 @@ class TaskIssueSyncer(Syncer):
         """
         self._issue_type = issue_type
         super(TaskIssueSyncer, self).__init__(**kwargs)
+        self._task_issue_handler = TaskIssueHandler(self, self._issue_type)
+        self._note_comment_handler = NoteCommentHandler(self)
 
     @property
     def handlers(self):
@@ -29,6 +30,6 @@ class TaskIssueSyncer(Syncer):
         Return a list of :class:`SyncHandler` instances.
         """
         return [
-            TaskIssueHandler(self, self._issue_type),
-            NoteCommentHandler(self)
+            self._task_issue_handler,
+            self._note_comment_handler
         ]

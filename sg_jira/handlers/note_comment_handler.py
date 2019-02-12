@@ -5,11 +5,9 @@
 # this software in either electronic or hard copy form.
 #
 
-import jira
 from jira import JIRAError
 
 from ..constants import SHOTGUN_JIRA_ID_FIELD
-from ..errors import InvalidShotgunValue
 from .sync_handler import SyncHandler
 
 # Template used to build Jira comments body from a Note.

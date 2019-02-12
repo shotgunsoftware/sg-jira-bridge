@@ -8,7 +8,6 @@
 import datetime
 
 import jira
-from jira import JIRAError
 
 from ..errors import InvalidShotgunValue, InvalidJiraValue
 from .sync_handler import SyncHandler
