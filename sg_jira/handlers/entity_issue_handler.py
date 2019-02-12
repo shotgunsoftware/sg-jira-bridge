@@ -160,9 +160,7 @@ class EntityIssueHandler(SyncHandler):
                 "Ignoring created by %s which is not a HumanUser." % created_by
             )
 
-        shotgun_url = "%s/detail/%s/%d" % (
-            self.shotgun.base_url, sg_entity["type"], sg_entity["id"]
-        )
+        shotgun_url = self.shotgun.get_entity_page_url(sg_entity)
 
         # Note that JIRA raises an error if there are new line characters in the
         # summary for an Issue or if the description field is not set.

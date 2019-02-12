@@ -12,7 +12,8 @@ from ..constants import SHOTGUN_JIRA_ID_FIELD
 from ..errors import InvalidShotgunValue
 from .sync_handler import SyncHandler
 
-BODY_TEMPLATE = """
+# Template used to build Jira comments body from a Note.
+COMMENT_BODY_TEMPLATE = """
 [Shotgun Note|%s]
 {panel:title=%s}
 %s
@@ -20,9 +21,16 @@ BODY_TEMPLATE = """
 """
 
 
-
 class NoteCommentHandler(SyncHandler):
+    """
+    Sync a Note attached to a Task to a comment attached to the Jira Issue for
+    this Task.
 
+    .. note:: The same Shotgun Note can be attached to multiple Tasks, but it is
+              not possible to share the same comment across multiple Issues in
+              Jira. If a Note is attached to multiple Tasks, only one Issue comment
+              will be updated.
+    """
     # Define the mapping between Shotgun Note fields and Jira Comment fields
     # if the Jira target is None, it means the target field is not settable
     # directly.
@@ -47,18 +55,40 @@ class NoteCommentHandler(SyncHandler):
         """
         return self.__NOTE_FIELDS_MAPPING.keys()
 
-    def shotgun_note_url(self, shotgun_note_id):
-        return "%s/detail/Note/%d" % (
-            self.shotgun.base_url,
-            shotgun_note_id,
-        )
-
     def get_jira_comment_body(self, shotgun_note):
-        return BODY_TEMPLATE % (
-            self.shotgun_note_url(shotgun_note["id"]),
+        """
+        Return a body value to update a Jira comment from the given Shotgun Note.
+
+        :param shotgun_note: A Shotgun Note dictionary.
+        :returns: A string.
+        """
+        return COMMENT_BODY_TEMPLATE % (
+            self.shotgun.get_entity_page_url(shotgun_note),
             shotgun_note["subject"],
             shotgun_note["content"],
         )
+
+    def get_issue_comment(self, jira_issue_key, jira_comment_id):
+        """
+        Retrieve the Jira comment with the given id attached to the given Issue.
+
+        :param str jira_issue_key: A Jira Issue key.
+        :param str jira_comment_id: A Jira Comment id.
+        :returns: A :class:`jira.resources.Comment` instance or None.
+        """
+        jira_comment = None
+        try:
+            jira_comment = self.jira.comment(
+                jira_issue_key, jira_comment_id
+            )
+        except JIRAError as e:
+            # Jira raises a 404 error if it can't find the Comment: catch the
+            # error and keep the None value
+            if e.status_code == 404:
+                pass
+            else:
+                raise
+        return jira_comment
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -80,6 +110,27 @@ class NoteCommentHandler(SyncHandler):
             return False
 
         return True
+
+    def parse_note_jira_key(self, shotgun_note):
+        """
+        Parse the Jira key value set in the given Shotgun Note and return the Jira
+        Issue key and the Jira comment id it refers to, if it is not empty.
+
+        :returns: A tuple with a Jira Issue key and a Jira comment id, or
+                  `None, None`.
+        :raises: ValueError if the Jira key is invalid.
+        """
+        if not shotgun_note[SHOTGUN_JIRA_ID_FIELD]:
+            return None, None
+        parts = shotgun_note[SHOTGUN_JIRA_ID_FIELD].split("/")
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            raise ValueError(
+                "Invalid Jira comment id %s, it must be "
+                "'<jira issue key>/<jira comment id>'" % (
+                    shotgun_note[SHOTGUN_JIRA_ID_FIELD]
+                )
+            )
+        return parts[0], parts[1]
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -110,82 +161,147 @@ class NoteCommentHandler(SyncHandler):
             ))
             return False
 
-        if not sg_entity["tasks"]:
-            return False
+        meta = event["meta"]
+        shotgun_field = meta["attribute_name"]
 
-        # Retrieve the Tasks this Note is attached to
-        sg_tasks = self.shotgun.find(
-            "Task", [
-                ["id", "in", [x["id"] for x in sg_entity["tasks"]]],
-                [SHOTGUN_JIRA_ID_FIELD, "is_not", None],
-            ],
-            ["content", SHOTGUN_JIRA_ID_FIELD, ]
-        )
-        self._logger.debug(
-            "Treating Note %s linked to Tasks %s" % (
-                sg_entity, sg_tasks,
+        # Update existing synced comment (if any) Issue attachment
+        if shotgun_field == "tasks":
+            return self.sync_note_tasks_change(
+                sg_entity,
+                event["meta"]["added"],
+                event["meta"]["removed"],
             )
-        )
-        jira_comment = None
-        jira_issues = []
-        for sg_task in sg_tasks:
-            if not sg_task[SHOTGUN_JIRA_ID_FIELD]:
-                continue
-            # Retrieve the Jira Issue for the Task
-            jira_issue = self.get_jira_issue(sg_task[SHOTGUN_JIRA_ID_FIELD])
-            if not jira_issue:
-                self._logger.warning(
-                    "Unable to retrieve the Jira Issue %s for Note %s" % (
-                        sg_task[SHOTGUN_JIRA_ID_FIELD],
-                        sg_entity,
-                    )
-                )
-                continue
 
-            if not sg_entity[SHOTGUN_JIRA_ID_FIELD]:
-                # A Jira comment does not yet exists for this Note
-                jira_comment = self.jira.add_comment(
-                    jira_issue,
-                    self.get_jira_comment_body(sg_entity),
-                    visibility=None,
-                    is_internal=False
-                )
-                sg_entity[SHOTGUN_JIRA_ID_FIELD] = jira_comment.id
-                self.shotgun.update(
-                    sg_entity["type"],
-                    sg_entity["id"],
-                    {SHOTGUN_JIRA_ID_FIELD: jira_comment.id}
-                )
-            else:
-                jira_comment=None
-                try:
-                    jira_comment = self.jira.comment(
-                        jira_issue, sg_entity[SHOTGUN_JIRA_ID_FIELD]
+        # Update an existing comment body from the Note fields.
+        jira_issue_key, jira_comment_id = self.parse_note_jira_key(sg_entity)
+        if jira_issue_key and jira_comment_id:
+            jira_comment = self.get_issue_comment(
+                jira_issue_key,
+                jira_comment_id
+            )
+            if jira_comment:
+                self._logger.debug(
+                    "Updating comment %s attached to Jira Issue %s" % (
+                        jira_comment, jira_issue_key
                     )
-                except JIRAError as e:
-                    # Jira raises a 404 error if it can't find the Comment: catch the
-                    # error and keep the None value
-                    if e.status_code == 404:
-                        pass
-                    else:
-                        raise
+                )
+                jira_comment.update(
+                    body=self.get_jira_comment_body(sg_entity)
+                )
+                return True
+
+        return False
+
+    def sync_note_tasks_change(self, shotgun_note, added, removed):
+        """
+        Update Jira with tasks changes for the given Shotgun Note.
+
+        :param shotgun_note: A Shotgun Note dictionary.
+        :param added: A list of Shotgun Task dictionaries which were added to
+                      the given Note.
+        :param removed: A list of Shotgun Task dictionaries which were removed from
+                        the given Note.
+        :returns: `True` if the given changes could be processed sucessfully,
+                  `False` otherwise.
+        """
+
+        jira_issue_key, jira_comment_id = self.parse_note_jira_key(shotgun_note)
+
+        if jira_issue_key and removed:
+            # Check if we should delete the comment because it was attached to
+            # a synced Task which has been removed.
+            # Retrieve a task with the given Issue key
+            sg_tasks = self.shotgun.find(
+                "Task", [
+                    ["id", "in", [x["id"] for x in removed]],
+                    [SHOTGUN_JIRA_ID_FIELD, "is", jira_issue_key]
+                ],
+                ["content"]
+            )
+            if sg_tasks:
+                if len(sg_tasks) > 1:
+                    # Issue a warning about a potential problem
+                    self._logger.warning(
+                        "Multiple Shotgun Tasks seem to linked to the same "
+                        "Jira Issue: %s." % sg_tasks
+                    )
+                jira_comment = self.get_issue_comment(
+                    jira_issue_key,
+                    jira_comment_id
+                )
                 if jira_comment:
                     self._logger.debug(
-                        "Updating comment %s for Jira Issue %s" % (
-                            jira_comment,
-                            jira_issue,
+                        "Deleting comment %s attached to Jira Issue %s" % (
+                            jira_comment, jira_issue_key
                         )
                     )
-                    jira_comment.update(
-                        body=self.get_jira_comment_body(sg_entity)
+                    jira_comment.delete()
+                # Unset the values so a new comment can be attached to another
+                # issue when processing the added Tasks.
+                jira_issue_key = None
+                jira_comment_id = None
+
+        if not jira_issue_key and added:
+            # Collect the list of Tasks which are linked to Jira Issues
+            sg_tasks = self.shotgun.find(
+                "Task", [
+                    ["id", "in", [x["id"] for x in added]],
+                    [SHOTGUN_JIRA_ID_FIELD, "is_not", None]
+                ],
+                ["content", SHOTGUN_JIRA_ID_FIELD]
+            )
+            if len(sg_tasks) > 1:
+                self._logger.warning(
+                    "Found multiple Tasks %s linked to a Jira Issue for Note %s, "
+                    "only one will be updated" % (
+                        sg_tasks, shotgun_note,
                     )
-            # Note: it is not possible to retrieve a comment without a Jira Issue
-            #
-            # Explore the Issue comments
-            comments = self.jira.comments(jira_issue)
-            self._logger.debug("%s" % comments)
-            for comment in comments:
-                self._logger.debug("%s" % comment)
+                )
+            for sg_task in sg_tasks:
+                # Retrieve the Jira Issue to ensure the Jira key value is valid
+                jira_issue = self.get_jira_issue(sg_task[SHOTGUN_JIRA_ID_FIELD])
+                if not jira_issue:
+                    self._logger.warning(
+                        "Unable to retrieve the Jira Issue %s for Note %s" % (
+                            sg_task[SHOTGUN_JIRA_ID_FIELD],
+                            shotgun_note,
+                        )
+                    )
+                    continue
+                # Add the note as a comment to the Issue
+                self._logger.debug(
+                    "Adding Note %s as a Jira comment for %s" % (
+                        shotgun_note,
+                        jira_issue,
+                    )
+                )
+                jira_comment = self.jira.add_comment(
+                    jira_issue,
+                    self.get_jira_comment_body(shotgun_note),
+                    visibility=None, # TODO: check if Note properties should drive this
+                    is_internal=False
+                )
+                jira_issue_key = jira_issue.key
+                jira_comment_id = jira_comment.id
+                break
+
+        # Update the Jira comment key in Shotgun
+        comment_key = None
+        if jira_issue_key and jira_comment_id:
+            comment_key = "%s/%s" % (jira_issue_key, jira_comment_id)
+        if comment_key != shotgun_note[SHOTGUN_JIRA_ID_FIELD]:
+            self._logger.debug(
+                "Updating %s with Jira comment key %s" % (
+                    shotgun_note,
+                    comment_key,
+                )
+            )
+            self.shotgun.update(
+                shotgun_note["type"],
+                shotgun_note["id"],
+                {SHOTGUN_JIRA_ID_FIELD: comment_key}
+            )
+        return True
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """

@@ -260,6 +260,17 @@ class ShotgunSession(object):
                 return self.consolidate_entity(sg_value)
         return None
 
+    def get_entity_page_url(self, shotgun_entity):
+        """
+        Return the Shotgun page url for the given Entity.
+
+        :param shotgun_entity: A Shotgun Entity dictionary with at least a 'type'
+                               key and an 'id' key.
+        """
+        return "%s/detail/%s/%d" % (
+            self.base_url, shotgun_entity["type"], shotgun_entity["id"]
+        )
+
     def _get_wrapped_shotgun_method(self, method_name):
         """
         Return a wrapped Shotgun method which encodes all parameters and decodes
