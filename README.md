@@ -44,7 +44,7 @@ Table of contents
 The following Issue fields must be created in Jira and made available in Boards:
 
 - `Shotgun Type`
-- `Shotgun Id`  
+- `Shotgun ID`  
 - `Shotgun URL`
 
 # Shotgun setup
@@ -55,17 +55,14 @@ The following fields must be created in Shotgun:
 - **Jira Sync Url** - `sg_jira_sync_url` (_File/Link_)
 - **Jira Key** - `sg_jira_key` (_Text_)
 
-Any Project you want to enable for syncing should have the **Jira Sync Url** value set to `http://<server host>:9090/<settings name>/sg2jira`.  
+Any Project you want to enable for syncing should have the **Jira Sync Url** value set to `http://<server host>:9090/sg2jira/<settings name>`.  
 Where `<server host>` is the host of the SG Jira Bridge web server and `<settings name>` is the name of the settings defined in your settings file.  
-For example, if you're running a server on _localhost_ and using settings named _default_, you would enter `http://localhost:9090/default/sg2jira`
+For example, if you're running a server on _localhost_ and using settings named _default_, you would enter `http://localhost:9090/sg2jira/default`
 
 ## All Entity Types to be Synced
-- **Jira Type** - `sg_jira_type` (_Text_)
 - **Jira Key** - `sg_jira_key` (_Text_)
 
-
 Entities will only be synced if they have a **Jira Key** value and are linked to a Project. 
-
 
 
 # Running the setup locally for testing
@@ -74,11 +71,13 @@ Entities will only be synced if they have a **Jira Key** value and are linked to
 
 **Python 2.7** is required.
 
-You may install the required packages using `pip` or `pipenv`.
+We recommend [setting up a virtual environment](https://docs.python-guide.org/dev/virtualenvs/) for doing testing. You may install the required packages using `pip` or `pipenv`. 
  
 ### Using pip
 
- A _requirements.txt_ file is provided to install all required packages. 
+Ensure you have [virtualenv](https://pypi.org/project/virtualenv/) installed in your global Python installation.
+
+A _requirements.txt_ file is provided to install all required packages. 
  
  
 ```bash
@@ -97,6 +96,7 @@ pip install -r requirements.txt
 ```
 
 ### Using pipenv
+
 Alternately, if you're using `pipenv` (https://pipenv.readthedocs.io) follow these instructions:
 
 ```bash
@@ -125,10 +125,10 @@ Credentials are retrieved by default from environment variables:
  - `SGJIRA_SG_SCRIPT_NAME`: a Shotgun script user name (_sg-jira-sync_)
  - `SGJIRA_SG_SCRIPT_KEY`: the Shotgun script user Application Key (_rrtOzkn@pkwlhak5witgugjdd_)
  - `SGJIRA_JIRA_SITE`: the Jira server url (_https://mystudio.atlassian.net_)
- - `SGJIRA_JIRA_USER`: the system name of the Jira user used to connect for the sync (_richard.hendricks@piedpiper.com_)  This is usually the email address you sign in to Jira with. Jira does not have a concept of a "script" user so this will need to be the designated user account that will control the sync updates. It will need appropriate permissions to make any changes required.
+ - `SGJIRA_JIRA_USER`: the system name of the Jira user used to connect for the sync (_richard.hendricks@piedpiper.com_)  This is usually your email address you sign in to Jira with. Jira does not have a concept of a "script" user so this will need to be the designated user account that will control the sync updates. It will need appropriate permissions to make any changes required.
  - `SGJIRA_JIRA_USER_SECRET`: the Jira user password (_youkn0wwh@tapa$5word1smAKeitag0odone3_)
  
-You may set these in your environment. However for testing, we recommend installing [dotenv](https://pypi.org/project/python-dotenv) (included in the _requirements.txt_) and defining these in a `.env` file. 
+You may set these in your environment. However for testing, we recommend installing [python-dotenv](https://pypi.org/project/python-dotenv) and defining these in a `.env` file. It is commented out by default in _requirements.txt_. 
 
 ```
 # Shotgun credentials
@@ -197,7 +197,8 @@ SYNC = {
 The [Shotgun event daemon](https://github.com/shotgunsoftware/shotgunEvents) is used to poll events from Shotgun and dispatch them to the trigger that initiates the sync to Jira for that event. 
 
 - Install the Shotgun event daemon from https://github.com/shotgunsoftware/shotgunEvents (instructions are available in the repo)
-- Once it's installed correctly, copy the `sg_jira_event_trigger.py` file to the directory configured for your triggers
+- Once it's installed correctly, copy the `sg_jira_event_trigger.py` file to the directory configured for your triggers. 
+    - _This is configured in the `[plugins]` section of the `shotgunEventDaemon.conf`_
 
 The trigger uses the following environment variables to retrieve Shotgun credentials:
 
@@ -211,9 +212,7 @@ _Note: The trigger uses it's own authentication to Shotgun, independent of the a
 The shotgunEventDaemon requires the [Shotgun Python API](https://github.com/shotgunsoftware/python-api). 
 The trigger requires the [`requests` module](http://docs.python-requests.org). 
 
-We recommend creating a virtual env. However, you can skip this if you decide to install the packages globally or from your existing library. 
-
-The easiest way to install the required packages is using `pip` or `pipenv`.
+We recommend [setting up a virtual environment](https://docs.python-guide.org/dev/virtualenvs/) for doing testing. You may install the required packages using `pip` or `pipenv`. 
  
 #### pip
 
