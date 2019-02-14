@@ -166,7 +166,7 @@ class NoteCommentHandler(SyncHandler):
         if shotgun_field == "tasks":
             return self.sync_note_tasks_change(
                 sg_entity,
-                event["meta"]["added"],
+                meta["added"],
                 event["meta"]["removed"],
             )
 
