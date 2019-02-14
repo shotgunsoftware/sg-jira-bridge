@@ -74,7 +74,7 @@ class EntityIssueHandler(SyncHandler):
             self._logger.debug("Rejecting event %s with an unknown issue type" % event)
             return False
         if issue_type["name"] != self._issue_type:
-            self._logger.debug("Rejecting event %s without a %s issue type" % (event, issue_type["name"]))
+            self._logger.debug("Rejecting event %s without a %s issue type" % (event, self._issue_type))
             return False
 
         shotgun_id = fields.get(self.bridge.jira_shotgun_id_field)
