@@ -21,7 +21,7 @@ COMMENT_BODY_TEMPLATE = """
 
 class NoteCommentHandler(SyncHandler):
     """
-    Sync a Note attached to a Task to a comment attached to the Jira Issue for
+    Sync a Shotgun Task Note with a comment attached to the associated Jira Issue for
     this Task.
 
     .. note:: The same Shotgun Note can be attached to multiple Tasks, but it is
@@ -29,8 +29,8 @@ class NoteCommentHandler(SyncHandler):
               Jira. If a Note is attached to multiple Tasks, only one Issue comment
               will be updated.
     """
-    # Define the mapping between Shotgun Note fields and Jira Comment fields
-    # if the Jira target is None, it means the target field is not settable
+    # Define the mapping between Shotgun Note fields and Jira Comment fields.
+    # If the Jira target is None, it means the target field is not settable
     # directly.
     __NOTE_FIELDS_MAPPING = {
         "subject": None,
@@ -170,8 +170,8 @@ class NoteCommentHandler(SyncHandler):
         if shotgun_field == "tasks":
             return self.sync_note_tasks_change(
                 sg_entity,
-                event["meta"]["added"],
-                event["meta"]["removed"],
+                meta["added"],
+                meta["removed"],
             )
 
         # Update an existing comment body from the Note fields.
@@ -270,7 +270,7 @@ class NoteCommentHandler(SyncHandler):
                         )
                     )
                     continue
-                # Add the note as a comment to the Issue
+                # Add the Note as a comment to the Issue
                 self._logger.debug(
                     "Adding Note %s as a Jira comment for %s" % (
                         shotgun_note,

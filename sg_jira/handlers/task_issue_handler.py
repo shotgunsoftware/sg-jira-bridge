@@ -91,7 +91,7 @@ class TaskIssueHandler(EntityIssueHandler):
         """
         Accept or reject the given event for the given Shotgun Entity.
 
-        :returns: `True if the event is accepted for processing, `False` otherwise.
+        :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
         # We only accept Tasks
         if entity_type != "Task":
@@ -234,7 +234,7 @@ class TaskIssueHandler(EntityIssueHandler):
             jira_issue.update(fields={jira_field: jira_value})
             return True
 
-        # Specials cases not handled by a direct update
+        # Special cases not handled by a direct update
         if sg_field == "sg_status_list":
             shotgun_status = event["meta"]["new_value"]
             return self.sync_shotgun_status_to_jira(

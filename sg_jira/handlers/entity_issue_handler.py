@@ -78,7 +78,7 @@ class EntityIssueHandler(SyncHandler):
             self._logger.debug("Rejecting event %s with an unknown issue type" % event)
             return False
         if issue_type["name"] != self._issue_type:
-            self._logger.debug("Rejecting event %s without a %s issue type" % (event, issue_type["name"]))
+            self._logger.debug("Rejecting event %s without a %s issue type" % (event, self._issue_type))
             return False
 
         shotgun_id = fields.get(self.bridge.jira_shotgun_id_field)
@@ -154,7 +154,7 @@ class EntityIssueHandler(SyncHandler):
                     jira_project=jira_project,
                 )
                 # If we found a Jira user, use his name as the reporter name,
-                # otherwise use the reporter name retrieve from the user used
+                # otherwise use the reporter name retrieved from the user used
                 # to run the bridge.
                 if jira_user:
                     reporter_name = jira_user.name

@@ -15,7 +15,7 @@ class SyncHandler(object):
     Handlers typically handle syncing values between a Shotgun Entity type and
     a Jira resource and are owned by a `:class:`Syncer` instance.
 
-    This base class defines the interface all handlers should support and it
+    This base class defines the interface all handlers should support and
     provides some helpers which can be useful to all handlers.
     """
 
@@ -106,7 +106,7 @@ class SyncHandler(object):
 
         Must be re-implemented in deriving classes.
 
-        :returns: `True if the event is accepted for processing, `False` otherwise.
+        :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
         raise NotImplementedError
 
