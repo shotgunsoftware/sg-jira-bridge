@@ -75,8 +75,8 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def setup(self):
         """
-        Check the Jira and Shotgun site, ensure that the sync can safely happen
-        and cache any value which is slow to retrieve.
+        Check the Jira and Shotgun site, ensure that the sync can safely happen.
+        This can be used as well to cache any value which is slow to retrieve.
         """
         self.shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
 
@@ -101,7 +101,7 @@ class TaskIssueHandler(EntityIssueHandler):
         field = meta["attribute_name"]
         if field not in self.supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting event %s with unsupported or missing field %s." % (
+                "Rejecting event %s with unsupported field %s." % (
                     event, field
                 )
             )
@@ -153,7 +153,7 @@ class TaskIssueHandler(EntityIssueHandler):
             return False
         jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
-            raise RuntimeError(
+            raise ValueError(
                 "Unable to retrieve a Jira Project %s for Shotgun Project %s" % (
                     jira_project_key,
                     sg_entity["project"],
@@ -163,6 +163,18 @@ class TaskIssueHandler(EntityIssueHandler):
         if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
             # Retrieve the Jira Issue
             jira_issue = self.get_jira_issue(sg_entity[SHOTGUN_JIRA_ID_FIELD])
+            if not jira_issue:
+                # Better to stop now for the time being.
+                # The Issue could have been deleted, and we don't want to keep
+                # recreating it. So we play safe until we correctly handle the
+                # deleted case.
+                raise ValueError(
+                    "Unable to retrieve a Jira Issue %s for Shotgun Task %s" % (
+                        sg_entity[SHOTGUN_JIRA_ID_FIELD],
+                        sg_entity,
+                    )
+                )
+
         # Create it if needed
         if not jira_issue:
             self._logger.info("Creating Jira Issue in %s for %s" % (

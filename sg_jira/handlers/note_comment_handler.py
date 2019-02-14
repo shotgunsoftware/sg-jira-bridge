@@ -66,9 +66,13 @@ class NoteCommentHandler(SyncHandler):
             shotgun_note["content"],
         )
 
-    def get_issue_comment(self, jira_issue_key, jira_comment_id):
+    def get_jira_issue_comment(self, jira_issue_key, jira_comment_id):
         """
         Retrieve the Jira comment with the given id attached to the given Issue.
+
+        .. note:: Jira comments can't live without being attached to an Issue,
+                  so we use a "<Issue key>/<Comment id>" key to reference a
+                  particular comment.
 
         :param str jira_issue_key: A Jira Issue key.
         :param str jira_comment_id: A Jira Comment id.
@@ -101,7 +105,7 @@ class NoteCommentHandler(SyncHandler):
         field = meta["attribute_name"]
         if field not in self.supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting event %s with unsupported or missing field %s." % (
+                "Rejecting event %s with unsupported field %s." % (
                     event, field
                 )
             )
@@ -136,7 +140,7 @@ class NoteCommentHandler(SyncHandler):
 
         :param str entity_type: The Shotgun Entity type to sync.
         :param int entity_id: The id of the Shotgun Entity to sync.
-        :param event: A dictionary with the event meta data for the change.
+        :param event: A dictionary with the event for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
         """
@@ -173,7 +177,7 @@ class NoteCommentHandler(SyncHandler):
         # Update an existing comment body from the Note fields.
         jira_issue_key, jira_comment_id = self.parse_note_jira_key(sg_entity)
         if jira_issue_key and jira_comment_id:
-            jira_comment = self.get_issue_comment(
+            jira_comment = self.get_jira_issue_comment(
                 jira_issue_key,
                 jira_comment_id
             )
@@ -223,7 +227,7 @@ class NoteCommentHandler(SyncHandler):
                         "Multiple Shotgun Tasks seem to linked to the same "
                         "Jira Issue: %s." % sg_tasks
                     )
-                jira_comment = self.get_issue_comment(
+                jira_comment = self.get_jira_issue_comment(
                     jira_issue_key,
                     jira_comment_id
                 )

@@ -20,6 +20,10 @@ class EntityIssueHandler(SyncHandler):
 
     def __init__(self, syncer, issue_type):
         """
+        Instantiate an Entity Issue handler for the given syncer.
+
+        :param syncer: A :class:`Syncer` instance.
+        :param str issue_type: A target Issue type, e.g. 'Task', 'Story'.
         """
         super(EntityIssueHandler, self).__init__(syncer)
         self._issue_type = issue_type
@@ -882,9 +886,9 @@ class EntityIssueHandler(SyncHandler):
         .. note:: Due to problems with user searching in Jira, this method always
                   returns assignable users for the time being.
 
+        :param user_email: An email address as a string.
         :param jira_project: A :class:`jira.resources.Project` instance or None.
         :param jira_issue: A :class:`jira.resources.Issue` instance or None.
-        :param user_email: An email address as a string.
         :param for_assignment: A boolean, if `False` the user just needs to have read
                             permission. If `True` the user needs to be suitable for
                             Issue assignments.
@@ -914,6 +918,13 @@ class EntityIssueHandler(SyncHandler):
         # ensure don't incorrectly miss matching the user.
         # See: https://jira.atlassian.com/browse/JRASERVER-61772
         # See: https://jira.atlassian.com/browse/JRACLOUD-61772
+
+        # TODO: Possible source of the problem
+        # Users need to have the global "Browse users and groups" permission.
+        # We don't have this permission by default for some reason.
+        # It's currently only assigned to the **jira-developers** group.
+        # Something to double check and see if we can spot this in the setup
+        # check and report the problem. And get rid of the fallback code.
 
         jira_assignee = None
 

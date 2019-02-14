@@ -12,8 +12,8 @@ class Syncer(object):
     """
     A class handling syncing between Shotgun and Jira.
 
-    All Syncer should define a list of :class:`SyncHandler` which should accept
-    or reject events, and process them if they accepted it.
+    All Syncer should define a list of :class:`SyncHandler` which should reject
+    or accept and process events.
     """
 
     def __init__(self, name, bridge, **kwargs):

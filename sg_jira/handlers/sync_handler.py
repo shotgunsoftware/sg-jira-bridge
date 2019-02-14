@@ -118,7 +118,7 @@ class SyncHandler(object):
 
         :param str entity_type: The Shotgun Entity type to sync.
         :param int entity_id: The id of the Shotgun Entity to sync.
-        :param event: A dictionary with the event meta data for the change.
+        :param event: A dictionary with the event for the change.
         """
         raise NotImplementedError
 
