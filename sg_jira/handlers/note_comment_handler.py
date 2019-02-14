@@ -167,7 +167,7 @@ class NoteCommentHandler(SyncHandler):
             return self.sync_note_tasks_change(
                 sg_entity,
                 meta["added"],
-                event["meta"]["removed"],
+                meta["removed"],
             )
 
         # Update an existing comment body from the Note fields.
