@@ -29,7 +29,7 @@ class NoteCommentHandler(SyncHandler):
               Jira. If a Note is attached to multiple Tasks, only one Issue comment
               will be updated.
     """
-    # Define the mapping between Shotgun Note fields and Jira Comment fields
+    # Define the mapping between Shotgun Note fields and Jira Comment fields.
     # if the Jira target is None, it means the target field is not settable
     # directly.
     __NOTE_FIELDS_MAPPING = {
