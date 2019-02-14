@@ -150,7 +150,7 @@ class EntityIssueHandler(SyncHandler):
                     jira_project=jira_project,
                 )
                 # If we found a Jira user, use his name as the reporter name,
-                # otherwise use the reporter name retrieve from the user used
+                # otherwise use the reporter name retrieved from the user used
                 # to run the bridge.
                 if jira_user:
                     reporter_name = jira_user.name
