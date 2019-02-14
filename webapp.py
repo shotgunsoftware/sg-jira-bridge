@@ -82,7 +82,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         Handle a GET request.
         """
-        # Note: all responses must do
+        # Note: all responses must
         # - send the response or error code first.
         # - then, if there is some data, call end_headers to add a blank line.
         # - then write the data, if any, with self.wfile.write
