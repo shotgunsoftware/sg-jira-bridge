@@ -91,7 +91,7 @@ class TaskIssueHandler(EntityIssueHandler):
         """
         Accept or reject the given event for the given Shotgun Entity.
 
-        :returns: `True if the event is accepted for processing, `False` otherwise.
+        :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
         # We only accept Tasks
         if entity_type != "Task":
