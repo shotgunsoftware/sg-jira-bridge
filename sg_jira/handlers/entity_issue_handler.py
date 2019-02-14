@@ -198,7 +198,7 @@ class EntityIssueHandler(SyncHandler):
         # Check if we're trying to set any value which can't be set and validate
         # empty values.
         invalid_fields = []
-        data_keys = data.keys() # Retrieve all keys so we can delete them in the dict
+        data_keys = data.keys()  # Retrieve all keys so we can delete them in the dict
         for k in data_keys:
             # Filter out anything which can't be used in creation.
             if k not in fields_createmeta:
@@ -562,13 +562,13 @@ class EntityIssueHandler(SyncHandler):
             for allowed_value in allowed_values:
                 # TODO: check this code actually works. For our basic implementation
                 # we don't update fields with allowedValues restriction.
-                if isinstance(allowed_value, dict): # Some kind of Jira Resource
+                if isinstance(allowed_value, dict):  # Some kind of Jira Resource
                     # Jira can store the "value" with a "value" key, or a "name" key
                     if "value" in allowed_value and allowed_value["value"].lower() == sg_value_name:
                         return allowed_value
                     if "name" in allowed_value and allowed_value["name"].lower() == sg_value_name:
                         return allowed_value
-                else: # Assume a string
+                else:  # Assume a string
                     if allowed_value.lower() == sg_value_name:
                         return allowed_value
             self._logger.warning(

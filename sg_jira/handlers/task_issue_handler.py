@@ -25,7 +25,7 @@ class TaskIssueHandler(EntityIssueHandler):
         "tags": "labels",
         "created_by": "reporter",
         "due_date": "duedate",
-        "est_in_mins": "timetracking", # time tracking needs to be enabled in Jira.
+        "est_in_mins": "timetracking",  # time tracking needs to be enabled in Jira.
         "addressings_cc": None
     }
 
@@ -39,7 +39,7 @@ class TaskIssueHandler(EntityIssueHandler):
         "assignee": "task_assignees",
         "labels": "tags",
         "duedate": "due_date",
-        "timetracking": "est_in_mins", # time tracking needs to be enabled in Jira.
+        "timetracking": "est_in_mins",  # time tracking needs to be enabled in Jira.
         "watches": "addressings_cc"
     }
 
@@ -53,7 +53,7 @@ class TaskIssueHandler(EntityIssueHandler):
             "ip": "In Progress",
             "fin": "Done",
             "res": "Done",
-            "rdy": "Selected for Development", # Used to be "To Do" ?
+            "rdy": "Selected for Development",  # Used to be "To Do" ?
             "wtg": "Selected for Development",
             "hld": "Backlog",
         }

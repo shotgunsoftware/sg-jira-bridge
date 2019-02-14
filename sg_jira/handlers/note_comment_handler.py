@@ -280,7 +280,7 @@ class NoteCommentHandler(SyncHandler):
                 jira_comment = self.jira.add_comment(
                     jira_issue,
                     self.get_jira_comment_body(shotgun_note),
-                    visibility=None, # TODO: check if Note properties should drive this
+                    visibility=None,  # TODO: check if Note properties should drive this
                     is_internal=False
                 )
                 jira_issue_key = jira_issue.key

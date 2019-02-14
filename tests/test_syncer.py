@@ -497,7 +497,7 @@ class TestJiraSyncer(TestBase):
         # An error should be raised If the Project is linked to a bad Jira
         # Project
         self.assertRaisesRegexp(
-            RuntimeError,
+            ValueError,
             "Unable to retrieve a Jira Project",
             bridge.sync_in_jira,
             "task_issue",

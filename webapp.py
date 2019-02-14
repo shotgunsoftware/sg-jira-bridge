@@ -76,7 +76,7 @@ class Server(BaseHTTPServer.HTTPServer):
 
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    request_version = "HTTP/1.0" # TODO: support HTTP/1.1
+    request_version = "HTTP/1.0"  # TODO: support HTTP/1.1
 
     def do_GET(self):
         """

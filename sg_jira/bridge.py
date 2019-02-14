@@ -100,7 +100,7 @@ class Bridge(object):
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
         self._jira_setup()
-        self._shotgun_schemas = {} # A cache for retrieved Shotgun schemas
+        self._shotgun_schemas = {}  # A cache for retrieved Shotgun schemas
         self._shotgun_setup()
 
     @classmethod
