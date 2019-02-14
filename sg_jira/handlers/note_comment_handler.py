@@ -21,7 +21,7 @@ COMMENT_BODY_TEMPLATE = """
 
 class NoteCommentHandler(SyncHandler):
     """
-    Sync a Note attached to a Task to a comment attached to the Jira Issue for
+    Sync a Shotgun Task Note with a comment attached to the associated Jira Issue for
     this Task.
 
     .. note:: The same Shotgun Note can be attached to multiple Tasks, but it is
