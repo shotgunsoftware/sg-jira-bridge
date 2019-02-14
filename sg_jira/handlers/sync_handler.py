@@ -106,7 +106,7 @@ class SyncHandler(object):
 
         Must be re-implemented in deriving classes.
 
-        :returns: `True if the event is accepted for processing, `False` otherwise.
+        :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
         raise NotImplementedError
 
