@@ -266,7 +266,7 @@ class NoteCommentHandler(SyncHandler):
                         )
                     )
                     continue
-                # Add the note as a comment to the Issue
+                # Add the Note as a comment to the Issue
                 self._logger.debug(
                     "Adding Note %s as a Jira comment for %s" % (
                         shotgun_note,
