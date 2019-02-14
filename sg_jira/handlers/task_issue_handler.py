@@ -222,7 +222,7 @@ class TaskIssueHandler(EntityIssueHandler):
             jira_issue.update(fields={jira_field: jira_value})
             return True
 
-        # Specials cases not handled by a direct update
+        # Special cases not handled by a direct update
         if sg_field == "sg_status_list":
             shotgun_status = event["meta"]["new_value"]
             return self.sync_shotgun_status_to_jira(
