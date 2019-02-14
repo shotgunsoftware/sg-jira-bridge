@@ -28,6 +28,7 @@ def registerCallbacks(reg):
     """
     # Narrow down the list of events we pass to the bridge
     event_filter = {
+        "Shotgun_Note_Change": ["*"],
         "Shotgun_Task_Change": ["*"],
         "Shotgun_Ticket_Change": ["*"],
         "Shotgun_Project_Change": ["*"],

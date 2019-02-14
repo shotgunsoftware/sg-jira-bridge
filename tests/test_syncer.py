@@ -497,7 +497,7 @@ class TestJiraSyncer(TestBase):
         # An error should be raised If the Project is linked to a bad Jira
         # Project
         self.assertRaisesRegexp(
-            RuntimeError,
+            ValueError,
             "Unable to retrieve a Jira Project",
             bridge.sync_in_jira,
             "task_issue",
@@ -1186,3 +1186,115 @@ class TestJiraSyncer(TestBase):
             self.assertTrue(isinstance(k, unicode))
             # We shouldn't have any string value, just unicode
             self.assertFalse(isinstance(v, str))
+
+    def test_shotgun_note(self, mocked_jira, mocked_sg):
+        """
+        Test syncing a Note from SG to Jira.
+        """
+        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        # Faked Jira project
+        bridge.jira.set_projects([JIRA_PROJECT])
+        issue = bridge.jira.create_issue({})
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        synced_task = {
+            "type": "Task",
+            "id": 3,
+            "content": "Task One/2",
+            "task_assignees": [],
+            "project": SG_PROJECTS[1],
+            SHOTGUN_JIRA_ID_FIELD: issue.key
+        }
+        self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS + [synced_task])
+
+        self.add_to_sg_mock_db(bridge.shotgun, {
+            "type": "Note",
+            "subject": "This is a note",
+            "id": 1,
+            "content": "This is the note's content",
+            "user": None,
+            "tasks": SG_TASKS,
+        })
+        bridge.jira.set_projects([JIRA_PROJECT])
+        # Notes linked to not synced Tasks shouldn't trigger anything
+        bridge.sync_in_jira(
+            "task_issue",
+            "Note",
+            1,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 1,
+                    "added": [],
+                    "attribute_name": "tasks",
+                    "entity_type": "Note",
+                    "field_data_type": "multi_entity",
+                    "removed": [
+                        SG_TASKS[0]
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
+        )
+        self.assertIsNone(updated_note[SHOTGUN_JIRA_ID_FIELD])
+
+        # Adding a synced Tasks should create a comment and the comment key
+        bridge.sync_in_jira(
+            "task_issue",
+            "Note",
+            1,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 1,
+                    "added": [synced_task],
+                    "attribute_name": "tasks",
+                    "entity_type": "Note",
+                    "field_data_type": "multi_entity",
+                    "removed": [
+                        SG_TASKS[0]
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
+        )
+        self.assertEqual(updated_note[SHOTGUN_JIRA_ID_FIELD], "%s/1" % issue.key)
+
+        # Removing a synced Tasks should delete the comment and unset the comment key
+        bridge.sync_in_jira(
+            "task_issue",
+            "Note",
+            1,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 1,
+                    "added": SG_TASKS,
+                    "attribute_name": "tasks",
+                    "entity_type": "Note",
+                    "field_data_type": "multi_entity",
+                    "removed": [
+                        synced_task
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
+        )
+        self.assertIsNone(updated_note[SHOTGUN_JIRA_ID_FIELD])

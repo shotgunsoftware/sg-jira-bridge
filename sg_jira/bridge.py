@@ -100,7 +100,7 @@ class Bridge(object):
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
         self._jira_setup()
-        self._shotgun_schemas = {} # A cache for retrieved Shotgun schemas
+        self._shotgun_schemas = {}  # A cache for retrieved Shotgun schemas
         self._shotgun_setup()
 
     @classmethod
@@ -314,9 +314,10 @@ class Bridge(object):
             # to unicode before processing.
             safe_event = utf8_decode(event)
             syncer = self.get_syncer(settings_name)
-            if syncer.accept_shotgun_event(entity_type, entity_id, safe_event):
+            handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
+            if handler:
                 self._shotgun.set_session_uuid(safe_event.get("session_uuid"))
-                synced = syncer.process_shotgun_event(
+                synced = handler.process_shotgun_event(
                     entity_type,
                     entity_id,
                     safe_event
@@ -341,8 +342,9 @@ class Bridge(object):
         synced = False
         try:
             syncer = self.get_syncer(settings_name)
-            if syncer.accept_jira_event(resource_type, resource_id, event):
-                synced = syncer.process_jira_event(resource_type, resource_id, event)
+            handler = syncer.accept_jira_event(resource_type, resource_id, event)
+            if handler:
+                synced = handler.process_jira_event(resource_type, resource_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)

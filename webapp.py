@@ -76,12 +76,16 @@ class Server(BaseHTTPServer.HTTPServer):
 
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    request_version = "HTTP/1.0"  # TODO: support HTTP/1.1
+
     def do_GET(self):
         """
         Handle a GET request.
         """
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
+        # Note: all responses must
+        # - send the response or error code first.
+        # - then, if there is some data, call end_headers to add a blank line.
+        # - then write the data, if any, with self.wfile.write
 
         # Extract path components from the path, ignore leading '/' and
         # discard empty values coming from '/' at the end or multiple
@@ -89,6 +93,14 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         path_parts = [x for x in self.path[1:].split("/") if x]
         if not path_parts:
             self.send_response(200, "The server is alive")
+            self.end_headers()
+            self.wfile.write(
+                HMTL_TEMPLATE % (
+                    "The server is alive",
+                    "The server is alive",
+                    ""
+                )
+            )
             return
         if len(path_parts) < 2:
             self.send_error(400, "Invalid request path %s" % self.path)
@@ -105,11 +117,15 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_error(400, "Invalid settings name %s" % settings_name)
             return
         # Success, send a basic html page
-        self.send_response(200, HMTL_TEMPLATE % (
-            title,
-            title,
-            "Syncing with %s settings." % settings_name
-        ))
+        self.send_response(200, "Syncing with %s settings." % settings_name)
+        self.end_headers()
+        self.wfile.write(
+            HMTL_TEMPLATE % (
+                title,
+                title,
+                "Syncing with %s settings." % settings_name
+            )
+        )
 
     def do_POST(self):
         """
