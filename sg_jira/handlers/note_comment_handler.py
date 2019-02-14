@@ -30,7 +30,7 @@ class NoteCommentHandler(SyncHandler):
               will be updated.
     """
     # Define the mapping between Shotgun Note fields and Jira Comment fields.
-    # if the Jira target is None, it means the target field is not settable
+    # If the Jira target is None, it means the target field is not settable
     # directly.
     __NOTE_FIELDS_MAPPING = {
         "subject": None,
