@@ -44,7 +44,7 @@ class TaskIssueHandler(EntityIssueHandler):
     }
 
     @property
-    def sg_jira_statuses_mapping(self):
+    def _sg_jira_statuses_mapping(self):
         """
         Return a dictionary where keys are Shotgun status short codes and values
         Jira Issue status names.
@@ -59,7 +59,7 @@ class TaskIssueHandler(EntityIssueHandler):
         }
 
     @property
-    def supported_shotgun_fields_for_jira_event(self):
+    def _supported_shotgun_fields_for_jira_event(self):
         """"
         Return the list of fields this handler can process for a Jira event.
 
@@ -78,9 +78,9 @@ class TaskIssueHandler(EntityIssueHandler):
         Check the Jira and Shotgun site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
         """
-        self.shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
+        self._shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
 
-    def supported_shotgun_fields_for_shotgun_event(self):
+    def _supported_shotgun_fields_for_shotgun_event(self):
         """
         Return the list of Shotgun fields that this handler can process for a
         Shotgun to Jira event.
@@ -99,7 +99,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
         meta = event["meta"]
         field = meta["attribute_name"]
-        if field not in self.supported_shotgun_fields_for_shotgun_event():
+        if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
                 "Rejecting event %s with unsupported field %s." % (
                     event, field
@@ -128,7 +128,7 @@ class TaskIssueHandler(EntityIssueHandler):
             "project.Project.name",
             SHOTGUN_JIRA_ID_FIELD
         ] + self.__TASK_FIELDS_MAPPING.keys()
-        sg_entity = self.shotgun.consolidate_entity(
+        sg_entity = self._shotgun.consolidate_entity(
             {"type": entity_type, "id": entity_id},
             fields=task_fields
         )
@@ -181,7 +181,7 @@ class TaskIssueHandler(EntityIssueHandler):
                 jira_project,
                 sg_entity,
             ))
-            jira_issue = self.create_jira_issue_for_entity(
+            jira_issue = self._create_jira_issue_for_entity(
                 sg_entity,
                 jira_project,
                 self._issue_type,
@@ -190,7 +190,7 @@ class TaskIssueHandler(EntityIssueHandler):
                     "originalEstimate": "%d m" % (sg_entity["est_in_mins"] or 0)
                 }
             )
-            self.shotgun.update(
+            self._shotgun.update(
                 sg_entity["type"],
                 sg_entity["id"],
                 {SHOTGUN_JIRA_ID_FIELD: jira_issue.key}
@@ -207,7 +207,7 @@ class TaskIssueHandler(EntityIssueHandler):
         try:
             # Note: the returned jira_field will be None for the special cases handled
             # below.
-            jira_field, jira_value = self.get_jira_issue_field_sync_value(
+            jira_field, jira_value = self._get_jira_issue_field_sync_value(
                 jira_project,
                 jira_issue,
                 sg_entity["type"],
@@ -237,7 +237,7 @@ class TaskIssueHandler(EntityIssueHandler):
         # Special cases not handled by a direct update
         if sg_field == "sg_status_list":
             shotgun_status = event["meta"]["new_value"]
-            return self.sync_shotgun_status_to_jira(
+            return self._sync_shotgun_status_to_jira(
                 jira_issue,
                 shotgun_status,
                 "Updated from Shotgun %s(%d) moving to %s" % (
@@ -248,7 +248,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
             )
         if sg_field == "addressings_cc":
-            self.sync_shotgun_cced_changes_to_jira(
+            self._sync_shotgun_cced_changes_to_jira(
                 jira_issue,
                 event["meta"]["added"],
                 event["meta"]["removed"],
@@ -256,7 +256,7 @@ class TaskIssueHandler(EntityIssueHandler):
             return True
         return False
 
-    def get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
+    def _get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
         """
         Returns the Jira Issue field id to use to sync the given Shotgun Entity
         type field.
@@ -269,7 +269,7 @@ class TaskIssueHandler(EntityIssueHandler):
             return None
         return self.__TASK_FIELDS_MAPPING.get(shotgun_field)
 
-    def get_shotgun_entity_field_for_issue_field(self, jira_field_id):
+    def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
         """
         Returns the Shotgun field name to use to sync the given Jira Issue field.
 

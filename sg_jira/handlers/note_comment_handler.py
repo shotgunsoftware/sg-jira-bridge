@@ -44,16 +44,16 @@ class NoteCommentHandler(SyncHandler):
         Check the Jira and Shotgun site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
-        self.shotgun.assert_field("Note", SHOTGUN_JIRA_ID_FIELD, "text")
+        self._shotgun.assert_field("Note", SHOTGUN_JIRA_ID_FIELD, "text")
 
-    def supported_shotgun_fields_for_shotgun_event(self):
+    def _supported_shotgun_fields_for_shotgun_event(self):
         """
         Return the list of Shotgun fields that this handler can process for a
         Shotgun to Jira event.
         """
         return self.__NOTE_FIELDS_MAPPING.keys()
 
-    def get_jira_comment_body(self, shotgun_note):
+    def _get_jira_comment_body(self, shotgun_note):
         """
         Return a body value to update a Jira comment from the given Shotgun Note.
 
@@ -61,12 +61,12 @@ class NoteCommentHandler(SyncHandler):
         :returns: A string.
         """
         return COMMENT_BODY_TEMPLATE % (
-            self.shotgun.get_entity_page_url(shotgun_note),
+            self._shotgun.get_entity_page_url(shotgun_note),
             shotgun_note["subject"],
             shotgun_note["content"],
         )
 
-    def get_jira_issue_comment(self, jira_issue_key, jira_comment_id):
+    def _get_jira_issue_comment(self, jira_issue_key, jira_comment_id):
         """
         Retrieve the Jira comment with the given id attached to the given Issue.
 
@@ -80,7 +80,7 @@ class NoteCommentHandler(SyncHandler):
         """
         jira_comment = None
         try:
-            jira_comment = self.jira.comment(
+            jira_comment = self._jira.comment(
                 jira_issue_key, jira_comment_id
             )
         except JIRAError as e:
@@ -103,7 +103,7 @@ class NoteCommentHandler(SyncHandler):
             return False
         meta = event["meta"]
         field = meta["attribute_name"]
-        if field not in self.supported_shotgun_fields_for_shotgun_event():
+        if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
                 "Rejecting event %s with unsupported field %s." % (
                     event, field
@@ -113,7 +113,7 @@ class NoteCommentHandler(SyncHandler):
 
         return True
 
-    def parse_note_jira_key(self, shotgun_note):
+    def _parse_note_jira_key(self, shotgun_note):
         """
         Parse the Jira key value set in the given Shotgun Note and return the Jira
         Issue key and the Jira comment id it refers to, if it is not empty.
@@ -152,7 +152,7 @@ class NoteCommentHandler(SyncHandler):
             SHOTGUN_JIRA_ID_FIELD
         ] + self.__NOTE_FIELDS_MAPPING.keys()
 
-        sg_entity = self.shotgun.consolidate_entity(
+        sg_entity = self._shotgun.consolidate_entity(
             {"type": entity_type, "id": entity_id},
             fields=note_fields
         )
@@ -168,16 +168,16 @@ class NoteCommentHandler(SyncHandler):
 
         # Update existing synced comment (if any) Issue attachment
         if shotgun_field == "tasks":
-            return self.sync_note_tasks_change(
+            return self._sync_note_tasks_change(
                 sg_entity,
                 meta["added"],
                 meta["removed"],
             )
 
         # Update an existing comment body from the Note fields.
-        jira_issue_key, jira_comment_id = self.parse_note_jira_key(sg_entity)
+        jira_issue_key, jira_comment_id = self._parse_note_jira_key(sg_entity)
         if jira_issue_key and jira_comment_id:
-            jira_comment = self.get_jira_issue_comment(
+            jira_comment = self._get_jira_issue_comment(
                 jira_issue_key,
                 jira_comment_id
             )
@@ -188,13 +188,13 @@ class NoteCommentHandler(SyncHandler):
                     )
                 )
                 jira_comment.update(
-                    body=self.get_jira_comment_body(sg_entity)
+                    body=self._get_jira_comment_body(sg_entity)
                 )
                 return True
 
         return False
 
-    def sync_note_tasks_change(self, shotgun_note, added, removed):
+    def _sync_note_tasks_change(self, shotgun_note, added, removed):
         """
         Update Jira with tasks changes for the given Shotgun Note.
 
@@ -207,13 +207,13 @@ class NoteCommentHandler(SyncHandler):
                   `False` otherwise.
         """
 
-        jira_issue_key, jira_comment_id = self.parse_note_jira_key(shotgun_note)
+        jira_issue_key, jira_comment_id = self._parse_note_jira_key(shotgun_note)
 
         if jira_issue_key and removed:
             # Check if we should delete the comment because it was attached to
             # a synced Task which has been removed.
             # Retrieve a task with the given Issue key
-            sg_tasks = self.shotgun.find(
+            sg_tasks = self._shotgun.find(
                 "Task", [
                     ["id", "in", [x["id"] for x in removed]],
                     [SHOTGUN_JIRA_ID_FIELD, "is", jira_issue_key]
@@ -227,7 +227,7 @@ class NoteCommentHandler(SyncHandler):
                         "Multiple Shotgun Tasks seem to linked to the same "
                         "Jira Issue: %s." % sg_tasks
                     )
-                jira_comment = self.get_jira_issue_comment(
+                jira_comment = self._get_jira_issue_comment(
                     jira_issue_key,
                     jira_comment_id
                 )
@@ -245,7 +245,7 @@ class NoteCommentHandler(SyncHandler):
 
         if not jira_issue_key and added:
             # Collect the list of Tasks which are linked to Jira Issues
-            sg_tasks = self.shotgun.find(
+            sg_tasks = self._shotgun.find(
                 "Task", [
                     ["id", "in", [x["id"] for x in added]],
                     [SHOTGUN_JIRA_ID_FIELD, "is_not", None]
@@ -277,9 +277,9 @@ class NoteCommentHandler(SyncHandler):
                         jira_issue,
                     )
                 )
-                jira_comment = self.jira.add_comment(
+                jira_comment = self._jira.add_comment(
                     jira_issue,
-                    self.get_jira_comment_body(shotgun_note),
+                    self._get_jira_comment_body(shotgun_note),
                     visibility=None,  # TODO: check if Note properties should drive this
                     is_internal=False
                 )
@@ -298,7 +298,7 @@ class NoteCommentHandler(SyncHandler):
                     comment_key,
                 )
             )
-            self.shotgun.update(
+            self._shotgun.update(
                 shotgun_note["type"],
                 shotgun_note["id"],
                 {SHOTGUN_JIRA_ID_FIELD: comment_key}

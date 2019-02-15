@@ -130,7 +130,12 @@ class Syncer(object):
                 return None
 
         # Loop over all handlers and return the first one which accepts the
-        # event for the given entity
+        # event for the given entity.
+        # Note: it seems safer to return a single handler than a list of all
+        # handlers which could process a given event. Otherwise, one handler
+        # could undo what is set by another one without the first one being
+        # aware of it. The assumption is that complicated logic can always be
+        # implemented in a single handler.
         for handler in self.handlers:
             if handler.accept_shotgun_event(entity_type, entity_id, event):
                 self._logger.debug("Dispatching event to %s" % handler)
@@ -170,6 +175,11 @@ class Syncer(object):
 
         # Loop over all handlers and return the first one which accepts the
         # event for the given entity
+        # Note: it seems safer to return a single handler than a list of all
+        # handlers which could process a given event. Otherwise, one handler
+        # could undo what is set by another one without the first one being
+        # aware of it. The assumption is that complicated logic can always be
+        # implemented in a single handler.
         for handler in self.handlers:
             if handler.accept_jira_event(resource_type, resource_id, event):
                 self._logger.debug("Dispatching event to %s" % handler)

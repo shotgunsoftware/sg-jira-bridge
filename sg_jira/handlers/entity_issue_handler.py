@@ -29,7 +29,7 @@ class EntityIssueHandler(SyncHandler):
         self._issue_type = issue_type
 
     @property
-    def sg_jira_statuses_mapping(self):
+    def _sg_jira_statuses_mapping(self):
         """
         Needs to be re-implemented in deriving classes and return a dictionary
         where keys are Shotgun status short codes and values Jira Issue status
@@ -81,8 +81,8 @@ class EntityIssueHandler(SyncHandler):
             self._logger.debug("Rejecting event %s without a %s issue type" % (event, self._issue_type))
             return False
 
-        shotgun_id = fields.get(self.jira.jira_shotgun_id_field)
-        shotgun_type = fields.get(self.jira.jira_shotgun_type_field)
+        shotgun_id = fields.get(self._jira.jira_shotgun_id_field)
+        shotgun_type = fields.get(self._jira.jira_shotgun_type_field)
         if not shotgun_id or not shotgun_type:
             self._logger.debug(
                 "Rejecting event %s for %s %s not linked to a Shotgun Entity" % (
@@ -95,7 +95,7 @@ class EntityIssueHandler(SyncHandler):
 
         return True
 
-    def create_jira_issue_for_entity(
+    def _create_jira_issue_for_entity(
         self,
         sg_entity,
         jira_project,
@@ -115,7 +115,7 @@ class EntityIssueHandler(SyncHandler):
         :param properties: Arbitrary properties to set on the Jira Issue.
         :returns: A :class:`jira.resources.Issue` instance.
         """
-        jira_issue_type = self.jira.issue_type_by_name(issue_type)
+        jira_issue_type = self._jira.issue_type_by_name(issue_type)
         # Retrieve creation meta data for the project / issue type
         # Note: there is a new simpler Project type in Jira where createmeta is not
         # available.
@@ -124,7 +124,7 @@ class EntityIssueHandler(SyncHandler):
         # It seems a Project `simplified` key can help distinguish between old
         # school projects and new simpler projects.
         # TODO: cache the retrieved data to avoid multiple requests to the server
-        create_meta_data = self.jira.createmeta(
+        create_meta_data = self._jira.createmeta(
             jira_project,
             issuetypeIds=jira_issue_type.id,
             expand="projects.issuetypes.fields"
@@ -143,13 +143,13 @@ class EntityIssueHandler(SyncHandler):
 
         # Retrieve the reporter, either the user who created the Entity or the
         # Jira user used to run the syncing.
-        reporter_name = self.jira.current_user()
+        reporter_name = self._jira.current_user()
         created_by = sg_entity["created_by"]
         if created_by["type"] == "HumanUser":
-            user = self.shotgun.consolidate_entity(created_by)
+            user = self._shotgun.consolidate_entity(created_by)
             if user:
                 user_email = user["email"]
-                jira_user = self.jira.find_jira_user(
+                jira_user = self._jira.find_jira_user(
                     user_email,
                     jira_project=jira_project,
                 )
@@ -163,7 +163,7 @@ class EntityIssueHandler(SyncHandler):
                 "Ignoring created by %s which is not a HumanUser." % created_by
             )
 
-        shotgun_url = self.shotgun.get_entity_page_url(sg_entity)
+        shotgun_url = self._shotgun.get_entity_page_url(sg_entity)
 
         # Note that JIRA raises an error if there are new line characters in the
         # summary for an Issue or if the description field is not set.
@@ -173,9 +173,9 @@ class EntityIssueHandler(SyncHandler):
             "project": jira_project.raw,
             "summary": summary.replace("\n", "").replace("\r", ""),
             "description": description,
-            self.jira.jira_shotgun_id_field: "%d" % sg_entity["id"],
-            self.jira.jira_shotgun_type_field: sg_entity["type"],
-            self.jira.jira_shotgun_url_field: shotgun_url,
+            self._jira.jira_shotgun_id_field: "%d" % sg_entity["id"],
+            self._jira.jira_shotgun_type_field: sg_entity["type"],
+            self._jira.jira_shotgun_url_field: shotgun_url,
             "issuetype": jira_issue_type.raw,
             "reporter": {"name": reporter_name},
         }
@@ -231,9 +231,9 @@ class EntityIssueHandler(SyncHandler):
             sg_entity, data
         ))
 
-        return self.jira.create_issue(fields=data)
+        return self._jira.create_issue(fields=data)
 
-    def get_jira_issue_field_sync_value(
+    def _get_jira_issue_field_sync_value(
         self,
         jira_project,
         jira_issue,
@@ -257,7 +257,7 @@ class EntityIssueHandler(SyncHandler):
         :raises: InvalidShotgunValue if the Shotgun value can't be translated
                  into a valid Jira value.
         """
-        field_schema = self.shotgun.get_field_schema(
+        field_schema = self._shotgun.get_field_schema(
             shotgun_entity_type,
             shotgun_field
         )
@@ -266,7 +266,7 @@ class EntityIssueHandler(SyncHandler):
                 shotgun_entity_type, shotgun_field,
             ))
         # Retrieve the matching Jira field
-        jira_field = self.get_jira_issue_field_for_shotgun_field(
+        jira_field = self._get_jira_issue_field_for_shotgun_field(
             shotgun_entity_type,
             shotgun_field
         )
@@ -281,7 +281,7 @@ class EntityIssueHandler(SyncHandler):
             return None, None
 
         # Retrieve edit meta data for the issue
-        jira_fields = self.get_jira_issue_edit_meta(jira_issue)
+        jira_fields = self._get_jira_issue_edit_meta(jira_issue)
 
         # Bail out if the target Jira field is not editable
         if jira_field not in jira_fields:
@@ -307,7 +307,7 @@ class EntityIssueHandler(SyncHandler):
                     shotgun_event_meta,
                 )
             )
-            jira_value = self.get_jira_value_for_shotgun_list_changes(
+            jira_value = self._get_jira_value_for_shotgun_list_changes(
                 jira_project,
                 jira_issue,
                 jira_field,
@@ -329,7 +329,7 @@ class EntityIssueHandler(SyncHandler):
                 jira_value = jira_value.raw
         else:
             shotgun_value = shotgun_event_meta["new_value"]
-            jira_value = self.get_jira_value_for_shotgun_value(
+            jira_value = self._get_jira_value_for_shotgun_value(
                 jira_project,
                 jira_issue,
                 jira_field,
@@ -356,7 +356,7 @@ class EntityIssueHandler(SyncHandler):
                 jira_value = [jira_value] if jira_value else []
 
         try:
-            jira_value = self.jira.sanitize_jira_update_value(
+            jira_value = self._jira.sanitize_jira_update_value(
                 jira_value, jira_fields[jira_field]
             )
         except UserWarning as e:
@@ -365,7 +365,7 @@ class EntityIssueHandler(SyncHandler):
             return None, None
         return jira_field, jira_value
 
-    def get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
+    def _get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
         """
         Needs to be re-implemented in deriving classes and return the Jira Issue
         field id to use to sync the given Shotgun Entity type field.
@@ -374,7 +374,7 @@ class EntityIssueHandler(SyncHandler):
         """
         raise NotImplementedError
 
-    def get_jira_issue_edit_meta(self, jira_issue):
+    def _get_jira_issue_edit_meta(self, jira_issue):
         """
         Return the edit metadata for the given Jira Issue.
 
@@ -385,7 +385,7 @@ class EntityIssueHandler(SyncHandler):
         """
         # Retrieve edit meta data for the issue
         # TODO: cache the retrieved data to avoid multiple requests to the server
-        edit_meta_data = self.jira.editmeta(jira_issue)
+        edit_meta_data = self._jira.editmeta(jira_issue)
         jira_edit_fields = edit_meta_data.get("fields")
         if not jira_edit_fields:
             raise RuntimeError(
@@ -396,7 +396,7 @@ class EntityIssueHandler(SyncHandler):
             )
         return jira_edit_fields
 
-    def get_jira_value_for_shotgun_list_changes(
+    def _get_jira_value_for_shotgun_list_changes(
         self,
         jira_project,
         jira_issue,
@@ -423,7 +423,7 @@ class EntityIssueHandler(SyncHandler):
         if is_array:
             if current_value:
                 for removed in shotgun_removed:
-                    value = self.get_jira_value_for_shotgun_value(
+                    value = self._get_jira_value_for_shotgun_value(
                         jira_project,
                         jira_issue,
                         jira_field,
@@ -442,7 +442,7 @@ class EntityIssueHandler(SyncHandler):
                         )
 
             for added in shotgun_added:
-                value = self.get_jira_value_for_shotgun_value(
+                value = self._get_jira_value_for_shotgun_value(
                     jira_project,
                     jira_issue,
                     jira_field,
@@ -457,7 +457,7 @@ class EntityIssueHandler(SyncHandler):
             # removed. If so, set the value from the added values (if any)
             if current_value:
                 for removed in shotgun_removed:
-                    value = self.get_jira_value_for_shotgun_value(
+                    value = self._get_jira_value_for_shotgun_value(
                         jira_project,
                         jira_issue,
                         jira_field,
@@ -483,7 +483,7 @@ class EntityIssueHandler(SyncHandler):
                 # have multiple values.
                 for sg_value in shotgun_added:
                     self._logger.debug("Treating %s" % sg_value)
-                    value = self.get_jira_value_for_shotgun_value(
+                    value = self._get_jira_value_for_shotgun_value(
                         jira_project,
                         jira_issue,
                         jira_field,
@@ -506,7 +506,7 @@ class EntityIssueHandler(SyncHandler):
         # Return the modified current value
         return current_value
 
-    def get_jira_value_for_shotgun_value(
+    def _get_jira_value_for_shotgun_value(
         self,
         jira_project,
         jira_issue,
@@ -543,7 +543,7 @@ class EntityIssueHandler(SyncHandler):
 
         if isinstance(shotgun_value, dict):
             # Assume a Shotgun Entity
-            shotgun_value = self.shotgun.consolidate_entity(shotgun_value)
+            shotgun_value = self._shotgun.consolidate_entity(shotgun_value)
 
         allowed_values = jira_field_schema.get("allowedValues")
         if allowed_values:
@@ -599,7 +599,7 @@ class EntityIssueHandler(SyncHandler):
                         return None
                 else:
                     email_address = shotgun_value
-                jira_value = self.jira.find_jira_assignee_for_issue(
+                jira_value = self._jira.find_jira_assignee_for_issue(
                     email_address,
                     jira_project,
                     jira_issue,
@@ -622,7 +622,7 @@ class EntityIssueHandler(SyncHandler):
 
         return jira_value
 
-    def sync_shotgun_status_to_jira(self, jira_issue, shotgun_status, comment):
+    def _sync_shotgun_status_to_jira(self, jira_issue, shotgun_status, comment):
         """
         Set the status of the Jira Issue based on the given Shotgun status.
 
@@ -631,16 +631,16 @@ class EntityIssueHandler(SyncHandler):
         :param comment: A string, a comment to apply to the Jira transition.
         :returns: `True` if the status was successfully set, `False` otherwise.
         """
-        jira_status = self.sg_jira_statuses_mapping.get(shotgun_status)
+        jira_status = self._sg_jira_statuses_mapping.get(shotgun_status)
         if not jira_status:
             self._logger.warning(
                 "Unable to retrieve corresponding Jira status for %s" % shotgun_status
             )
             return False
 
-        return self.jira.set_jira_issue_status(jira_issue, jira_status, comment)
+        return self._jira.set_jira_issue_status(jira_issue, jira_status, comment)
 
-    def sync_shotgun_cced_changes_to_jira(self, jira_issue, added, removed):
+    def _sync_shotgun_cced_changes_to_jira(self, jira_issue, added, removed):
         """
         Update the given Jira Issue watchers from the given Shotgun changes.
 
@@ -653,9 +653,9 @@ class EntityIssueHandler(SyncHandler):
             if user["type"] != "HumanUser":
                 # Can be a Group, a ScriptUser
                 continue
-            sg_user = self.shotgun.consolidate_entity(user)
+            sg_user = self._shotgun.consolidate_entity(user)
             if sg_user:
-                jira_user = self.jira.find_jira_user(
+                jira_user = self._jira.find_jira_user(
                     sg_user["email"],
                     jira_issue=jira_issue,
                 )
@@ -668,15 +668,15 @@ class EntityIssueHandler(SyncHandler):
                             jira_issue
                         )
                     )
-                    self.jira.remove_watcher(jira_issue, jira_user.name)
+                    self._jira.remove_watcher(jira_issue, jira_user.name)
 
         for user in added:
             if user["type"] != "HumanUser":
                 # Can be a Group, a ScriptUser
                 continue
-            sg_user = self.shotgun.consolidate_entity(user)
+            sg_user = self._shotgun.consolidate_entity(user)
             if sg_user:
-                jira_user = self.jira.find_jira_user(
+                jira_user = self._jira.find_jira_user(
                     sg_user["email"],
                     jira_issue=jira_issue,
                 )
@@ -687,10 +687,10 @@ class EntityIssueHandler(SyncHandler):
                             jira_issue
                         )
                     )
-                    self.jira.add_watcher(jira_issue, jira_user.name)
+                    self._jira.add_watcher(jira_issue, jira_user.name)
 
     @property
-    def supported_shotgun_fields_for_jira_event(self):
+    def _supported_shotgun_fields_for_jira_event(self):
         """"
         Return the list of fields this handler can process for a Jira event.
 
@@ -712,15 +712,15 @@ class EntityIssueHandler(SyncHandler):
         fields = jira_issue["fields"]
         issue_type = fields["issuetype"]
 
-        shotgun_id = fields.get(self.jira.jira_shotgun_id_field)
+        shotgun_id = fields.get(self._jira.jira_shotgun_id_field)
         if not shotgun_id.isdigit():
             raise ValueError(
                 "Invalid Shotgun id %s, it should be an integer" % shotgun_id
             )
-        shotgun_type = fields.get(self.jira.jira_shotgun_type_field)
+        shotgun_type = fields.get(self._jira.jira_shotgun_type_field)
         # Collect the list of fields we might need to process the event
-        sg_fields = self.supported_shotgun_fields_for_jira_event
-        sg_entity = self.shotgun.consolidate_entity(
+        sg_fields = self._supported_shotgun_fields_for_jira_event
+        sg_entity = self._shotgun.consolidate_entity(
             {"type": shotgun_type, "id": int(shotgun_id)},
             fields=sg_fields,
         )
@@ -748,7 +748,7 @@ class EntityIssueHandler(SyncHandler):
             # Depending on the Jira server version, we can get the Jira field id
             # in the change payload or just the field name.
             # If we don't have the field id, retrieve it from our internal mapping.
-            field_id = change.get("fieldId") or self.jira.get_jira_issue_field_id(
+            field_id = change.get("fieldId") or self._jira.get_jira_issue_field_id(
                 change["field"]
             )
             self._logger.debug(
@@ -757,7 +757,7 @@ class EntityIssueHandler(SyncHandler):
                 )
             )
             try:
-                shotgun_field, shotgun_value = self.get_shotgun_entity_field_sync_value(
+                shotgun_field, shotgun_value = self._get_shotgun_entity_field_sync_value(
                     sg_entity,
                     jira_issue,
                     field_id,
@@ -782,7 +782,7 @@ class EntityIssueHandler(SyncHandler):
                     shotgun_data,
                 )
             )
-            self.shotgun.update(
+            self._shotgun.update(
                 sg_entity["type"],
                 sg_entity["id"],
                 shotgun_data,
@@ -791,7 +791,7 @@ class EntityIssueHandler(SyncHandler):
 
         return False
 
-    def get_shotgun_entity_field_sync_value(self, shotgun_entity, jira_issue, jira_field_id, change):
+    def _get_shotgun_entity_field_sync_value(self, shotgun_entity, jira_issue, jira_field_id, change):
         """
         Retrieve the Shotgun Entity field and the value to set from the given Jira
         Issue field value.
@@ -821,7 +821,7 @@ class EntityIssueHandler(SyncHandler):
         """
 
         # Retrieve the Shotgun field to update
-        shotgun_field = self.get_shotgun_entity_field_for_issue_field(
+        shotgun_field = self._get_shotgun_entity_field_for_issue_field(
             jira_field_id,
         )
         if not shotgun_field:
@@ -831,7 +831,7 @@ class EntityIssueHandler(SyncHandler):
             return None, None
 
         # TODO: handle Shotgun Project specific fields?
-        shotgun_field_schema = self.shotgun.get_field_schema(
+        shotgun_field_schema = self._shotgun.get_field_schema(
             shotgun_entity["type"],
             shotgun_field
         )
@@ -849,7 +849,7 @@ class EntityIssueHandler(SyncHandler):
         # Special cases for some fields where we need to perform some dedicated
         # logic.
         if jira_field_id == "assignee":
-            shotgun_value = self.get_shotgun_assignment_from_jira_issue_change(
+            shotgun_value = self._get_shotgun_assignment_from_jira_issue_change(
                 shotgun_entity,
                 shotgun_field,
                 shotgun_field_schema,
@@ -859,7 +859,7 @@ class EntityIssueHandler(SyncHandler):
             return shotgun_field, shotgun_value
 
         # General case based on the target Shotgun field data type.
-        shotgun_value = self.get_shotgun_value_from_jira_issue_change(
+        shotgun_value = self._get_shotgun_value_from_jira_issue_change(
             shotgun_entity,
             shotgun_field,
             shotgun_field_schema,
@@ -868,7 +868,7 @@ class EntityIssueHandler(SyncHandler):
         )
         return shotgun_field, shotgun_value
 
-    def get_shotgun_entity_field_for_issue_field(self, jira_field_id):
+    def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
         """
         Returns the Shotgun field name to use to sync the given Jira Issue field.
 
@@ -879,7 +879,7 @@ class EntityIssueHandler(SyncHandler):
         """
         raise NotImplementedError
 
-    def get_shotgun_assignment_from_jira_issue_change(
+    def _get_shotgun_assignment_from_jira_issue_change(
         self,
         shotgun_entity,
         shotgun_field,
@@ -943,8 +943,8 @@ class EntityIssueHandler(SyncHandler):
         if data_type == "multi_entity":
             if from_assignee:
                 # Try to remove the old assignee from the Shotgun assignment
-                jira_user = self.jira.user(from_assignee)
-                sg_user = self.shotgun.find_one(
+                jira_user = self._jira.user(from_assignee)
+                sg_user = self._shotgun.find_one(
                     "HumanUser",
                     [["email", "is", jira_user.emailAddress]],
                     ["email", "name"]
@@ -973,7 +973,7 @@ class EntityIssueHandler(SyncHandler):
                 # Try to add the new assignee to the Shotgun assignment
                 # Use the Issue assignee value to avoid a Jira user query
                 jira_user = jira_issue["fields"]["assignee"]
-                sg_user = self.shotgun.find_one(
+                sg_user = self._shotgun.find_one(
                     "HumanUser",
                     [["email", "is", jira_user["emailAddress"]]],
                     ["email", "name"]
@@ -999,8 +999,8 @@ class EntityIssueHandler(SyncHandler):
         else:  # data_type == "entity":
             if from_assignee:
                 # Try to remove the old assignee from the Shotgun assignment
-                jira_user = self.jira.user(from_assignee)
-                sg_user = self.shotgun.find_one(
+                jira_user = self._jira.user(from_assignee)
+                sg_user = self._shotgun.find_one(
                     "HumanUser",
                     [["email", "is", jira_user.emailAddress]],
                     ["email", "name"]
@@ -1026,7 +1026,7 @@ class EntityIssueHandler(SyncHandler):
                 # Note that we are dealing here with a Jira raw value dict, not
                 # a jira.resources.Resource instance.
                 jira_user = jira_issue["fields"]["assignee"]
-                sg_user = self.shotgun.find_one(
+                sg_user = self._shotgun.find_one(
                     "HumanUser",
                     [["email", "is", jira_user["emailAddress"]]],
                     ["email", "name"]
@@ -1042,7 +1042,7 @@ class EntityIssueHandler(SyncHandler):
                 current_sg_assignment = sg_user
         return current_sg_assignment
 
-    def get_shotgun_value_from_jira_issue_change(
+    def _get_shotgun_value_from_jira_issue_change(
         self,
         shotgun_entity,
         shotgun_field,
@@ -1096,13 +1096,13 @@ class EntityIssueHandler(SyncHandler):
                     all_allowed
                 )
             )
-            self.shotgun.schema_field_update(
+            self._shotgun.schema_field_update(
                 shotgun_entity["type"],
                 shotgun_field,
                 {"valid_values": all_allowed}
             )
             # Clear the schema to take into account the change we just made.
-            self.shotgun.clear_cached_field_schema(shotgun_entity["type"])
+            self._shotgun.clear_cached_field_schema(shotgun_entity["type"])
             return value
 
         if data_type == "status_list":
@@ -1113,7 +1113,7 @@ class EntityIssueHandler(SyncHandler):
             # Look up a matching Shotgun status from our mapping
             # Please note that if we have multiple matching values the first
             # one will be arbitrarily returned.
-            for sg_code, jira_name in self.sg_jira_statuses_mapping.iteritems():
+            for sg_code, jira_name in self._sg_jira_statuses_mapping.iteritems():
                 if value.lower() == jira_name.lower():
                     return sg_code
             # No match.
@@ -1122,7 +1122,7 @@ class EntityIssueHandler(SyncHandler):
                 value,
                 "Unable to find a matching Shotgun status for %s from %s" % (
                     value,
-                    self.sg_jira_statuses_mapping
+                    self._sg_jira_statuses_mapping
                 )
             )
 
@@ -1142,7 +1142,7 @@ class EntityIssueHandler(SyncHandler):
             removed_list = old_list - new_list
             added_list = new_list - old_list
             # Make sure we have the current value and the Shotgun project
-            consolidated = self.shotgun.consolidate_entity(
+            consolidated = self._shotgun.consolidate_entity(
                 shotgun_entity,
                 fields=[shotgun_field, "project"]
             )
@@ -1189,7 +1189,7 @@ class EntityIssueHandler(SyncHandler):
                 else:
                     # We need to retrieve a matching Entity from Shotgun and
                     # add it to the list, if we found one.
-                    sg_value = self.shotgun.match_entity_by_name(
+                    sg_value = self._shotgun.match_entity_by_name(
                         added,
                         allowed_entities,
                         consolidated["project"]

@@ -35,21 +35,21 @@ class SyncHandler(object):
         return self._syncer._logger
 
     @property
-    def bridge(self):
+    def _bridge(self):
         """
         Return a connected Jira handle.
         """
         return self._syncer.bridge
 
     @property
-    def shotgun(self):
+    def _shotgun(self):
         """
         Return a connected :class:`ShotgunSession` instance.
         """
         return self._syncer.shotgun
 
     @property
-    def jira(self):
+    def _jira(self):
         """
         Return a connected Jira handle.
         """
@@ -73,7 +73,7 @@ class SyncHandler(object):
         """
         jira_issue = None
         try:
-            jira_issue = self.jira.issue(issue_key)
+            jira_issue = self._jira.issue(issue_key)
             if not jira_issue.fields.project:
                 # This should never happen as it does not seem possible to
                 # have Issues not linked to a project. Report the error if it
