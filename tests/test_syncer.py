@@ -300,7 +300,7 @@ class TestJiraSyncer(TestBase):
         # in its __exit__. We don't need the original jira.client.Jira class
         # in these tests, so restoring it is not an issue, but this is not
         # clean and should be fixed.
-        #self.addCleanup(patcher.stop)
+        # self.addCleanup(patcher.stop)
 
     def test_bad_syncer(self, mocked_sg):
         """

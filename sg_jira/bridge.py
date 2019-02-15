@@ -11,17 +11,11 @@ import logging
 import logging.config
 import importlib
 
-# import jira
-from jira import JIRAError
-import jira
-
 from .shotgun_session import ShotgunSession
 from .jira_session import JiraSession
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
-from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD
-from .constants import SHOTGUN_JIRA_ID_FIELD
 from .utils import utf8_to_unicode
 
 logger = logging.getLogger(__name__)
@@ -70,31 +64,13 @@ class Bridge(object):
         )
         self._shotgun.add_user_agent("sg_jira_sync")
 
-        try:
-            self._jira = JiraSession(
-                jira_site,
-                auth=(
-                    jira_user,
-                    jira_secret
-                ),
-            )
-        except JIRAError as e:
-            # Jira puts some huge html / java script code in the exception
-            # string so we catch it to issue a more reasonable message.
-            logger.debug(
-                "Unable to connect to %s: %s" % (jira_site, e),
-                exc_info=True
-            )
-            # Check the status code
-            if e.status_code == 401:
-                raise RuntimeError(
-                    "Unable to connect to %s (error code %d), "
-                    "please check your credentials" % (
-                        jira_site,
-                        e.status_code,
-                    )
-                )
-            raise RuntimeError("Unable to connect to %s" % jira_site)
+        self._jira = JiraSession(
+            jira_site,
+            auth=(
+                jira_user,
+                jira_secret
+            ),
+        )
         logger.info("Connected to %s." % jira_site)
         self._sync_settings = sync_settings or {}
         self._syncers = {}

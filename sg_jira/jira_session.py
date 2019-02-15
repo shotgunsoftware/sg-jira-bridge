@@ -16,17 +16,42 @@ from .constants import JIRA_RESULT_PAGING
 logger = logging.getLogger(__name__)
 
 
-
 class JiraSession(jira.client.JIRA):
     """
     Extend :class:`jira.client.JIRA` with helpers.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, jira_site, *args, **kwargs):
         """
-        Instantiate a JiraSession
+        Instantiate a JiraSession.
+
+        Connect to the given Jira site with given parameters.
+
+        :param str jira_site: A Jira site url.
+        :raises: RuntimeError on Jira connection errors.
         """
-        super(JiraSession, self).__init__(*args, **kwargs)
+        try:
+            super(JiraSession, self).__init__(
+                jira_site, *args, **kwargs
+            )
+        except JIRAError as e:
+            # Jira puts some huge html / java script code in the exception
+            # string so we catch it to issue a more reasonable message.
+            logger.debug(
+                "Unable to connect to %s: %s" % (jira_site, e),
+                exc_info=True
+            )
+            # Check the status code
+            if e.status_code == 401:
+                raise RuntimeError(
+                    "Unable to connect to %s (error code %d), "
+                    "please check your credentials" % (
+                        jira_site,
+                        e.status_code,
+                    )
+                )
+            raise RuntimeError("Unable to connect to %s" % jira_site)
+
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
 
@@ -328,7 +353,7 @@ class JiraSession(jira.client.JIRA):
         logger.debug("Found Jira Assignee %s" % jira_assignee)
         return jira_assignee
 
-    def set_jira_issue_status(self, jira_issue, jira_status_name):
+    def set_jira_issue_status(self, jira_issue, jira_status_name, comment):
         """
         Attempt to change the Jira Issue status to the given value.
 
@@ -337,6 +362,7 @@ class JiraSession(jira.client.JIRA):
 
         :param jira_issue: A :class:`jira.resources.Issue` instance.
         :param str jira_status: A Jira status name, e.g. `In Progress`.
+        :param comment: A string, a comment to apply to the Jira transition.
         :return: `True` if the status could be set, `False` otherwise.
         """
 

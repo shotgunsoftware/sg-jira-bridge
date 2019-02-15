@@ -638,7 +638,7 @@ class EntityIssueHandler(SyncHandler):
             )
             return False
 
-        return self.jira.set_jira_issue_status(jira_issue, jira_status)
+        return self.jira.set_jira_issue_status(jira_issue, jira_status, comment)
 
     def sync_shotgun_cced_changes_to_jira(self, jira_issue, added, removed):
         """
