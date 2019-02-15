@@ -9,7 +9,6 @@ import datetime
 
 import jira
 
-from ..constants import JIRA_RESULT_PAGING
 from ..errors import InvalidShotgunValue, InvalidJiraValue
 from .sync_handler import SyncHandler
 
@@ -82,8 +81,8 @@ class EntityIssueHandler(SyncHandler):
             self._logger.debug("Rejecting event %s without a %s issue type" % (event, self._issue_type))
             return False
 
-        shotgun_id = fields.get(self.bridge.jira_shotgun_id_field)
-        shotgun_type = fields.get(self.bridge.jira_shotgun_type_field)
+        shotgun_id = fields.get(self.jira.jira_shotgun_id_field)
+        shotgun_type = fields.get(self.jira.jira_shotgun_type_field)
         if not shotgun_id or not shotgun_type:
             self._logger.debug(
                 "Rejecting event %s for %s %s not linked to a Shotgun Entity" % (
@@ -150,7 +149,7 @@ class EntityIssueHandler(SyncHandler):
             user = self.shotgun.consolidate_entity(created_by)
             if user:
                 user_email = user["email"]
-                jira_user = self.find_jira_user(
+                jira_user = self.jira.find_jira_user(
                     user_email,
                     jira_project=jira_project,
                 )
@@ -174,9 +173,9 @@ class EntityIssueHandler(SyncHandler):
             "project": jira_project.raw,
             "summary": summary.replace("\n", "").replace("\r", ""),
             "description": description,
-            self.bridge.jira_shotgun_id_field: "%d" % sg_entity["id"],
-            self.bridge.jira_shotgun_type_field: sg_entity["type"],
-            self.bridge.jira_shotgun_url_field: shotgun_url,
+            self.jira.jira_shotgun_id_field: "%d" % sg_entity["id"],
+            self.jira.jira_shotgun_type_field: sg_entity["type"],
+            self.jira.jira_shotgun_url_field: shotgun_url,
             "issuetype": jira_issue_type.raw,
             "reporter": {"name": reporter_name},
         }
@@ -357,7 +356,7 @@ class EntityIssueHandler(SyncHandler):
                 jira_value = [jira_value] if jira_value else []
 
         try:
-            jira_value = self.sanitize_jira_update_value(
+            jira_value = self.jira.sanitize_jira_update_value(
                 jira_value, jira_fields[jira_field]
             )
         except UserWarning as e:
@@ -600,7 +599,7 @@ class EntityIssueHandler(SyncHandler):
                         return None
                 else:
                     email_address = shotgun_value
-                jira_value = self.find_jira_assignee_for_issue(
+                jira_value = self.jira.find_jira_assignee_for_issue(
                     email_address,
                     jira_project,
                     jira_issue,
@@ -639,93 +638,7 @@ class EntityIssueHandler(SyncHandler):
             )
             return False
 
-        if jira_issue.fields.status.name == jira_status:
-            self._logger.debug("Jira issue %s is already '%s'" % (
-                jira_issue, jira_status
-            ))
-            return True
-
-        # Retrieve available transitions for the issue including fields on the
-        # transition screen.
-        jira_transitions = self.jira.transitions(
-            jira_issue,
-            expand="transitions.fields"
-        )
-        for tra in jira_transitions:
-            # Match a transition with the expected status name
-            if tra["to"]["name"] == jira_status:
-                self._logger.info(
-                    "Found transition to %s for %s: %s" % (
-                        jira_status,
-                        jira_issue,
-                        tra,
-                    )
-                )
-                # Iterate over any fields for transition and find required fields
-                # that don't have a default value. Set the value using our defaults.
-                # NOTE: This only supports text fields right now.
-                fields = {}
-                if "fields" in tra:
-                    for field_name, details in tra["fields"].iteritems():
-                        # If field is required, it doesn't currently have a value and
-                        # there is no default value provided by Jira, use our hardcoded
-                        # default value.
-                        # Eventually, this should be moved to a flexible framework for clients
-                        # to customize on their own like Hooks.
-                        # Note: This is not reliable. The "fields" key we get back from the
-                        # transitions call above only includes fields on the transition screen
-                        # and each field's "required" key refers to whether the field is
-                        # globally set as required. However, you can set a validator
-                        # on the transition that requires a globally optional field be non-empty.
-                        # The field will still show up as "required=False" since the field isn't
-                        # configured as a globally required field.
-                        if details["required"] and (
-                            not getattr(jira_issue.fields, field_name)
-                            and not details.get("hasDefaultValue")
-                        ):
-                            # The resolution field is often required in transitions. We don't
-                            # currently support configuring this so we use the first
-                            # allowed value.
-                            if details["schema"]["type"] == "resolution":
-                                fields[field_name] = details["allowedValues"][0]
-                                self._logger.info(
-                                    "Setting resolution to first allowedValue: %s" %
-                                    details["allowedValues"][0]
-                                )
-                            # Text fields are just filled with our default value to satisfy
-                            # the requirement.
-                            elif details["schema"]["type"] == "text":
-                                fields[field_name] = comment
-
-                # We add a comment by default in case it is required by the transition validator.
-                # Note that the comment will only be saved if it is visible on a transition
-                # screen.
-                params = {
-                    "comment": comment,
-                }
-                # If there are any required text fields we have
-                # provided values for, then add the "fields" param. When "fields" is specified,
-                # all other keyword params are ignored (including the comment param setup above).
-                if fields:
-                    params["fields"] = fields
-
-                self._logger.info("Transitioning Issue %s to %s. Params: %s" % (
-                    jira_issue,
-                    tra["name"],
-                    params
-                ))
-                self.jira.transition_issue(
-                    jira_issue,
-                    tra["id"],
-                    **params
-                )
-                return True
-
-        self._logger.warning(
-            "Couldn't find any Jira transition with %s as target" % jira_status
-        )
-        self._logger.debug("Available transitions are %s" % jira_transitions)
-        return False
+        return self.jira.set_jira_issue_status(jira_issue, jira_status)
 
     def sync_shotgun_cced_changes_to_jira(self, jira_issue, added, removed):
         """
@@ -742,7 +655,7 @@ class EntityIssueHandler(SyncHandler):
                 continue
             sg_user = self.shotgun.consolidate_entity(user)
             if sg_user:
-                jira_user = self.find_jira_user(
+                jira_user = self.jira.find_jira_user(
                     sg_user["email"],
                     jira_issue=jira_issue,
                 )
@@ -763,7 +676,7 @@ class EntityIssueHandler(SyncHandler):
                 continue
             sg_user = self.shotgun.consolidate_entity(user)
             if sg_user:
-                jira_user = self.find_jira_user(
+                jira_user = self.jira.find_jira_user(
                     sg_user["email"],
                     jira_issue=jira_issue,
                 )
@@ -775,236 +688,6 @@ class EntityIssueHandler(SyncHandler):
                         )
                     )
                     self.jira.add_watcher(jira_issue, jira_user.name)
-
-    def sanitize_jira_update_value(self, jira_value, jira_field_schema):
-        """
-        Perform sanity checks for the given Jira value and ensure it can be used
-        to update the Jira field with the given schema.
-
-        :returns: A Jira value which can safely be used to update the Jira field.
-        :raises: UserWarning if a safe value can't be obtained.
-        """
-        # If the value is empty but required, check if Jira will be able to use
-        # a default value. Default values are only available when creating Issues
-        if not jira_value and jira_field_schema["required"]:
-            # Create meta data has a "hasDefaultValue" property, edit meta data
-            # does not have this property.
-            has_default = jira_field_schema.get("hasDefaultValue")
-            if not has_default:
-                raise UserWarning(
-                    "Invalid value %s: Field %s requires a value and does not "
-                    "provide a default value" % (
-                        jira_value,
-                        jira_field_schema["name"]
-                    )
-                )
-        # Jira doesn't allow single-line text entry fields to be longer than
-        # 255 characters, so we truncate the string data and add a little
-        # message -- so users know to look at Shotgun. Note that this
-        # "feature" could result in data loss; if the truncated text is
-        # subsequently modified in Jira, the truncated result will be sent
-        # to Shotgun by the Jira sync webhook.
-        if jira_field_schema["schema"]["type"] == "string" and isinstance(jira_value, str):
-            # Reference:
-            # com.atlassian.jira.plugin.system.customfieldtypes:textfield
-            # com.atlassian.jira.plugin.system.customfieldtypes:textarea
-            if jira_field_schema["schema"].get("custom") == "com.atlassian.jira.plugin.system.customfieldtypes:textfield":
-                if len(jira_value) > 255:
-                    self._logger.warning(
-                        "String data for Jira field %s is too long (> 255 chars). "
-                        "Truncating for display in Jira." % jira_field_schema["name"]
-                    )
-                    message = "... [see Shotgun]."
-                    jira_value = jira_value[:(255 - len(message))] + message
-
-        self._logger.debug(
-            "Sanitized value for %s is %s" % (
-                jira_field_schema["name"],
-                jira_value,
-            )
-        )
-        return jira_value
-
-    def find_jira_assignee_for_issue(self, user_email, jira_project=None, jira_issue=None):
-        """
-        Return a Jira user the given issue can be assigned to, based
-        on the given email address.
-
-        A Jira Project must be specified when creating an Issue. A Jira Issue must
-        be specified when editing an Issue.
-
-        :param jira_project: A :class:`jira.resources.Project` instance or None.
-        :param jira_issue: A :class:`jira.resources.Issue` instance or None.
-        :param user_email: An email address as a string.
-        :returns: A :class:`jira.resources.User` instance or None.
-        :raises: ValueError if no Project nor Issue is specified.
-        """
-        return self.find_jira_user(
-            user_email,
-            jira_project,
-            jira_issue,
-            for_assignment=True
-        )
-
-    def _search_allowed_users_for_issue(self, user, project, issueKey, startAt=0, maxResults=50):
-        """
-        Wrapper around jira.search_allowed_users_for_issue to make its parameter
-        consistent with jira.search_assignable_users_for_issues parameters.
-        """
-        # Note: this does not work and requires a user name or email to be specified.
-        # There are some various discussions about it, mentionning that using
-        # "." or "%" or "_" could act as a wildcard but none of them worked.
-        return self.jira.search_allowed_users_for_issue(
-            user if user else ".",
-            projectKey=project.key if project else None,
-            issueKey=issueKey,
-            startAt=startAt,
-            maxResults=maxResults
-        )
-        # An attempt to use a query param instead of the username param, which is
-        # being deprecated, used by the method above. This didn't work better ...
-        # https://developer.atlassian.com/cloud/jira/platform/rest/v2?_ga=2.239994883.1204798848.1547548670-1513186087.1542632955#api-api-2-user-search-query-key-get
-#        params = {
-#            "query": user or "_"
-#        }
-#        if issueKey is not None:
-#            params["issueKey"] = issueKey
-#        if project is not None:
-#            params["projectKey"] = project.key
-#        return self.jira._fetch_pages(
-#            jira.resources.User,
-#            None,
-#            "user/viewissue/search",
-#            startAt,
-#            maxResults,
-#            params
-#        )
-
-    def find_jira_user(self, user_email, jira_project=None, jira_issue=None, for_assignment=False):
-        """
-        Return a Jira an assignable user or with browse permission for the given
-        Project or Issue, with the given email address.
-
-        .. note:: Due to problems with user searching in Jira, this method always
-                  returns assignable users for the time being.
-
-        :param user_email: An email address as a string.
-        :param jira_project: A :class:`jira.resources.Project` instance or None.
-        :param jira_issue: A :class:`jira.resources.Issue` instance or None.
-        :param for_assignment: A boolean, if `False` the user just needs to have read
-                            permission. If `True` the user needs to be suitable for
-                            Issue assignments.
-        :returns: A :class:`jira.resources.User` instance or None.
-        :raises: ValueError if no Project nor Issue is specified.
-        """
-
-        if not jira_project and not jira_issue:
-            raise ValueError(
-                "Either a Jira Project or a Jira Issue must be specified"
-            )
-
-        if not user_email:
-            return None
-
-        if for_assignment:
-            search_method = self.jira.search_assignable_users_for_issues
-        else:
-            # See comments in _search_allowed_users_for_issue: searching for users
-            # does not seem to work very well, so, for the time being, we use the
-            # only method that can be trusted and only consider assignable users.
-            # search_method = self._search_allowed_users_for_issue
-            search_method = self.jira.search_assignable_users_for_issues
-
-        # Note: There is a Jira bug that prevents searching by email address from working on
-        # some instances. In this case, we fall back on paging through ALL results to
-        # ensure don't incorrectly miss matching the user.
-        # See: https://jira.atlassian.com/browse/JRASERVER-61772
-        # See: https://jira.atlassian.com/browse/JRACLOUD-61772
-
-        # TODO: Possible source of the problem
-        # Users need to have the global "Browse users and groups" permission.
-        # We don't have this permission by default for some reason.
-        # It's currently only assigned to the **jira-developers** group.
-        # Something to double check and see if we can spot this in the setup
-        # check and report the problem. And get rid of the fallback code.
-
-        jira_assignee = None
-
-        # Direct user search with their email
-        self._logger.debug("Looking up %s in assignable users" % user_email)
-        jira_users = search_method(
-            user_email,
-            project=jira_project,
-            issueKey=jira_issue.key if jira_issue else None,
-            maxResults=JIRA_RESULT_PAGING,
-        )
-        if jira_users:
-            jira_assignee = jira_users[0]
-            if len(jira_users) > 1:
-                self._logger.warning(
-                    "Found multiple assignable Jira users with email address %s. "
-                    "Using the first one: %s" % (
-                        user_email,
-                        jira_users
-                    )
-                )
-            self._logger.debug("Found Jira Assignee %s" % jira_assignee)
-            return jira_assignee
-
-        # Because of the bug mentioned above, fall back on matching users ourself.
-        self._logger.debug(
-            "No assignable users found matching %s. Searching all assignable users "
-            "manually" % user_email
-        )
-        uemail = user_email.lower()
-        start_idx = 0
-        self._logger.debug("Querying assignable users starting at #%d" % start_idx)
-        jira_users = search_method(
-            None,
-            project=jira_project,
-            issueKey=jira_issue.key if jira_issue else None,
-            maxResults=JIRA_RESULT_PAGING,
-            startAt=start_idx,
-        )
-        while jira_users:
-            for jira_user in jira_users:
-                if jira_user.emailAddress and jira_user.emailAddress.lower() == uemail:
-                    jira_assignee = jira_user
-                    break
-            if jira_assignee:
-                break
-            else:
-                start_idx += len(jira_users)
-                self._logger.debug(
-                    "Querying assignable users starting at #%d" % start_idx
-                )
-                jira_users = search_method(
-                    None,
-                    project=jira_project,
-                    issueKey=jira_issue.key if jira_issue else None,
-                    maxResults=JIRA_RESULT_PAGING,
-                    startAt=start_idx,
-                )
-                self._logger.debug("Found %s users" % (len(jira_users)))
-
-        if not jira_assignee:
-            if jira_issue:
-                self._logger.warning(
-                    "Unable to retrieve a Jira user with email %s for Issue %s" % (
-                        user_email,
-                        jira_issue,
-                    )
-                )
-            else:
-                self._logger.warning(
-                    "Unable to retrieve a Jira user with email %s for Project %s" % (
-                        user_email,
-                        jira_project,
-                    )
-                )
-
-        self._logger.debug("Found Jira Assignee %s" % jira_assignee)
-        return jira_assignee
 
     @property
     def supported_shotgun_fields_for_jira_event(self):
@@ -1029,12 +712,12 @@ class EntityIssueHandler(SyncHandler):
         fields = jira_issue["fields"]
         issue_type = fields["issuetype"]
 
-        shotgun_id = fields.get(self.bridge.jira_shotgun_id_field)
+        shotgun_id = fields.get(self.jira.jira_shotgun_id_field)
         if not shotgun_id.isdigit():
             raise ValueError(
                 "Invalid Shotgun id %s, it should be an integer" % shotgun_id
             )
-        shotgun_type = fields.get(self.bridge.jira_shotgun_type_field)
+        shotgun_type = fields.get(self.jira.jira_shotgun_type_field)
         # Collect the list of fields we might need to process the event
         sg_fields = self.supported_shotgun_fields_for_jira_event
         sg_entity = self.shotgun.consolidate_entity(
@@ -1065,7 +748,7 @@ class EntityIssueHandler(SyncHandler):
             # Depending on the Jira server version, we can get the Jira field id
             # in the change payload or just the field name.
             # If we don't have the field id, retrieve it from our internal mapping.
-            field_id = change.get("fieldId") or self.bridge.get_jira_issue_field_id(
+            field_id = change.get("fieldId") or self.jira.get_jira_issue_field_id(
                 change["field"]
             )
             self._logger.debug(

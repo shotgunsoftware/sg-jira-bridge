@@ -9,6 +9,7 @@ import logging
 import shotgun_api3
 
 from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
+from .constants import SHOTGUN_JIRA_ID_FIELD
 from .utils import utf8_to_unicode, unicode_to_utf8
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,19 @@ class ShotgunSession(object):
         :returns: A Shotgun record dictionary with an `id` key and a `type` key.
         """
         return self._shotgun_user
+
+    def setup(self):
+        """
+        Check the Shotgun site and cache site level values.
+
+        :raises: RuntimeError if the Shotgun site was not correctly configured to
+                 be used with this bridge.
+        """
+        self.assert_field(
+            "Project",
+            SHOTGUN_JIRA_ID_FIELD,
+            "text"
+        )
 
     def assert_field(self, entity_type, field_name, field_type):
         """

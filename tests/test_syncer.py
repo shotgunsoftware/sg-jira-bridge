@@ -247,9 +247,6 @@ class ExtMockgun(mockgun.Shotgun):
 # Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
-# Mock Jira with MockedJira, this works only if the code uses jira.client.JIRA
-# and does not use `from jira import JIRA` and then `jira_handle = JIRA(...)`
-@mock.patch("jira.client.JIRA")
 class TestJiraSyncer(TestBase):
     """
     Test syncing from Shotgun to Jira.
@@ -264,15 +261,14 @@ class TestJiraSyncer(TestBase):
             "xxxxxxxxxx",
         )
 
-    def _get_syncer(self, mocked_jira, mocked_sg, name="task_issue"):
+    def _get_syncer(self, mocked_sg, name="task_issue"):
         """
         Helper to get a syncer and a bridge with a mocked Shotgun.
 
-        :param mocked_jira: Mocked jira.client.JIRA.
         :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.
         """
-        mocked_jira.return_value = MockedJira()
+
         mocked_sg.return_value = self._get_mocked_sg_handle()
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
@@ -291,8 +287,22 @@ class TestJiraSyncer(TestBase):
             os.path.dirname(__file__),
             "fixtures", "schemas", "sg-jira",
         ))
+        # Patch the JiraSession base class to use our MockedJira instead of
+        # the jira.client.Jira class.
+        patcher = mock.patch.object(
+            sg_jira.jira_session.JiraSession,
+            "__bases__",
+            (MockedJira,)
+        )
+        patcher.is_local = True
+        patcher.start()
+        # FIXME: the patcher fails with TypeError: can't delete JiraSession.__bases__
+        # in its __exit__. We don't need the original jira.client.Jira class
+        # in these tests, so restoring it is not an issue, but this is not
+        # clean and should be fixed.
+        #self.addCleanup(patcher.stop)
 
-    def test_bad_syncer(self, mocked_jira, mocked_sg):
+    def test_bad_syncer(self, mocked_sg):
         """
         Test we handle problems gracefully and that syncers settings are
         correctly handled.
@@ -302,7 +312,6 @@ class TestJiraSyncer(TestBase):
             RuntimeError,
             "Sorry, I'm bad!",
             self._get_syncer,
-            mocked_jira,
             mocked_sg,
             "bad_setup"
         )
@@ -341,12 +350,12 @@ class TestJiraSyncer(TestBase):
         "sg_jira.Bridge.current_shotgun_user",
         new_callable=mock.PropertyMock
     )
-    def test_shotgun_event_accept(self, mocked_cur_user, mocked_jira, mocked_sg):
+    def test_shotgun_event_accept(self, mocked_cur_user, mocked_sg):
         """
         Test syncer accepts the right Shotgun events.
         """
         mocked_cur_user.return_value = {"type": "ApiUser", "id": 1}
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         # Empty events should be rejected
         self.assertFalse(
             syncer.accept_shotgun_event(
@@ -403,11 +412,11 @@ class TestJiraSyncer(TestBase):
             )
         )
 
-    def test_jira_event_accept(self, mocked_jira, mocked_sg):
+    def test_jira_event_accept(self, mocked_sg):
         """
         Test syncer accepts the right Jira events.
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         # Check an empty event does not cause problems
         self.assertFalse(
             syncer.accept_jira_event(
@@ -472,12 +481,12 @@ class TestJiraSyncer(TestBase):
             )
         )
 
-    def test_project_match(self, mocked_jira, mocked_sg):
+    def test_project_match(self, mocked_sg):
         """
         Test matching a Project between Shotgun and Jira, handling Jira
         create meta data and creating an Issue.
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
         self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS)
 
@@ -547,11 +556,11 @@ class TestJiraSyncer(TestBase):
             }
         )
 
-    def test_shotgun_assignee(self, mocked_jira, mocked_sg):
+    def test_shotgun_assignee(self, mocked_sg):
         """
         Test matching Shotgun assignment to Jira.
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
         self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS)
         self.add_to_sg_mock_db(bridge.shotgun, {
@@ -696,11 +705,11 @@ class TestJiraSyncer(TestBase):
         )
         self.assertIsNone(issue.fields.assignee)
 
-    def test_jira_assignment(self, mocked_jira, mocked_sg):
+    def test_jira_assignment(self, mocked_sg):
         """
         Test syncing Jira assignment to Shotgun
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
 
         self.add_to_sg_mock_db(bridge.shotgun, {
             "status": "act",
@@ -845,11 +854,11 @@ class TestJiraSyncer(TestBase):
             )["task_assignees"]
         )
 
-    def test_jira_labels(self, mocked_jira, mocked_sg):
+    def test_jira_labels(self, mocked_sg):
         """
         Test syncing Jira labels to Shotgun
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
         sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
 
@@ -964,11 +973,11 @@ class TestJiraSyncer(TestBase):
             )["tags"]
         )
 
-    def test_jira_status(self, mocked_jira, mocked_sg):
+    def test_jira_status(self, mocked_sg):
         """
         Test syncing Jira status to Shotgun
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
         sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
 
@@ -1028,11 +1037,11 @@ class TestJiraSyncer(TestBase):
             )
         )
 
-    def test_jira_2_shotgun(self, mocked_jira, mocked_sg):
+    def test_jira_2_shotgun(self, mocked_sg):
         """
         Test syncing from Jira to Shotgun
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         # Syncing without the target entities shouldn't cause problems
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
         sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
@@ -1072,13 +1081,13 @@ class TestJiraSyncer(TestBase):
             )
         )
 
-    def test_unicode(self, mocked_jira, mocked_sg):
+    def test_unicode(self, mocked_sg):
         """
         Test unicode values are correclty handled.
         """
         unicode_string = u"No Sync unicode_îéö_😀"
         encoded_string = unicode_string.encode("utf-8")
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         # Faked Jira project
         bridge.jira.set_projects([JIRA_PROJECT])
         # Values we get back from Shotgun are never unicode
@@ -1187,11 +1196,11 @@ class TestJiraSyncer(TestBase):
             # We shouldn't have any string value, just unicode
             self.assertFalse(isinstance(v, str))
 
-    def test_shotgun_note(self, mocked_jira, mocked_sg):
+    def test_shotgun_note(self, mocked_sg):
         """
         Test syncing a Note from SG to Jira.
         """
-        syncer, bridge = self._get_syncer(mocked_jira, mocked_sg)
+        syncer, bridge = self._get_syncer(mocked_sg)
         # Faked Jira project
         bridge.jira.set_projects([JIRA_PROJECT])
         issue = bridge.jira.create_issue({})

@@ -16,6 +16,7 @@ from jira import JIRAError
 import jira
 
 from .shotgun_session import ShotgunSession
+from .jira_session import JiraSession
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
@@ -70,7 +71,7 @@ class Bridge(object):
         self._shotgun.add_user_agent("sg_jira_sync")
 
         try:
-            self._jira = jira.client.JIRA(
+            self._jira = JiraSession(
                 jira_site,
                 auth=(
                     jira_user,
@@ -97,11 +98,8 @@ class Bridge(object):
         logger.info("Connected to %s." % jira_site)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
-        # A dictionary where keys are Jira field name and values are their field id.
-        self._jira_fields_map = {}
-        self._jira_setup()
-        self._shotgun_schemas = {}  # A cache for retrieved Shotgun schemas
-        self._shotgun_setup()
+        self._jira.setup()
+        self._shotgun.setup()
 
     @classmethod
     def get_bridge(cls, settings_file):
@@ -234,7 +232,7 @@ class Bridge(object):
     @property
     def jira(self):
         """
-        Return a connected Jira handle.
+        Return a connected :class:`JiraSession` instance.
         """
         return self._jira
 
@@ -350,84 +348,3 @@ class Bridge(object):
             logger.exception(e)
             raise
         return synced
-
-    def _jira_setup(self):
-        """
-        Check the Jira site and cache site level values.
-
-        :raises: RuntimeError if the Jira site was not correctly configured to
-                 be used with this bridge.
-        """
-        # Build a mapping from Jira field names to their id for fast lookup.
-        for jira_field in self._jira.fields():
-            self._jira_fields_map[jira_field["name"].lower()] = jira_field["id"]
-        self._jira_shotgun_type_field = self.get_jira_issue_field_id(
-            JIRA_SHOTGUN_TYPE_FIELD.lower()
-        )
-        if not self._jira_shotgun_type_field:
-            raise RuntimeError(
-                "Missing required custom Jira field %s" % JIRA_SHOTGUN_TYPE_FIELD
-            )
-        self._jira_shotgun_id_field = self.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower())
-        if not self._jira_shotgun_id_field:
-            raise RuntimeError(
-                "Missing required custom Jira field %s" % JIRA_SHOTGUN_ID_FIELD
-            )
-        self._jira_shotgun_url_field = self.get_jira_issue_field_id(JIRA_SHOTGUN_URL_FIELD.lower())
-        if not self._jira_shotgun_url_field:
-            raise RuntimeError(
-                "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
-            )
-
-    def get_jira_issue_field_id(self, name):
-        """
-        Return the Jira field id for the Issue field with the given name.
-
-        :returns: The id as a string or None if the field is unknown.
-        """
-        return self._jira_fields_map.get(name.lower())
-
-    @property
-    def jira_shotgun_type_field(self):
-        """
-        Return the id of the Jira field used to store the type of a linked Shotgun
-        Entity.
-
-        Two custom fields are used in Jira to store a reference to a Shotgun
-        Entity: its Shotgun Entity type and id. This method returns the id of
-        the Jira field used to store the Shotgun type.
-        """
-        return self._jira_shotgun_type_field
-
-    @property
-    def jira_shotgun_id_field(self):
-        """
-        Return the id of the Jira field used to store the id of a linked Shotgun
-        Entity.
-
-        Two custom fields are used in Jira to store a reference to a Shotgun
-        Entity: its Shotgun Entity type and id. This method returns the id of
-        the Jira field used to store the Shotgun id.
-        """
-        return self._jira_shotgun_id_field
-
-    @property
-    def jira_shotgun_url_field(self):
-        """
-        Return the id of the Jira field used to store the url of a linked Shotgun
-        Entity.
-        """
-        return self._jira_shotgun_url_field
-
-    def _shotgun_setup(self):
-        """
-        Check the Shotgun site and cache site level values.
-
-        :raises: RuntimeError if the Shotgun site was not correctly configured to
-                 be used with this bridge.
-        """
-        self._shotgun.assert_field(
-            "Project",
-            SHOTGUN_JIRA_ID_FIELD,
-            "text"
-        )
