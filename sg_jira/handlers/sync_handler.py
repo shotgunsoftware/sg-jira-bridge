@@ -37,7 +37,7 @@ class SyncHandler(object):
     @property
     def _bridge(self):
         """
-        Return a connected Jira handle.
+        Return a connected :class:`sg_jira.Bridge` instance.
         """
         return self._syncer.bridge
 
@@ -51,7 +51,7 @@ class SyncHandler(object):
     @property
     def _jira(self):
         """
-        Return a connected Jira handle.
+        Return a connected :class:`sg_jira.jira_session.JiraSession` instance.
         """
         return self._syncer.jira
 
