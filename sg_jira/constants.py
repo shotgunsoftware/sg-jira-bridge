@@ -46,3 +46,7 @@ SG_ENTITY_SPECIAL_NAME_FIELDS = {
     "Tag": "name",
     "Ticket": "title",
 }
+
+# Jira search methods use some paging
+# this is the max number of results to get per "page".
+JIRA_RESULT_PAGING = 2000

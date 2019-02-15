@@ -9,6 +9,7 @@ import datetime
 
 import jira
 
+from ..constants import JIRA_RESULT_PAGING
 from ..errors import InvalidShotgunValue, InvalidJiraValue
 from .sync_handler import SyncHandler
 
@@ -810,7 +811,8 @@ class EntityIssueHandler(SyncHandler):
             if jira_field_schema["schema"].get("custom") == "com.atlassian.jira.plugin.system.customfieldtypes:textfield":
                 if len(jira_value) > 255:
                     self._logger.warning(
-                        "String data is too long (> 255 chars). Truncating for display in Jira."
+                        "String data for Jira field %s is too long (> 255 chars). "
+                        "Truncating for display in Jira." % jira_field_schema["name"]
                     )
                     message = "... [see Shotgun]."
                     jira_value = jira_value[:(255 - len(message))] + message
@@ -934,7 +936,7 @@ class EntityIssueHandler(SyncHandler):
             user_email,
             project=jira_project,
             issueKey=jira_issue.key if jira_issue else None,
-            maxResults=2000,
+            maxResults=JIRA_RESULT_PAGING,
         )
         if jira_users:
             jira_assignee = jira_users[0]
@@ -961,7 +963,7 @@ class EntityIssueHandler(SyncHandler):
             None,
             project=jira_project,
             issueKey=jira_issue.key if jira_issue else None,
-            maxResults=2000,
+            maxResults=JIRA_RESULT_PAGING,
             startAt=start_idx,
         )
         while jira_users:
@@ -980,7 +982,7 @@ class EntityIssueHandler(SyncHandler):
                     None,
                     project=jira_project,
                     issueKey=jira_issue.key if jira_issue else None,
-                    maxResults=2000,
+                    maxResults=JIRA_RESULT_PAGING,
                     startAt=start_idx,
                 )
                 self._logger.debug("Found %s users" % (len(jira_users)))

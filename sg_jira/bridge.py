@@ -21,7 +21,7 @@ from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
 from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD
 from .constants import SHOTGUN_JIRA_ID_FIELD
-from .utils import utf8_decode
+from .utils import utf8_to_unicode
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -312,7 +312,7 @@ class Bridge(object):
         try:
             # Shotgun events might contain utf-8 encoded strings, convert them
             # to unicode before processing.
-            safe_event = utf8_decode(event)
+            safe_event = utf8_to_unicode(event)
             syncer = self.get_syncer(settings_name)
             handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
             if handler:

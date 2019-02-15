@@ -9,18 +9,18 @@ import logging
 import shotgun_api3
 
 from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
-from .utils import utf8_decode, utf8_encode
+from .utils import utf8_to_unicode, unicode_to_utf8
 
 logger = logging.getLogger(__name__)
 
 
 class ShotgunSession(object):
     """
-    Wrap a :class:`shotgun_api3.Shotgun` instance and provide some helpers and
+    Wraps a :class:`shotgun_api3.Shotgun` instance and provide some helpers and
     session caches.
 
-    Ensure all the values we get from Shotgun are unicode and not utf-8 encoded
-    strings. Utf-8 encode unicode values before sending them to Shotgun.
+    Ensures all the values we get from Shotgun are unicode and not utf-8 encoded
+    strings. Utf-8 encodes unicode values before sending them to Shotgun.
     """
 
     # The list of Shotgun methods we need to wrap.
@@ -54,11 +54,11 @@ class ShotgunSession(object):
         # to wrap with some very similar code which would encode all params,
         # blindly call the original method, decode and return the result.
 
-        safe_args = utf8_encode(args)
-        safe_kwargs = utf8_encode(kwargs)
+        safe_args = unicode_to_utf8(args)
+        safe_kwargs = unicode_to_utf8(kwargs)
         self._shotgun = shotgun_api3.Shotgun(
-            utf8_encode(base_url),
-            utf8_encode(script_name),
+            unicode_to_utf8(base_url),
+            unicode_to_utf8(script_name),
             *safe_args,
             **safe_kwargs
         )
@@ -281,10 +281,10 @@ class ShotgunSession(object):
         method_to_wrap = getattr(self._shotgun, method_name)
 
         def wrapped(*args, **kwargs):
-            safe_args = utf8_encode(args)
-            safe_kwargs = utf8_encode(kwargs)
+            safe_args = unicode_to_utf8(args)
+            safe_kwargs = unicode_to_utf8(kwargs)
             result = method_to_wrap(*safe_args, **safe_kwargs)
-            return utf8_decode(result)
+            return utf8_to_unicode(result)
 
         return wrapped
 
