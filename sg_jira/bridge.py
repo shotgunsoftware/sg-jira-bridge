@@ -288,6 +288,9 @@ class Bridge(object):
             # to unicode before processing.
             safe_event = utf8_to_unicode(event)
             syncer = self.get_syncer(settings_name)
+            # See comment in Syncer class: we assume copmlicated logic can be
+            # handled in a single handler, so we don't have to support multiple
+            # handlers.
             handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
             if handler:
                 self._shotgun.set_session_uuid(safe_event.get("session_uuid"))
@@ -316,6 +319,9 @@ class Bridge(object):
         synced = False
         try:
             syncer = self.get_syncer(settings_name)
+            # See comment in Syncer class: we assume copmlicated logic can be
+            # handled in a single handler, so we don't have to support multiple
+            # handlers.
             handler = syncer.accept_jira_event(resource_type, resource_id, event)
             if handler:
                 synced = handler.process_jira_event(resource_type, resource_id, event)
