@@ -609,6 +609,16 @@ class EntityIssueHandler(SyncHandler):
                     jira_value = shotgun_value["name"]
                 else:
                     jira_value = shotgun_value
+                # Jira does not accept spaces in labels.
+                # Note: we could try to sanitize the data with "_" but then we
+                # could end up having conflicts when syncing back the sanitized
+                # value from Jira. Seems safer to just not sync it.
+                if " " in jira_value:
+                    raise InvalidShotgunValue(
+                        jira_field,
+                        shotgun_value,
+                        "Jira labels can't contain spaces"
+                    )
             elif jira_field == "summary":
                 # JIRA raises an error if there are new line characters in the
                 # summary for an Issue.

@@ -705,6 +705,111 @@ class TestJiraSyncer(TestBase):
         )
         self.assertIsNone(issue.fields.assignee)
 
+    def test_shotgun_tag(self, mocked_sg):
+        """
+        Test matching Shotgun tags to Jira labels.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        bridge.jira.set_projects([JIRA_PROJECT])
+        issue = bridge.jira.create_issue({})
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        sg_tags = [{
+            "type": "Tag",
+            "id": 1,
+            "name": "foo",
+        }, {
+            "type": "Tag",
+            "id": 2,
+            "name": "bar",
+        }, {
+            "type": "Tag",
+            "id": 3,
+            "name": "invalid for Jira",
+        }]
+        self.add_to_sg_mock_db(bridge.shotgun, sg_tags)
+
+        synced_task = {
+            "type": "Task",
+            "id": 3,
+            "content": "Task One/2",
+            "tags": [sg_tags[0]],
+            "project": SG_PROJECTS[1],
+            SHOTGUN_JIRA_ID_FIELD: issue.key
+        }
+        self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS + [synced_task])
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            3,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "removed": [
+                        sg_tags[0]
+                    ],
+                    "attribute_name": "tags",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "added": [
+                        sg_tags[1]
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        issue = bridge.jira.issue(synced_task[SHOTGUN_JIRA_ID_FIELD])
+        self.assertEqual(issue.fields.labels, ["bar"])
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            3,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "removed": [
+                        sg_tags[1]
+                    ],
+                    "attribute_name": "tags",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "added": [
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        issue = bridge.jira.issue(synced_task[SHOTGUN_JIRA_ID_FIELD])
+        self.assertEqual(issue.fields.labels, [])
+        bridge.sync_in_jira(
+            "task_issue",
+            "Task",
+            3,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 28786,
+                    "removed": [
+                        sg_tags[1]
+                    ],
+                    "attribute_name": "tags",
+                    "entity_type": "Task",
+                    "field_data_type": "multi_entity",
+                    "added": [
+                        sg_tags[0], sg_tags[2]
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        issue = bridge.jira.issue(synced_task[SHOTGUN_JIRA_ID_FIELD])
+        # The invalid tag should be reject, only the valid one should be there
+        self.assertEqual(issue.fields.labels, ["foo"])
+
     def test_jira_assignment(self, mocked_sg):
         """
         Test syncing Jira assignment to Shotgun
