@@ -34,6 +34,7 @@ exclude =
     vendors,
     # Skip __init__.py files, to not have a lot of 'xxx' imported but unused
     sg_jira/__init__.py,
+    sg_jira/handlers/__init__.py,
 
 # Ignore some errors
 #
@@ -42,11 +43,10 @@ exclude =
 # W293 blank line contains whitespace
 # W391 blank line at end of file
 # E221 multiple spaces before operator
-# E261 two whitespaces before end of line comment.
 # E402 module level import not top of file
 # N802 Variables should be lower case. (clashes with Qt naming conventions)
 # N806 Variables should be lower case. (clashes with Qt naming conventions)
 # E999 SyntaxError: invalid syntax (hack for hound CI which runs python 3.x)
 # W503 line break before binary operator: preferred to W504 line break after the operator
-ignore = E501, W291, W293, W391, E221, E261, E402, N802, N806, E999, W503
+ignore = E501, W291, W293, W391, E221, E402, N802, N806, E999, W503
 

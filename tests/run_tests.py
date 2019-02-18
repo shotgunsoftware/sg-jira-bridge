@@ -11,6 +11,11 @@ import argparse
 import unittest2 as unittest
 import xmlrunner
 
+import logging
+logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
+logger = logging.getLogger("run_tests")
+logger.setLevel(logging.INFO)
+
 
 class TestRunner(object):
     """
@@ -72,6 +77,9 @@ def run_tests():
         "--xmlout",
         help="Output directory for xml reports",
     )
+    # Dump the environment for debug purpose
+    for name, value in os.environ.iteritems():
+        logger.info("Env %s: %s" % (name, value))
     args, other_args = parser.parse_known_args()
     runner = TestRunner(args.xmlout)
     return runner.run_tests(other_args)

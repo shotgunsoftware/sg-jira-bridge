@@ -7,7 +7,7 @@
 
 import copy
 from jira.resources import Project as JiraProject
-from jira.resources import IssueType, Issue, User
+from jira.resources import IssueType, Issue, User, Comment
 
 # Faked Jira Project, Issue, change log and event
 JIRA_PROJECT_KEY = "UTest"
@@ -417,6 +417,16 @@ class MockedIssue(Issue):
         self._parse_raw(raw)
 
 
+class MockedComment(Comment):
+    def update(self, fields, *args, **kwargs):
+        raw = self.raw
+        raw["fields"].update(fields)
+        self._parse_raw(raw)
+
+    def delete(self):
+        pass
+
+
 class MockedJira(object):
     """
     A class to mock a Jira connection and methods used by the bridge.
@@ -615,6 +625,26 @@ class MockedJira(object):
         Mocked Jira method.
         """
         return self._issues.get(issue_key)
+
+    def add_comment(self, issue, body, *args, **kwargs):
+        """
+        Mocked Jira method.
+        """
+        return MockedComment(None, None, raw={
+            "issue": issue,
+            "body": body,
+            "id": 1
+        })
+
+    def comment(self, issue, *args, **kwargs):
+        """
+        Mocked Jira method.
+        """
+        return MockedComment(None, None, raw={
+            "issue": issue,
+            "body": "Totally faked",
+            "id": 1
+        })
 
     def transitions(self, *args, **kwargs):
         """
