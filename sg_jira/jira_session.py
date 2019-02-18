@@ -367,7 +367,7 @@ class JiraSession(jira.client.JIRA):
         """
 
         if jira_issue.fields.status.name == jira_status_name:
-            self._logger.debug("Jira issue %s is already '%s'" % (
+            logger.debug("Jira issue %s is already '%s'" % (
                 jira_issue, jira_status_name
             ))
             return True
@@ -549,3 +549,25 @@ class JiraSession(jira.client.JIRA):
         logger.debug("Creating Jira issue with %s" % data)
 
         return self.create_issue(fields=data)
+
+    def get_jira_issue_edit_meta(self, jira_issue):
+        """
+        Return the edit metadata for the given Jira Issue.
+
+        :param jira_issue: A :class:`jira.resources.Issue`.
+        :returns: The Jira Issue edit metadata `fields` property.
+        :raises: RuntimeError if the edit metadata can't be retrieved for the
+                 given Issue.
+        """
+        # Retrieve edit meta data for the issue
+        # TODO: cache the retrieved data to avoid multiple requests to the server
+        edit_meta_data = self.editmeta(jira_issue)
+        jira_edit_fields = edit_meta_data.get("fields")
+        if not jira_edit_fields:
+            raise RuntimeError(
+                "Unable to retrieve edit meta data for %s %s. " % (
+                    jira_issue.fields.issuetype,
+                    jira_issue.key
+                )
+            )
+        return jira_edit_fields
