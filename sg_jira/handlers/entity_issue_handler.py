@@ -5,8 +5,6 @@
 # this software in either electronic or hard copy form.
 #
 
-import datetime
-
 import jira
 
 from ..errors import InvalidShotgunValue, InvalidJiraValue
