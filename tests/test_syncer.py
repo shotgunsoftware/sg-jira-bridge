@@ -1359,6 +1359,40 @@ class TestJiraSyncer(TestBase):
         )
         self.assertIsNone(updated_note[SHOTGUN_JIRA_ID_FIELD])
 
+        # Adding a synced Tasks shouldn't do anything if its "sync in Jira" is off
+        bridge.sync_in_jira(
+            "task_issue",
+            "Note",
+            1,
+            {
+                "user": {"type": "HumanUser", "id": 1},
+                "project": {"type": "Project", "id": 2},
+                "meta": {
+                    "entity_id": 1,
+                    "added": [synced_task],
+                    "attribute_name": "tasks",
+                    "entity_type": "Note",
+                    "field_data_type": "multi_entity",
+                    "removed": [
+                        SG_TASKS[0]
+                    ],
+                    "type": "attribute_change",
+                }
+            }
+        )
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
+        )
+        self.assertIsNone(updated_note[SHOTGUN_JIRA_ID_FIELD])
+
+        # Turn sync on for the synced Task
+        bridge.shotgun.update(
+            synced_task["type"],
+            synced_task["id"],
+            {SHOTGUN_SYNC_IN_JIRA_FIELD: True}
+        )
         # Adding a synced Tasks should create a comment and the comment key
         bridge.sync_in_jira(
             "task_issue",
