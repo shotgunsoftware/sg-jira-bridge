@@ -6,7 +6,7 @@
 #
 
 from .syncer import Syncer
-from .handlers import TaskIssueHandler, NoteCommentHandler
+from .handlers import TaskIssueHandler, NoteCommentHandler, StartSyncingHandler
 
 
 class TaskIssueSyncer(Syncer):
@@ -23,6 +23,10 @@ class TaskIssueSyncer(Syncer):
         super(TaskIssueSyncer, self).__init__(**kwargs)
         self._task_issue_handler = TaskIssueHandler(self, self._issue_type)
         self._note_comment_handler = NoteCommentHandler(self)
+        self._start_syncing_handler = StartSyncingHandler(
+            self,
+            [self._task_issue_handler, self._note_comment_handler]
+        )
 
     @property
     def handlers(self):
@@ -30,6 +34,7 @@ class TaskIssueSyncer(Syncer):
         Return a list of :class:`SyncHandler` instances.
         """
         return [
+            self._start_syncing_handler,
             self._task_issue_handler,
             self._note_comment_handler
         ]

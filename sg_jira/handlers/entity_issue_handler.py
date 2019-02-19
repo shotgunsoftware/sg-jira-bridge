@@ -622,6 +622,8 @@ class EntityIssueHandler(SyncHandler):
         :param str resource_type: The type of Jira resource to sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
+        :returns: True if the event was successfully processed, False if the
+                  sync didn't happen for any reason.
         """
         jira_issue = event["issue"]
         fields = jira_issue["fields"]

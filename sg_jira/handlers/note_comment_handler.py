@@ -7,7 +7,7 @@
 
 from jira import JIRAError
 
-from ..constants import SHOTGUN_JIRA_ID_FIELD
+from ..constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
 from .sync_handler import SyncHandler
 
 # Template used to build Jira comments body from a Note.
@@ -98,6 +98,9 @@ class NoteCommentHandler(SyncHandler):
 
         :returns: `True if the event is accepted for processing, `False` otherwise.
         """
+        # Note: we don't accept events for the SHOTGUN_SYNC_IN_JIRA_FIELD field
+        # but we process them. Accepting the event is done by a higher level handler.
+
         # We only accept Note
         if entity_type != "Note":
             return False
@@ -112,6 +115,16 @@ class NoteCommentHandler(SyncHandler):
             return False
 
         return True
+
+    @property
+    def _shotgun_note_fields(self):
+        return [
+            "created_by",
+            "project",
+            "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
+            "project.Project.name",
+            SHOTGUN_JIRA_ID_FIELD
+        ] + self._supported_shotgun_fields_for_shotgun_event()
 
     def _parse_note_jira_key(self, shotgun_note):
         """
@@ -144,17 +157,19 @@ class NoteCommentHandler(SyncHandler):
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
         """
-        note_fields = [
-            "created_by",
-            "project",
-            "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
-            "project.Project.name",
-            SHOTGUN_JIRA_ID_FIELD
-        ] + self.__NOTE_FIELDS_MAPPING.keys()
+        meta = event["meta"]
+        shotgun_field = meta["attribute_name"]
+
+        # Note: we don't accept events for the SHOTGUN_SYNC_IN_JIRA_FIELD field
+        # but we process them. Accepting the event is done by a higher level handler.
+        if shotgun_field == SHOTGUN_SYNC_IN_JIRA_FIELD:
+            return self._sync_shotgun_task_notes_to_jira(
+                {"type": entity_type, "id": entity_id}
+            )
 
         sg_entity = self._shotgun.consolidate_entity(
             {"type": entity_type, "id": entity_id},
-            fields=note_fields
+            fields=self._shotgun_note_fields
         )
         if not sg_entity:
             self._logger.warning("Unable to retrieve a %s with id %d" % (
@@ -168,14 +183,17 @@ class NoteCommentHandler(SyncHandler):
 
         # Update existing synced comment (if any) Issue attachment
         if shotgun_field == "tasks":
-            return self._sync_note_tasks_change(
+            return self._sync_note_tasks_change_to_jira(
                 sg_entity,
                 meta["added"],
                 meta["removed"],
             )
 
+        return self._sync_note_content_to_jira(sg_entity)
+
+    def _sync_note_content_to_jira(self, shotgun_note):
         # Update an existing comment body from the Note fields.
-        jira_issue_key, jira_comment_id = self._parse_note_jira_key(sg_entity)
+        jira_issue_key, jira_comment_id = self._parse_note_jira_key(shotgun_note)
         if jira_issue_key and jira_comment_id:
             jira_comment = self._get_jira_issue_comment(
                 jira_issue_key,
@@ -188,13 +206,13 @@ class NoteCommentHandler(SyncHandler):
                     )
                 )
                 jira_comment.update(
-                    body=self._get_jira_comment_body(sg_entity)
+                    body=self._get_jira_comment_body(shotgun_note)
                 )
                 return True
 
         return False
 
-    def _sync_note_tasks_change(self, shotgun_note, added, removed):
+    def _sync_note_tasks_change_to_jira(self, shotgun_note, added, removed):
         """
         Update Jira with tasks changes for the given Shotgun Note.
 
@@ -216,7 +234,8 @@ class NoteCommentHandler(SyncHandler):
             sg_tasks = self._shotgun.find(
                 "Task", [
                     ["id", "in", [x["id"] for x in removed]],
-                    [SHOTGUN_JIRA_ID_FIELD, "is", jira_issue_key]
+                    [SHOTGUN_JIRA_ID_FIELD, "is", jira_issue_key],
+                    [SHOTGUN_SYNC_IN_JIRA_FIELD, "is", True]
                 ],
                 ["content"]
             )
@@ -248,9 +267,10 @@ class NoteCommentHandler(SyncHandler):
             sg_tasks = self._shotgun.find(
                 "Task", [
                     ["id", "in", [x["id"] for x in added]],
-                    [SHOTGUN_JIRA_ID_FIELD, "is_not", None]
+                    [SHOTGUN_JIRA_ID_FIELD, "is_not", None],
+                    [SHOTGUN_SYNC_IN_JIRA_FIELD, "is", True]
                 ],
-                ["content", SHOTGUN_JIRA_ID_FIELD]
+                ["content", SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD]
             )
             if len(sg_tasks) > 1:
                 self._logger.warning(
@@ -317,3 +337,22 @@ class NoteCommentHandler(SyncHandler):
         :returns: True if the event is accepted for processing, False otherwise.
         """
         return False
+
+    def _sync_shotgun_task_notes_to_jira(self, shotgun_task):
+
+        shotgun_notes = self._shotgun.find(
+            "Note",
+            [["tasks", "is", shotgun_task]],
+            self._shotgun_note_fields
+        )
+        self._logger.debug(
+            "Retrieved Notes %s linked to Task %s" % (shotgun_notes, shotgun_task)
+        )
+        for shotgun_note in shotgun_notes:
+            self._sync_note_tasks_change_to_jira(
+                shotgun_note,
+                added=[shotgun_task],
+                removed=[]
+            )
+            self._sync_note_content_to_jira(shotgun_note)
+        return bool(shotgun_notes)

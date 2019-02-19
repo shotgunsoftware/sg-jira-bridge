@@ -132,6 +132,8 @@ class SyncHandler(object):
         :param str entity_type: The Shotgun Entity type to sync.
         :param int entity_id: The id of the Shotgun Entity to sync.
         :param event: A dictionary with the event for the change.
+        :returns: True if the event was successfully processed, False if the
+                  sync didn't happen for any reason.
         """
         raise NotImplementedError
 
@@ -152,15 +154,15 @@ class SyncHandler(object):
         """
         Process the given Jira event for the given Jira resource.
 
+        Must be re-implemented in deriving classes.
+
         :param str resource_type: The type of Jira resource sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
+        :returns: True if the event was successfully processed, False if the
+                  sync didn't happen for any reason.
         """
-        self._logger.info("Syncing in SG %s(%s) for event %s" % (
-            resource_type,
-            resource_id,
-            event
-        ))
+        raise NotImplementedError
 
     def _get_shotgun_value_from_jira_change(
         self,
