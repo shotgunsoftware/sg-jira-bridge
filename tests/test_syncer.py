@@ -16,7 +16,7 @@ from test_base import TestBase
 from mock_jira import MockedJira
 from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 import sg_jira
-from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD
+from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
 
 # A list of Shotgun Projects
 SG_PROJECTS = [
@@ -38,7 +38,8 @@ SG_TASKS = [
         "id": 2,
         "content": "Task One/2",
         "task_assignees": [],
-        "project": SG_PROJECTS[1]
+        "project": SG_PROJECTS[1],
+        SHOTGUN_SYNC_IN_JIRA_FIELD: True,
     },
 ]
 # Faked SG event meta data
@@ -734,7 +735,8 @@ class TestJiraSyncer(TestBase):
             "content": "Task One/2",
             "tags": [sg_tags[0]],
             "project": SG_PROJECTS[1],
-            SHOTGUN_JIRA_ID_FIELD: issue.key
+            SHOTGUN_JIRA_ID_FIELD: issue.key,
+            SHOTGUN_SYNC_IN_JIRA_FIELD: True,
         }
         self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS + [synced_task])
         bridge.sync_in_jira(
@@ -1316,7 +1318,7 @@ class TestJiraSyncer(TestBase):
             "content": "Task One/2",
             "task_assignees": [],
             "project": SG_PROJECTS[1],
-            SHOTGUN_JIRA_ID_FIELD: issue.key
+            SHOTGUN_JIRA_ID_FIELD: issue.key,
         }
         self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS + [synced_task])
 
