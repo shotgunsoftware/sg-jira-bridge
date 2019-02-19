@@ -389,7 +389,7 @@ class TaskIssueHandler(EntityIssueHandler):
                 )
             )
         # Sync addressings_cc
-        if "addressings_cc" not in exclude_shotgun_fields:
+        if "addressings_cc" not in exclude_shotgun_fields and sg_entity["addressings_cc"]:
             self._sync_shotgun_cced_changes_to_jira(
                 jira_issue,
                 sg_entity["addressings_cc"],
