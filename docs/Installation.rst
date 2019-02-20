@@ -7,6 +7,11 @@ Installation & Configuration
 Requirements
 ---------------------------------
 
+note::
+    These docs are primarily centered around testing, and not for production
+    use. For production use we recommend employing standard production-level
+    techniques that are (currently) beyond the scope of these docs.
+
 Python
 ~~~~~~~~~~~~~~~~~~~~~~
 Python 2.7 is required.
