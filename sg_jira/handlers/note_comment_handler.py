@@ -165,6 +165,7 @@ class NoteCommentHandler(SyncHandler):
         # but we process them.
         # Accepting the event is done by a higher level handler.
         if shotgun_field == SHOTGUN_SYNC_IN_JIRA_FIELD:
+            # Note: in this case the Entity is a Task.
             return self._sync_shotgun_task_notes_to_jira(
                 {"type": entity_type, "id": entity_id}
             )
@@ -215,7 +216,8 @@ class NoteCommentHandler(SyncHandler):
                 ],
             ):
                 self._logger.debug(
-                    "Not updating Jira Issue %s comment %s from Shotgun Note %s" % (
+                    "Not updating Jira Issue %s comment %s from Shotgun Note %s "
+                    "not linked to a Task actively updating the Issue." % (
                         jira_issue_key,
                         jira_comment_id,
                         shotgun_note
@@ -255,7 +257,7 @@ class NoteCommentHandler(SyncHandler):
 
         jira_issue_key, jira_comment_id = self._parse_note_jira_key(shotgun_note)
 
-        updates = 0
+        updated = False
         if jira_issue_key and removed:
             # Check if we should delete the comment because it was attached to
             # a synced Task which has been removed.
@@ -286,7 +288,7 @@ class NoteCommentHandler(SyncHandler):
                         )
                     )
                     jira_comment.delete()
-                    updates += 1
+                    updated = True
                 # Unset the values so a new comment can be attached to another
                 # issue when processing the added Tasks.
                 jira_issue_key = None
@@ -335,7 +337,7 @@ class NoteCommentHandler(SyncHandler):
                 )
                 jira_issue_key = jira_issue.key
                 jira_comment_id = jira_comment.id
-                updates += 1
+                updated = True
                 break
 
         # Update the Jira comment key in Shotgun
@@ -354,9 +356,9 @@ class NoteCommentHandler(SyncHandler):
                 shotgun_note["id"],
                 {SHOTGUN_JIRA_ID_FIELD: comment_key}
             )
-            updates += 1
+            updated = True
 
-        return bool(updates)
+        return updated
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """
@@ -386,7 +388,7 @@ class NoteCommentHandler(SyncHandler):
         self._logger.debug(
             "Retrieved Notes %s linked to Task %s" % (shotgun_notes, shotgun_task)
         )
-        updates = 0
+        updated = False
         for shotgun_note in shotgun_notes:
             res = self._sync_note_tasks_change_to_jira(
                 shotgun_note,
@@ -394,8 +396,8 @@ class NoteCommentHandler(SyncHandler):
                 removed=[]
             )
             if res:
-                updates += 1
+                updated = True
             if self._sync_note_content_to_jira(shotgun_note):
-                updates += 1
+                updated = True
 
-        return bool(updates)
+        return updated

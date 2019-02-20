@@ -9,4 +9,4 @@ from .sync_handler import SyncHandler
 from .entity_issue_handler import EntityIssueHandler
 from .task_issue_handler import TaskIssueHandler
 from .note_comment_handler import NoteCommentHandler
-from .start_syncing_handler import StartSyncingHandler
+from .enable_syncing_handler import EnableSyncingHandler

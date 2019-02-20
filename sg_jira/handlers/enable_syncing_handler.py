@@ -9,10 +9,14 @@ from ..constants import SHOTGUN_SYNC_IN_JIRA_FIELD
 from .sync_handler import SyncHandler
 
 
-class StartSyncingHandler(SyncHandler):
+class EnableSyncingHandler(SyncHandler):
     """
-    A handler which combines multiple handlers to perform an initial sync when
-    a "Sync In Jira" checkbox field is changed in Shotgun.
+    A handler which combines multiple handlers to start syncing Tasks and Entities
+    linked to them when a Task "Sync In Jira" checkbox field is changed in Shotgun.
+
+    A full sync is performed each time the checkbox is turned on. This allows
+    to manually force a re-sync if needed by just setting off the checkbox, and
+    then back to on.
     """
 
     def __init__(self, syncer, handlers):
@@ -25,13 +29,18 @@ class StartSyncingHandler(SyncHandler):
         Events will be sent to secondary handlers for processing only if the
         primary handler was able to successfully process them.
 
+        This allows to control from the primary handler if a Shotgun Entity should
+        be synced or not, and then automatically start syncing secondary Entities
+        which are linked to this primary Entity, e.g. Notes on a Task, without
+        having to explicitely enable syncing for the linked Entities.
+
         Combined handlers shouldn't accept the events which are accepted by this
         handler, but they need to be able to process them.
 
         :param syncer: A :class:`Syncer` instance.
         :param handlers: A non empty list of :class:`SyncHandler` instances.
         """
-        super(StartSyncingHandler, self).__init__(syncer)
+        super(EnableSyncingHandler, self).__init__(syncer)
         if not handlers:
             raise ValueError("At least one handler needs to be provided")
         self._primary_handler = handlers[0]
@@ -54,6 +63,11 @@ class StartSyncingHandler(SyncHandler):
 
         :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
+
+        # We only accept Tasks
+        if entity_type != "Task":
+            return False
+
         meta = event["meta"]
         field = meta["attribute_name"]
 
