@@ -31,7 +31,7 @@ jobs:
   - script: |
       python tests/run_tests.py --xmlout test-results
     displayName: 'Test SG Jira'
-    env: { 'LANG': 'en_GB.UTF-8' }
+    env: { 'LANG': 'en_US.UTF-8' }
 
   - task: PublishTestResults@2
     inputs:
@@ -63,7 +63,7 @@ jobs:
   - script: |
       python tests/run_tests.py --xmlout test-results
     displayName: 'Test SG Jira'
-    env: { 'LANG': 'en_GB.UTF-8' }
+    env: { 'LANG': 'en_US.UTF-8' }
 
   - task: PublishTestResults@2
     inputs:
@@ -95,7 +95,7 @@ jobs:
   - script: |
       python tests/run_tests.py --xmlout test-results
     displayName: 'Test SG Jira'
-    env: { 'LANG': 'en_GB.UTF-8' }
+    env: { 'LANG': 'en_US.UTF-8' }
 
   - task: PublishTestResults@2
     inputs:

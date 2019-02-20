@@ -5,6 +5,8 @@
 # this software in either electronic or hard copy form.
 #
 
-from .bridge import Bridge
-from .syncer import Syncer
-from .task_issue_syncer import TaskIssueSyncer
+from .sync_handler import SyncHandler
+from .entity_issue_handler import EntityIssueHandler
+from .task_issue_handler import TaskIssueHandler
+from .note_comment_handler import NoteCommentHandler
+from .enable_syncing_handler import EnableSyncingHandler

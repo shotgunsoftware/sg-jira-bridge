@@ -25,7 +25,7 @@ SHOTGUN = {
     "site": os.environ.get("SGJIRA_SG_SITE"),
     "script_name": os.environ.get("SGJIRA_SG_SCRIPT_NAME"),
     "script_key": os.environ.get("SGJIRA_SG_SCRIPT_KEY"),
-    "http_proxy": None, # If set, the Shotgun connection is done through this proxy.
+    "http_proxy": None,  # If set, the Shotgun connection is done through this proxy.
 }
 # Jira site and credentials, the user name needs to be an email address or
 # the user login name, e.g. ford_escort for "Ford Escort".
@@ -70,7 +70,7 @@ LOGGING = {
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "simple",
             "filename": "/tmp/sg_jira.log",
-            "maxBytes": 1024,
+            "maxBytes": 1024 * 1024,
             "backupCount": 5
         },
     },

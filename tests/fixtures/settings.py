@@ -24,16 +24,16 @@ except ImportError:
 
 # Shotgun site and credentials
 SHOTGUN = {
-    "site": os.environ.get("SG_JIRA_SG_SITE") or "https://sg.faked.com",
-    "script_name": os.environ.get("SG_JIRA_SG_SCRIPT_NAME") or "faked",
-    "script_key": os.environ.get("SG_JIRA_SG_SCRIPT_KEY") or "xxxxxxx",
+    "site": os.environ.get("SGJIRA_SG_SITE") or "https://sg.faked.com",
+    "script_name": os.environ.get("SGJIRA_SG_SCRIPT_NAME") or "faked",
+    "script_key": os.environ.get("SGJIRA_SG_SCRIPT_KEY") or "xxxxxxx",
 }
 # Jira site and credentials, the user name needs to be an email address or
 # the user login name, e.g. ford_escort for "Ford Escort".
 JIRA = {
-    "site": os.environ.get("SG_JIRA_JIRA_SITE") or "https://jira.faked.com",
-    "user": os.environ.get("SG_JIRA_JIRA_USER") or "faked",
-    "secret": os.environ.get("SG_JIRA_JIRA_USER_SECRET") or "xxxxxxx",
+    "site": os.environ.get("SGJIRA_JIRA_SITE") or "https://jira.faked.com",
+    "user": os.environ.get("SGJIRA_JIRA_USER") or "faked",
+    "secret": os.environ.get("SGJIRA_JIRA_USER_SECRET") or "xxxxxxx",
 }
 
 # Define logging

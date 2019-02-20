@@ -21,24 +21,24 @@ class TestUtils(TestBase):
     Test various utilities.
     """
 
-    def test_utf8_decode(self):
+    def test_utf8_to_unicode(self):
         """
         Test utf8 decoding.
         """
         # Unicode value should be unchanged
-        res = sg_jira.utf8_decode(UNICODE_STRING)
+        res = sg_jira.utils.utf8_to_unicode(UNICODE_STRING)
         self.assertEqual(res, UNICODE_STRING)
 
         # Utf-8 encoded string should be decoded
-        res = sg_jira.utf8_decode(UTF8_ENCODED_STRING)
+        res = sg_jira.utils.utf8_to_unicode(UTF8_ENCODED_STRING)
         self.assertEqual(res, UNICODE_STRING)
 
         # All values in a list should be decoded if needed
-        res = sg_jira.utf8_decode([UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING])
+        res = sg_jira.utils.utf8_to_unicode([UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING])
         self.assertEqual(res, [UNICODE_STRING, UNICODE_STRING, UNICODE_STRING])
 
         # All keys and values in a dict should be decoded if needed
-        res = sg_jira.utf8_decode({
+        res = sg_jira.utils.utf8_to_unicode({
             UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
             "foo": UNICODE_STRING,
             "blah": 1,
@@ -58,7 +58,7 @@ class TestUtils(TestBase):
         with self.assertRaises(ValueError) as cm:
             # Note: we can't use self.assertRaisesRegexp which calls `str` on
             # the error message to perform the match, and fails with UnicodeEncodeError.
-            sg_jira.utf8_decode({
+            sg_jira.utils.utf8_to_unicode({
                 UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
                 "foo": UNICODE_STRING,
                 "blah": 1,
@@ -71,7 +71,7 @@ class TestUtils(TestBase):
             )
         )
         # A dictionary with lists
-        res = sg_jira.utf8_decode({
+        res = sg_jira.utils.utf8_to_unicode({
             UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
             "foo": [UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING],
             "blah": [1, 2, 3, 4],
@@ -93,7 +93,7 @@ class TestUtils(TestBase):
             "blah": [1, 2, 3, 4],
             "%s_bis" % UNICODE_STRING: [UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING],
         }
-        res = sg_jira.utf8_decode([d] * 7)
+        res = sg_jira.utils.utf8_to_unicode([d] * 7)
         decoded = {
             UNICODE_STRING: UNICODE_STRING,
             "foo": [UNICODE_STRING, UNICODE_STRING, UNICODE_STRING],
@@ -120,7 +120,7 @@ class TestUtils(TestBase):
                 UNICODE_STRING, UTF8_ENCODED_STRING
             ],
         }
-        res = sg_jira.utf8_decode(d)
+        res = sg_jira.utils.utf8_to_unicode(d)
         decoded = {
             UNICODE_STRING: UNICODE_STRING,
             "foo": (UNICODE_STRING, UNICODE_STRING, UNICODE_STRING),
@@ -146,19 +146,19 @@ class TestUtils(TestBase):
         Test utf8 encoding.
         """
         # string value should be unchanged
-        res = sg_jira.utf8_encode(UTF8_ENCODED_STRING)
+        res = sg_jira.utils.unicode_to_utf8(UTF8_ENCODED_STRING)
         self.assertEqual(res, UTF8_ENCODED_STRING)
 
         # Utf-8 encoded string should be decoded
-        res = sg_jira.utf8_encode(UNICODE_STRING)
+        res = sg_jira.utils.unicode_to_utf8(UNICODE_STRING)
         self.assertEqual(res, UTF8_ENCODED_STRING)
 
         # All values in a list should be decode if needed
-        res = sg_jira.utf8_encode([UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING])
+        res = sg_jira.utils.unicode_to_utf8([UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING])
         self.assertEqual(res, [UTF8_ENCODED_STRING, UTF8_ENCODED_STRING, UTF8_ENCODED_STRING])
 
         # All keys and values in a dict should be encoded if needed
-        res = sg_jira.utf8_encode({
+        res = sg_jira.utils.unicode_to_utf8({
             UNICODE_STRING: UNICODE_STRING,
             "foo": UTF8_ENCODED_STRING,
             "blah": 1,
@@ -178,7 +178,7 @@ class TestUtils(TestBase):
         with self.assertRaises(ValueError) as cm:
             # Note: we can't use self.assertRaisesRegexp which calls `str` on
             # the error message to perform the match, and fails with UnicodeEncodeError.
-            sg_jira.utf8_encode({
+            sg_jira.utils.unicode_to_utf8({
                 UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
                 "foo": UNICODE_STRING,
                 "blah": 1,
@@ -192,7 +192,7 @@ class TestUtils(TestBase):
         )
 
         # A dictionary with lists
-        res = sg_jira.utf8_encode({
+        res = sg_jira.utils.unicode_to_utf8({
             UNICODE_STRING: UNICODE_STRING,
             "foo": [UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING],
             "blah": [1, 2, 3, 4],
@@ -214,7 +214,7 @@ class TestUtils(TestBase):
             "blah": [1, 2, 3, 4],
             "%s_bis" % UTF8_ENCODED_STRING: [UTF8_ENCODED_STRING, UNICODE_STRING, UTF8_ENCODED_STRING],
         }
-        res = sg_jira.utf8_encode([d] * 7)
+        res = sg_jira.utils.unicode_to_utf8([d] * 7)
         encoded = {
             UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
             "foo": [UTF8_ENCODED_STRING, UTF8_ENCODED_STRING, UTF8_ENCODED_STRING],
@@ -241,7 +241,7 @@ class TestUtils(TestBase):
                 UNICODE_STRING, UTF8_ENCODED_STRING
             ],
         }
-        res = sg_jira.utf8_encode(d)
+        res = sg_jira.utils.unicode_to_utf8(d)
         encoded = {
             UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
             "foo": (UTF8_ENCODED_STRING, UTF8_ENCODED_STRING, UTF8_ENCODED_STRING),

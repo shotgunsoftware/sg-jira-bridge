@@ -6,6 +6,28 @@
 #
 
 from sg_jira import Syncer
+from sg_jira.handlers import SyncHandler
+
+
+class BadHandler(SyncHandler):
+    """
+    A syncer handler which causes problems which should be handled gracefully.
+    """
+    def __init__(self, syncer, fail_on_sg_sync):
+        """
+        :param bool fail_on_sg_sync: Whether this syncer should fail when processing
+                                     Shotgun events.
+        """
+        self._fail_on_sg_sync = fail_on_sg_sync
+        return super(BadHandler, self).__init__(syncer)
+
+    def process_shotgun_event(self, entity_type, entity_id, event):
+        """
+        Raise RuntimeError if set to do it.
+        """
+        if self._fail_on_sg_sync:
+            raise RuntimeError("Sorry, I'm bad!")
+        return super(BadHandler, self).process_shotgun_event(entity_type, entity_id, event)
 
 
 class BadSyncer(Syncer):
@@ -31,7 +53,7 @@ class BadSyncer(Syncer):
         super(BadSyncer, self).__init__(**kwargs)
         self._fail_on_setup = fail_on_setup
         self._fail_on_sg_accept = fail_on_sg_accept
-        self._fail_on_sg_sync = fail_on_sg_sync
+        self._handler = BadHandler(self, fail_on_sg_sync)
 
     def setup(self):
         """
@@ -40,6 +62,10 @@ class BadSyncer(Syncer):
         if self._fail_on_setup:
             raise RuntimeError("Sorry, I'm bad!")
         return super(BadSyncer, self).setup()
+
+    @property
+    def handlers(self):
+        return [self._handler]
 
     @property
     def sg_jira_statuses_mapping(self):
@@ -57,12 +83,4 @@ class BadSyncer(Syncer):
         """
         if self._fail_on_sg_accept:
             raise RuntimeError("Sorry, I'm bad!")
-        return super(BadSyncer, self).accept_shotgun_event(entity_type, entity_id, event)
-
-    def process_shotgun_event(self, entity_type, entity_id, event):
-        """
-        Raise RuntimeError if set to do it.
-        """
-        if self._fail_on_sg_sync:
-            raise RuntimeError("Sorry, I'm bad!")
-        return super(BadSyncer, self).process_shotgun_event(entity_type, entity_id, event)
+        return self._handler

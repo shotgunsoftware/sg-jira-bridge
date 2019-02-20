@@ -9,18 +9,19 @@ import logging
 import shotgun_api3
 
 from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
-from .utils import utf8_decode, utf8_encode
+from .constants import SHOTGUN_JIRA_ID_FIELD
+from .utils import utf8_to_unicode, unicode_to_utf8
 
 logger = logging.getLogger(__name__)
 
 
 class ShotgunSession(object):
     """
-    Wrap a :class:`shotgun_api3.Shotgun` instance and provide some helpers and
+    Wraps a :class:`shotgun_api3.Shotgun` instance and provide some helpers and
     session caches.
 
-    Ensure all the values we get from Shotgun are unicode and not utf-8 encoded
-    strings. Utf-8 encode unicode values before sending them to Shotgun.
+    Ensures all the values we get from Shotgun are unicode and not utf-8 encoded
+    strings. Utf-8 encodes unicode values before sending them to Shotgun.
     """
 
     # The list of Shotgun methods we need to wrap.
@@ -54,11 +55,11 @@ class ShotgunSession(object):
         # to wrap with some very similar code which would encode all params,
         # blindly call the original method, decode and return the result.
 
-        safe_args = utf8_encode(args)
-        safe_kwargs = utf8_encode(kwargs)
+        safe_args = unicode_to_utf8(args)
+        safe_kwargs = unicode_to_utf8(kwargs)
         self._shotgun = shotgun_api3.Shotgun(
-            utf8_encode(base_url),
-            utf8_encode(script_name),
+            unicode_to_utf8(base_url),
+            unicode_to_utf8(script_name),
             *safe_args,
             **safe_kwargs
         )
@@ -81,6 +82,19 @@ class ShotgunSession(object):
         :returns: A Shotgun record dictionary with an `id` key and a `type` key.
         """
         return self._shotgun_user
+
+    def setup(self):
+        """
+        Check the Shotgun site and cache site level values.
+
+        :raises: RuntimeError if the Shotgun site was not correctly configured to
+                 be used with this bridge.
+        """
+        self.assert_field(
+            "Project",
+            SHOTGUN_JIRA_ID_FIELD,
+            "text"
+        )
 
     def assert_field(self, entity_type, field_name, field_type):
         """
@@ -176,6 +190,101 @@ class ShotgunSession(object):
         # standard field.
         return True
 
+    def consolidate_entity(self, shotgun_entity, fields=None):
+        """
+        Consolidate the given Shotgun Entity: collect additional field values,
+        ensure the Entity name is available under a "name" key.
+
+        :param shotgun_entity: A Shotgun Entity dictionary with at least its id
+                               and its type.
+        :param fields: An optional list of fields to add to the query.
+        :returns: The consolidated Shotgun Entity or `None` if it can't be retrieved.
+        """
+
+        # Define the fields we need to handle the Entity type.
+        needed_fields = []
+        entity_type = shotgun_entity["type"]
+        name_field = self.get_entity_name_field(entity_type)
+
+        if entity_type == "HumanUser":
+            needed_fields = [name_field, "email"]
+        elif entity_type == "Task":
+            needed_fields = [name_field, "task_assignees"]
+        else:
+            needed_fields = [name_field]
+
+        if self.is_project_entity(shotgun_entity["type"]):
+            needed_fields.append("project")
+
+        if fields:
+            needed_fields.extend(fields)
+
+        # Do a Shotgun query if any field is missing
+        missing = [needed for needed in needed_fields if needed not in shotgun_entity]
+        if missing:
+            consolidated = self.find_one(
+                shotgun_entity["type"],
+                [["id", "is", shotgun_entity["id"]]],
+                missing + shotgun_entity.keys(),
+            )
+            if not consolidated:
+                logger.warning(
+                    "Unable to retrieve %s %d in Shotgun." % (
+                        shotgun_entity["type"],
+                        shotgun_entity["id"],
+                    )
+                )
+                return None
+            shotgun_entity = consolidated
+
+        # Ensure a consistent way to retrieve the Entity name
+        if name_field != "name":
+            shotgun_entity["name"] = shotgun_entity[name_field]
+        return shotgun_entity
+
+    def match_entity_by_name(self, name, entity_types, shotgun_project):
+        """
+        Retrieve a Shotgun Entity with the given name from the given list of
+        Entity types.
+
+        Project Shotgun Entities are restricted to the given Shotgun Project.
+
+        :param str name: A name to match.
+        :param entity_types: A list of Shotgun Entity types to consider.
+        :param shotgun_project: A Shotgun Project dictionary.
+        :return: A Shotgun Entity dictionary or `None`.
+        """
+        for entity_type in entity_types:
+            name_field = self.get_entity_name_field(
+                entity_type
+            )
+            filter = [[name_field, "is", name]]
+            fields = [name_field]
+            if self.is_project_entity(entity_type):
+                filter.append(
+                    ["project", "is", shotgun_project]
+                )
+                fields.append("project")
+            sg_value = self.find_one(
+                entity_type,
+                filter,
+                fields,
+            )
+            if sg_value:
+                return self.consolidate_entity(sg_value)
+        return None
+
+    def get_entity_page_url(self, shotgun_entity):
+        """
+        Return the Shotgun page url for the given Entity.
+
+        :param shotgun_entity: A Shotgun Entity dictionary with at least a 'type'
+                               key and an 'id' key.
+        """
+        return "%s/detail/%s/%d" % (
+            self.base_url, shotgun_entity["type"], shotgun_entity["id"]
+        )
+
     def _get_wrapped_shotgun_method(self, method_name):
         """
         Return a wrapped Shotgun method which encodes all parameters and decodes
@@ -186,10 +295,10 @@ class ShotgunSession(object):
         method_to_wrap = getattr(self._shotgun, method_name)
 
         def wrapped(*args, **kwargs):
-            safe_args = utf8_encode(args)
-            safe_kwargs = utf8_encode(kwargs)
+            safe_args = unicode_to_utf8(args)
+            safe_kwargs = unicode_to_utf8(kwargs)
             result = method_to_wrap(*safe_args, **safe_kwargs)
-            return utf8_decode(result)
+            return utf8_to_unicode(result)
 
         return wrapped
 

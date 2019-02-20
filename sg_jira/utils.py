@@ -6,9 +6,10 @@
 #
 
 
-def utf8_decode(value):
+def utf8_to_unicode(value):
     """
-    Convert any string in the given value to an utf8 decoded unicode value.
+    Convert any string in the given input to unicode. Strings are expected to be
+    in utf-8 encoding.
 
     Treat containers by recursively iterating over all the values they contain.
 
@@ -19,11 +20,11 @@ def utf8_decode(value):
     """
     if isinstance(value, list):
         # Convert all values
-        return [utf8_decode(x) for x in value]
+        return [utf8_to_unicode(x) for x in value]
 
     if isinstance(value, tuple):
         # Convert all values
-        return tuple([utf8_decode(x) for x in value])
+        return tuple([utf8_to_unicode(x) for x in value])
 
     if isinstance(value, dict):
         # Convert the keys and the values
@@ -43,7 +44,7 @@ def utf8_decode(value):
                     )
             else:
                 decoded_key = k
-            decoded[decoded_key] = utf8_decode(v)
+            decoded[decoded_key] = utf8_to_unicode(v)
         return decoded
 
     if isinstance(value, str):
@@ -53,9 +54,9 @@ def utf8_decode(value):
     return value
 
 
-def utf8_encode(value):
+def unicode_to_utf8(value):
     """
-    Convert any unicode in the given value to an utf8 encoded string value.
+    Convert any unicode in the given input to an utf8 encoded string value.
 
     Treat containers by recursively iterating over all the values they contain.
 
@@ -66,11 +67,11 @@ def utf8_encode(value):
     """
     if isinstance(value, list):
         # Convert all values
-        return [utf8_encode(x) for x in value]
+        return [unicode_to_utf8(x) for x in value]
 
     if isinstance(value, tuple):
         # Convert all values
-        return tuple([utf8_encode(x) for x in value])
+        return tuple([unicode_to_utf8(x) for x in value])
 
     if isinstance(value, dict):
         # Convert the keys and the values
@@ -95,7 +96,7 @@ def utf8_encode(value):
                     )
             else:
                 encoded_key = k
-            encoded[encoded_key] = utf8_encode(v)
+            encoded[encoded_key] = unicode_to_utf8(v)
         return encoded
 
     if isinstance(value, unicode):

@@ -28,6 +28,9 @@ JIRA_SHOTGUN_URL_FIELD = "Shotgun Url"
 # Entity.
 SHOTGUN_JIRA_ID_FIELD = "sg_jira_key"
 
+# A Shotgun check box field used to specify which entities should be synced.
+SHOTGUN_SYNC_IN_JIRA_FIELD = "sg_sync_in_jira"
+
 # Shotgun fields handling multiple values
 SHOTGUN_LIST_FIELDS = [
     "multi_entity"
@@ -45,4 +48,9 @@ SG_ENTITY_SPECIAL_NAME_FIELDS = {
     "Delivery": "title",
     "Tag": "name",
     "Ticket": "title",
+    "ApiUser": "name",
 }
+
+# Jira search methods use some paging
+# this is the max number of results to get per "page".
+JIRA_RESULT_PAGING = 2000

@@ -11,17 +11,12 @@ import logging
 import logging.config
 import importlib
 
-# import jira
-from jira import JIRAError
-import jira
-
 from .shotgun_session import ShotgunSession
+from .jira_session import JiraSession
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
-from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD
-from .constants import SHOTGUN_JIRA_ID_FIELD
-from .utils import utf8_decode
+from .utils import utf8_to_unicode
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -69,39 +64,18 @@ class Bridge(object):
         )
         self._shotgun.add_user_agent("sg_jira_sync")
 
-        try:
-            self._jira = jira.client.JIRA(
-                jira_site,
-                auth=(
-                    jira_user,
-                    jira_secret
-                ),
-            )
-        except JIRAError as e:
-            # Jira puts some huge html / java script code in the exception
-            # string so we catch it to issue a more reasonable message.
-            logger.debug(
-                "Unable to connect to %s: %s" % (jira_site, e),
-                exc_info=True
-            )
-            # Check the status code
-            if e.status_code == 401:
-                raise RuntimeError(
-                    "Unable to connect to %s (error code %d), "
-                    "please check your credentials" % (
-                        jira_site,
-                        e.status_code,
-                    )
-                )
-            raise RuntimeError("Unable to connect to %s" % jira_site)
+        self._jira = JiraSession(
+            jira_site,
+            auth=(
+                jira_user,
+                jira_secret
+            ),
+        )
         logger.info("Connected to %s." % jira_site)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
-        # A dictionary where keys are Jira field name and values are their field id.
-        self._jira_fields_map = {}
-        self._jira_setup()
-        self._shotgun_schemas = {} # A cache for retrieved Shotgun schemas
-        self._shotgun_setup()
+        self._jira.setup()
+        self._shotgun.setup()
 
     @classmethod
     def get_bridge(cls, settings_file):
@@ -234,7 +208,7 @@ class Bridge(object):
     @property
     def jira(self):
         """
-        Return a connected Jira handle.
+        Return a connected :class:`JiraSession` instance.
         """
         return self._jira
 
@@ -312,11 +286,15 @@ class Bridge(object):
         try:
             # Shotgun events might contain utf-8 encoded strings, convert them
             # to unicode before processing.
-            safe_event = utf8_decode(event)
+            safe_event = utf8_to_unicode(event)
             syncer = self.get_syncer(settings_name)
-            if syncer.accept_shotgun_event(entity_type, entity_id, safe_event):
+            # See comment in Syncer class: we assume copmlicated logic can be
+            # handled in a single handler, so we don't have to support multiple
+            # handlers.
+            handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
+            if handler:
                 self._shotgun.set_session_uuid(safe_event.get("session_uuid"))
-                synced = syncer.process_shotgun_event(
+                synced = handler.process_shotgun_event(
                     entity_type,
                     entity_id,
                     safe_event
@@ -341,91 +319,14 @@ class Bridge(object):
         synced = False
         try:
             syncer = self.get_syncer(settings_name)
-            if syncer.accept_jira_event(resource_type, resource_id, event):
-                synced = syncer.process_jira_event(resource_type, resource_id, event)
+            # See comment in Syncer class: we assume copmlicated logic can be
+            # handled in a single handler, so we don't have to support multiple
+            # handlers.
+            handler = syncer.accept_jira_event(resource_type, resource_id, event)
+            if handler:
+                synced = handler.process_jira_event(resource_type, resource_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)
             raise
         return synced
-
-    def _jira_setup(self):
-        """
-        Check the Jira site and cache site level values.
-
-        :raises: RuntimeError if the Jira site was not correctly configured to
-                 be used with this bridge.
-        """
-        # Build a mapping from Jira field names to their id for fast lookup.
-        for jira_field in self._jira.fields():
-            self._jira_fields_map[jira_field["name"].lower()] = jira_field["id"]
-        self._jira_shotgun_type_field = self.get_jira_issue_field_id(
-            JIRA_SHOTGUN_TYPE_FIELD.lower()
-        )
-        if not self._jira_shotgun_type_field:
-            raise RuntimeError(
-                "Missing required custom Jira field %s" % JIRA_SHOTGUN_TYPE_FIELD
-            )
-        self._jira_shotgun_id_field = self.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower())
-        if not self._jira_shotgun_id_field:
-            raise RuntimeError(
-                "Missing required custom Jira field %s" % JIRA_SHOTGUN_ID_FIELD
-            )
-        self._jira_shotgun_url_field = self.get_jira_issue_field_id(JIRA_SHOTGUN_URL_FIELD.lower())
-        if not self._jira_shotgun_url_field:
-            raise RuntimeError(
-                "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
-            )
-
-    def get_jira_issue_field_id(self, name):
-        """
-        Return the Jira field id for the Issue field with the given name.
-
-        :returns: The id as a string or None if the field is unknown.
-        """
-        return self._jira_fields_map.get(name.lower())
-
-    @property
-    def jira_shotgun_type_field(self):
-        """
-        Return the id of the Jira field used to store the type of a linked Shotgun
-        Entity.
-
-        Two custom fields are used in Jira to store a reference to a Shotgun
-        Entity: its Shotgun Entity type and id. This method returns the id of
-        the Jira field used to store the Shotgun type.
-        """
-        return self._jira_shotgun_type_field
-
-    @property
-    def jira_shotgun_id_field(self):
-        """
-        Return the id of the Jira field used to store the id of a linked Shotgun
-        Entity.
-
-        Two custom fields are used in Jira to store a reference to a Shotgun
-        Entity: its Shotgun Entity type and id. This method returns the id of
-        the Jira field used to store the Shotgun id.
-        """
-        return self._jira_shotgun_id_field
-
-    @property
-    def jira_shotgun_url_field(self):
-        """
-        Return the id of the Jira field used to store the url of a linked Shotgun
-        Entity.
-        """
-        return self._jira_shotgun_url_field
-
-    def _shotgun_setup(self):
-        """
-        Check the Shotgun site and cache site level values.
-
-        :raises: RuntimeError if the Shotgun site was not correctly configured to
-                 be used with this bridge.
-        """
-        self._shotgun.assert_field(
-            "Project",
-            SHOTGUN_JIRA_ID_FIELD,
-            "text"
-        )
