@@ -146,7 +146,7 @@ class TaskIssueHandler(EntityIssueHandler):
             ))
             return False
 
-        # Explicit sync: check if the "Sync in Jira" checkbox in on.
+        # Explicit sync: check if the "Sync in Jira" checkbox is on.
         if not sg_entity[SHOTGUN_SYNC_IN_JIRA_FIELD]:
             self._logger.debug(
                 "Not syncing %s which has 'Sync in Jira' off" % sg_entity,
