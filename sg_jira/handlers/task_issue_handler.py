@@ -222,7 +222,7 @@ class TaskIssueHandler(EntityIssueHandler):
             # values a second time. This seems safer than checking which fields
             # are accepted in the the Issue create meta and trying to be smart here.
             # The efficiency cost does not seem high, except maybe for any fields
-            # requiring a user lookup. But this could be handled by cachigng
+            # requiring a user lookup. But this could be handled by caching
             # retrieved users
             self._sync_shotgun_fields_to_jira(
                 sg_entity,
