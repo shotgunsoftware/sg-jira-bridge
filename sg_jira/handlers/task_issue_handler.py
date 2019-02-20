@@ -220,7 +220,7 @@ class TaskIssueHandler(EntityIssueHandler):
             # If sg_sync_in_jira was turned on, sync all supported values
             # Note: if the Issue was just created, we might be syncing some
             # values a second time. This seems safer than checking which fields
-            # are accepted in the the Issue create meta and being smart here.
+            # are accepted in the the Issue create meta and trying to be smart here.
             # The efficiency cost does not seem high, except maybe for any fields
             # requiring a user lookup. But this could be handled by cachigng
             # retrieved users
