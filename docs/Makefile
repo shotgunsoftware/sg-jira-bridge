@@ -6,6 +6,8 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
+# get the current branch so we can switch back to it when deploying gh-pages
+CURRENT_BRANCH := $(shell git symbolic-ref --short -q HEAD)
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -19,7 +21,7 @@ gh-pages:
 	rm -rf /tmp/gh-pages
 	cp -r $(BUILDDIR)/html /tmp/gh-pages
 	git checkout gh-pages
-	cd .. && rm -rf * && cp -r /tmp/gh-pages/* . && git add . && git commit -m "Updated gh-pages" && git push && git checkout master
+	cd .. && rm -rf * && cp -r /tmp/gh-pages/* . && git add . && git commit -m "Updated gh-pages" && git push && git checkout $(CURRENT_BRANCH)
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
