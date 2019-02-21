@@ -2,6 +2,8 @@
 
 A simple synchronization setup between Shotgun and Jira.
 
+![alt text](https://gplgithub.github.io/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
+
 - **`sg_jira_event_trigger.py`**: A Shotgun event trigger which can be used with the [Shotgun Event Daemon](https://github.com/shotgunsoftware/shotgunEvents)
 - **`webapp.py`**: A simple web app used as a frontend for the synchronization.
 - **`service.py`**: A script to run the web app as a service on Linux and MacOS platforms.
