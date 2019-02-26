@@ -1,6 +1,6 @@
 # sg-jira-bridge
 
-A simple synchronization setup between Shotgun and Jira.
+A simple synchronization setup between Shotgun and Jira. Foo Bar
 
 
 -  **sg_jira_event_trigger.py**: A Shotgun event trigger which can be used with the [Shotgun Event Daemon](https://github.com/shotgunsoftware/shotgunEvents)
