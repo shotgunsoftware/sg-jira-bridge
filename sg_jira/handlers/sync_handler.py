@@ -60,7 +60,7 @@ class SyncHandler(object):
         return self._syncer.jira
 
     @property
-    def _sg_jira_statuses_mapping(self):
+    def _sg_jira_status_mapping(self):
         """
         Needs to be re-implemented in deriving classes and return a dictionary
         where keys are Shotgun status short codes and values are Jira status
@@ -235,7 +235,7 @@ class SyncHandler(object):
             # Look up a matching Shotgun status from our mapping
             # Please note that if we have multiple matching values the first
             # one will be arbitrarily returned.
-            for sg_code, jira_name in self._sg_jira_statuses_mapping.iteritems():
+            for sg_code, jira_name in self._sg_jira_status_mapping.iteritems():
                 if value.lower() == jira_name.lower():
                     return sg_code
             # No match.
@@ -244,7 +244,7 @@ class SyncHandler(object):
                 value,
                 "Unable to find a matching Shotgun status for %s from %s" % (
                     value,
-                    self._sg_jira_statuses_mapping
+                    self._sg_jira_status_mapping
                 )
             )
 

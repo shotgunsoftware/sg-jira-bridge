@@ -12,7 +12,8 @@ from .sync_handler import SyncHandler
 class EnableSyncingHandler(SyncHandler):
     """
     A handler which combines multiple handlers to start syncing Tasks and Entities
-    linked to them when a Task "Sync In Jira" checkbox field is changed in Shotgun.
+    linked to them when a Task "Sync In Jira" (sg_sync_in_jira) checkbox field
+    is changed in Shotgun.
 
     A full sync is performed each time the checkbox is turned on. This allows
     to manually force a re-sync if needed by just setting off the checkbox, and

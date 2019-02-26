@@ -167,15 +167,20 @@ class EntityIssueHandler(SyncHandler):
     ):
         """
         Retrieve the Jira Issue field and the value to set from the given Shotgun
-        field name and its value for the given Shotgun Entity type.
+        field name and the given changes for the given Shotgun Entity type.
+
+        This methods supports list fields changes with the `added` and `removed`
+        parameters, or a value being set directly with the `new_value` parameter.
+        The `new_value` parameter is ignored if either `added` or `removed` is
+        not `None`.
 
         :param jira_project: A :class:`jira.resources.Project` instance.
         :param jira_issue: A :class:`jira.resources.Issue` instance.
         :param shotgun_entity_type: A Shotgun Entity type as a string.
         :param shotgun_field: A Shotgun Entity field name as a string.
-        :param added:
-        :param removed:
-        :param new_value:
+        :param added: A list of Shotgun values added to the given field.
+        :param removed: A list of Shotgun values removed from the given field.
+        :param new_value: A Shotgun value the given field was set to.
 
         :returns: A tuple with a Jira field id and a Jira value usable for an
                   update. The returned field id is `None` if no valid field or
@@ -429,16 +434,16 @@ class EntityIssueHandler(SyncHandler):
         :returns: A :class:`jira.resources.Resource` instance, or a dictionary,
                   or a string, depending on the field type.
         """
-        # Deal with unset or empty value
-#        if shotgun_value is None:
-#            return None
         self._logger.debug("Getting Jira value for Shotgun value %s" % shotgun_value)
         jira_type = jira_field_schema["schema"]["type"]
+        # Deal with unset or empty value
         if not shotgun_value:
             # Return an empty value suitable for the Jira field type
             if jira_type == "string":
                 return ""
             if jira_type == "timetracking":
+                # We need to provide a null estimate, otherwise Jira will error
+                # out.
                 return {"originalEstimate": "0 m"}
 
             self._logger.debug(
@@ -546,7 +551,7 @@ class EntityIssueHandler(SyncHandler):
         :param comment: A string, a comment to apply to the Jira transition.
         :returns: `True` if the status was successfully set, `False` otherwise.
         """
-        jira_status = self._sg_jira_statuses_mapping.get(shotgun_status)
+        jira_status = self._sg_jira_status_mapping.get(shotgun_status)
         if not jira_status:
             self._logger.warning(
                 "Unable to retrieve corresponding Jira status for %s" % shotgun_status

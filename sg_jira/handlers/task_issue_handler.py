@@ -44,7 +44,7 @@ class TaskIssueHandler(EntityIssueHandler):
     }
 
     @property
-    def _sg_jira_statuses_mapping(self):
+    def _sg_jira_status_mapping(self):
         """
         Return a dictionary where keys are Shotgun status short codes and values
         Jira Issue status names.
