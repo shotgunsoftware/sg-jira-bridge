@@ -103,6 +103,16 @@ class TaskIssueHandler(EntityIssueHandler):
 
         # Note: we don't accept events for the SHOTGUN_SYNC_IN_JIRA_FIELD field
         # but we process them. Accepting the event is done by a higher level handler.
+        # Events are accepted by a single handler, which is safer than letting
+        # multiple handlers accept the same event: this allows the logic of processing
+        # to be easily controllable and understandable.
+        # However, there are cases where we want to re-use the processing logic.
+        # For example, when the sync in jira checkbox is turned on, we want to
+        # sync the task, and then its notes.
+        # This processing logic is already available in the `TaskIssueHandler`
+        # and the `NoteCommentHandler`. So the `EnableSyncingHandler` accepts
+        # the event, and then call `TaskIssueHandler.process_shotgun_event` and,
+        # only if this was successful, `NoteCommentHandler.process_shotgun_event`.
 
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
