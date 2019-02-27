@@ -5,7 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
-from ..constants import SHOTGUN_JIRA_ID_FIELD
+from ..constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
 from ..errors import InvalidShotgunValue
 from .entity_issue_handler import EntityIssueHandler
 
@@ -44,7 +44,7 @@ class TaskIssueHandler(EntityIssueHandler):
     }
 
     @property
-    def _sg_jira_statuses_mapping(self):
+    def _sg_jira_status_mapping(self):
         """
         Return a dictionary where keys are Shotgun status short codes and values
         Jira Issue status names.
@@ -79,6 +79,7 @@ class TaskIssueHandler(EntityIssueHandler):
         This can be used as well to cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
+        self._shotgun.assert_field("Task", SHOTGUN_SYNC_IN_JIRA_FIELD, "checkbox")
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
@@ -99,6 +100,20 @@ class TaskIssueHandler(EntityIssueHandler):
 
         meta = event["meta"]
         field = meta["attribute_name"]
+
+        # Note: we don't accept events for the SHOTGUN_SYNC_IN_JIRA_FIELD field
+        # but we process them. Accepting the event is done by a higher level handler.
+        # Events are accepted by a single handler, which is safer than letting
+        # multiple handlers accept the same event: this allows the logic of processing
+        # to be easily controllable and understandable.
+        # However, there are cases where we want to re-use the processing logic.
+        # For example, when the sync in jira checkbox is turned on, we want to
+        # sync the task, and then its notes.
+        # This processing logic is already available in the `TaskIssueHandler`
+        # and the `NoteCommentHandler`. So the `EnableSyncingHandler` accepts
+        # the event, and then call `TaskIssueHandler.process_shotgun_event` and,
+        # only if this was successful, `NoteCommentHandler.process_shotgun_event`.
+
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
                 "Rejecting event %s with unsupported field %s." % (
@@ -126,8 +141,10 @@ class TaskIssueHandler(EntityIssueHandler):
             "project",
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
             "project.Project.name",
-            SHOTGUN_JIRA_ID_FIELD
-        ] + self.__TASK_FIELDS_MAPPING.keys()
+            SHOTGUN_JIRA_ID_FIELD,
+            SHOTGUN_SYNC_IN_JIRA_FIELD,
+        ] + self._supported_shotgun_fields_for_shotgun_event()
+
         sg_entity = self._shotgun.consolidate_entity(
             {"type": entity_type, "id": entity_id},
             fields=task_fields
@@ -138,6 +155,14 @@ class TaskIssueHandler(EntityIssueHandler):
                 entity_id
             ))
             return False
+
+        # Explicit sync: check if the "Sync in Jira" checkbox is on.
+        if not sg_entity[SHOTGUN_SYNC_IN_JIRA_FIELD]:
+            self._logger.debug(
+                "Not syncing %s which has 'Sync in Jira' off" % sg_entity,
+            )
+            return False
+
         # Check if the Project is linked to a Jira Project
         jira_project_key = sg_entity["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
         if not jira_project_key:
@@ -159,6 +184,7 @@ class TaskIssueHandler(EntityIssueHandler):
                     sg_entity["project"],
                 )
             )
+
         jira_issue = None
         if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
             # Retrieve the Jira Issue
@@ -195,14 +221,32 @@ class TaskIssueHandler(EntityIssueHandler):
                 sg_entity["id"],
                 {SHOTGUN_JIRA_ID_FIELD: jira_issue.key}
             )
-        # Update it
+
+        sg_field = event["meta"]["attribute_name"]
+
+        # Note: we don't accept events for the SHOTGUN_SYNC_IN_JIRA_FIELD field
+        # but we process them. Accepting the event is done by a higher level handler.
+        if sg_field == SHOTGUN_SYNC_IN_JIRA_FIELD:
+            # If sg_sync_in_jira was turned on, sync all supported values
+            # Note: if the Issue was just created, we might be syncing some
+            # values a second time. This seems safer than checking which fields
+            # are accepted in the the Issue create meta and trying to be smart here.
+            # The efficiency cost does not seem high, except maybe for any fields
+            # requiring a user lookup. But this could be handled by caching
+            # retrieved users
+            self._sync_shotgun_fields_to_jira(
+                sg_entity,
+                jira_issue,
+            )
+            return True
+
+        # Otherwise, handle the attribute change
         self._logger.debug("Syncing in Jira %s(%d) to %s for event %s." % (
             entity_type,
             entity_id,
             jira_issue,
             event
         ))
-        sg_field = event["meta"]["attribute_name"]
 
         try:
             # Note: the returned jira_field will be None for the special cases handled
@@ -212,7 +256,9 @@ class TaskIssueHandler(EntityIssueHandler):
                 jira_issue,
                 sg_entity["type"],
                 sg_field,
-                event["meta"]
+                event["meta"].get("added"),
+                event["meta"].get("removed"),
+                event["meta"].get("new_value"),
             )
         except InvalidShotgunValue as e:
             self._logger.warning(
@@ -277,3 +323,85 @@ class TaskIssueHandler(EntityIssueHandler):
         :returns: A string or `None`.
         """
         return self.__ISSUE_FIELDS_MAPPING.get(jira_field_id)
+
+    def _sync_shotgun_fields_to_jira(self, sg_entity, jira_issue, exclude_shotgun_fields=None):
+        """
+        Update the given Jira Issue with values from the given Shotgun Entity.
+
+        An optional list of Shotgun fields can be provided to exclude them from
+        the sync.
+
+        :param sg_entity: A Shotgun Entity dictionary.
+        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param exclude_shotgun_fields: An optional list of Shotgun field names which
+                                       shouldn't be synced.
+        """
+
+        if exclude_shotgun_fields is None:
+            exclude_shotgun_fields = []
+
+        issue_data = {}
+        for sg_field, jira_field in self.__TASK_FIELDS_MAPPING.iteritems():
+            if sg_field in exclude_shotgun_fields:
+                continue
+
+            if jira_field is None:
+                # Special cases where a direct update is not possible, handled
+                # below.
+                continue
+
+            shotgun_value = sg_entity[sg_field]
+            if isinstance(shotgun_value, list):
+                removed = []
+                added = shotgun_value
+                new_value = None
+            else:
+                removed = None
+                added = None
+                new_value = shotgun_value
+            try:
+                jira_field, jira_value = self._get_jira_issue_field_sync_value(
+                    jira_issue.fields.project,
+                    jira_issue,
+                    sg_entity["type"],
+                    sg_field,
+                    added,
+                    removed,
+                    new_value
+                )
+                if jira_field:
+                    issue_data[jira_field] = jira_value
+            except InvalidShotgunValue as e:
+                self._logger.warning(
+                    "Unable to update Jira %s %s field from Shotgun value %s" % (
+                        jira_issue,
+                        jira_field,
+                        shotgun_value,
+                    )
+                )
+                self._logger.debug("%s" % e, exc_info=True)
+        if issue_data:
+            self._logger.debug("Updating Jira %s with %s" % (
+                jira_issue,
+                issue_data
+            ))
+            jira_issue.update(fields=issue_data)
+
+        # Sync status
+        if "sg_status_list" not in exclude_shotgun_fields:
+            self._sync_shotgun_status_to_jira(
+                jira_issue,
+                sg_entity["sg_status_list"],
+                "Updated from Shotgun %s(%d) moving to %s" % (
+                    sg_entity["type"],
+                    sg_entity["id"],
+                    sg_entity["sg_status_list"]
+                )
+            )
+        # Sync addressings_cc
+        if "addressings_cc" not in exclude_shotgun_fields and sg_entity["addressings_cc"]:
+            self._sync_shotgun_cced_changes_to_jira(
+                jira_issue,
+                sg_entity["addressings_cc"],
+                [],
+            )

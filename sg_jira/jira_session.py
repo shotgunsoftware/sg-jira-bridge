@@ -367,7 +367,7 @@ class JiraSession(jira.client.JIRA):
         """
 
         if jira_issue.fields.status.name == jira_status_name:
-            self._logger.debug("Jira issue %s is already '%s'" % (
+            logger.debug("Jira issue %s is already '%s'" % (
                 jira_issue, jira_status_name
             ))
             return True
@@ -453,3 +453,121 @@ class JiraSession(jira.client.JIRA):
         )
         logger.debug("Available transitions are %s" % jira_transitions)
         return False
+
+    def create_issue_from_data(self, jira_project, issue_type, data):
+        """
+        Create an Issue from the given data.
+
+        Sanity check the data against Jira create meta data. Try to amend the
+        data, if possible, to complete the Issue creation. Raise `ValueError` if
+        the data can't be amended to complete the Issue creation.
+
+        :param jira_project: A :class:`jira.resources.Project` instance.
+        :param str issue_type: The target Issue type name.
+        :param data: A dictionary where keys are Jira Issue field ids and values
+                     are Jira values.
+        :returns: A :class:`jira.resources.Issue` instance.
+        :raises: RuntimeError if the Jira create meta data can't be retrieved.
+        :raises: ValueError if invalid and unfixable data is provided.
+        """
+        jira_issue_type = self.issue_type_by_name(issue_type)
+        # Retrieve creation meta data for the project / issue type
+        # Note: there is a new simpler Project type in Jira where createmeta is not
+        # available.
+        # https://confluence.atlassian.com/jirasoftwarecloud/working-with-agility-boards-945104895.html
+        # https://community.developer.atlassian.com/t/jira-cloud-next-gen-projects-and-connect-apps/23681/14
+        # It seems a Project `simplified` key can help distinguish between old
+        # school projects and new simpler projects.
+        # TODO: cache the retrieved data to avoid multiple requests to the server
+        create_meta_data = self.createmeta(
+            jira_project,
+            issuetypeIds=jira_issue_type.id,
+            expand="projects.issuetypes.fields"
+        )
+        # We asked for a single project / single issue type, so we can just pick
+        # the first entry, if it exists.
+        if not create_meta_data["projects"] or not create_meta_data["projects"][0]["issuetypes"]:
+            logger.debug("Create meta data: %s" % create_meta_data)
+            raise RuntimeError(
+                "Unable to retrieve create meta data for Project %s Issue type %s."  % (
+                    jira_project,
+                    jira_issue_type.id,
+                )
+            )
+        fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
+
+        # Make a shallow copy so we can add/delete keys
+        data = dict(data)
+        data["issuetype"] = jira_issue_type.raw
+
+        # Check if we are missing any required data which does not have a default
+        # value.
+        missing = []
+        for k, jira_create_field in fields_createmeta.iteritems():
+            if k not in data:
+                if jira_create_field["required"] and not jira_create_field["hasDefaultValue"]:
+                    missing.append(jira_create_field["name"])
+        if missing:
+            raise ValueError(
+                "The following data is missing in order to create a Jira %s Issue: %s" % (
+                    data["issuetype"]["name"],
+                    missing,
+                )
+            )
+        # Check if we're trying to set any value which can't be set and validate
+        # empty values.
+        invalid_fields = []
+        data_keys = data.keys()  # Retrieve all keys so we can delete them in the dict
+        for k in data_keys:
+            # Filter out anything which can't be used in creation.
+            if k not in fields_createmeta:
+                logger.warning(
+                    "Disabling %s in issue creation which can't be set in Jira" % k
+                )
+                del data[k]
+            elif not data[k] and fields_createmeta[k]["required"]:
+                # Handle required fields with empty value
+                if fields_createmeta[k]["hasDefaultValue"]:
+                    # Empty field data which Jira will set default values for should be removed in
+                    # order for Jira to properly set the default. Jira will complain if we leave it
+                    # in.
+                    logger.info(
+                        "Removing %s from data payload since it has an empty value. Jira will "
+                        "now set a default value." % k
+                    )
+                    del data[k]
+                else:
+                    # Empty field data isn't valid if the field is required and doesn't have a
+                    # default value in Jira.
+                    invalid_fields.append(k)
+        if invalid_fields:
+            raise ValueError(
+                "Unable to create Jira Issue: The following fields are required and cannot "
+                "be empty: %s" % invalid_fields
+            )
+
+        logger.debug("Creating Jira issue with %s" % data)
+
+        return self.create_issue(fields=data)
+
+    def get_jira_issue_edit_meta(self, jira_issue):
+        """
+        Return the edit metadata for the given Jira Issue.
+
+        :param jira_issue: A :class:`jira.resources.Issue`.
+        :returns: The Jira Issue edit metadata `fields` property.
+        :raises: RuntimeError if the edit metadata can't be retrieved for the
+                 given Issue.
+        """
+        # Retrieve edit meta data for the issue
+        # TODO: cache the retrieved data to avoid multiple requests to the server
+        edit_meta_data = self.editmeta(jira_issue)
+        jira_edit_fields = edit_meta_data.get("fields")
+        if not jira_edit_fields:
+            raise RuntimeError(
+                "Unable to retrieve edit meta data for %s %s. " % (
+                    jira_issue.fields.issuetype,
+                    jira_issue.key
+                )
+            )
+        return jira_edit_fields

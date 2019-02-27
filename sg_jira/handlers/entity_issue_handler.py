@@ -5,8 +5,6 @@
 # this software in either electronic or hard copy form.
 #
 
-import datetime
-
 import jira
 
 from ..errors import InvalidShotgunValue, InvalidJiraValue
@@ -27,15 +25,6 @@ class EntityIssueHandler(SyncHandler):
         """
         super(EntityIssueHandler, self).__init__(syncer)
         self._issue_type = issue_type
-
-    @property
-    def _sg_jira_statuses_mapping(self):
-        """
-        Needs to be re-implemented in deriving classes and return a dictionary
-        where keys are Shotgun status short codes and values Jira Issue status
-        names.
-        """
-        raise NotImplementedError
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """
@@ -115,31 +104,6 @@ class EntityIssueHandler(SyncHandler):
         :param properties: Arbitrary properties to set on the Jira Issue.
         :returns: A :class:`jira.resources.Issue` instance.
         """
-        jira_issue_type = self._jira.issue_type_by_name(issue_type)
-        # Retrieve creation meta data for the project / issue type
-        # Note: there is a new simpler Project type in Jira where createmeta is not
-        # available.
-        # https://confluence.atlassian.com/jirasoftwarecloud/working-with-agility-boards-945104895.html
-        # https://community.developer.atlassian.com/t/jira-cloud-next-gen-projects-and-connect-apps/23681/14
-        # It seems a Project `simplified` key can help distinguish between old
-        # school projects and new simpler projects.
-        # TODO: cache the retrieved data to avoid multiple requests to the server
-        create_meta_data = self._jira.createmeta(
-            jira_project,
-            issuetypeIds=jira_issue_type.id,
-            expand="projects.issuetypes.fields"
-        )
-        # We asked for a single project / single issue type, so we can just pick
-        # the first entry, if it exists.
-        if not create_meta_data["projects"] or not create_meta_data["projects"][0]["issuetypes"]:
-            self._logger.debug("Create meta data: %s" % create_meta_data)
-            raise RuntimeError(
-                "Unable to retrieve create meta data for Project %s Issue type %s."  % (
-                    jira_project,
-                    jira_issue_type.id,
-                )
-            )
-        fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
 
         # Retrieve the reporter, either the user who created the Entity or the
         # Jira user used to run the syncing.
@@ -176,62 +140,20 @@ class EntityIssueHandler(SyncHandler):
             self._jira.jira_shotgun_id_field: "%d" % sg_entity["id"],
             self._jira.jira_shotgun_type_field: sg_entity["type"],
             self._jira.jira_shotgun_url_field: shotgun_url,
-            "issuetype": jira_issue_type.raw,
             "reporter": {"name": reporter_name},
         }
         if properties:
             data.update(properties)
-        # Check if we are missing any required data which does not have a default
-        # value.
-        missing = []
-        for k, jira_create_field in fields_createmeta.iteritems():
-            if k not in data:
-                if jira_create_field["required"] and not jira_create_field["hasDefaultValue"]:
-                    missing.append(jira_create_field["name"])
-        if missing:
-            raise ValueError(
-                "The following data is missing in order to create a Jira %s Issue: %s" % (
-                    data["issuetype"]["name"],
-                    missing,
-                )
-            )
-        # Check if we're trying to set any value which can't be set and validate
-        # empty values.
-        invalid_fields = []
-        data_keys = data.keys()  # Retrieve all keys so we can delete them in the dict
-        for k in data_keys:
-            # Filter out anything which can't be used in creation.
-            if k not in fields_createmeta:
-                self._logger.warning(
-                    "Disabling %s in issue creation which can't be set in Jira" % k
-                )
-                del data[k]
-            elif not data[k] and fields_createmeta[k]["required"]:
-                # Handle required fields with empty value
-                if fields_createmeta[k]["hasDefaultValue"]:
-                    # Empty field data which Jira will set default values for should be removed in
-                    # order for Jira to properly set the default. Jira will complain if we leave it
-                    # in.
-                    self._logger.info(
-                        "Removing %s from data payload since it has an empty value. Jira will "
-                        "now set a default value." % k
-                    )
-                    del data[k]
-                else:
-                    # Empty field data isn't valid if the field is required and doesn't have a
-                    # default value in Jira.
-                    invalid_fields.append(k)
-        if invalid_fields:
-            raise ValueError(
-                "Unable to create Jira Issue: The following fields are required and cannot "
-                "be empty: %s" % invalid_fields
-            )
 
         self._logger.info("Creating Jira issue for %s with %s" % (
             sg_entity, data
         ))
 
-        return self._jira.create_issue(fields=data)
+        return self._jira.create_issue_from_data(
+            jira_project,
+            issue_type,
+            data,
+        )
 
     def _get_jira_issue_field_sync_value(
         self,
@@ -239,17 +161,26 @@ class EntityIssueHandler(SyncHandler):
         jira_issue,
         shotgun_entity_type,
         shotgun_field,
-        shotgun_event_meta
+        added=None,
+        removed=None,
+        new_value=None,
     ):
         """
         Retrieve the Jira Issue field and the value to set from the given Shotgun
-        field name and its value for the given Shotgun Entity type.
+        field name and the given changes for the given Shotgun Entity type.
+
+        This methods supports list fields changes with the `added` and `removed`
+        parameters, or a value being set directly with the `new_value` parameter.
+        The `new_value` parameter is ignored if either `added` or `removed` is
+        not `None`.
 
         :param jira_project: A :class:`jira.resources.Project` instance.
         :param jira_issue: A :class:`jira.resources.Issue` instance.
         :param shotgun_entity_type: A Shotgun Entity type as a string.
         :param shotgun_field: A Shotgun Entity field name as a string.
-        :param shotgun_event_meta: A Shotgun event meta data as a dictionary.
+        :param added: A list of Shotgun values added to the given field.
+        :param removed: A list of Shotgun values removed from the given field.
+        :param new_value: A Shotgun value the given field was set to.
 
         :returns: A tuple with a Jira field id and a Jira value usable for an
                   update. The returned field id is `None` if no valid field or
@@ -257,14 +188,6 @@ class EntityIssueHandler(SyncHandler):
         :raises: InvalidShotgunValue if the Shotgun value can't be translated
                  into a valid Jira value.
         """
-        field_schema = self._shotgun.get_field_schema(
-            shotgun_entity_type,
-            shotgun_field
-        )
-        if not field_schema:
-            raise ValueError("Unknown Shotgun %s %s field" % (
-                shotgun_entity_type, shotgun_field,
-            ))
         # Retrieve the matching Jira field
         jira_field = self._get_jira_issue_field_for_shotgun_field(
             shotgun_entity_type,
@@ -281,7 +204,7 @@ class EntityIssueHandler(SyncHandler):
             return None, None
 
         # Retrieve edit meta data for the issue
-        jira_fields = self._get_jira_issue_edit_meta(jira_issue)
+        jira_fields = self._jira.get_jira_issue_edit_meta(jira_issue)
 
         # Bail out if the target Jira field is not editable
         if jira_field not in jira_fields:
@@ -301,10 +224,12 @@ class EntityIssueHandler(SyncHandler):
         if jira_fields[jira_field]["schema"]["type"] == "array":
             is_array = True
             jira_value = []
-        if "added" in shotgun_event_meta or "removed" in shotgun_event_meta:
+
+        if added is not None or removed is not None:
             self._logger.debug(
-                "Dealing with list changes added %s" % (
-                    shotgun_event_meta,
+                "Dealing with list changes added %s, removed %s" % (
+                    added,
+                    removed
                 )
             )
             jira_value = self._get_jira_value_for_shotgun_list_changes(
@@ -312,8 +237,8 @@ class EntityIssueHandler(SyncHandler):
                 jira_issue,
                 jira_field,
                 jira_fields[jira_field],
-                shotgun_event_meta.get("added", []),
-                shotgun_event_meta.get("removed", []),
+                added or [],
+                removed or [],
             )
             # jira Resource instances are not json serializable so we need
             # to return their raw value
@@ -328,7 +253,7 @@ class EntityIssueHandler(SyncHandler):
             elif isinstance(jira_value, jira.resources.Resource):
                 jira_value = jira_value.raw
         else:
-            shotgun_value = shotgun_event_meta["new_value"]
+            shotgun_value = new_value
             jira_value = self._get_jira_value_for_shotgun_value(
                 jira_project,
                 jira_issue,
@@ -373,28 +298,6 @@ class EntityIssueHandler(SyncHandler):
         :returns: A string or `None`.
         """
         raise NotImplementedError
-
-    def _get_jira_issue_edit_meta(self, jira_issue):
-        """
-        Return the edit metadata for the given Jira Issue.
-
-        :param jira_issue: A :class:`jira.resources.Issue`.
-        :returns: The Jira Issue edit metadata `fields` property.
-        :raises: RuntimeError if the edit metadata can't be retrieved for the
-                 given Issue.
-        """
-        # Retrieve edit meta data for the issue
-        # TODO: cache the retrieved data to avoid multiple requests to the server
-        edit_meta_data = self._jira.editmeta(jira_issue)
-        jira_edit_fields = edit_meta_data.get("fields")
-        if not jira_edit_fields:
-            raise RuntimeError(
-                "Unable to retrieve edit meta data for %s %s. " % (
-                    jira_issue.fields.issuetype,
-                    jira_issue.key
-                )
-            )
-        return jira_edit_fields
 
     def _get_jira_value_for_shotgun_list_changes(
         self,
@@ -531,14 +434,21 @@ class EntityIssueHandler(SyncHandler):
         :returns: A :class:`jira.resources.Resource` instance, or a dictionary,
                   or a string, depending on the field type.
         """
-        # Deal with unset or empty value
-        if shotgun_value is None:
-            return None
+        self._logger.debug("Getting Jira value for Shotgun value %s" % shotgun_value)
         jira_type = jira_field_schema["schema"]["type"]
+        # Deal with unset or empty value
         if not shotgun_value:
             # Return an empty value suitable for the Jira field type
             if jira_type == "string":
                 return ""
+            if jira_type == "timetracking":
+                # We need to provide a null estimate, otherwise Jira will error
+                # out.
+                return {"originalEstimate": "0 m"}
+
+            self._logger.debug(
+                "Returning `None` for Jira %s field type" % jira_type
+            )
             return None
 
         if isinstance(shotgun_value, dict):
@@ -583,9 +493,9 @@ class EntityIssueHandler(SyncHandler):
         else:
             # In most simple cases the Jira value is the Shotgun value.
             jira_value = shotgun_value
-
+            self._logger.debug("Special cases for %s: %s" % (jira_field, jira_value))
             # Special cases
-            if jira_field == "assignee":
+            if jira_field in ["assignee", "reporter"]:
                 if isinstance(shotgun_value, dict):
                     email_address = shotgun_value.get("email")
                     if not email_address:
@@ -609,6 +519,16 @@ class EntityIssueHandler(SyncHandler):
                     jira_value = shotgun_value["name"]
                 else:
                     jira_value = shotgun_value
+                # Jira does not accept spaces in labels.
+                # Note: we could try to sanitize the data with "_" but then we
+                # could end up having conflicts when syncing back the sanitized
+                # value from Jira. Seems safer to just not sync it.
+                if " " in jira_value:
+                    raise InvalidShotgunValue(
+                        jira_field,
+                        shotgun_value,
+                        "Jira labels can't contain spaces"
+                    )
             elif jira_field == "summary":
                 # JIRA raises an error if there are new line characters in the
                 # summary for an Issue.
@@ -631,7 +551,7 @@ class EntityIssueHandler(SyncHandler):
         :param comment: A string, a comment to apply to the Jira transition.
         :returns: `True` if the status was successfully set, `False` otherwise.
         """
-        jira_status = self._sg_jira_statuses_mapping.get(shotgun_status)
+        jira_status = self._sg_jira_status_mapping.get(shotgun_status)
         if not jira_status:
             self._logger.warning(
                 "Unable to retrieve corresponding Jira status for %s" % shotgun_status
@@ -707,6 +627,8 @@ class EntityIssueHandler(SyncHandler):
         :param str resource_type: The type of Jira resource to sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
+        :returns: True if the event was successfully processed, False if the
+                  sync didn't happen for any reason.
         """
         jira_issue = event["issue"]
         fields = jira_issue["fields"]
@@ -859,7 +781,7 @@ class EntityIssueHandler(SyncHandler):
             return shotgun_field, shotgun_value
 
         # General case based on the target Shotgun field data type.
-        shotgun_value = self._get_shotgun_value_from_jira_issue_change(
+        shotgun_value = self._get_shotgun_value_from_jira_change(
             shotgun_entity,
             shotgun_field,
             shotgun_field_schema,
@@ -1041,234 +963,3 @@ class EntityIssueHandler(SyncHandler):
                     )
                 current_sg_assignment = sg_user
         return current_sg_assignment
-
-    def _get_shotgun_value_from_jira_issue_change(
-        self,
-        shotgun_entity,
-        shotgun_field,
-        shotgun_field_schema,
-        change,
-        jira_value,
-    ):
-        """
-        Return a Shotgun value suitable to update the given Shotgun Entity field
-        from the given Jira change.
-
-        The following Shotgun field types are supported by this method:
-        - text
-        - list
-        - status_list
-        - multi_entity
-        - date
-        - duration
-        - number
-        - checkbox
-
-        :param str shotgun_entity: A Shotgun Entity dictionary as retrieved from
-                                   Shotgun.
-        :param str shotgun_field: The Shotgun Entity field to get a value for.
-        :param shotgun_field_schema: The Shotgun Entity field schema.
-        :param change: A Jira event changelog dictionary with 'fromString',
-                       'toString', 'from' and 'to' keys.
-        :raises: RuntimeError if the Shotgun Entity can't be retrieved from Shotgun.
-        :raises: ValueError for unsupported Shotgun data types.
-        """
-        data_type = shotgun_field_schema["data_type"]["value"]
-        if data_type == "text":
-            return change["toString"]
-
-        if data_type == "list":
-            value = change["toString"]
-            if not value:
-                return ""
-            # Make sure the value is available in the list of possible values
-            all_allowed = shotgun_field_schema["properties"]["valid_values"]["value"]
-            for allowed in all_allowed:
-                if value.lower() == allowed.lower():
-                    return allowed
-            # The value is not allowed, update the schema to allow it. This is
-            # provided as a convenience, otherwise keeping the list of allowed
-            # values on both side could be very painful. Another option here
-            # would be to raise an InvalidJiraValue
-            all_allowed.append(value)
-            self._logger.info(
-                "Updating %s.%s schema with %s valid values" % (
-                    all_allowed
-                )
-            )
-            self._shotgun.schema_field_update(
-                shotgun_entity["type"],
-                shotgun_field,
-                {"valid_values": all_allowed}
-            )
-            # Clear the schema to take into account the change we just made.
-            self._shotgun.clear_cached_field_schema(shotgun_entity["type"])
-            return value
-
-        if data_type == "status_list":
-            value = change["toString"]
-            if not value:
-                # Unset the status in Shotgun
-                return None
-            # Look up a matching Shotgun status from our mapping
-            # Please note that if we have multiple matching values the first
-            # one will be arbitrarily returned.
-            for sg_code, jira_name in self._sg_jira_statuses_mapping.iteritems():
-                if value.lower() == jira_name.lower():
-                    return sg_code
-            # No match.
-            raise InvalidJiraValue(
-                shotgun_field,
-                value,
-                "Unable to find a matching Shotgun status for %s from %s" % (
-                    value,
-                    self._sg_jira_statuses_mapping
-                )
-            )
-
-        if data_type == "multi_entity":
-            # If the Jira field is an array we will get the list of resource
-            # names in a string, separated by spaces.
-            # We're assuming here that if someone maps a Jira simple field to
-            # a Shotgun multi entity field the same convention will be applied
-            # and spaces will be used as separators.
-            allowed_entities = shotgun_field_schema["properties"]["valid_types"]["value"]
-            old_list = set()
-            new_list = set()
-            if change["fromString"]:
-                old_list = set(change["fromString"].split(" "))
-            if change["toString"]:
-                new_list = set(change["toString"].split(" "))
-            removed_list = old_list - new_list
-            added_list = new_list - old_list
-            # Make sure we have the current value and the Shotgun project
-            consolidated = self._shotgun.consolidate_entity(
-                shotgun_entity,
-                fields=[shotgun_field, "project"]
-            )
-            if not consolidated:
-                raise RuntimeError(
-                    "Unable to retrieve the %s with the id %d from Shotgun" % (
-                        shotgun_entity["type"],
-                        shotgun_entity["id"]
-                    )
-                )
-            current_sg_value = consolidated[shotgun_field]
-            for removed in removed_list:
-                # Try to remove the entries from the Shotgun value. We make a
-                # copy of the list so we can delete entries while iterating
-                for i, sg_value in enumerate(list(current_sg_value)):
-                    # Match the SG entity name, because this is retrieved
-                    # from the entity holding the list, we do have a "name" key
-                    # even if the linked Entities use another field to store their
-                    # name e.g. "code"
-                    if removed.lower() == sg_value["name"].lower():
-                        self._logger.debug(
-                            "Removing %s for %s from Shotgun value %s" % (
-                                sg_value, removed, current_sg_value,
-                            )
-                        )
-                        del current_sg_value[i]
-            for added in added_list:
-                # Check if the value is already there
-                self._logger.debug("Checking %s against %s" % (
-                    added, current_sg_value,
-                ))
-                for sg_value in current_sg_value:
-                    # Match the SG entity name, because this is retrieved
-                    # from the entity holding the list, we do have a "name" key
-                    # even if the linked Entities use another field to store their
-                    # name e.g. "code"
-                    if added.lower() == sg_value["name"].lower():
-                        self._logger.debug(
-                            "%s is already in current value as %s" % (
-                                added, sg_value,
-                            )
-                        )
-                        break
-                else:
-                    # We need to retrieve a matching Entity from Shotgun and
-                    # add it to the list, if we found one.
-                    sg_value = self._shotgun.match_entity_by_name(
-                        added,
-                        allowed_entities,
-                        consolidated["project"]
-                    )
-                    if sg_value:
-                        self._logger.debug(
-                            "Adding %s for %s to Shotgun value %s" % (
-                                sg_value, added, current_sg_value,
-                            )
-                        )
-                        current_sg_value.append(sg_value)
-                    else:
-                        self._logger.debug(
-                            "Couldn't retrieve a %s named '%s'" % (
-                                " or a ".join(allowed_entities),
-                                added
-                            )
-                        )
-
-            return current_sg_value
-
-        if data_type == "date":
-            # We use the "to" value here as the toString value includes some
-            # time with the date e.g. "2019-01-31 00:00:00.0"
-            value = change["to"]
-            if not value:
-                return None
-            try:
-                # Validate the date string
-                datetime.datetime.strptime(value, "%Y-%m-%d")
-            except ValueError as e:
-                message = "Unable to parse %s as a date: %s" % (
-                    value, e
-                )
-                # Log the original error with a traceback for debug purpose
-                self._logger.debug(
-                    message,
-                    exc_info=True,
-                )
-                # Notify the caller that the value is not right
-                raise InvalidJiraValue(
-                    shotgun_field,
-                    value,
-                    message
-                )
-            return value
-
-        if data_type in ["duration", "number"]:
-            # Note: int Jira field changes are not available from the "to" key.
-            value = change["toString"]
-            if value is None:
-                return None
-            # Validate the int value
-            try:
-                return int(value)
-            except ValueError as e:
-                message = "%s is not a valid integer: %s" % (
-                    value, e
-                )
-                # Log the original error with a traceback for debug purpose
-                self._logger.debug(
-                    message,
-                    exc_info=True,
-                )
-                # Notify the caller that the value is not right
-                raise InvalidJiraValue(
-                    shotgun_field,
-                    value,
-                    message
-                )
-
-        if data_type == "checkbox":
-            return bool(change["toString"])
-
-        raise ValueError(
-            "Unsupported data type %s for %s.%s change %s" % (
-                data_type,
-                shotgun_entity["type"],
-                shotgun_field,
-                change
-            )
-        )
