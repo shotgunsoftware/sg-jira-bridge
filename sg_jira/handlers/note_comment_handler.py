@@ -5,8 +5,10 @@
 # this software in either electronic or hard copy form.
 #
 
-from jira import JIRAError
+import re
 
+from jira import JIRAError
+from ..errors import InvalidJiraValue
 from ..constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
 from .sync_handler import SyncHandler
 
@@ -53,7 +55,7 @@ class NoteCommentHandler(SyncHandler):
         """
         return self.__NOTE_FIELDS_MAPPING.keys()
 
-    def _get_jira_comment_body(self, shotgun_note):
+    def _compose_jira_comment_body(self, shotgun_note):
         """
         Return a body value to update a Jira comment from the given Shotgun Note.
 
@@ -65,6 +67,40 @@ class NoteCommentHandler(SyncHandler):
             shotgun_note["subject"],
             shotgun_note["content"],
         )
+
+    def _compose_shotgun_note(self, jira_comment):
+        """
+        Return a subject and content value to update a Shotgun Note from the 
+        given Jira comment.
+
+        Notes created in SG are stored in Jira with some fanciness markup (see
+        ``COMMENT_BODY_TEMPLATE``) to mimic the subject and content format that SG has. 
+        This attempts to parse the Jira Comment assuming this format is still
+        intact. 
+        
+        If the subject and content cannot be parsed, we raise an exception
+        since we can't reliably determine what the Note should contain.
+        
+        Any changes to the template above will require updating this logic.
+
+        :param str jira_comment: A Jira comment body.
+        :returns tuple: a tuple containing the subject and content as strings.
+        :raises InvalidJiraError: if the Jira Comment body is not in the
+            expected format as defined by ``COMMENT_BODY_TEMPLATE``.
+        """
+        result = re.search(r"{panel:title=(.*)}\n(.*){panel}", jira_comment, flags=re.S)
+        # We can't reliably determine what the Note should contain
+        if not result:
+            raise InvalidJiraValue(
+                "content",
+                jira_comment,
+                "Invalid Jira Comment body format. Unable to parse Shotgun subject and content from %s" % jira_comment
+            )
+
+        subject = result.group(1).strip()
+        content = result.group(2).strip()
+            
+        return subject, content
 
     def _get_jira_issue_comment(self, jira_issue_key, jira_comment_id):
         """
@@ -133,7 +169,6 @@ class NoteCommentHandler(SyncHandler):
             "project",
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
             "project.Project.name",
-            "tasks",
             SHOTGUN_JIRA_ID_FIELD,
         ] + self._supported_shotgun_fields_for_shotgun_event()
 
@@ -246,7 +281,7 @@ class NoteCommentHandler(SyncHandler):
                     )
                 )
                 jira_comment.update(
-                    body=self._get_jira_comment_body(shotgun_note)
+                    body=self._compose_jira_comment_body(shotgun_note)
                 )
                 return True
 
@@ -341,7 +376,7 @@ class NoteCommentHandler(SyncHandler):
                 )
                 jira_comment = self._jira.add_comment(
                     jira_issue,
-                    self._get_jira_comment_body(shotgun_note),
+                    self._compose_jira_comment_body(shotgun_note),
                     visibility=None,  # TODO: check if Note properties should drive this
                     is_internal=False
                 )
@@ -374,14 +409,142 @@ class NoteCommentHandler(SyncHandler):
         """
         Accept or reject the given event for the given Jira resource.
 
-        Not yet implemented...
+        .. note:: The event for Comments is different than a standard Issue 
+                  event. There is no ``changelog`` key. The ``issue`` value
+                  doesn't contain the full schema, just the basic fields. So
+                  the logic in here and in :method:`process_jira_event`, is
+                  a little different than in Issue-based handlers. For
+                  example, we can't examine the existing Issue fields to see
+                  whether the issue is synced with Shotgun without doing
+                  another query somewhere, so we leave this to 
+                  :method:`process_jira_event`.
 
         :param str resource_type: The type of Jira resource sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
         :returns: True if the event is accepted for processing, False otherwise.
         """
-        return False
+        if resource_type.lower() != "issue":
+            self._logger.debug("Rejecting event for a %s Jira resource" % resource_type)
+            return False
+        # Check the event payload and reject the event if we don't have what we
+        # expect
+        jira_issue = event.get("issue")
+        if not jira_issue:
+            self._logger.debug("Rejecting event %s without an issue" % event)
+            return False
+        
+        jira_comment = event.get("comment")
+        if not jira_comment:
+            self._logger.debug("Rejecting event %s without a comment" % event)
+            return False
+
+        webhook_event = event.get("webhookEvent")
+        if not webhook_event:
+            self._logger.debug("Rejecting event %s without a webhook event" % event)
+            return False
+            
+        if webhook_event != "comment_updated":
+            self._logger.debug(
+                "Rejecting event %s with unsupported webhook event %s" % (
+                    event, 
+                    webhook_event
+                )
+            )
+            return False
+
+        return True
+
+    def process_jira_event(self, resource_type, resource_id, event):
+        """
+        Process the given Jira event for the given Jira resource.
+
+        :param str resource_type: The type of Jira resource to sync, e.g. Issue.
+        :param str resource_id: The id of the Jira resource to sync.
+        :param event: A dictionary with the event meta data for the change.
+        :returns: True if the event was successfully processed, False if the
+                  sync didn't happen for any reason.
+        """
+        jira_issue = event["issue"]
+        jira_comment = event["comment"]
+        webhook_event = event["webhookEvent"]
+
+        # construct our Jira key for Notes and check if we have an existing
+        # Shotgun Note to update.
+        # key <jira issue key>/<jira comment id>.
+        sg_jira_key = "%s/%s" % (jira_issue["key"], jira_comment["id"])                
+        sg_notes = self._shotgun.find(
+            "Note",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", sg_jira_key]],
+            fields=["subject", "tasks"]
+        )
+
+        # If we have more than one Note with the same key, we don't want to 
+        # create more mess.
+        if len(sg_notes) > 1:
+            self._logger.warning(
+                "Unable to process Jira Comment %s event. More than one Note "
+                "exists in Shotgun with Jira key %s: %s" % (
+                    webhook_event, 
+                    sg_jira_key,
+                    sg_notes
+                )
+            )
+            return False            
+
+        # TODO: We don't know if the Issue this comment is for, is currently
+        #       synced to Shotgun. We need to load it first to properly check
+        #       if this is a warning or debug level message, but that's 
+        #       expensive. Keeping it at debug for now.
+        if not sg_notes:
+            self._logger.debug(
+                "Unable to process Jira Comment %s event. Unable to find a Shotgun "
+                "Note with Jira key %s" % (
+                    webhook_event, 
+                    sg_jira_key
+                )
+            )
+            return False                
+
+        # We have a single Note
+        # TODO: Check that the Task the Note is linked to has syncing enabled.
+        #       Otherwise syncing could be turned off for the Task but this 
+        #       will still sync the Note.
+        self._logger.info("Syncing %s %s Comment to Shotgun Note %d (jira_key:%s) for event %s" % (
+            resource_type,
+            resource_id,
+            sg_notes[0]["id"],
+            sg_jira_key,
+            event
+        ))
+
+        sg_data = {}
+        try:
+            sg_data["subject"], sg_data["content"] = self._compose_shotgun_note(jira_comment["body"])
+        except InvalidJiraValue as e:
+            msg = "Unable to process Jira Comment %s event. %s" % (
+                webhook_event, 
+                e
+            )
+            self._logger.debug(msg, exc_info=True)
+            self._logger.warning(msg)
+
+            return False                
+
+        self._logger.debug(
+            "Updating Shotgun Note %d (jira_key:%s): %s" % (
+                sg_notes[0]["id"],
+                sg_jira_key,
+                sg_data
+            )
+        )
+
+        self._shotgun.update(
+            "Note", 
+            sg_notes[0]["id"],
+            sg_data
+        )
+        return True
 
     def _sync_shotgun_task_notes_to_jira(self, shotgun_task):
         """

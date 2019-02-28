@@ -237,6 +237,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 )
                 return
             self.send_response(200, "POST request successful")
+            self.end_headers()
         except Exception as e:
             self.send_error(500, e.message)
 
