@@ -178,12 +178,13 @@ class TaskIssueHandler(EntityIssueHandler):
             return False
         jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
-            raise ValueError(
+            self._logger.warning(
                 "Unable to retrieve a Jira Project %s for Shotgun Project %s" % (
                     jira_project_key,
                     sg_entity["project"],
                 )
             )
+            return False
 
         jira_issue = None
         if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
@@ -194,12 +195,13 @@ class TaskIssueHandler(EntityIssueHandler):
                 # The Issue could have been deleted, and we don't want to keep
                 # recreating it. So we play safe until we correctly handle the
                 # deleted case.
-                raise ValueError(
+                self._logger.warning(
                     "Unable to retrieve a Jira Issue %s for Shotgun Task %s" % (
                         sg_entity[SHOTGUN_JIRA_ID_FIELD],
                         sg_entity,
                     )
                 )
+                return False
 
         # Create it if needed
         if not jira_issue:
