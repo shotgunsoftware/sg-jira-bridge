@@ -17,6 +17,7 @@ from mock_jira import MockedJira
 from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 import sg_jira
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+from sg_jira.handlers.note_comment_handler import COMMENT_BODY_TEMPLATE
 
 # A list of Shotgun Projects
 SG_PROJECTS = [
@@ -231,6 +232,55 @@ JIRA_EVENT = {
         "timeZone": "Europe/Paris"
     },
     "webhookEvent": "jira:issue_updated"
+}
+
+# Comment events have a small subset of Issue fields
+JIRA_COMMENT_EVENT_ISSUE_FIELDS = {
+    "summary": JIRA_ISSUE_FIELDS["summary"],
+    "issuetype": JIRA_ISSUE_FIELDS["issuetype"],
+    "project": JIRA_ISSUE_FIELDS["project"],
+    "assignee": JIRA_ISSUE_FIELDS["assignee"],
+    "priority": JIRA_ISSUE_FIELDS["priority"],
+    "status": JIRA_ISSUE_FIELDS["status"]
+}
+
+JIRA_COMMENT = {
+    "self": "https://myjira.atlassian.net/rest/api/2/issue/16656/comment/13338",
+    "id": "13338",
+    "author": {
+        "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=0123456789abcdef01234567",
+        "name": "richard.hendricks",
+        "key": "richard.hendricks",
+        "accountId": "0123456789abcdef01234567",
+        "displayName": "Richard Hendricks",
+        "active": True,
+        "timeZone": "America/New_York"
+    },
+    "body": "[Shotgun Note|https://myshotgun.shotgunstudio.com/detail/Note/6460]\r\n{panel:title=Pied Piper Rocks!}\r\nNote content here\r\nand more here.\r\n{panel}",
+    "updateAuthor": {
+        "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=0123456789abcdef01234567",
+        "name": "richard.hendricks",
+        "key": "richard.hendricks",
+        "accountId": "0123456789abcdef01234567",
+        "displayName": "Richard Hendricks",
+        "active": True,
+        "timeZone": "America/New_York"
+    },
+    "created": "2019-02-23T01:59:36.787-0500",
+    "updated": "2019-02-23T22:00:02.443-0500",
+    "jsdPublic": True
+}
+
+JIRA_COMMENT_EVENT = {
+    "timestamp": 1550977202443,
+    "webhookEvent": "comment_updated",
+    "comment": JIRA_COMMENT,
+    "issue": {
+        "id": "16656",
+        "self": "https://myjira.atlassian.net/rest/api/2/issue/16656",
+        "key": "KP-1",
+        "fields": JIRA_COMMENT_EVENT_ISSUE_FIELDS
+    }
 }
 
 
@@ -1302,6 +1352,202 @@ class TestJiraSyncer(TestBase):
             self.assertTrue(isinstance(k, unicode))
             # We shouldn't have any string value, just unicode
             self.assertFalse(isinstance(v, str))
+
+    def test_jira_comment(self, mocked_sg):
+        """
+        Test syncing Comments from Jira to SG.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+                
+        jira_issue_key = JIRA_COMMENT_EVENT["issue"]["key"]
+        jira_note_key = "%s/%s" % (jira_issue_key, JIRA_COMMENT["id"])
+
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        synced_task = {
+            "type": "Task",
+            "id": 3,
+            "content": "Task One/2",
+            "task_assignees": [],
+            "project": SG_PROJECTS[1],
+            SHOTGUN_JIRA_ID_FIELD: jira_issue_key,
+        }
+        self.add_to_sg_mock_db(bridge.shotgun, synced_task)
+
+        self.add_to_sg_mock_db(bridge.shotgun, {
+            "type": "Note",
+            "subject": "This is a note",
+            "id": 1,
+            "content": "This is the note's content",
+            "user": None,
+            "tasks": [synced_task],
+            SHOTGUN_JIRA_ID_FIELD: jira_note_key
+        })
+
+        jira_comment_event = dict(JIRA_COMMENT_EVENT)
+
+        sg_url = "https://myshotgun.shotgunstudio.com/detail/Note/1"
+        expected_sg_title = u"Updated Title"
+        expected_sg_content = u"updated content\nand updated more here."
+        jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
+            sg_url,
+            expected_sg_title,
+            expected_sg_content
+        )
+        
+        # Update succeeds
+        # ---------------------
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
+            )
+        )
+        # SG Note subject and content matches
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
+        )
+        self.assertEqual(
+            updated_note["subject"],
+            expected_sg_title
+        )
+        self.assertEqual(
+            updated_note["content"],
+            expected_sg_content
+        )
+
+        # jira body with {} chars that should not trip up things
+        expected_sg_title = u"Updated Title"
+        expected_sg_content = u"}{foo\nand updated more here."
+        jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
+            sg_url,
+            expected_sg_title,
+            expected_sg_content
+        )
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
+            )
+        )
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
+        )
+        self.assertEqual(
+            updated_note["subject"],
+            expected_sg_title
+        )
+        self.assertEqual(
+            updated_note["content"],
+            expected_sg_content
+        )
+
+        expected_sg_title = u"Upda{panel:title=bad title}ted Title"
+        expected_sg_content = u"some comment body\nand updated more here."
+        jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
+            sg_url,
+            expected_sg_title,
+            expected_sg_content
+        )
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
+            )
+        )
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
+        )
+        self.assertEqual(
+            updated_note["subject"],
+            expected_sg_title
+        )
+        self.assertEqual(
+            updated_note["content"],
+            expected_sg_content
+        )
+
+        # unicode
+        # ---------------------
+        expected_sg_title_unicode = u"Üñïçœdé Title 😬"
+        expected_sg_content_unicode = u"Üñïçœdé content 😬\nyay"
+        jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
+            sg_url,
+            expected_sg_title_unicode,
+            expected_sg_content_unicode
+        )
+        # unicode Update succeeds
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
+            )
+        )
+        # unicode SG Note subject and content matches
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
+        )
+        self.assertEqual(
+            updated_note["subject"],
+            expected_sg_title_unicode
+        )
+        self.assertEqual(
+            updated_note["content"],
+            expected_sg_content_unicode
+        )
+
+        # failures
+        # ---------------------
+        # sync fails if jira comment format is bad
+        jira_comment_event["comment"]["body"] = "Wrong format for Comment body"
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
+            )
+        )
+
+        # create Comment doesn't sync
+        jira_comment_event["webhookEvent"] = "comment_created"
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
+            )
+        )
+        # delete Comment doesn't sync
+        jira_comment_event["webhookEvent"] = "comment_deleted"
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
+            )
+        )
+
+        # TODO: Add test to ensure Comment update to synced
+        #       Note that is linked to a Task that does NOT
+        #       have syncing enabled fails.
 
     def test_shotgun_note(self, mocked_sg):
         """
