@@ -102,7 +102,7 @@ class NoteCommentHandler(SyncHandler):
         subject = result.group(1).strip()
         # if we have any { or } in the title reject the value as it is likely
         # to be an ill form panel block.
-        if re.search("[\{\}]", subject):
+        if re.search(r"[\{\}]", subject):
             raise InvalidJiraValue(
                 "content",
                 jira_comment,
