@@ -14,7 +14,6 @@ from .sync_handler import SyncHandler
 
 # Template used to build Jira comments body from a Note.
 COMMENT_BODY_TEMPLATE = """
-[Shotgun Note|%s]
 {panel:title=%s}
 %s
 {panel}
@@ -63,7 +62,6 @@ class NoteCommentHandler(SyncHandler):
         :returns: A string.
         """
         return COMMENT_BODY_TEMPLATE % (
-            self._shotgun.get_entity_page_url(shotgun_note),
             shotgun_note["subject"],
             shotgun_note["content"],
         )
@@ -101,8 +99,16 @@ class NoteCommentHandler(SyncHandler):
                 "Invalid Jira Comment body format. Unable to parse Shotgun "
                 "subject and content from '%s'" % jira_comment
             )
-
         subject = result.group(1).strip()
+        # if we have any { or } in the title reject the value as it is likely
+        # to be an ill form panel block.
+        if re.search("[\{\}]", subject):
+            raise InvalidJiraValue(
+                "content",
+                jira_comment,
+                "Invalid Jira Comment panel formatting. Unable to parse Shotgun "
+                "subject from '%s'" % subject
+            )
         content = result.group(2).strip()
             
         return subject, content

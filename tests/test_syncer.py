@@ -554,20 +554,19 @@ class TestJiraSyncer(TestBase):
         self.assertFalse(ret)
         # Just make sure our faked Project does not really exist.
         self.assertFalse(syncer.get_jira_project(JIRA_PROJECT_KEY))
-        # An error should be raised If the Project is linked to a bad Jira
-        # Project
-        self.assertRaisesRegexp(
-            ValueError,
-            "Unable to retrieve a Jira Project",
-            bridge.sync_in_jira,
-            "task_issue",
-            "Task",
-            2,
-            {
-                "user": {"type": "HumanUser", "id": 1},
-                "project": {"type": "Project", "id": 2},
-                "meta": SG_EVENT_META
-            }
+        # If the Project is linked to a bad Jira Project, nothing should happen,
+        # no error should be raised
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "task_issue",
+                "Task",
+                2,
+                {
+                    "user": {"type": "HumanUser", "id": 1},
+                    "project": {"type": "Project", "id": 2},
+                    "meta": SG_EVENT_META
+                }
+            )
         )
         # Faked Jira project
         bridge.jira.set_projects([JIRA_PROJECT])
@@ -1385,11 +1384,9 @@ class TestJiraSyncer(TestBase):
 
         jira_comment_event = dict(JIRA_COMMENT_EVENT)
 
-        sg_url = "https://myshotgun.shotgunstudio.com/detail/Note/1"
         expected_sg_title = u"Updated Title"
         expected_sg_content = u"updated content\nand updated more here."
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
-            sg_url,
             expected_sg_title,
             expected_sg_content
         )
@@ -1423,7 +1420,6 @@ class TestJiraSyncer(TestBase):
         expected_sg_title = u"Updated Title"
         expected_sg_content = u"}{foo\nand updated more here."
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
-            sg_url,
             expected_sg_title,
             expected_sg_content
         )
@@ -1449,14 +1445,13 @@ class TestJiraSyncer(TestBase):
             expected_sg_content
         )
 
-        expected_sg_title = u"Upda{panel:title=bad title}ted Title"
-        expected_sg_content = u"some comment body\nand updated more here."
+        # Ill formatted {panel} should be rejected
+        bad_sg_title = u"Upda{panel:title=bad title}ted Title"
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
-            sg_url,
-            expected_sg_title,
+            bad_sg_title,
             expected_sg_content
         )
-        self.assertTrue(
+        self.assertFalse(
             bridge.sync_in_shotgun(
                 "task_issue",
                 "Issue",
@@ -1469,6 +1464,7 @@ class TestJiraSyncer(TestBase):
             [["id", "is", 1]],
             ["subject", "content"],
         )
+        # Shouldn't have changed
         self.assertEqual(
             updated_note["subject"],
             expected_sg_title
@@ -1483,7 +1479,6 @@ class TestJiraSyncer(TestBase):
         expected_sg_title_unicode = u"Üñïçœdé Title 😬"
         expected_sg_content_unicode = u"Üñïçœdé content 😬\nyay"
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
-            sg_url,
             expected_sg_title_unicode,
             expected_sg_content_unicode
         )
