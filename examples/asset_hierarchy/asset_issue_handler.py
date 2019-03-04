@@ -194,7 +194,7 @@ class AssetIssueHandler(EntityIssueHandler):
                     [SHOTGUN_JIRA_ID_FIELD, "is_not", None],
                     [SHOTGUN_SYNC_IN_JIRA_FIELD, "is", True]
                 ],
-                ["content"]
+                ["content", SHOTGUN_JIRA_ID_FIELD]
             )
             to_delete = []
             for sg_task in sg_tasks:
