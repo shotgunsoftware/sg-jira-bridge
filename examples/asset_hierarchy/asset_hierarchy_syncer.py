@@ -7,17 +7,19 @@
 
 from sg_jira import Syncer
 from sg_jira.handlers import TaskIssueHandler, NoteCommentHandler, EnableSyncingHandler
-from .handler import AssetIssueHandler
+from .asset_issue_handler import AssetIssueHandler
 
 class AssetHierarchSyncer(Syncer):
     """
     Syncer example which mimicks in Jira a simple Shotgun Asset hierarchy.
     - Assets are synced as Jira stories.
-    - Tasks are synced as Jira Issues, with a dependency to the Asset Story
+    - Tasks are synced as Jira Issues, with a dependency to the Asset Story.
+
+    This example shows how you can combine handlers to provide your own logic
+    and how you can re-use some of the existing handlers or their base class.
     """
 
     def __init__(self, asset_issue_type="Story", task_issue_type="Task", **kwargs):
-        self._issue_type = issue_type
         super(AssetHierarchSyncer, self).__init__(**kwargs)
         self._task_issue_handler = TaskIssueHandler(self, task_issue_type)
         self._note_comment_handler = NoteCommentHandler(self)
@@ -44,5 +46,5 @@ class AssetHierarchSyncer(Syncer):
             self._enable_syncing_handler,
             self._task_issue_handler,
             self._note_comment_handler,
-            self._asset_story_handler
+            self._asset_issue_handler
         ]
