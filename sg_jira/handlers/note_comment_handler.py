@@ -14,7 +14,6 @@ from .sync_handler import SyncHandler
 
 # Template used to build Jira comments body from a Note.
 COMMENT_BODY_TEMPLATE = """
-[Shotgun Note|%s]
 {panel:title=%s}
 %s
 {panel}
@@ -63,7 +62,6 @@ class NoteCommentHandler(SyncHandler):
         :returns: A string.
         """
         return COMMENT_BODY_TEMPLATE % (
-            self._shotgun.get_entity_page_url(shotgun_note),
             shotgun_note["subject"],
             shotgun_note["content"],
         )
@@ -88,16 +86,29 @@ class NoteCommentHandler(SyncHandler):
         :raises InvalidJiraError: if the Jira Comment body is not in the
             expected format as defined by ``COMMENT_BODY_TEMPLATE``.
         """
-        result = re.search(r"{panel:title=(.*)}\n(.*){panel}", jira_comment, flags=re.S)
+        result = re.search(
+            r"\{panel:title=([^\}]*)\}(.*)\{panel\}",
+            jira_comment,
+            flags=re.S
+        )
         # We can't reliably determine what the Note should contain
         if not result:
             raise InvalidJiraValue(
                 "content",
                 jira_comment,
-                "Invalid Jira Comment body format. Unable to parse Shotgun subject and content from %s" % jira_comment
+                "Invalid Jira Comment body format. Unable to parse Shotgun "
+                "subject and content from '%s'" % jira_comment
             )
-
         subject = result.group(1).strip()
+        # if we have any { or } in the title reject the value as it is likely
+        # to be an ill formed panel block.
+        if re.search(r"[\{\}]", subject):
+            raise InvalidJiraValue(
+                "content",
+                jira_comment,
+                "Invalid Jira Comment panel formatting. Unable to parse Shotgun "
+                "subject from '%s'" % subject
+            )
         content = result.group(2).strip()
             
         return subject, content
@@ -520,7 +531,9 @@ class NoteCommentHandler(SyncHandler):
 
         sg_data = {}
         try:
-            sg_data["subject"], sg_data["content"] = self._compose_shotgun_note(jira_comment["body"])
+            sg_data["subject"], sg_data["content"] = self._compose_shotgun_note(
+                jira_comment["body"]
+            )
         except InvalidJiraValue as e:
             msg = "Unable to process Jira Comment %s event. %s" % (
                 webhook_event, 
