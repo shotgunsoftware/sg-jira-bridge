@@ -140,7 +140,6 @@ class AssetIssueHandler(EntityIssueHandler):
                     shotgun_asset["id"],
                     shotgun_status
                 )
-
             )
 
         return False
