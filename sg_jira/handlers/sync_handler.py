@@ -192,6 +192,7 @@ class SyncHandler(object):
         :param shotgun_field_schema: The Shotgun Entity field schema.
         :param change: A Jira event changelog dictionary with 'fromString',
                        'toString', 'from' and 'to' keys.
+        :param jira_value: The full current Jira value.
         :raises: RuntimeError if the Shotgun Entity can't be retrieved from Shotgun.
         :raises: ValueError for unsupported Shotgun data types.
         """

@@ -13,8 +13,8 @@ class InvalidSyncValue(ValueError):
     """
     def __init__(self, field, value, *args, **kwargs):
         """
-        :param str field: The Jira field for which the exception was raised.
-        :param value: The Shotgun value for which the exception was raised.
+        :param str field: The Jira or SG field for which the exception was raised.
+        :param value: The Jira or SG value for which the exception was raised.
         """
         super(InvalidSyncValue, self).__init__(*args, **kwargs)
         self._field = field
