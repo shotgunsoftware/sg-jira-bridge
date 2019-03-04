@@ -101,3 +101,7 @@ Unit tests are in the _tests_ folder and can be run with `python run_tests.py`.
 - Run unit tests on Linux, Mac and Windows with Python 2.7.
 
 Azure Pipelines jobs are defined by the description files in the _azure-pipelines_ folder.
+
+## Contributing
+
+This project welcomes contributions. Please see our contribution guide at [CONTRIBUTING.md](CONTRIBUTING.md)
