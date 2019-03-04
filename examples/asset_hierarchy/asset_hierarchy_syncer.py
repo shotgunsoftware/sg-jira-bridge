@@ -9,6 +9,7 @@ from sg_jira import Syncer
 from sg_jira.handlers import TaskIssueHandler, NoteCommentHandler, EnableSyncingHandler
 from .asset_issue_handler import AssetIssueHandler
 
+
 class AssetHierarchSyncer(Syncer):
     """
     Syncer example which mimicks in Jira a simple Shotgun Asset hierarchy.

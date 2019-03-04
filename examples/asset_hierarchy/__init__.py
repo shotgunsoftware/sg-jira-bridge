@@ -5,4 +5,4 @@
 # this software in either electronic or hard copy form.
 #
 
-from .asset_hierarchy_syncer import AssetHierarchSyncer
+from .asset_hierarchy_syncer import AssetHierarchSyncer  # noqa

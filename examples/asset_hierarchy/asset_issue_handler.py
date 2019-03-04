@@ -9,6 +9,7 @@ from sg_jira.handlers import EntityIssueHandler
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
 from sg_jira.errors import InvalidShotgunValue
 
+
 class AssetIssueHandler(EntityIssueHandler):
     """
     A handler which syncs a Shotgun Asset as a Jira Issue
@@ -90,7 +91,6 @@ class AssetIssueHandler(EntityIssueHandler):
             # Better to stop processing.
             return False
 
-        jira_data = {}
         # Process all supported fields ff no event meta data was provied.
         if not event_meta:
             return self._sync_shotgun_fields_to_jira(
@@ -216,7 +216,6 @@ class AssetIssueHandler(EntityIssueHandler):
                 ))
                 self._jira.delete_issue_link(issue_link.id)
                 updated = True
-
 
         if added:
             # Collect the list of Tasks which are linked to Jira Issues
@@ -472,7 +471,6 @@ class AssetIssueHandler(EntityIssueHandler):
                 entity_id
             ))
             return False
-
 
         # Update existing synced Issue (if any) Issue dependencies
         if shotgun_field == "tasks":
