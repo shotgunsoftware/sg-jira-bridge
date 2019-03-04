@@ -90,6 +90,15 @@ SYNC = {
             "issue_type": "Task"
         },
     },
+    "asset_hierarchy": {
+        # The syncer class to use
+        "syncer": "asset_hierarchy.AssetHierarchSyncer",
+        # And its specific settings which are passed to its __init__ method
+        "settings": {
+            "asset_issue_type": "Story",
+            "task_issue_type": "Task",
+        },
+    },
     "test": {
         # Example of a custom syncer with an additional parameter to define
         # a log level.

@@ -112,6 +112,14 @@ SYNC = {
             "log_level": logging.DEBUG
         },
     },
+    "asset_hierarchy": {
+        # The syncer class to use
+        "syncer": "example_sync.ExampleSync",
+        # And its specific settings which are passed to its __init__ method
+        "settings": {
+            "issue_type": "Task"
+        },
+    },
     "unicode_😀": {
         # The syncer class to use
         "syncer": "sg_jira.TaskIssueSyncer",
