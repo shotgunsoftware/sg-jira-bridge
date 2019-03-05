@@ -123,7 +123,7 @@ class NoteCommentHandler(SyncHandler):
 
         :param str jira_issue_key: A Jira Issue key.
         :param str jira_comment_id: A Jira Comment id.
-        :returns: A :class:`jira.resources.Comment` instance or None.
+        :returns: A :class:`jira.Comment` instance or None.
         """
         jira_comment = None
         try:
@@ -190,7 +190,7 @@ class NoteCommentHandler(SyncHandler):
 
         :returns: A tuple with a Jira Issue key and a Jira comment id, or
                   `None, None`.
-        :raises: ValueError if the Jira key is invalid.
+        :raises ValueError: if the Jira key is invalid.
         """
         if not shotgun_note[SHOTGUN_JIRA_ID_FIELD]:
             return None, None

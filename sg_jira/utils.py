@@ -15,7 +15,7 @@ def utf8_to_unicode(value):
 
     :param value: A string, a list, a tuple, or a dictionary.
     :returns: The value with all strings converted to unicode.
-    :raises: ValueError if a converted UTF-8 decoded key is already present in the
+    :raises ValueError: if a converted UTF-8 decoded key is already present in the
              original value of a dictionary.
     """
     if isinstance(value, list):
@@ -62,7 +62,7 @@ def unicode_to_utf8(value):
 
     :param value: A string, a list, a tuple, or a dictionary.
     :returns: The value with all unicode values converted to strings.
-    :raises: ValueError if a converted UTF-8 encoded key is already present in the
+    :raises ValueError: if a converted UTF-8 encoded key is already present in the
              original value of a dictionary.
     """
     if isinstance(value, list):

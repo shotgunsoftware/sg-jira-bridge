@@ -20,7 +20,7 @@ class EntityIssueHandler(SyncHandler):
         """
         Instantiate an Entity Issue handler for the given syncer.
 
-        :param syncer: A :class:`Syncer` instance.
+        :param syncer: A :class:`~sg_jira.Syncer` instance.
         :param str issue_type: A target Issue type, e.g. 'Task', 'Story'.
         """
         super(EntityIssueHandler, self).__init__(syncer)
@@ -102,7 +102,7 @@ class EntityIssueHandler(SyncHandler):
         :param str summary: The Issue summary.
         :param str description: An optional description for the Issue.
         :param properties: Arbitrary properties to set on the Jira Issue.
-        :returns: A :class:`jira.resources.Issue` instance.
+        :returns: A :class:`jira.Issue` instance.
         """
 
         # Retrieve the reporter, either the user who created the Entity or the
@@ -175,7 +175,7 @@ class EntityIssueHandler(SyncHandler):
         not `None`.
 
         :param jira_project: A :class:`jira.resources.Project` instance.
-        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param jira_issue: A :class:`jira.Issue` instance.
         :param shotgun_entity_type: A Shotgun Entity type as a string.
         :param shotgun_field: A Shotgun Entity field name as a string.
         :param added: A list of Shotgun values added to the given field.
@@ -185,7 +185,7 @@ class EntityIssueHandler(SyncHandler):
         :returns: A tuple with a Jira field id and a Jira value usable for an
                   update. The returned field id is `None` if no valid field or
                   value could be retrieved.
-        :raises: InvalidShotgunValue if the Shotgun value can't be translated
+        :raises InvalidShotgunValue: if the Shotgun value can't be translated
                  into a valid Jira value.
         """
         # Retrieve the matching Jira field
@@ -313,7 +313,7 @@ class EntityIssueHandler(SyncHandler):
         corresponding to changes for the given Issue field.
 
         :param jira_project: A :class:`jira.resources.Project` instance.
-        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param jira_issue: A :class:`jira.Issue` instance.
         :param jira_field: A Jira field id, as a string.
         :param jira_field_schema: The jira create or edit meta data for the given
                                   field.
@@ -426,7 +426,7 @@ class EntityIssueHandler(SyncHandler):
                   values.
 
         :param jira_project: A :class:`jira.resources.Project` instance.
-        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param jira_issue: A :class:`jira.Issue` instance.
         :param jira_field: A Jira field id, as a string.
         :param jira_field_schema: The jira create or edit meta data for the given
                                   field.
@@ -546,7 +546,7 @@ class EntityIssueHandler(SyncHandler):
         """
         Set the status of the Jira Issue based on the given Shotgun status.
 
-        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param jira_issue: A :class:`jira.Issue` instance.
         :param shotgun_status: A Shotgun status short code as a string.
         :param comment: A string, a comment to apply to the Jira transition.
         :returns: `True` if the status was successfully set, `False` otherwise.
@@ -564,7 +564,7 @@ class EntityIssueHandler(SyncHandler):
         """
         Update the given Jira Issue watchers from the given Shotgun changes.
 
-        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param jira_issue: A :class:`jira.Issue` instance.
         :param added: A list of Shotgun user dictionaries.
         :param removed: A list of Shotgun user dictionaries.
         """
@@ -737,9 +737,9 @@ class EntityIssueHandler(SyncHandler):
         :returns: A tuple with a Jira field id and a Jira value usable for an
                   update. The returned field id is `None` if no valid field or
                   value could be retrieved.
-        :raises: InvalidJiraValue if the Jira value can't be translated
+        :raises InvalidJiraValue: if the Jira value can't be translated
                  into a valid Shotgun value.
-        :raises: ValueError if the target Shotgun field is not valid.
+        :raises ValueError: if the target Shotgun field is not valid.
         """
 
         # Retrieve the Shotgun field to update
@@ -826,7 +826,7 @@ class EntityIssueHandler(SyncHandler):
                        'to' keys.
 
         :returns: The updated value to set in Shotgun for the given field.
-        :raises: ValueError if the target Shotgun field is not suitable
+        :raises ValueError: if the target Shotgun field is not suitable
         """
         # Change log example
         # {

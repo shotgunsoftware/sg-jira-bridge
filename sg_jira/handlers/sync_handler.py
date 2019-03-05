@@ -17,7 +17,7 @@ class SyncHandler(object):
     Base class to handle a particular sync between Shotgun and Jira.
 
     Handlers typically handle syncing values between a Shotgun Entity type and
-    a Jira resource and are owned by a `:class:`Syncer` instance.
+    a Jira resource and are owned by a :class:`~sg_jira.Syncer` instance.
 
     This base class defines the interface all handlers should support and
     provides some helpers which can be useful to all handlers.
@@ -27,7 +27,7 @@ class SyncHandler(object):
         """
         Instantiate a handler for the given syncer.
 
-        :param syncer: A :class:`Syncer` instance.
+        :param syncer: A :class:`~sg_jira.Syncer` instance.
         """
         self._syncer = syncer
 
@@ -41,21 +41,21 @@ class SyncHandler(object):
     @property
     def _bridge(self):
         """
-        Return a connected :class:`sg_jira.Bridge` instance.
+        Return a connected :class:`~sg_jira.Bridge` instance.
         """
         return self._syncer.bridge
 
     @property
     def _shotgun(self):
         """
-        Return a connected :class:`ShotgunSession` instance.
+        Return a connected :class:`~sg_jira.shotgun_session.ShotgunSession` instance.
         """
         return self._syncer.shotgun
 
     @property
     def _jira(self):
         """
-        Return a connected :class:`sg_jira.jira_session.JiraSession` instance.
+        Return a connected :class:`~sg_jira.jira_session.JiraSession` instance.
         """
         return self._syncer.jira
 
@@ -81,8 +81,8 @@ class SyncHandler(object):
         Retrieve the Jira Issue with the given key, if any.
 
         :param str issue_key: A Jira Issue key to look for.
-        :returns: A :class:`jira.resources.Issue` instance or None.
-        :raises: RuntimeError if the Issue if not bound to any Project.
+        :returns: A :class:`jira.Issue` instance or None.
+        :raises RuntimeError: if the Issue if not bound to any Project.
         """
         jira_issue = None
         try:
@@ -193,8 +193,8 @@ class SyncHandler(object):
         :param change: A Jira event changelog dictionary with 'fromString',
                        'toString', 'from' and 'to' keys.
         :param jira_value: The full current Jira value.
-        :raises: RuntimeError if the Shotgun Entity can't be retrieved from Shotgun.
-        :raises: ValueError for unsupported Shotgun data types.
+        :raises RuntimeError: if the Shotgun Entity can't be retrieved from Shotgun.
+        :raises ValueError: for unsupported Shotgun data types.
         """
         data_type = shotgun_field_schema["data_type"]["value"]
         if data_type == "text":

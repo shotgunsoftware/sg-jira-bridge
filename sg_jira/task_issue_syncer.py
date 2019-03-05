@@ -36,7 +36,7 @@ class TaskIssueSyncer(Syncer):
     @property
     def handlers(self):
         """
-        Return a list of :class:`SyncHandler` instances.
+        Return a list of :class:`~handlers.SyncHandler` instances.
         """
         return [
             self._enable_syncing_handler,

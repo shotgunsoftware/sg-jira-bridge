@@ -38,7 +38,7 @@ class EnableSyncingHandler(SyncHandler):
         Combined handlers shouldn't accept the events which are accepted by this
         handler, but they need to be able to process them.
 
-        :param syncer: A :class:`Syncer` instance.
+        :param syncer: A :class:`~sg_jira.Syncer` instance.
         :param handlers: A non empty list of :class:`SyncHandler` instances.
         """
         super(EnableSyncingHandler, self).__init__(syncer)
