@@ -188,8 +188,12 @@ class AssetIssueHandler(EntityIssueHandler):
         :returns: An Issue link or `None`.
         """
         for issue_link in from_issue.fields.issuelinks:
-            if issue_link.raw.get("outwardIssue"):
-                if issue_link.outwardIssue.key == to_issue_key:
+            # Depending link directions we either get "inwardIssue" or "outwardIssue"
+            # populated.
+            if issue_link.raw.get("inwardIssue"):
+                if issue_link.inwardIssue.key == to_issue_key:
+                    # Note: we don't check the Issue Link type and return any link
+                    # which is n the right direction.
                     return issue_link
         return None
 
@@ -237,11 +241,16 @@ class AssetIssueHandler(EntityIssueHandler):
                     sg_task[SHOTGUN_JIRA_ID_FIELD]
                 )
                 if issue_link:
-                    self._logger.debug("Found link between %s and %s to delete" % (
+                    self._logger.debug("Found a link between %s and %s to delete" % (
                         jira_issue.key,
                         sg_task[SHOTGUN_JIRA_ID_FIELD]
                     ))
                     to_delete.append(issue_link)
+                else:
+                    self._logger.debug("Didn't a find link between %s and %s to delete" % (
+                        jira_issue.key,
+                        sg_task[SHOTGUN_JIRA_ID_FIELD]
+                    ))
 
             # Delete the links, if any
             for issue_link in to_delete:
@@ -321,6 +330,9 @@ class AssetIssueHandler(EntityIssueHandler):
                     )
                     self._jira.create_issue_link(
                         type=self.__JIRA_PARENT_LINK_TYPE,
+                        # Note: depending on the link type, e.g. "blocks" or
+                        # "is blocked", the inward and outward values might need
+                        # to be swapped
                         inwardIssue=jira_issue.key,
                         outwardIssue=sg_task[SHOTGUN_JIRA_ID_FIELD],
                         comment={
@@ -331,6 +343,13 @@ class AssetIssueHandler(EntityIssueHandler):
                         }
                     )
                     updated = True
+                else:
+                    self._logger.debug(
+                        "%s is already linked to %s" % (
+                            jira_issue.key,
+                            sg_task[SHOTGUN_JIRA_ID_FIELD]
+                        )
+                    )
 
         return updated
 
