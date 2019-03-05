@@ -29,6 +29,16 @@ class AssetIssueHandler(EntityIssueHandler):
     # representing the Asset.
     __JIRA_PARENT_LINK_TYPE = "blocks"
 
+    # Define the mapping between Jira Issue fields and Shotgun Asset fields
+    # if the Shotgun target is None, it means the target field is not settable
+    # directly.
+    __ISSUE_FIELDS_MAPPING = {
+        "summary": "code",
+        "description": "description",
+        "status": "sg_status_list",
+        "labels": "tags",
+    }
+
     @property
     def _shotgun_asset_fields(self):
         return [
@@ -52,6 +62,21 @@ class AssetIssueHandler(EntityIssueHandler):
             "hld": "Backlog",
         }
 
+    @property
+    def _supported_shotgun_fields_for_jira_event(self):
+        """"
+        Return the list of fields this handler can process for a Jira event.
+
+        :returns: A list of strings.
+        """
+        # By convention we might have `None` as values in our mapping dictionary
+        # meaning that we handle a specific Jira field but there is not a direct
+        # mapping to a Shotgun field and a special logic must be implemented
+        # and called to perform the update to Shotgun.
+        return [
+            field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field
+        ]
+
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
         Return the list of Shotgun fields that this handler can process for a
@@ -71,6 +96,15 @@ class AssetIssueHandler(EntityIssueHandler):
         if shotgun_entity_type != "Asset":
             return None
         return self.__ASSET_FIELDS_MAPPING.get(shotgun_field)
+
+    def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
+        """
+        Returns the Shotgun field name to use to sync the given Jira Issue field.
+
+        :param str jira_field_id: A Jira Issue field id, e.g. 'summary'.
+        :returns: A string or `None`.
+        """
+        return self.__ISSUE_FIELDS_MAPPING.get(jira_field_id)
 
     def _sync_asset_to_jira(self, shotgun_asset, event_meta=None):
         """
@@ -473,6 +507,7 @@ class AssetIssueHandler(EntityIssueHandler):
             return False
 
         # Update existing synced Issue (if any) Issue dependencies
+        # Note: deleting a Task does not seem to trigger an Asset.tasks change?
         if shotgun_field == "tasks":
             return self._sync_asset_tasks_change_to_jira(
                 sg_entity,
