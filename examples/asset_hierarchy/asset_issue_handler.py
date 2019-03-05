@@ -41,6 +41,10 @@ class AssetIssueHandler(EntityIssueHandler):
 
     @property
     def _shotgun_asset_fields(self):
+        """
+        Return the list of fields to ask for when retrieving an Asset from
+        Shotgun.
+        """
         return [
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
             "project.Project.name",
@@ -51,7 +55,7 @@ class AssetIssueHandler(EntityIssueHandler):
     def _sg_jira_status_mapping(self):
         """
         Return a dictionary where keys are Shotgun status short codes and values
-        Jira Issue status names.
+        are Jira Issue status names.
         """
         return {
             "ip": "In Progress",
@@ -110,6 +114,7 @@ class AssetIssueHandler(EntityIssueHandler):
         """
         Update an existing Jira Issue from the Shotgun Asset fields.
 
+        :param shotgun_asset: A Shotgun Asset dictionary.
         :param event_meta: A Shotgun Event meta data dictionary or `None`.
         :returns: `True` if a Jira Issue was updated, `False` otherwise.
         """
