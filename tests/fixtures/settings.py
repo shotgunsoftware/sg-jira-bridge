@@ -74,6 +74,11 @@ sys.path.append(os.path.abspath(
     os.path.dirname(__file__),
 ))
 
+# Add the ../../examples folder to the Python path so example syncers can be loaded by unit tests
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "examples")
+))
+
 SYNC = {
     "task_issue": {
         # The syncer class to use
@@ -114,10 +119,11 @@ SYNC = {
     },
     "asset_hierarchy": {
         # The syncer class to use
-        "syncer": "example_sync.ExampleSync",
+        "syncer": "asset_hierarchy.AssetHierarchSyncer",
         # And its specific settings which are passed to its __init__ method
         "settings": {
-            "issue_type": "Task"
+            "asset_issue_type": "Story",
+            "task_issue_type": "Task",
         },
     },
     "unicode_😀": {

@@ -1,0 +1,114 @@
+# -*- coding: utf-8 -*-
+# Copyright 2018 Autodesk, Inc.  All rights reserved.
+#
+# Use of this software is subject to the terms of the Autodesk license agreement
+# provided at the time of installation or download, or which otherwise accompanies
+# this software in either electronic or hard copy form.
+#
+
+import os
+import mock
+
+from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+
+from test_sync_base import TestSyncBase
+from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
+
+# A list of Shotgun Projects
+SG_PROJECTS = [
+    {"id": 1, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY}
+]
+
+
+# Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
+# and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
+@mock.patch("shotgun_api3.Shotgun")
+class TestHierarchySyncer(TestSyncBase):
+    """
+    Test hierarchy syncer example.
+    """
+
+    def test_shotgun_sync(self, mocked_sg):
+        """
+        Test syncing from SG to Jira.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg, name="asset_hierarchy")
+        bridge.jira.set_projects([JIRA_PROJECT])
+        issue = bridge.jira.create_issue({})
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        synced_task = {
+            "type": "Task",
+            "id": 3,
+            "content": "Task One/2",
+            "project": SG_PROJECTS[0],
+            SHOTGUN_JIRA_ID_FIELD: issue.key,
+            SHOTGUN_SYNC_IN_JIRA_FIELD: True,
+        }
+        sg_asset = {
+            "project": SG_PROJECTS[0],
+            "type": "Asset",
+            "id": 1,
+            "code": "Foo",
+            "description": "I'm Foo !",
+            "tasks": []
+        }
+        self.add_to_sg_mock_db(bridge.shotgun, sg_asset)
+        self.add_to_sg_mock_db(bridge.shotgun, synced_task)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "asset_hierarchy",
+                "Asset",
+                1,
+                {
+                    "user": {"type": "HumanUser", "id": 1},
+                    "project": {"type": "Project", "id": 2},
+                    "meta": {
+                        "entity_id": 1,
+                        "removed": [
+                        ],
+                        "attribute_name": "tasks",
+                        "entity_type": "Asset",
+                        "field_data_type": "multi_entity",
+                        "added": [
+                            synced_task
+                        ],
+                        "type": "attribute_change",
+                    }
+                }
+            )
+        )
+        updated_asset = bridge.shotgun.find_one(
+            "Asset",
+            [["id", "is", sg_asset["id"]]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+        # An Issue should have been created for the Asset
+        self.assertIsNotNone(updated_asset[SHOTGUN_JIRA_ID_FIELD])
+        issue = bridge.jira.issue(updated_asset[SHOTGUN_JIRA_ID_FIELD])
+        for issue_link in issue.fields.issuelinks:
+            raise ValueError(issue_link.raw.get("inwardIssue"))
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "asset_hierarchy",
+                "Asset",
+                1,
+                {
+                    "user": {"type": "HumanUser", "id": 1},
+                    "project": {"type": "Project", "id": 2},
+                    "meta": {
+                        "entity_id": 1,
+                        "removed": [
+                            synced_task
+                        ],
+                        "attribute_name": "tasks",
+                        "entity_type": "Asset",
+                        "field_data_type": "multi_entity",
+                        "added": [
+                        ],
+                        "type": "attribute_change",
+                    }
+                }
+            )
+        )

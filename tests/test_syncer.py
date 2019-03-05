@@ -7,13 +7,9 @@
 #
 
 import os
-import logging
 import mock
 
-from shotgun_api3.lib import mockgun
-
-from test_base import TestBase
-from mock_jira import MockedJira
+from test_sync_base import TestSyncBase
 from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 import sg_jira
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
@@ -284,74 +280,13 @@ JIRA_COMMENT_EVENT = {
 }
 
 
-class ExtMockgun(mockgun.Shotgun):
-    """
-    Add missing mocked methods to mockgun.Shotgun
-    """
-    def add_user_agent(*args, **kwargs):
-        pass
-
-    def set_session_uuid(*args, **kwargs):
-        pass
-
-
 # Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
-class TestJiraSyncer(TestBase):
+class TestJiraSyncer(TestSyncBase):
     """
     Test syncing from Shotgun to Jira.
     """
-    def _get_mocked_sg_handle(self):
-        """
-        Return a mocked SG handle.
-        """
-        return ExtMockgun(
-            "https://mocked.my.com",
-            "Ford Prefect",
-            "xxxxxxxxxx",
-        )
-
-    def _get_syncer(self, mocked_sg, name="task_issue"):
-        """
-        Helper to get a syncer and a bridge with a mocked Shotgun.
-
-        :param mocked_sg: Mocked shotgun_api3.Shotgun.
-        :parma str name: A syncer name.
-        """
-
-        mocked_sg.return_value = self._get_mocked_sg_handle()
-        bridge = sg_jira.Bridge.get_bridge(
-            os.path.join(self._fixtures_path, "settings.py")
-        )
-        syncer = bridge.get_syncer(name)
-        if syncer:
-            syncer._logger.setLevel(logging.WARNING)
-        return syncer, bridge
-
-    def setUp(self):
-        """
-        Test setup.
-        """
-        super(TestJiraSyncer, self).setUp()
-        self.set_sg_mock_schema(os.path.join(
-            os.path.dirname(__file__),
-            "fixtures", "schemas", "sg-jira",
-        ))
-        # Patch the JiraSession base class to use our MockedJira instead of
-        # the jira.client.Jira class.
-        patcher = mock.patch.object(
-            sg_jira.jira_session.JiraSession,
-            "__bases__",
-            (MockedJira,)
-        )
-        patcher.is_local = True
-        patcher.start()
-        # FIXME: the patcher fails with TypeError: can't delete JiraSession.__bases__
-        # in its __exit__. We don't need the original jira.client.Jira class
-        # in these tests, so restoring it is not an issue, but this is not
-        # clean and should be fixed.
-        # self.addCleanup(patcher.stop)
 
     def test_bad_syncer(self, mocked_sg):
         """

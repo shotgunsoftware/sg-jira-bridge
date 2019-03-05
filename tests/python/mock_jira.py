@@ -7,7 +7,7 @@
 
 import copy
 from jira.resources import Project as JiraProject
-from jira.resources import IssueType, Issue, User, Comment
+from jira.resources import IssueType, Issue, User, Comment, IssueLink
 
 # Faked Jira Project, Issue, change log and event
 JIRA_PROJECT_KEY = "UTest"
@@ -390,7 +390,7 @@ RESOURCE_OPTIONS = {
     u'context_path': u'/',
     u'agile_rest_path':
     u'greenhopper',
-    u'server': u'https://sgpipeline.atlassian.net',
+    u'server': u'https://myjira.atlassian.net',
     u'check_update': False,
     u'headers': {u'Content-Type': u'application/json', u'X-Atlassian-Token': u'no-check', u'Cache-Control': u'no-cache'},
     u'auth_url': u'/rest/auth/1/session',
@@ -400,7 +400,6 @@ RESOURCE_OPTIONS = {
     u'client_cert': None,
     u'rest_path': u'api'
 }
-
 
 class MockedSession(object):
     def put(self, *args, **kwargs):
@@ -619,6 +618,25 @@ class MockedJira(object):
         self._issues[issue_key].key = issue_key
         self._issues[issue_key].id = len(self._issues)
         return self._issues[issue_key]
+
+    def create_issue_link(self, type, inwardIssue, outwardIssue, comment=None):
+        issue_link = {
+            "type": {
+                "name": type
+            },
+            "inwardIssue": {
+                "key": inwardIssue
+            },
+            "outwardIssue": {
+                "key": outwardIssue
+            },
+            "comment": comment
+        }
+        issue = self.issue(inwardIssue)
+        issue.update(
+            fields={"issuelinks": [IssueLink(None, None, raw=issue_link)]}
+        )
+        return issue_link
 
     def issue(self, issue_key, *args, **kwargs):
         """
