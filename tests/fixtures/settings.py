@@ -48,6 +48,11 @@ LOGGING = {
             "console"
         ],
     },
+    "loggers": {
+        "sg_jira.syncer" : {
+            "level": "WARNING",
+        }
+    },
     # Some formatters, mainly as examples
     "formatters": {
         "verbose": {

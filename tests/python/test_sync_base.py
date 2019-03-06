@@ -62,8 +62,6 @@ class TestSyncBase(TestBase):
             os.path.join(self._fixtures_path, "settings.py")
         )
         syncer = bridge.get_syncer(name)
-        if syncer:
-            syncer._logger.setLevel(logging.WARNING)
         return syncer, bridge
 
     def setUp(self):
