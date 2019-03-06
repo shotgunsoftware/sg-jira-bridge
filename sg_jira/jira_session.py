@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class JiraSession(jira.client.JIRA):
     """
-    Extend :class:`jira.client.JIRA` with helpers.
+    Extend :class:`jira.JIRA` with helpers.
     """
 
     def __init__(self, jira_site, *args, **kwargs):
@@ -28,14 +28,14 @@ class JiraSession(jira.client.JIRA):
         Connect to the given Jira site with given parameters.
 
         :param str jira_site: A Jira site url.
-        :raises: RuntimeError on Jira connection errors.
+        :raises RuntimeError: on Jira connection errors.
         """
         try:
             super(JiraSession, self).__init__(
                 jira_site, *args, **kwargs
             )
         except JIRAError as e:
-            # Jira puts some huge html / java script code in the exception
+            # Jira puts some huge html / javascript code in the exception
             # string so we catch it to issue a more reasonable message.
             logger.debug(
                 "Unable to connect to %s: %s" % (jira_site, e),
@@ -59,7 +59,7 @@ class JiraSession(jira.client.JIRA):
         """
         Check the Jira site and cache site level values.
 
-        :raises: RuntimeError if the Jira site was not correctly configured to
+        :raises RuntimeError: if the Jira site was not correctly configured to
                  be used with this bridge.
         """
         # Build a mapping from Jira field names to their id for fast lookup.
@@ -129,7 +129,7 @@ class JiraSession(jira.client.JIRA):
         to update the Jira field with the given schema.
 
         :returns: A Jira value which can safely be used to update the Jira field.
-        :raises: UserWarning if a safe value can't be obtained.
+        :raises UserWarning: if a safe value can't be obtained.
         """
         # If the value is empty but required, check if Jira will be able to use
         # a default value. Default values are only available when creating Issues
@@ -181,10 +181,10 @@ class JiraSession(jira.client.JIRA):
         be specified when editing an Issue.
 
         :param jira_project: A :class:`jira.resources.Project` instance or None.
-        :param jira_issue: A :class:`jira.resources.Issue` instance or None.
+        :param jira_issue: A :class:`jira.Issue` instance or None.
         :param user_email: An email address as a string.
         :returns: A :class:`jira.resources.User` instance or None.
-        :raises: ValueError if no Project nor Issue is specified.
+        :raises ValueError: if no Project nor Issue is specified.
         """
         return self.find_jira_user(
             user_email,
@@ -237,12 +237,12 @@ class JiraSession(jira.client.JIRA):
 
         :param user_email: An email address as a string.
         :param jira_project: A :class:`jira.resources.Project` instance or None.
-        :param jira_issue: A :class:`jira.resources.Issue` instance or None.
+        :param jira_issue: A :class:`jira.Issue` instance or None.
         :param for_assignment: A boolean, if `False` the user just needs to have read
                             permission. If `True` the user needs to be suitable for
                             Issue assignments.
         :returns: A :class:`jira.resources.User` instance or None.
-        :raises: ValueError if no Project nor Issue is specified.
+        :raises ValueError: if no Project nor Issue is specified.
         """
 
         if not jira_project and not jira_issue:
@@ -360,7 +360,7 @@ class JiraSession(jira.client.JIRA):
         Lookup for a Jira transition where the target status is the
         given one and try to apply it.
 
-        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param jira_issue: A :class:`jira.Issue` instance.
         :param str jira_status: A Jira status name, e.g. `In Progress`.
         :param comment: A string, a comment to apply to the Jira transition.
         :return: `True` if the status could be set, `False` otherwise.
@@ -466,9 +466,9 @@ class JiraSession(jira.client.JIRA):
         :param str issue_type: The target Issue type name.
         :param data: A dictionary where keys are Jira Issue field ids and values
                      are Jira values.
-        :returns: A :class:`jira.resources.Issue` instance.
-        :raises: RuntimeError if the Jira create meta data can't be retrieved.
-        :raises: ValueError if invalid and unfixable data is provided.
+        :returns: A :class:`jira.Issue` instance.
+        :raises RuntimeError: if the Jira create meta data can't be retrieved.
+        :raises ValueError: if invalid and unfixable data is provided.
         """
         jira_issue_type = self.issue_type_by_name(issue_type)
         # Retrieve creation meta data for the project / issue type
@@ -554,9 +554,9 @@ class JiraSession(jira.client.JIRA):
         """
         Return the edit metadata for the given Jira Issue.
 
-        :param jira_issue: A :class:`jira.resources.Issue`.
+        :param jira_issue: A :class:`jira.Issue`.
         :returns: The Jira Issue edit metadata `fields` property.
-        :raises: RuntimeError if the edit metadata can't be retrieved for the
+        :raises RuntimeError: if the edit metadata can't be retrieved for the
                  given Issue.
         """
         # Retrieve edit meta data for the issue

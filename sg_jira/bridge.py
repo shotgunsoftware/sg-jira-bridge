@@ -83,7 +83,7 @@ class Bridge(object):
         Read the given settings and instantiate a new :class:`Bridge` with them.
 
         :param str settings_file: Path to a settings Python file.
-        :raises: ValueError on missing required settings.
+        :raises ValueError: on missing required settings.
         """
         # Read settings
         settings = cls.read_settings(settings_file)
@@ -145,8 +145,8 @@ class Bridge(object):
 
         :param str settings_file: Path to a settings Python file.
         :returns: A dictionary with the settings.
-        :raises: ValueError if the file does not exist or if its name does not end
-                 with .py.
+        :raises ValueError: if the file does not exist or if its name does not end
+                 with ``.py``.
         """
         result = {}
         full_path = os.path.abspath(settings_file)
@@ -183,7 +183,7 @@ class Bridge(object):
     @property
     def shotgun(self):
         """
-        Return a connected :class:`ShotgunSession` instance.
+        Return a connected :class:`~shotgun_session.ShotgunSession` instance.
         """
         return self._shotgun
 
@@ -208,7 +208,7 @@ class Bridge(object):
     @property
     def jira(self):
         """
-        Return a connected :class:`JiraSession` instance.
+        Return a connected :class:`~jira_session.JiraSession` instance.
         """
         return self._jira
 
@@ -224,7 +224,7 @@ class Bridge(object):
         Returns a :class:`Syncer` instance for the given settings name.
 
         :param str: A settings name.
-        :raises: ValueError for invalid settings.
+        :raises ValueError: for invalid settings.
         """
         if name not in self._syncers:
             # Create the syncer from the settings

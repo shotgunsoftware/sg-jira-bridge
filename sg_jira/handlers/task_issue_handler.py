@@ -334,7 +334,7 @@ class TaskIssueHandler(EntityIssueHandler):
         the sync.
 
         :param sg_entity: A Shotgun Entity dictionary.
-        :param jira_issue: A :class:`jira.resources.Issue` instance.
+        :param jira_issue: A :class:`jira.Issue` instance.
         :param exclude_shotgun_fields: An optional list of Shotgun field names which
                                        shouldn't be synced.
         """

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class ShotgunSession(object):
     """
-    Wraps a :class:`shotgun_api3.Shotgun` instance and provide some helpers and
+    Wraps a :class:`shotgun_api3.shotgun.Shotgun` instance and provide some helpers and
     session caches.
 
     Ensures all the values we get from Shotgun are unicode and not utf-8 encoded
@@ -48,7 +48,7 @@ class ShotgunSession(object):
 
     def __init__(self, base_url, script_name=None, *args, **kwargs):
         """
-        Instantiate a :class:`shotgun_api3.Shotgun` with the sanitized parameters.
+        Instantiate a :class:`shotgun_api3.shotgun.Shotgun` with the sanitized parameters.
         """
         # Note: we use composition rather than inheritance to wrap the Shotgun
         # instance. Otherwise we would have to redefine all the methods we need
@@ -87,7 +87,7 @@ class ShotgunSession(object):
         """
         Check the Shotgun site and cache site level values.
 
-        :raises: RuntimeError if the Shotgun site was not correctly configured to
+        :raises RuntimeError: if the Shotgun site was not correctly configured to
                  be used with this bridge.
         """
         self.assert_field(
@@ -104,7 +104,7 @@ class ShotgunSession(object):
         :param str entity_type: A Shotgun Entity type.
         :param str field_name: A Shotgun field name, e.g. 'sg_my_precious'.
         :param str field_type: A Shotgun field type, e.g. 'text'.
-        :raises: RuntimeError if the field does not exist or does not have the
+        :raises RuntimeError: if the field does not exist or does not have the
                  expected type.
         """
         field = self.get_field_schema(entity_type, field_name)
@@ -290,7 +290,7 @@ class ShotgunSession(object):
         Return a wrapped Shotgun method which encodes all parameters and decodes
         the result before returning it.
 
-        :param str method_name: A :class:`shotgun_api3.Shotgun` method name.
+        :param str method_name: A :class:`~shotgun_api3.shotgun.Shotgun` method name.
         """
         method_to_wrap = getattr(self._shotgun, method_name)
 
@@ -308,7 +308,7 @@ class ShotgunSession(object):
 
         Check if the name is one of the Shotgun method names we need to wrap,
         return a wrapped method if it is the case.
-        Return the :class:`shotgun_api3.Shotgun` attribute otherwise.
+        Return the :class:`shotgun_api3.shotgun.Shotgun` attribute otherwise.
 
         :param str attribute_name: The attribute name to retrieve.
         """

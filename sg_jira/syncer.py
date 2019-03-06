@@ -12,7 +12,7 @@ class Syncer(object):
     """
     A class handling syncing between Shotgun and Jira.
 
-    All Syncer should define a list of :class:`SyncHandler` which should reject
+    All Syncers should define a list of :class:`~handlers.SyncHandler` which should reject
     or accept and process events.
     """
 
@@ -21,7 +21,7 @@ class Syncer(object):
         Instatiate a new syncer for the given bridge.
 
         :param str name: A unique name for the syncer.
-        :param bridge: A :class:`sg_jira.Bridge` instance.
+        :param bridge: A :class:`~sg_jira.Bridge` instance.
         """
         super(Syncer, self).__init__()
         self._name = name
@@ -33,7 +33,7 @@ class Syncer(object):
     @property
     def bridge(self):
         """
-        Returns the :class:`sg_jira.Bridge` instance used by this syncer.
+        Returns the :class:`~sg_jira.Bridge` instance used by this syncer.
         """
         return self._bridge
 
@@ -55,7 +55,7 @@ class Syncer(object):
     def handlers(self):
         """
         Needs to be re-implemented in deriving classes and return a list of
-        :class:`SyncHandler` instances.
+        :class:`~handlers.SyncHandler` instances.
         """
         raise NotImplementedError
 
@@ -86,7 +86,7 @@ class Syncer(object):
         """
         Accept or reject the given event for the given Shotgun Entity.
 
-        :returns: A :class:`SyncHandler` instance if the event is accepted for
+        :returns: A :class:`~handlers.SyncHandler` instance if the event is accepted for
                   processing, `None` otherwise.
         """
 
@@ -154,7 +154,7 @@ class Syncer(object):
         :param str resource_type: The type of Jira resource sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
-        :returns: A :class:`SyncHandler` instance if the event is accepted for
+        :returns: A :class:`~handlers.SyncHandler` instance if the event is accepted for
                   processing, `None` otherwise.
         """
         # Check we didn't trigger the event to avoid infinite loops.
