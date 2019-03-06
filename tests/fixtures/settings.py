@@ -49,7 +49,7 @@ LOGGING = {
         ],
     },
     "loggers": {
-        "sg_jira.syncer" : {
+        "sg_jira.syncer": {
             "level": "WARNING",
         }
     },
