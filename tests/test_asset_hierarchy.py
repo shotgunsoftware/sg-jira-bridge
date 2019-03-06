@@ -6,13 +6,12 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
 import mock
 
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
 
 from test_sync_base import TestSyncBase
-from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
+from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT
 
 # A list of Shotgun Projects
 SG_PROJECTS = [
@@ -28,9 +27,9 @@ class TestHierarchySyncer(TestSyncBase):
     Test hierarchy syncer example.
     """
 
-    def test_shotgun_sync(self, mocked_sg):
+    def test_shotgun_links_sync(self, mocked_sg):
         """
-        Test syncing from SG to Jira.
+        Test syncing links from SG to Jira.
         """
         syncer, bridge = self._get_syncer(mocked_sg, name="asset_hierarchy")
         bridge.jira.set_projects([JIRA_PROJECT])
@@ -86,9 +85,8 @@ class TestHierarchySyncer(TestSyncBase):
         # An Issue should have been created for the Asset
         self.assertIsNotNone(updated_asset[SHOTGUN_JIRA_ID_FIELD])
         issue = bridge.jira.issue(updated_asset[SHOTGUN_JIRA_ID_FIELD])
-        for issue_link in issue.fields.issuelinks:
-            raise ValueError(issue_link.raw.get("inwardIssue"))
 
+        # Should return True because a link is deleted
         self.assertTrue(
             bridge.sync_in_jira(
                 "asset_hierarchy",

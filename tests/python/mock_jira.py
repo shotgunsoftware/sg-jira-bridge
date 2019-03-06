@@ -401,6 +401,7 @@ RESOURCE_OPTIONS = {
     u'rest_path': u'api'
 }
 
+
 class MockedSession(object):
     def put(self, *args, **kwargs):
         pass
@@ -434,6 +435,7 @@ class MockedJira(object):
         self._projects = []
         self._createmeta = {}
         self._issues = {}
+        self._issue_links = []
 
     def set_projects(self, projects):
         """
@@ -620,7 +622,11 @@ class MockedJira(object):
         return self._issues[issue_key]
 
     def create_issue_link(self, type, inwardIssue, outwardIssue, comment=None):
+        """
+        Mocked Jira method.
+        """
         issue_link = {
+            "id": len(self._issue_links),
             "type": {
                 "name": type
             },
@@ -632,11 +638,38 @@ class MockedJira(object):
             },
             "comment": comment
         }
+        self._issue_links.append(issue_link)
         issue = self.issue(inwardIssue)
         issue.update(
-            fields={"issuelinks": [IssueLink(None, None, raw=issue_link)]}
+            fields={"issuelinks": issue.fields.issuelinks + [IssueLink(None, None, raw=issue_link)]}
+        )
+        issue = self.issue(outwardIssue)
+        issue.update(
+            fields={"issuelinks": issue.fields.issuelinks + [IssueLink(None, None, raw=issue_link)]}
         )
         return issue_link
+
+    def delete_issue_link(self, id):
+        """
+        Mocked Jira method.
+        """
+        issue_link = IssueLink(None, None, self._issue_links.pop(id))
+        issue = self.issue(issue_link.inwardIssue.key)
+        keep_links = []
+        for link in issue.fields.issuelinks:
+            if link.id != issue_link.id:
+                keep_links.append(link)
+        issue.update(
+            fields={"issuelinks": keep_links}
+        )
+        issue = self.issue(issue_link.outwardIssue.key)
+        keep_links = []
+        for link in issue.fields.issuelinks:
+            if link.id != issue_link.id:
+                keep_links.append(link)
+        issue.update(
+            fields={"issuelinks": keep_links}
+        )
 
     def issue(self, issue_key, *args, **kwargs):
         """
