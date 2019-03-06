@@ -63,7 +63,7 @@ class TestSyncBase(TestBase):
         )
         syncer = bridge.get_syncer(name)
         if syncer:
-            syncer._logger.setLevel(logging.DEBUG)
+            syncer._logger.setLevel(logging.WARNING)
         return syncer, bridge
 
     def setUp(self):
