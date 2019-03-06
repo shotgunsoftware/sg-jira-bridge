@@ -27,7 +27,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
     # The type of Issue link to use when linking a Task Issue to the Issue
     # representing the Asset.
-    __JIRA_PARENT_LINK_TYPE = "is blocked by"
+    __JIRA_PARENT_LINK_TYPE = "relates to"
 
     # Define the mapping between Jira Issue fields and Shotgun Asset fields
     # if the Shotgun target is None, it means the target field is not settable
@@ -338,8 +338,8 @@ class AssetIssueHandler(EntityIssueHandler):
                         # Note: depending on the link type, e.g. "blocks" or
                         # "is blocked", the inward and outward values might need
                         # to be swapped
-                        inwardIssue=jira_issue.key,
-                        outwardIssue=sg_task[SHOTGUN_JIRA_ID_FIELD],
+                        inwardIssue=sg_task[SHOTGUN_JIRA_ID_FIELD],
+                        outwardIssue=jira_issue.key,
                         comment={
                             "body": "Linking %s to %s" % (
                                 shotgun_asset["code"],
