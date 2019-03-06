@@ -29,7 +29,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
-      python tests/run_tests.py --xmlout test-results
+      python tests/run_tests.py test_routing test_service --xmlout test-results
     displayName: 'Test SG Jira'
     env: { 'LANG': 'en_US.UTF-8' }
 
