@@ -21,6 +21,14 @@ class AssetHierarchySyncer(Syncer):
     """
 
     def __init__(self, asset_issue_type="Story", task_issue_type="Task", **kwargs):
+        """
+        Instantiate a new :class:`AssetHierarchySyncer`.
+
+        :param str asset_issue_type: The Jira Issue type to use for the Issue
+                                     representing an Asset.
+        :param str task_issue_type: The Jira Issue type to use for the Issue
+                                    representing a Task.
+        """
         super(AssetHierarchySyncer, self).__init__(**kwargs)
         self._task_issue_handler = TaskIssueHandler(self, task_issue_type)
         self._note_comment_handler = NoteCommentHandler(self)
