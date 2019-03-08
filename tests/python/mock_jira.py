@@ -7,7 +7,7 @@
 
 import copy
 from jira.resources import Project as JiraProject
-from jira.resources import IssueType, Issue, User, Comment
+from jira.resources import IssueType, Issue, User, Comment, IssueLink
 
 # Faked Jira Project, Issue, change log and event
 JIRA_PROJECT_KEY = "UTest"
@@ -390,7 +390,7 @@ RESOURCE_OPTIONS = {
     u'context_path': u'/',
     u'agile_rest_path':
     u'greenhopper',
-    u'server': u'https://sgpipeline.atlassian.net',
+    u'server': u'https://myjira.atlassian.net',
     u'check_update': False,
     u'headers': {u'Content-Type': u'application/json', u'X-Atlassian-Token': u'no-check', u'Cache-Control': u'no-cache'},
     u'auth_url': u'/rest/auth/1/session',
@@ -435,6 +435,7 @@ class MockedJira(object):
         self._projects = []
         self._createmeta = {}
         self._issues = {}
+        self._issue_links = []
 
     def set_projects(self, projects):
         """
@@ -619,6 +620,56 @@ class MockedJira(object):
         self._issues[issue_key].key = issue_key
         self._issues[issue_key].id = len(self._issues)
         return self._issues[issue_key]
+
+    def create_issue_link(self, type, inwardIssue, outwardIssue, comment=None):
+        """
+        Mocked Jira method.
+        """
+        issue_link = {
+            "id": len(self._issue_links),
+            "type": {
+                "name": type
+            },
+            "inwardIssue": {
+                "key": inwardIssue
+            },
+            "outwardIssue": {
+                "key": outwardIssue
+            },
+            "comment": comment
+        }
+        self._issue_links.append(issue_link)
+        issue = self.issue(inwardIssue)
+        issue.update(
+            fields={"issuelinks": issue.fields.issuelinks + [IssueLink(None, None, raw=issue_link)]}
+        )
+        issue = self.issue(outwardIssue)
+        issue.update(
+            fields={"issuelinks": issue.fields.issuelinks + [IssueLink(None, None, raw=issue_link)]}
+        )
+        return issue_link
+
+    def delete_issue_link(self, id):
+        """
+        Mocked Jira method.
+        """
+        issue_link = IssueLink(None, None, self._issue_links.pop(id))
+        issue = self.issue(issue_link.inwardIssue.key)
+        keep_links = []
+        for link in issue.fields.issuelinks:
+            if link.id != issue_link.id:
+                keep_links.append(link)
+        issue.update(
+            fields={"issuelinks": keep_links}
+        )
+        issue = self.issue(issue_link.outwardIssue.key)
+        keep_links = []
+        for link in issue.fields.issuelinks:
+            if link.id != issue_link.id:
+                keep_links.append(link)
+        issue.update(
+            fields={"issuelinks": keep_links}
+        )
 
     def issue(self, issue_key, *args, **kwargs):
         """

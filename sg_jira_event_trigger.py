@@ -32,6 +32,7 @@ def registerCallbacks(reg):
         "Shotgun_Task_Change": ["*"],
         "Shotgun_Ticket_Change": ["*"],
         "Shotgun_Project_Change": ["*"],
+        "Shotgun_Asset_Change": ["*"],  # Needed by the Asset/Task example.
     }
     # Define a dictionary which is persisted by the framework and will collect
     # routing from Shotgun Projects.

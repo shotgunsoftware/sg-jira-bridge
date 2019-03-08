@@ -48,6 +48,11 @@ LOGGING = {
             "console"
         ],
     },
+    "loggers": {
+        "sg_jira.syncer": {
+            "level": "WARNING",
+        }
+    },
     # Some formatters, mainly as examples
     "formatters": {
         "verbose": {
@@ -72,6 +77,11 @@ LOGGING = {
 # Add the ./ folder to the Python path so test syncers can be loaded by unit tests
 sys.path.append(os.path.abspath(
     os.path.dirname(__file__),
+))
+
+# Add the ../../examples folder to the Python path so example syncers can be loaded by unit tests
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "examples")
 ))
 
 SYNC = {
@@ -110,6 +120,15 @@ SYNC = {
         "syncer": "example_sync.ExampleSync",
         "settings": {
             "log_level": logging.DEBUG
+        },
+    },
+    "asset_hierarchy": {
+        # The syncer class to use
+        "syncer": "asset_hierarchy.AssetHierarchySyncer",
+        # And its specific settings which are passed to its __init__ method
+        "settings": {
+            "asset_issue_type": "Story",
+            "task_issue_type": "Task",
         },
     },
     "unicode_😀": {

@@ -102,7 +102,11 @@ class TestRouting(TestBase):
         super(TestRouting, self).setUp()
         # This is controlled by the bridge settings that we don't
         # load in these tests.
-        logging.getLogger("webapp").setLevel(logging.INFO)
+        # Our custom MockRequest using StringIO causes problems when running
+        # tests with xmlrunner, so, as a workaround, we set the logging level
+        # to warning to avoid unicode problems, depending on the order the tests
+        # are run.
+        logging.getLogger("webapp").setLevel(logging.WARNING)
         self.set_sg_mock_schema(
             os.path.join(self._fixtures_path, "schemas", "sg-jira")
         )
