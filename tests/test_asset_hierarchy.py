@@ -9,6 +9,7 @@
 import mock
 
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+from sg_jira.constants import SHOTGUN_JIRA_URL_FIELD
 
 from test_sync_base import TestSyncBase
 from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT
@@ -80,11 +81,21 @@ class TestHierarchySyncer(TestSyncBase):
         updated_asset = bridge.shotgun.find_one(
             "Asset",
             [["id", "is", sg_asset["id"]]],
-            [SHOTGUN_JIRA_ID_FIELD]
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD]
         )
         # An Issue should have been created for the Asset
         self.assertIsNotNone(updated_asset[SHOTGUN_JIRA_ID_FIELD])
+
+        # load the asset issue
         issue = bridge.jira.issue(updated_asset[SHOTGUN_JIRA_ID_FIELD])
+
+        # make sure we're setting the Jira URL and it's what we expect
+        self.assertIsNotNone(updated_asset[SHOTGUN_JIRA_URL_FIELD])
+        expected_url = {
+            u"name": u"View in Jira",
+            u"url": issue.permalink()
+        }
+        self.assertEqual(updated_asset[SHOTGUN_JIRA_URL_FIELD], expected_url)
 
         # Should return False because the link is already there (no update)
         self.assertFalse(

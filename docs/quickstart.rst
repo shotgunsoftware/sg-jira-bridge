@@ -34,15 +34,16 @@ Required Fields
 The following fields must be created in Shotgun for each of the
 following entity types:
 
-===========   ====================   =========   ==========================
-Entity Type   Field Name             Data Type   Display Name (recommended)
-===========   ====================   =========   ==========================
-Project       ``sg_jira_sync_url``   File/Link   Jira Sync URL
-Project       ``sg_jira_key``        Text        Jira Key
-Task          ``sg_jira_key``        Text        Jira Key
-Task          ``sg_sync_in_jira``    Checkbox    Sync In Jira
-Note          ``sg_jira_key``        Text        Jira Key
-===========   ====================   =========   ==========================
+===========   ====================   =========   ==========================   ==========================
+Entity Type   Field Name             Data Type   Display                      Description
+===========   ====================   =========   ==========================   ==========================
+Project       ``sg_jira_sync_url``   File/Link   Jira Sync URL                URL of SG Jira Bridge (see below)
+Project       ``sg_jira_key``        Text        Jira Key                     Synced Project Key value in Jira
+Task          ``sg_jira_key``        Text        Jira Key                     Synced Issue Key value in Jira
+Task          ``sg_sync_in_jira``    Checkbox    Sync In Jira                 Enable/Disable syncing for this Task
+Task          ``sg_jira_url``        File/Link   Jira URL                     Link to synced Issue in Jira
+Note          ``sg_jira_key``        Text        Jira Key                     Synced Issue Key/Comment ID in Jira
+===========   ====================   =========   ==========================   ==========================
 
 Configure your Shotgun Project
 ==============================

@@ -5,7 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
-from ..constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+from ..constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_URL_FIELD
 from ..errors import InvalidShotgunValue
 from .entity_issue_handler import EntityIssueHandler
 
@@ -80,6 +80,7 @@ class TaskIssueHandler(EntityIssueHandler):
         """
         self._shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
         self._shotgun.assert_field("Task", SHOTGUN_SYNC_IN_JIRA_FIELD, "checkbox")
+        self._shotgun.assert_field("Task", SHOTGUN_JIRA_URL_FIELD, "url")
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
@@ -221,7 +222,13 @@ class TaskIssueHandler(EntityIssueHandler):
             self._shotgun.update(
                 sg_entity["type"],
                 sg_entity["id"],
-                {SHOTGUN_JIRA_ID_FIELD: jira_issue.key}
+                {
+                    SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+                    SHOTGUN_JIRA_URL_FIELD: {
+                        "url": jira_issue.permalink(),
+                        "name": "View in Jira"
+                    }
+                }
             )
 
         sg_field = event["meta"]["attribute_name"]
