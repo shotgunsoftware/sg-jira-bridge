@@ -518,7 +518,7 @@ class TestJiraSyncer(TestSyncBase):
             # This should fail because of missing data for the required "Faked" field
             self.assertRaisesRegexp(
                 ValueError,
-                r"The following data is missing in order to create a Jira Task Issue: \['Faked'\]",
+                r"Unable to create Jira Task Issue. The following required data is missing: \['Faked'\]",
                 bridge.sync_in_jira,
                 "task_issue",
                 "Task",

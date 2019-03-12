@@ -215,7 +215,9 @@ class SyncHandler(object):
             # would be to raise an InvalidJiraValue
             all_allowed.append(value)
             self._logger.info(
-                "Updating %s.%s schema with %s valid values" % (
+                "Updating Shotgun %s.%s schema with valid values: %s" % (
+                    shotgun_entity["type"],
+                    shotgun_field,
                     all_allowed
                 )
             )
@@ -271,7 +273,7 @@ class SyncHandler(object):
             )
             if not consolidated:
                 raise RuntimeError(
-                    "Unable to retrieve the %s with the id %d from Shotgun" % (
+                    "Unable to find %s (%d) in Shotgun" % (
                         shotgun_entity["type"],
                         shotgun_entity["id"]
                     )
@@ -280,6 +282,11 @@ class SyncHandler(object):
             for removed in removed_list:
                 # Try to remove the entries from the Shotgun value. We make a
                 # copy of the list so we can delete entries while iterating
+                self._logger.debug("Trying to remove %s from Shotgun %s value %s" % (
+                    removed, 
+                    shotgun_field,
+                    current_sg_value,
+                ))
                 for i, sg_value in enumerate(list(current_sg_value)):
                     # Match the SG entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
@@ -287,15 +294,20 @@ class SyncHandler(object):
                     # name e.g. "code"
                     if removed.lower() == sg_value["name"].lower():
                         self._logger.debug(
-                            "Removing %s for %s from Shotgun value %s" % (
-                                sg_value, removed, current_sg_value,
+                            "Removing %s from Shotgun value %s since Jira "
+                            "removed %s " % (
+                                sg_value, 
+                                current_sg_value,
+                                removed,
                             )
                         )
                         del current_sg_value[i]
             for added in added_list:
                 # Check if the value is already there
-                self._logger.debug("Checking %s against %s" % (
-                    added, current_sg_value,
+                self._logger.debug("Trying to add %s to Shotgun %s value %s" % (
+                    added, 
+                    shotgun_field,
+                    current_sg_value,
                 ))
                 for sg_value in current_sg_value:
                     # Match the SG entity name, because this is retrieved
@@ -304,7 +316,7 @@ class SyncHandler(object):
                     # name e.g. "code"
                     if added.lower() == sg_value["name"].lower():
                         self._logger.debug(
-                            "%s is already in current value as %s" % (
+                            "%s is already in current Shotgun value: %s" % (
                                 added, sg_value,
                             )
                         )
@@ -319,15 +331,18 @@ class SyncHandler(object):
                     )
                     if sg_value:
                         self._logger.debug(
-                            "Adding %s for %s to Shotgun value %s" % (
-                                sg_value, added, current_sg_value,
+                            "Adding %s to Shotgun value %s since Jira "
+                            "added %s" % (
+                                sg_value, 
+                                current_sg_value,
+                                added,
                             )
                         )
                         current_sg_value.append(sg_value)
                     else:
                         self._logger.debug(
-                            "Couldn't retrieve a %s named '%s'" % (
-                                " or a ".join(allowed_entities),
+                            "Couldn't find a %s named '%s' from Shotgun" % (
+                                " or ".join(allowed_entities),
                                 added
                             )
                         )
@@ -344,7 +359,7 @@ class SyncHandler(object):
                 # Validate the date string
                 datetime.datetime.strptime(value, "%Y-%m-%d")
             except ValueError as e:
-                message = "Unable to parse %s as a date: %s" % (
+                message = "Unable to parse Jira value %s as a date: %s" % (
                     value, e
                 )
                 # Log the original error with a traceback for debug purpose
@@ -369,7 +384,7 @@ class SyncHandler(object):
             try:
                 return int(value)
             except ValueError as e:
-                message = "%s is not a valid integer: %s" % (
+                message = "Jira value %s is not a valid integer: %s" % (
                     value, e
                 )
                 # Log the original error with a traceback for debug purpose
@@ -388,7 +403,7 @@ class SyncHandler(object):
             return bool(change["toString"])
 
         raise ValueError(
-            "Unsupported data type %s for %s.%s change %s" % (
+            "Unsupported data type %s for %s.%s change from Jira update: %s" % (
                 data_type,
                 shotgun_entity["type"],
                 shotgun_field,

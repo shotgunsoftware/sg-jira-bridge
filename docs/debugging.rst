@@ -164,8 +164,7 @@ If you change a status in Shotgun or Jira and there's no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs::
 
-    DEBUG:sg_jira.syncer.default:Don't know how to sync Shotgun Task sg_status_list field to Jira
-    WARNING:sg_jira.syncer.default:Unable to retrieve corresponding Jira status for na
+    2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for Shotgun status 'na'
 
 In this case, there is no Jira status defined in the handlers to match with
 the ``na`` status in Shotgun. Your handler defines a

@@ -97,7 +97,7 @@ def process_event(sg, logger, event, dispatch_routes):
         if not sg_project:
             # This shouldn't happen, but better to be safe here.
             logger.warning(
-                "Unable to retrieve a Shotgun Project "
+                "Unable to find a Shotgun Project "
                 "with id %d, skipping event..." % (
                     project["id"]
                 )

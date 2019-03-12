@@ -36,48 +36,55 @@ class EntityIssueHandler(SyncHandler):
         :returns: True if the event is accepted for processing, False otherwise.
         """
         if resource_type.lower() != "issue":
-            self._logger.debug("Rejecting event for a %s Jira resource" % resource_type)
+            self._logger.debug(
+                "Rejecting event for a %s Jira resource. Handler only "
+                "accepts Issue resources." % resource_type
+            )
             return False
         # Check the event payload and reject the event if we don't have what we
         # expect
         jira_issue = event.get("issue")
         if not jira_issue:
-            self._logger.debug("Rejecting event %s without an issue" % event)
+            self._logger.debug("Rejecting event without an issue: %s" % event)
             return False
 
         webhook_event = event.get("webhookEvent")
         if not webhook_event or webhook_event not in ["jira:issue_updated", "jira:issue_created"]:
             self._logger.debug(
-                "Rejecting event %s with an unsupported webhook event %s" % (event, webhook_event)
+                "Rejecting event with an unsupported webhook event '%s': %s" % (webhook_event, event)
             )
             return False
 
         changelog = event.get("changelog")
         if not changelog:
-            self._logger.debug("Rejecting event %s without a changelog" % event)
+            self._logger.debug("Rejecting event without a changelog: %s" % event)
             return False
 
         fields = jira_issue.get("fields")
         if not fields:
-            self._logger.debug("Rejecting event %s without issue fields" % event)
+            self._logger.debug("Rejecting event without issue fields: %s" % event)
             return False
 
         issue_type = fields.get("issuetype")
         if not issue_type:
-            self._logger.debug("Rejecting event %s with an unknown issue type" % event)
+            self._logger.debug("Rejecting event without an issue type: %s" % event)
             return False
         if issue_type["name"] != self._issue_type:
-            self._logger.debug("Rejecting event %s without a %s issue type" % (event, self._issue_type))
+            self._logger.debug("Rejecting event without a %s issue type: %s" % (
+                self._issue_type, 
+                event
+            ))
             return False
 
         shotgun_id = fields.get(self._jira.jira_shotgun_id_field)
         shotgun_type = fields.get(self._jira.jira_shotgun_type_field)
         if not shotgun_id or not shotgun_type:
             self._logger.debug(
-                "Rejecting event %s for %s %s not linked to a Shotgun Entity" % (
-                    event,
+                "Rejecting event for %s %s. It's not linked to a Shotgun "
+                "Entity: %s" % (
                     issue_type["name"],
                     resource_id,
+                    event,
                 )
             )
             return False
@@ -124,7 +131,7 @@ class EntityIssueHandler(SyncHandler):
                     reporter_name = jira_user.name
         else:
             self._logger.debug(
-                "Ignoring created by %s which is not a HumanUser." % created_by
+                "Ignoring created_by '%s' since it's not a HumanUser." % created_by
             )
 
         shotgun_url = self._shotgun.get_entity_page_url(sg_entity)
@@ -145,9 +152,14 @@ class EntityIssueHandler(SyncHandler):
         if properties:
             data.update(properties)
 
-        self._logger.info("Creating Jira issue for %s with %s" % (
-            sg_entity, data
-        ))
+        self._logger.info(
+            "Creating Jira Issue in Project %s for Shotgun %s '%s' (%d)" % (
+                jira_project,
+                sg_entity["type"],
+                sg_entity["name"],
+                sg_entity["id"]
+            )
+        )
 
         return self._jira.create_issue_from_data(
             jira_project,
@@ -196,7 +208,8 @@ class EntityIssueHandler(SyncHandler):
         # Bail out if we couldn't find a target Jira field
         if not jira_field:
             self._logger.debug(
-                "Don't know how to sync Shotgun %s %s field to Jira" % (
+                "Not syncing Shotgun %s.%s to Jira. No target Jira field "
+                "is defined" % (
                     shotgun_entity_type,
                     shotgun_field
                 )
@@ -209,11 +222,12 @@ class EntityIssueHandler(SyncHandler):
         # Bail out if the target Jira field is not editable
         if jira_field not in jira_fields:
             self._logger.debug(
-                "Target Jira %s %s field for Shotgun %s %s field is not editable" % (
+                "Not syncing Shotgun %s.%s to Jira. Target Jira %s %s field "
+                "is not editable" % (
+                    shotgun_entity_type,
+                    shotgun_field,
                     jira_issue.fields.issuetype,
                     jira_field,
-                    shotgun_entity_type,
-                    shotgun_field
                 )
             )
             return None, None
@@ -227,7 +241,7 @@ class EntityIssueHandler(SyncHandler):
 
         if added is not None or removed is not None:
             self._logger.debug(
-                "Dealing with list changes added %s, removed %s" % (
+                "Processing Shotgun list change: added %s, removed %s" % (
                     added,
                     removed
                 )
@@ -337,10 +351,11 @@ class EntityIssueHandler(SyncHandler):
                         current_value.remove(value)
                     else:
                         self._logger.debug(
-                            "Unable to remove %s mapped to %s from current Jira value %s" % (
-                                removed,
+                            "Unable to remove %s from current Jira value %s. "
+                            "Removed Shotgun value was %s" % (
                                 value,
                                 current_value,
+                                removed,
                             )
                         )
 
@@ -374,7 +389,7 @@ class EntityIssueHandler(SyncHandler):
                         break
                 else:
                     self._logger.debug(
-                        "Current Jira value %s unaffected by %s removal." % (
+                        "Current Jira value %s unaffected by Shotgun %s removal." % (
                             current_value,
                             shotgun_removed,
                         )
@@ -398,8 +413,10 @@ class EntityIssueHandler(SyncHandler):
                         added_count = len(shotgun_added)
                         if added_count > 1:
                             self._logger.warning(
-                                "Only a single value is accepted by Jira, got "
-                                "%d values, using %s mapped to %s" % (
+                                "Only a single value is accepted by Jira for "
+                                "field %s. Shotgun added %d values. Using %s "
+                                "translated to Jira value %s" % (
+                                    jira_field,
                                     added_count,
                                     sg_value,
                                     current_value
@@ -447,7 +464,7 @@ class EntityIssueHandler(SyncHandler):
                 return {"originalEstimate": "0 m"}
 
             self._logger.debug(
-                "Returning `None` for Jira %s field type" % jira_type
+                "Returning `None` value for Jira %s field type" % jira_type
             )
             return None
 
@@ -482,8 +499,8 @@ class EntityIssueHandler(SyncHandler):
                     if allowed_value.lower() == sg_value_name:
                         return allowed_value
             self._logger.warning(
-                "Shotgun value '%s' for Jira field %s is not in the list of "
-                "allowed values: %s." % (
+                "Shotgun value '%s' is not in the list of allowed values for "
+                "Jira field %s: %s" % (
                     shotgun_value,
                     jira_field,
                     allowed_values
@@ -500,8 +517,8 @@ class EntityIssueHandler(SyncHandler):
                     email_address = shotgun_value.get("email")
                     if not email_address:
                         self._logger.warning(
-                            "Unable to update Jira %s field from Shotgun value '%s'. "
-                            "An email address is required." % (
+                            "Jira field %s requires an email address but Shotgun "
+                            "value to sync has no email key %s" % (
                                 jira_field,
                                 shotgun_value,
                             )
@@ -554,7 +571,8 @@ class EntityIssueHandler(SyncHandler):
         jira_status = self._sg_jira_status_mapping.get(shotgun_status)
         if not jira_status:
             self._logger.warning(
-                "Unable to retrieve corresponding Jira status for %s" % shotgun_status
+                "Unable to find a matching Jira status for Shotgun "
+                "status '%s'" % shotgun_status
             )
             return False
 
@@ -637,7 +655,7 @@ class EntityIssueHandler(SyncHandler):
         shotgun_id = fields.get(self._jira.jira_shotgun_id_field)
         if not shotgun_id.isdigit():
             raise ValueError(
-                "Invalid Shotgun id %s, it should be an integer" % shotgun_id
+                "Invalid Shotgun id %s, it must be an integer" % shotgun_id
             )
         shotgun_type = fields.get(self._jira.jira_shotgun_type_field)
         # Collect the list of fields we might need to process the event
@@ -649,23 +667,23 @@ class EntityIssueHandler(SyncHandler):
         if not sg_entity:
             # Note: For the time being we don't allow Jira to create new Shotgun
             # Entities.
-            self._logger.warning("Unable to retrieve Shotgun %s (%s)" % (
+            self._logger.warning("Unable to find Shotgun %s (%s)" % (
                 shotgun_type,
                 shotgun_id
             ))
             return False
 
-        self._logger.info("Syncing %s(%s) to Shotgun %s(%d) for event %s" % (
+        # The presence of the changelog key has been validated by the accept method.
+        changes = event["changelog"]["items"]
+        shotgun_data = {}
+
+        self._logger.debug("Attempting to sync %s (%s) to Shotgun %s (%d) for event %s" % (
             issue_type["name"],
             resource_id,
             sg_entity["type"],
             sg_entity["id"],
             event
         ))
-
-        # The presence of the changelog key has been validated by the accept method.
-        changes = event["changelog"]["items"]
-        shotgun_data = {}
         for change in changes:
             # Depending on the Jira server version, we can get the Jira field id
             # in the change payload or just the field name.
@@ -674,7 +692,7 @@ class EntityIssueHandler(SyncHandler):
                 change["field"]
             )
             self._logger.debug(
-                "Treating change %s for field %s" % (
+                "Treating Jira change %s for field %s" % (
                     change, field_id
                 )
             )
@@ -687,14 +705,29 @@ class EntityIssueHandler(SyncHandler):
                 )
                 if shotgun_field:
                     shotgun_data[shotgun_field] = shotgun_value
+                    # we definitely have data to sync at this point
+                    self._logger.info(
+                        "Syncing Jira %s %s '%s' to Shotgun %s (%d) as value '%s'" % (
+                            issue_type["name"],
+                            jira_issue["key"],
+                            change["field"],
+                            sg_entity["type"],
+                            sg_entity["id"],
+                            shotgun_value
+                        )
+                    )
             except InvalidJiraValue as e:
                 self._logger.warning(
-                    "Unable to update Shotgun %s for event %s: %s" % (
-                        jira_issue,
-                        event,
+                    "Unable to sync Jira %s %s '%s' to Shotgun %s (%d): %s" % (
+                        issue_type["name"],
+                        jira_issue["key"],
+                        change["field"],
+                        sg_entity["type"],
+                        sg_entity["id"],
                         e,
                     )
                 )
+                self._logger.debug("Jira event: %s" % event)
 
         if shotgun_data:
             self._logger.debug(
@@ -734,9 +767,9 @@ class EntityIssueHandler(SyncHandler):
         :param jira_field_id: A Jira field id as a string.
         :param change: A dictionary with the field change retrieved from the
                        event change log.
-        :returns: A tuple with a Jira field id and a Jira value usable for an
-                  update. The returned field id is `None` if no valid field or
-                  value could be retrieved.
+        :returns: A tuple with a Shotgun field name and a Shotgun value usable
+                  for an update. The returned field id is `None` if no valid 
+                  field or value could be retrieved.
         :raises InvalidJiraValue: if the Jira value can't be translated
                  into a valid Shotgun value.
         :raises ValueError: if the target Shotgun field is not valid.
@@ -748,7 +781,7 @@ class EntityIssueHandler(SyncHandler):
         )
         if not shotgun_field:
             self._logger.debug(
-                "Don't know how to sync Jira field %s to Shotgun." % jira_field_id
+                "Unable to find a target Shotgun field for Jira field %s" % jira_field_id
             )
             return None, None
 
@@ -758,14 +791,19 @@ class EntityIssueHandler(SyncHandler):
             shotgun_field
         )
         if not shotgun_field_schema:
-            raise ValueError("Unknown Shotgun %s %s field" % (
+            raise ValueError("Unknown Shotgun field %s.%s" % (
                 shotgun_entity["type"], shotgun_field,
             ))
 
         if not shotgun_field_schema["editable"]["value"]:
-            self._logger.debug("Shotgun field %s.%s is not editable" % (
-                shotgun_entity["type"], shotgun_field,
-            ))
+            self._logger.debug(
+                "Unable to translate Jira field %s value to Shotgun. Target "
+                "Shotgun field %s.%s is not editable" % (
+                    jira_field_id,
+                    shotgun_entity["type"], 
+                    shotgun_field,
+                )
+            )
             return None, None
 
         # Special cases for some fields where we need to perform some dedicated
@@ -853,7 +891,8 @@ class EntityIssueHandler(SyncHandler):
         sg_valid_types = shotgun_field_schema["properties"]["valid_types"]["value"]
         if "HumanUser" not in sg_valid_types:
             raise ValueError(
-                "Shotgun %s.%s assignment field must accept HumanUser but only accepts %s" % (
+                "Shotgun %s.%s assignment field must accept HumanUser entities "
+                "but only accepts %s" % (
                     shotgun_entity["type"],
                     shotgun_field,
                     sg_valid_types
@@ -873,7 +912,7 @@ class EntityIssueHandler(SyncHandler):
                 )
                 if not sg_user:
                     self._logger.debug(
-                        "Unable to retrieve a Shotgun user with email address %s" % (
+                        "Unable to find a Shotgun user with email address %s" % (
                             jira_user.emailAddress
                         )
                     )
@@ -904,7 +943,7 @@ class EntityIssueHandler(SyncHandler):
                     raise InvalidJiraValue(
                         shotgun_field,
                         jira_user,
-                        "Unable to retrieve a Shotgun user with email address %s" % (
+                        "Unable to find a Shotgun user with email address %s" % (
                             jira_user["emailAddress"]
                         )
                     )
@@ -929,7 +968,7 @@ class EntityIssueHandler(SyncHandler):
                 )
                 if not sg_user:
                     self._logger.debug(
-                        "Unable to retrieve a Shotgun user with email address %s" % (
+                        "Unable to find a Shotgun user with email address %s" % (
                             jira_user.emailAddress
                         )
                     )
@@ -957,7 +996,7 @@ class EntityIssueHandler(SyncHandler):
                     raise InvalidJiraValue(
                         shotgun_field,
                         jira_user,
-                        "Unable to retrieve a Shotgun user with email address %s" % (
+                        "Unable to find a Shotgun user with email address %s" % (
                             jira_user["emailAddress"]
                         )
                     )

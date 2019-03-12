@@ -50,7 +50,10 @@ class JiraSession(jira.client.JIRA):
                         e.status_code,
                     )
                 )
-            raise RuntimeError("Unable to connect to %s" % jira_site)
+            raise RuntimeError(
+                "Unable to connect to %s. See the log for details." % jira_site
+            )
+        logger.info("Connected to %s." % jira_site)
 
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
@@ -139,8 +142,8 @@ class JiraSession(jira.client.JIRA):
             has_default = jira_field_schema.get("hasDefaultValue")
             if not has_default:
                 raise UserWarning(
-                    "Invalid value %s: Field %s requires a value and does not "
-                    "provide a default value" % (
+                    "Invalid value %s: Jira field %s requires a value and does"
+                    "not provide a default value" % (
                         jira_value,
                         jira_field_schema["name"]
                     )
@@ -165,7 +168,7 @@ class JiraSession(jira.client.JIRA):
                     jira_value = jira_value[:(255 - len(message))] + message
 
         logger.debug(
-            "Sanitized value for %s is %s" % (
+            "Sanitized Jira value for %s is %s" % (
                 jira_field_schema["name"],
                 jira_value,
             )
@@ -230,7 +233,8 @@ class JiraSession(jira.client.JIRA):
     def find_jira_user(self, user_email, jira_project=None, jira_issue=None, for_assignment=False):
         """
         Return a Jira an assignable user or with browse permission for the given
-        Project or Issue, with the given email address.
+        Project or Issue, with the given email address. Either a jira_project 
+        or jira_issue must be provided.
 
         .. note:: Due to problems with user searching in Jira, this method always
                   returns assignable users for the time being.
@@ -292,7 +296,7 @@ class JiraSession(jira.client.JIRA):
                     "Found multiple assignable Jira users with email address %s. "
                     "Using the first one: %s" % (
                         user_email,
-                        jira_users
+                        ["%s (%s)" % (ju.emailAddress, ju.accountId) for ju in jira_users]
                     )
                 )
             logger.debug("Found Jira Assignee %s" % jira_assignee)
@@ -305,7 +309,7 @@ class JiraSession(jira.client.JIRA):
         )
         uemail = user_email.lower()
         start_idx = 0
-        logger.debug("Querying assignable users starting at #%d" % start_idx)
+        logger.debug("Querying all assignable users starting at #%d" % start_idx)
         jira_users = search_method(
             None,
             project=jira_project,
@@ -323,7 +327,7 @@ class JiraSession(jira.client.JIRA):
             else:
                 start_idx += len(jira_users)
                 logger.debug(
-                    "Querying assignable users starting at #%d" % start_idx
+                    "Querying all assignable users starting at #%d" % start_idx
                 )
                 jira_users = search_method(
                     None,
@@ -337,14 +341,14 @@ class JiraSession(jira.client.JIRA):
         if not jira_assignee:
             if jira_issue:
                 logger.warning(
-                    "Unable to retrieve a Jira user with email %s for Issue %s" % (
+                    "Unable to find a Jira user with email %s for Issue %s" % (
                         user_email,
                         jira_issue,
                     )
                 )
             else:
                 logger.warning(
-                    "Unable to retrieve a Jira user with email %s for Project %s" % (
+                    "Unable to find a Jira user with email %s for Project %s" % (
                         user_email,
                         jira_project,
                     )
@@ -367,7 +371,7 @@ class JiraSession(jira.client.JIRA):
         """
 
         if jira_issue.fields.status.name == jira_status_name:
-            logger.debug("Jira issue %s is already '%s'" % (
+            logger.debug("Jira issue %s status is already '%s'" % (
                 jira_issue, jira_status_name
             ))
             return True
@@ -381,10 +385,10 @@ class JiraSession(jira.client.JIRA):
         for tra in jira_transitions:
             # Match a transition with the expected status name
             if tra["to"]["name"] == jira_status_name:
-                logger.info(
-                    "Found transition to %s for %s: %s" % (
-                        jira_status_name,
+                logger.debug(
+                    "Found transition for Jira Issue %s to %s: %s" % (
                         jira_issue,
+                        jira_status_name,
                         tra,
                     )
                 )
@@ -415,7 +419,7 @@ class JiraSession(jira.client.JIRA):
                             # allowed value.
                             if details["schema"]["type"] == "resolution":
                                 fields[field_name] = details["allowedValues"][0]
-                                logger.info(
+                                logger.debug(
                                     "Setting resolution to first allowedValue: %s" %
                                     details["allowedValues"][0]
                                 )
@@ -436,8 +440,8 @@ class JiraSession(jira.client.JIRA):
                 if fields:
                     params["fields"] = fields
 
-                logger.info("Transitioning Issue %s to %s. Params: %s" % (
-                    jira_issue,
+                logger.info("Transitioning Issue %s to '%s' with params: %s" % (
+                    jira_issue.key,
                     tra["name"],
                     params
                 ))
@@ -449,7 +453,10 @@ class JiraSession(jira.client.JIRA):
                 return True
 
         logger.warning(
-            "Couldn't find any Jira transition with %s as target" % jira_status_name
+            "Couldn't find a Jira transition with %s as target for Issue %s" % (
+                jira_status_name,
+                jira_issue.key
+            )
         )
         logger.debug("Available transitions are %s" % jira_transitions)
         return False
@@ -487,7 +494,11 @@ class JiraSession(jira.client.JIRA):
         # We asked for a single project / single issue type, so we can just pick
         # the first entry, if it exists.
         if not create_meta_data["projects"] or not create_meta_data["projects"][0]["issuetypes"]:
-            logger.debug("Create meta data: %s" % create_meta_data)
+            logger.debug("Create meta data for Project %s Issue type %s: %s" % (
+                jira_project,
+                jira_issue_type.id,
+                create_meta_data
+            ))
             raise RuntimeError(
                 "Unable to retrieve create meta data for Project %s Issue type %s."  % (
                     jira_project,
@@ -509,7 +520,7 @@ class JiraSession(jira.client.JIRA):
                     missing.append(jira_create_field["name"])
         if missing:
             raise ValueError(
-                "The following data is missing in order to create a Jira %s Issue: %s" % (
+                "Unable to create Jira %s Issue. The following required data is missing: %s" % (
                     data["issuetype"]["name"],
                     missing,
                 )
@@ -522,7 +533,8 @@ class JiraSession(jira.client.JIRA):
             # Filter out anything which can't be used in creation.
             if k not in fields_createmeta:
                 logger.warning(
-                    "Disabling %s in issue creation which can't be set in Jira" % k
+                    "Jira field %s cannot be set when creating an Issue. Removing it "
+                    "from the request." % k
                 )
                 del data[k]
             elif not data[k] and fields_createmeta[k]["required"]:
@@ -532,8 +544,8 @@ class JiraSession(jira.client.JIRA):
                     # order for Jira to properly set the default. Jira will complain if we leave it
                     # in.
                     logger.info(
-                        "Removing %s from data payload since it has an empty value. Jira will "
-                        "now set a default value." % k
+                        "Removing Jira field %s with an empty value from data payload so "
+                        "Jira will set the default value." % k
                     )
                     del data[k]
                 else:
@@ -542,7 +554,7 @@ class JiraSession(jira.client.JIRA):
                     invalid_fields.append(k)
         if invalid_fields:
             raise ValueError(
-                "Unable to create Jira Issue: The following fields are required and cannot "
+                "Unable to create Jira Issue. The following fields are required and cannot "
                 "be empty: %s" % invalid_fields
             )
 

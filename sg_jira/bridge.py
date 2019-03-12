@@ -10,6 +10,7 @@ import imp
 import logging
 import logging.config
 import importlib
+import urllib
 
 from .shotgun_session import ShotgunSession
 from .jira_session import JiraSession
@@ -71,7 +72,6 @@ class Bridge(object):
                 jira_secret
             ),
         )
-        logger.info("Connected to %s." % jira_site)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
         self._jira.setup()
@@ -85,8 +85,11 @@ class Bridge(object):
         :param str settings_file: Path to a settings Python file.
         :raises ValueError: on missing required settings.
         """
+        # make sure we have an absolute path
+        settings_file_path = os.path.abspath(settings_file)
+
         # Read settings
-        settings = cls.read_settings(settings_file)
+        settings = cls.read_settings(settings_file_path)
 
         # Set logging from settings
         logger_settings = settings[LOGGING_SETTINGS_KEY]
@@ -96,33 +99,33 @@ class Bridge(object):
         # Retrieve Shotgun connection settings
         shotgun_settings = settings[SHOTGUN_SETTINGS_KEY]
         if not shotgun_settings:
-            raise ValueError("Missing Shotgun settings in %s" % settings_file)
+            raise ValueError("Missing Shotgun settings in %s" % settings_file_path)
         missing = [
             name for name in ["site", "script_name", "script_key"] if not shotgun_settings.get(name)
         ]
         if missing:
             raise ValueError(
-                "Missing Shotgun setting values %s in %s" % (missing, settings_file)
+                "Missing Shotgun setting values %s in %s" % (missing, settings_file_path)
             )
 
         # Retrieve Jira connection settings
         jira_settings = settings[JIRA_SETTINGS_KEY]
         if not jira_settings:
-            raise ValueError("Missing Jira settings in %s" % settings_file)
+            raise ValueError("Missing Jira settings in %s" % settings_file_path)
 
         missing = [
             name for name in ["site", "user", "secret"] if not jira_settings.get(name)
         ]
         if missing:
             raise ValueError(
-                "Missing Jira setting values %s in %s" % (missing, settings_file)
+                "Missing Jira setting values %s in %s" % (missing, settings_file_path)
             )
 
         sync_settings = settings[SYNC_SETTINGS_KEY]
         if not sync_settings:
-            raise ValueError("Missing sync settings in %s" % settings_file)
+            raise ValueError("Missing sync settings in %s" % settings_file_path)
 
-        logger.info("Successfully read settings from %s" % settings_file)
+        logger.info("Successfully read settings from %s" % settings_file_path)
         try:
             return cls(
                 shotgun_settings["site"],
@@ -201,9 +204,15 @@ class Bridge(object):
         """
         Return the username of the current Jira user.
 
+        The jira API escapes special characters using %xx syntax when storing 
+        the username. For example, the username ``richard+hendricks`` is stored
+        as ``richard%2bhendricks`` by the jira API. We decode the username here
+        before returning it to ensure we return the exact value (eg. 
+        ``richard+hendricks``)
+
         :returns: A string with the username.
         """
-        return self.jira.current_user()
+        return urllib.unquote_plus(self.jira.current_user())
 
     @property
     def jira(self):

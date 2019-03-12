@@ -125,7 +125,10 @@ class AssetIssueHandler(EntityIssueHandler):
         jira_issue = self.get_jira_issue(jira_issue_key)
         if not jira_issue:
             self._logger.warning(
-                "Unable to retrieve a %s Issue" % jira_issue_key
+                "Unable to find Jira Issue %s for Shotgun Asset %s" % (
+                    jira_issue_key,
+                    shotgun_asset
+                )
             )
             # Better to stop processing.
             return False
@@ -150,8 +153,9 @@ class AssetIssueHandler(EntityIssueHandler):
             )
         except InvalidShotgunValue as e:
             self._logger.warning(
-                "Unable to update Jira %s for event %s: %s" % (
-                    jira_issue,
+                "Unable to update Jira %s %s for event %s: %s" % (
+                    jira_issue.fields.issuetype.name,
+                    jira_issue.key,
                     event_meta,
                     e,
                 )
@@ -222,7 +226,10 @@ class AssetIssueHandler(EntityIssueHandler):
             jira_issue = self.get_jira_issue(jira_issue_key)
             if not jira_issue:
                 self._logger.warning(
-                    "Unable to retrieve a %s Issue" % jira_issue_key
+                    "Unable to find Jira Issue %s for Shotgun Asset %s" % (
+                        jira_issue_key,
+                        shotgun_asset
+                    )
                 )
                 # Better to stop processing.
                 return False
@@ -246,20 +253,20 @@ class AssetIssueHandler(EntityIssueHandler):
                     sg_task[SHOTGUN_JIRA_ID_FIELD]
                 )
                 if issue_link:
-                    self._logger.debug("Found a link between %s and %s to delete" % (
+                    self._logger.debug("Found a Jira link between %s and %s to delete" % (
                         jira_issue.key,
                         sg_task[SHOTGUN_JIRA_ID_FIELD]
                     ))
                     to_delete.append(issue_link)
                 else:
-                    self._logger.debug("Didn't a find link between %s and %s to delete" % (
+                    self._logger.debug("Didn't find a Jira link between %s and %s to delete" % (
                         jira_issue.key,
                         sg_task[SHOTGUN_JIRA_ID_FIELD]
                     ))
 
             # Delete the links, if any
             for issue_link in to_delete:
-                self._logger.info("Deleting link %s" % (
+                self._logger.info("Deleting Jira link %s" % (
                     issue_link
                 ))
                 self._jira.delete_issue_link(issue_link.id)
@@ -284,7 +291,7 @@ class AssetIssueHandler(EntityIssueHandler):
                 jira_project_key = shotgun_asset["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
                 if not jira_project_key:
                     self._logger.debug(
-                        "Skipping tasks change event for %s(%d) for Project %s "
+                        "Skipping tasks change event for %s (%d) for Project %s "
                         "not linked to a Jira Project" % (
                             shotgun_asset["type"],
                             shotgun_asset["id"],
@@ -296,7 +303,7 @@ class AssetIssueHandler(EntityIssueHandler):
                 jira_project = self.get_jira_project(jira_project_key)
                 if not jira_project:
                     self._logger.warning(
-                        "Unable to retrieve a Jira Project %s for Shotgun Project %s" % (
+                        "Unable to find Jira Project %s for Shotgun Project %s." % (
                             jira_project_key,
                             shotgun_asset["project"],
                         )
@@ -328,7 +335,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
                 if not issue_link:
                     self._logger.info(
-                        "Linking %s to %s" % (
+                        "Linking Jira Issue %s to %s" % (
                             jira_issue.key,
                             sg_task[SHOTGUN_JIRA_ID_FIELD]
                         )
@@ -350,7 +357,7 @@ class AssetIssueHandler(EntityIssueHandler):
                     updated = True
                 else:
                     self._logger.debug(
-                        "%s is already linked to %s" % (
+                        "Jira Issue %s is already linked to %s" % (
                             jira_issue.key,
                             sg_task[SHOTGUN_JIRA_ID_FIELD]
                         )
@@ -406,17 +413,21 @@ class AssetIssueHandler(EntityIssueHandler):
                     issue_data[jira_field] = jira_value
             except InvalidShotgunValue as e:
                 self._logger.warning(
-                    "Unable to update Jira %s %s field from Shotgun value %s" % (
-                        jira_issue,
+                    "Unable to update Jira %s %s %s field from Shotgun value %s: %s" % (
+                        jira_issue.fields.issuetype.name,
+                        jira_issue.key,
                         jira_field,
                         shotgun_value,
+                        e
                     )
                 )
                 self._logger.debug("%s" % e, exc_info=True)
         if issue_data:
-            self._logger.debug("Updating Jira %s with %s" % (
+            self._logger.debug("Updating Jira %s %s with %s. Currently: %s" % (
+                jira_issue.fields.issuetype.name,
+                jira_issue.key,
+                issue_data,
                 jira_issue,
-                issue_data
             ))
             jira_issue.update(fields=issue_data)
 
@@ -488,8 +499,8 @@ class AssetIssueHandler(EntityIssueHandler):
 
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting event %s with unsupported field %s." % (
-                    event, field
+                "Rejecting event with unsupported field %s: %s" % (
+                    field, event
                 )
             )
             return False
@@ -527,10 +538,12 @@ class AssetIssueHandler(EntityIssueHandler):
             fields=asset_fields
         )
         if not sg_entity:
-            self._logger.warning("Unable to retrieve a %s with id %d" % (
-                entity_type,
-                entity_id
-            ))
+            self._logger.warning(
+                "Unable to find Shotgun %s (%s)." % (
+                    entity_type,
+                    entity_id
+                )
+            )
             return False
 
         # Update existing synced Issue (if any) Issue dependencies
