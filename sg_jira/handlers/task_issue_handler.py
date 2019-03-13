@@ -116,8 +116,8 @@ class TaskIssueHandler(EntityIssueHandler):
 
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting event %s with unsupported field %s." % (
-                    event, field
+                "Rejecting Shotgun event for unsupported field %s: %s" % (
+                    field, event
                 )
             )
             return False
@@ -150,16 +150,18 @@ class TaskIssueHandler(EntityIssueHandler):
             fields=task_fields
         )
         if not sg_entity:
-            self._logger.warning("Unable to retrieve a %s with id %d" % (
-                entity_type,
-                entity_id
-            ))
+            self._logger.warning(
+                "Unable to find Shotgun %s (%s)" % (
+                    entity_type,
+                    entity_id
+                )
+            )
             return False
 
         # Explicit sync: check if the "Sync in Jira" checkbox is on.
         if not sg_entity[SHOTGUN_SYNC_IN_JIRA_FIELD]:
             self._logger.debug(
-                "Not syncing %s which has 'Sync in Jira' off" % sg_entity,
+                "Not syncing Shotgun entity %s. 'Sync in Jira' is off" % sg_entity,
             )
             return False
 
@@ -167,19 +169,19 @@ class TaskIssueHandler(EntityIssueHandler):
         jira_project_key = sg_entity["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
         if not jira_project_key:
             self._logger.debug(
-                "Skipping event %s for %s(%d) for Project %s "
-                "not linked to a Jira Project" % (
-                    event,
+                "Skipping Shotgun event for %s (%d). Entity's Project %s "
+                "is not linked to a Jira Project. Event: %s" % (
                     entity_type,
                     entity_id,
                     sg_entity["project"],
+                    event,
                 )
             )
             return False
         jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
             self._logger.warning(
-                "Unable to retrieve a Jira Project %s for Shotgun Project %s" % (
+                "Unable to find a Jira Project %s for Shotgun Project %s" % (
                     jira_project_key,
                     sg_entity["project"],
                 )
@@ -196,7 +198,7 @@ class TaskIssueHandler(EntityIssueHandler):
                 # recreating it. So we play safe until we correctly handle the
                 # deleted case.
                 self._logger.warning(
-                    "Unable to retrieve a Jira Issue %s for Shotgun Task %s" % (
+                    "Unable to find a Jira Issue %s for Shotgun Task %s" % (
                         sg_entity[SHOTGUN_JIRA_ID_FIELD],
                         sg_entity,
                     )
@@ -205,10 +207,6 @@ class TaskIssueHandler(EntityIssueHandler):
 
         # Create it if needed
         if not jira_issue:
-            self._logger.info("Creating Jira Issue in %s for %s" % (
-                jira_project,
-                sg_entity,
-            ))
             jira_issue = self._create_jira_issue_for_entity(
                 sg_entity,
                 jira_project,
@@ -243,12 +241,14 @@ class TaskIssueHandler(EntityIssueHandler):
             return True
 
         # Otherwise, handle the attribute change
-        self._logger.debug("Syncing in Jira %s(%d) to %s for event %s." % (
+        self._logger.info("Syncing Shotgun %s.%s (%d) to Jira %s %s" % (
             entity_type,
+            sg_field,
             entity_id,
-            jira_issue,
-            event
+            jira_issue.fields.issuetype.name,
+            jira_issue.key
         ))
+        self._logger.debug("Shotgun event: %s" % event)
 
         try:
             # Note: the returned jira_field will be None for the special cases handled
@@ -264,9 +264,9 @@ class TaskIssueHandler(EntityIssueHandler):
             )
         except InvalidShotgunValue as e:
             self._logger.warning(
-                "Unable to update Jira %s for event %s: %s" % (
-                    jira_issue,
-                    event,
+                "Unable to update Jira %s %s: %s" % (
+                    jira_issue.fields.issuetype.name,
+                    jira_issue.key,
                     e,
                 )
             )
@@ -274,10 +274,10 @@ class TaskIssueHandler(EntityIssueHandler):
             return False
 
         if jira_field:
-            self._logger.debug("Updating Jira %s with %s: %s" % (
-                jira_issue,
+            self._logger.debug("Updating %s to %s in Jira for %s" % (
                 jira_field,
-                jira_value
+                jira_value,
+                jira_issue
             ))
             jira_issue.update(fields={jira_field: jira_value})
             return True
@@ -288,7 +288,7 @@ class TaskIssueHandler(EntityIssueHandler):
             return self._sync_shotgun_status_to_jira(
                 jira_issue,
                 shotgun_status,
-                "Updated from Shotgun %s(%d) moving to %s" % (
+                "Updated from Shotgun %s (%d) moving to %s" % (
                     entity_type,
                     entity_id,
                     shotgun_status
@@ -375,10 +375,11 @@ class TaskIssueHandler(EntityIssueHandler):
                     issue_data[jira_field] = jira_value
             except InvalidShotgunValue as e:
                 self._logger.warning(
-                    "Unable to update Jira %s %s field from Shotgun value %s" % (
-                        jira_issue,
-                        jira_field,
+                    "Unable to update Jira %s %s field from Shotgun value %s: %s" % (
+                        jira_issue.fields.issuetype.name,
+                        jira_issue.key,
                         shotgun_value,
+                        e
                     )
                 )
                 self._logger.debug("%s" % e, exc_info=True)

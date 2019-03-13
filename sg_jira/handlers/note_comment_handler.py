@@ -101,7 +101,7 @@ class NoteCommentHandler(SyncHandler):
             )
         subject = result.group(1).strip()
         # if we have any { or } in the title reject the value as it is likely
-        # to be an ill formed panel block.
+        # to be an ill-formed panel block.
         if re.search(r"[\{\}]", subject):
             raise InvalidJiraValue(
                 "content",
@@ -151,11 +151,11 @@ class NoteCommentHandler(SyncHandler):
         # multiple handlers accept the same event: this allows the logic of processing
         # to be easily controllable and understandable.
         # However, there are cases where we want to re-use the processing logic.
-        # For example, when the sync in jira checkbox is turned on, we want to
+        # For example, when the Sync In Jira checkbox is turned on, we want to
         # sync the task, and then its notes.
         # This processing logic is already available in the `TaskIssueHandler`
         # and the `NoteCommentHandler`. So the `EnableSyncingHandler` accepts
-        # the event, and then call `TaskIssueHandler.process_shotgun_event` and,
+        # the event, and then calls `TaskIssueHandler.process_shotgun_event` and,
         # only if this was successful, `NoteCommentHandler.process_shotgun_event`.
 
         # We only accept Note
@@ -165,8 +165,8 @@ class NoteCommentHandler(SyncHandler):
         field = meta["attribute_name"]
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting event %s with unsupported field %s." % (
-                    event, field
+                "Rejecting Shotgun event for unsupported field %s: %s" % (
+                    field, event
                 )
             )
             return False
@@ -197,7 +197,7 @@ class NoteCommentHandler(SyncHandler):
         parts = shotgun_note[SHOTGUN_JIRA_ID_FIELD].split("/")
         if len(parts) != 2 or not parts[0] or not parts[1]:
             raise ValueError(
-                "Invalid Jira comment id %s, it must be "
+                "Invalid Jira comment id %s, it must be in the format "
                 "'<jira issue key>/<jira comment id>'" % (
                     shotgun_note[SHOTGUN_JIRA_ID_FIELD]
                 )
@@ -231,10 +231,12 @@ class NoteCommentHandler(SyncHandler):
             fields=self._shotgun_note_fields
         )
         if not sg_entity:
-            self._logger.warning("Unable to retrieve a %s with id %d" % (
-                entity_type,
-                entity_id
-            ))
+            self._logger.warning(
+                "Unable to find Shotgun %s (%s)" % (
+                    entity_type,
+                    entity_id
+                )
+            )
             return False
 
         meta = event["meta"]
@@ -272,8 +274,9 @@ class NoteCommentHandler(SyncHandler):
                 ],
             ):
                 self._logger.debug(
-                    "Not updating Jira Issue %s comment %s from Shotgun Note %s "
-                    "not linked to a Task actively updating the Issue." % (
+                    "Not updating Jira Issue %s comment %s from Shotgun Note %s."
+                    "Note is not linked to a synced Task that currently has "
+                    "syncing enabled" % (
                         jira_issue_key,
                         jira_comment_id,
                         shotgun_note
@@ -286,9 +289,11 @@ class NoteCommentHandler(SyncHandler):
                 jira_comment_id
             )
             if jira_comment:
-                self._logger.debug(
-                    "Updating comment %s attached to Jira Issue %s" % (
-                        jira_comment, jira_issue_key
+                self._logger.info(
+                    "Shotgun Note (%d) updated. Syncing to Jira Issue %s Comment %s" % (
+                        shotgun_note["id"],
+                        jira_issue_key,
+                        jira_comment, 
                     )
                 )
                 jira_comment.update(
@@ -317,7 +322,7 @@ class NoteCommentHandler(SyncHandler):
         if jira_issue_key and removed:
             # Check if we should delete the comment because it was attached to
             # a synced Task which has been removed.
-            # Retrieve a task with the given Issue key
+            # Retrieve a Task with the given Issue key
             sg_tasks = self._shotgun.find(
                 "Task", [
                     ["id", "in", [x["id"] for x in removed]],
@@ -330,17 +335,20 @@ class NoteCommentHandler(SyncHandler):
                 if len(sg_tasks) > 1:
                     # Issue a warning about a potential problem
                     self._logger.warning(
-                        "Multiple Shotgun Tasks seem to linked to the same "
-                        "Jira Issue: %s." % sg_tasks
+                        "Multiple Shotgun Tasks are linked to the same Jira"
+                        "Issue: %s." % sg_tasks
                     )
                 jira_comment = self._get_jira_issue_comment(
                     jira_issue_key,
                     jira_comment_id
                 )
                 if jira_comment:
-                    self._logger.debug(
-                        "Deleting comment %s attached to Jira Issue %s" % (
-                            jira_comment, jira_issue_key
+                    self._logger.info(
+                        "Shotgun Note (%d) removed from synced Task. Deleting synced "
+                        "Jira Issue %s Comment (%s)" % (
+                            shotgun_note["id"],
+                            jira_issue_key,
+                            jira_comment_id, 
                         )
                     )
                     jira_comment.delete()
@@ -362,9 +370,9 @@ class NoteCommentHandler(SyncHandler):
             )
             if len(sg_tasks) > 1:
                 self._logger.warning(
-                    "Found multiple Tasks %s linked to a Jira Issue for Note %s, "
-                    "only one will be updated" % (
-                        sg_tasks, shotgun_note,
+                    "Multiple Shotgun Tasks are linked to the same Jira Issue "
+                    "for Note %s, only one will be updated. SG Tasks: %s" % (
+                        shotgun_note, sg_tasks
                     )
                 )
             for sg_task in sg_tasks:
@@ -372,17 +380,17 @@ class NoteCommentHandler(SyncHandler):
                 jira_issue = self.get_jira_issue(sg_task[SHOTGUN_JIRA_ID_FIELD])
                 if not jira_issue:
                     self._logger.warning(
-                        "Unable to retrieve the Jira Issue %s for Note %s" % (
+                        "Unable to find Jira Issue %s for Note %s" % (
                             sg_task[SHOTGUN_JIRA_ID_FIELD],
                             shotgun_note,
                         )
                     )
                     continue
                 # Add the Note as a comment to the Issue
-                self._logger.debug(
-                    "Adding Note %s as a Jira comment for %s" % (
-                        shotgun_note,
-                        jira_issue,
+                self._logger.info(
+                    "Shotgun Note (%d) added. Adding as a comment on Jira Issue %s" % (
+                        shotgun_note["id"],
+                        jira_issue.key
                     )
                 )
                 jira_comment = self._jira.add_comment(
@@ -401,9 +409,9 @@ class NoteCommentHandler(SyncHandler):
         if jira_issue_key and jira_comment_id:
             comment_key = "%s/%s" % (jira_issue_key, jira_comment_id)
         if comment_key != shotgun_note[SHOTGUN_JIRA_ID_FIELD]:
-            self._logger.debug(
-                "Updating %s with Jira comment key %s" % (
-                    shotgun_note,
+            self._logger.info(
+                "Updating Shotgun Note (%d) with Jira comment key %s" % (
+                    shotgun_note["id"],
                     comment_key,
                 )
             )
@@ -436,30 +444,34 @@ class NoteCommentHandler(SyncHandler):
         :returns: True if the event is accepted for processing, False otherwise.
         """
         if resource_type.lower() != "issue":
-            self._logger.debug("Rejecting event for a %s Jira resource" % resource_type)
+            self._logger.debug(
+                "Rejecting event for a %s Jira resource. Handler only "
+                "accepts Issue resources." % resource_type
+            )
             return False
         # Check the event payload and reject the event if we don't have what we
         # expect
         jira_issue = event.get("issue")
         if not jira_issue:
-            self._logger.debug("Rejecting event %s without an issue" % event)
+            self._logger.debug("Rejecting event without an issue: %s" % event)
             return False
         
         jira_comment = event.get("comment")
         if not jira_comment:
-            self._logger.debug("Rejecting event %s without a comment" % event)
+            self._logger.debug("Rejecting event without a comment: %s" % event)
             return False
 
         webhook_event = event.get("webhookEvent")
         if not webhook_event:
-            self._logger.debug("Rejecting event %s without a webhook event" % event)
+            self._logger.debug("Rejecting event without a webhookEvent: %s" % event)
             return False
             
         if webhook_event != "comment_updated":
             self._logger.debug(
-                "Rejecting event %s with unsupported webhook event %s" % (
-                    event, 
-                    webhook_event
+                "Rejecting event with unsupported webhookEvent %s. Handler only "
+                "accepts comment_updated events: %s" % (
+                    webhook_event,
+                    event
                 )
             )
             return False
@@ -521,13 +533,15 @@ class NoteCommentHandler(SyncHandler):
         # TODO: Check that the Task the Note is linked to has syncing enabled.
         #       Otherwise syncing could be turned off for the Task but this 
         #       will still sync the Note.
-        self._logger.info("Syncing %s %s Comment to Shotgun Note %d (jira_key:%s) for event %s" % (
-            resource_type,
-            resource_id,
-            sg_notes[0]["id"],
-            sg_jira_key,
-            event
-        ))
+        self._logger.info(
+            "Jira %s %s Comment %s updated. Syncing to Shotgun Note (%d)" % (
+                resource_type,
+                resource_id,
+                jira_comment["id"],
+                sg_notes[0]["id"],
+            )
+        )
+        self._logger.debug("Jira event: %s" % event)
 
         sg_data = {}
         try:
@@ -545,7 +559,7 @@ class NoteCommentHandler(SyncHandler):
             return False                
 
         self._logger.debug(
-            "Updating Shotgun Note %d (jira_key:%s): %s" % (
+            "Updating Shotgun Note %d (jira_key:%s) with data: %s" % (
                 sg_notes[0]["id"],
                 sg_jira_key,
                 sg_data

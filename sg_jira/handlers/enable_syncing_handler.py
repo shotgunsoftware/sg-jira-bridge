@@ -87,9 +87,9 @@ class EnableSyncingHandler(SyncHandler):
         # Run the primary handler, stop processing if the primary handler
         # didn't perform anything.
         self._logger.debug(
-            "Dispatching event %s to primary handler %s" % (
-                event,
-                self._primary_handler
+            "Dispatching event to primary handler %s. Event: %s" % (
+                self._primary_handler,
+                event
             )
         )
         if not self._primary_handler.process_shotgun_event(
@@ -102,9 +102,9 @@ class EnableSyncingHandler(SyncHandler):
         # Run all the secondary handlers
         for handler in self._secondary_handlers:
             self._logger.debug(
-                "Dispatching event %s to secondary handler %s" % (
-                    event,
-                    handler
+                "Dispatching event to secondary handler %s. Event: %s" % (
+                    handler,
+                    event
                 )
             )
             handler.process_shotgun_event(

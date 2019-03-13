@@ -229,7 +229,7 @@ class ShotgunSession(object):
             )
             if not consolidated:
                 logger.warning(
-                    "Unable to retrieve %s %d in Shotgun." % (
+                    "Unable to find %s (%d) in Shotgun" % (
                         shotgun_entity["type"],
                         shotgun_entity["id"],
                     )
