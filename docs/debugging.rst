@@ -18,46 +18,58 @@ a good amount of detail to audit what is happening with each request.
 
 ::
 
-    # Define logging
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        # Settings for the parent of all loggers
-        "root": {
-            # Set default logging level for all loggers and add the console and
-            # file handlers
-            "level": "DEBUG",
-            "handlers": [
-                "console", "file"
-            ],
+# Define logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    # Settings for the parent of all loggers
+    "root": {
+        # Set default logging level for all loggers and add the console and
+        # file handlers
+        "level": "DEBUG",
+        "handlers": [
+            "console", "file"
+        ],
+    },
+    "loggers": {
+        # Set web server level to WARNING so we don't hear about every request
+        # If you want to see the requests in the logs, set this to INFO.
+        "webapp": {
+            "level": "WARNING"
+        }
+    },
+    # Some formatters, mainly as examples
+    "formatters": {
+        "verbose": {
+            "format": "%(asctime)s %(levelname)s [%(module)s %(process)d %(thread)d] %(message)s"
         },
-        # Some formatters, mainly as examples
-        "formatters": {
-            "verbose": {
-                "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
-            },
-            "simple": {
-                "format": "%(levelname)s:%(name)s:%(message)s"
-            },
+        "standard": {
+            "format": "%(asctime)s %(levelname)s [%(module)s] %(message)s"
         },
-        # Define the logging handlers
-        "handlers": {
-            # Print out any message to stdout
-            "console": {
-                "level": "DEBUG",
-                "class": "logging.StreamHandler",
-                "formatter": "simple"
-            },
-            "file": {
-                "level": "INFO",
-                "class": "logging.handlers.RotatingFileHandler",
-                "formatter": "simple",
-                "filename": "/tmp/sg_jira.log",
-                "maxBytes": 1024 * 1024,
-                "backupCount": 5
-            },
+        "simple": {
+            "format": "%(levelname)s:%(name)s:%(message)s"
         },
-    }
+    },
+    # Define the logging handlers
+    "handlers": {
+        # Print out any message to stdout
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "standard"
+        },
+        "file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            # this location should be updated to where you store logs
+            "filename": "/tmp/sg_jira.log",
+            "maxBytes": 1024 * 1024,
+            "backupCount": 5
+        },
+    },
+}
+
 
 Testing on a Machine Not Accessible to Jira
 ===========================================
