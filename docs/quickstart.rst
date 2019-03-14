@@ -186,11 +186,11 @@ Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed i
     $ venv/Scripts/activate
 
     # Install required packages
-    pip install requests https://github.com/shotgunsoftware/python-api/archive/v3.0.38.zip
+    pip install requests https://github.com/shotgunsoftware/python-api/archive/v3.0.39.zip
 
 Enable the SG Jira Trigger
 --------------------------
-Add the path to the SG Jira Bridge ``sg_jira_event_trigger.py`` file to the the
+Add the path to the SG Jira Bridge ``sg_jira_event_trigger.py`` file to the
 shotgunEvents conf file::
 
     ...
@@ -199,7 +199,7 @@ shotgunEvents conf file::
 
     # A comma delimited list of paths where the framework should look for plugins to
     # load.
-    paths: /path/to/sg_jira_bridge/sg_events_triggers, /path/to/your/other/shotgun/plugins
+    paths: /path/to/sg_jira_bridge/triggers, /path/to/any/other/shotgun/plugins
     ...
 
 Authentication

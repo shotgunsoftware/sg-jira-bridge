@@ -43,6 +43,7 @@ def registerCallbacks(reg):
         process_event,
         event_filter,
         dispatch_routes,
+        stopOnError=False
     )
 
     # Set the logging level for this particular plugin. Let debug and above

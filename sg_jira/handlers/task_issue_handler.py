@@ -50,12 +50,12 @@ class TaskIssueHandler(EntityIssueHandler):
         Jira Issue status names.
         """
         return {
+            "wtg": "To Do",
+            "rdy": "Open",
             "ip": "In Progress",
             "fin": "Done",
-            "res": "Done",
-            "rdy": "Selected for Development",  # Used to be "To Do" ?
-            "wtg": "Selected for Development",
             "hld": "Backlog",
+            "omt": "Closed",
         }
 
     @property
@@ -116,7 +116,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting Shotgun event for unsupported field %s: %s" % (
+                "Rejecting Shotgun event for unsupported Shotgun field %s: %s" % (
                     field, event
                 )
             )
