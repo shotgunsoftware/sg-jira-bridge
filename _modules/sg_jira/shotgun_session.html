@@ -1,0 +1,514 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sg_jira.shotgun_session &mdash; Shotgun Jira Bridge  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Shotgun Jira Bridge
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Shotgun Jira Bridge</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>sg_jira.shotgun_session</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sg_jira.shotgun_session</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2018 Autodesk, Inc.  All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this software is subject to the terms of the Autodesk license agreement</span>
+<span class="c1"># provided at the time of installation or download, or which otherwise accompanies</span>
+<span class="c1"># this software in either electronic or hard copy form.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">shotgun_api3</span>
+
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">SG_ENTITY_SPECIAL_NAME_FIELDS</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">SHOTGUN_JIRA_ID_FIELD</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">utf8_to_unicode</span><span class="p">,</span> <span class="n">unicode_to_utf8</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ShotgunSession"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession">[docs]</a><span class="k">class</span> <span class="nc">ShotgunSession</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wraps a :class:`shotgun_api3.shotgun.Shotgun` instance and provide some helpers and</span>
+<span class="sd">    session caches.</span>
+
+<span class="sd">    Ensures all the values we get from Shotgun are unicode and not utf-8 encoded</span>
+<span class="sd">    strings. Utf-8 encodes unicode values before sending them to Shotgun.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># The list of Shotgun methods we need to wrap.</span>
+    <span class="n">_WRAP_SHOTGUN_METHODS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;authenticate_human_user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;create&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;find_one&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;find&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;update&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;batch&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;upload&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;upload_thumbnail&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;upload_filmstrip_thumbnail&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;download_attachment&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;get_attachment_download_url&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;schema_entity_read&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;schema_field_create&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;schema_field_delete&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;schema_field_read&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;schema_field_update&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;schema_read&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;share_thumbnail&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">script_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate a :class:`shotgun_api3.shotgun.Shotgun` with the sanitized parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Note: we use composition rather than inheritance to wrap the Shotgun</span>
+        <span class="c1"># instance. Otherwise we would have to redefine all the methods we need</span>
+        <span class="c1"># to wrap with some very similar code which would encode all params,</span>
+        <span class="c1"># blindly call the original method, decode and return the result.</span>
+
+        <span class="n">safe_args</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">safe_kwargs</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span> <span class="o">=</span> <span class="n">shotgun_api3</span><span class="o">.</span><span class="n">Shotgun</span><span class="p">(</span>
+            <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">base_url</span><span class="p">),</span>
+            <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">script_name</span><span class="p">),</span>
+            <span class="o">*</span><span class="n">safe_args</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">safe_kwargs</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Retrieve our current login, this does not seem to be available from</span>
+        <span class="c1"># the connection?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
+            <span class="s2">&quot;ApiUser&quot;</span><span class="p">,</span>
+            <span class="p">[[</span><span class="s2">&quot;firstname&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">script_name</span><span class="p">]],</span>
+            <span class="p">[</span><span class="s2">&quot;firstname&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connected to </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">base_url</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the Shotgun user used for the connection.</span>
+
+<span class="sd">        :returns: A Shotgun record dictionary with an `id` key and a `type` key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_user</span>
+
+<div class="viewcode-block" id="ShotgunSession.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the Shotgun site and cache site level values.</span>
+
+<span class="sd">        :raises RuntimeError: if the Shotgun site was not correctly configured to</span>
+<span class="sd">                 be used with this bridge.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_field</span><span class="p">(</span>
+            <span class="s2">&quot;Project&quot;</span><span class="p">,</span>
+            <span class="n">SHOTGUN_JIRA_ID_FIELD</span><span class="p">,</span>
+            <span class="s2">&quot;text&quot;</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.assert_field"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.assert_field">[docs]</a>    <span class="k">def</span> <span class="nf">assert_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the given field with the given type exists for the given Shotgun</span>
+<span class="sd">        Entity type.</span>
+
+<span class="sd">        :param str entity_type: A Shotgun Entity type.</span>
+<span class="sd">        :param str field_name: A Shotgun field name, e.g. &#39;sg_my_precious&#39;.</span>
+<span class="sd">        :param str field_type: A Shotgun field type, e.g. &#39;text&#39;.</span>
+<span class="sd">        :raises RuntimeError: if the field does not exist or does not have the</span>
+<span class="sd">                 expected type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_field_schema</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">field</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Missing required custom Shotgun </span><span class="si">%s</span><span class="s2"> field </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">field</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">field_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid type &#39;</span><span class="si">%s</span><span class="s2">&#39; for </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">, it must be &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">field</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                    <span class="n">entity_type</span><span class="p">,</span>
+                    <span class="n">field_name</span><span class="p">,</span>
+                    <span class="n">field_type</span>
+                <span class="p">)</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.get_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_field_schema">[docs]</a>    <span class="k">def</span> <span class="nf">get_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the Shotgun schema for the given Entity field.</span>
+
+<span class="sd">        .. note:: Shotgun schemas are cached and the bridge needs to be restarted</span>
+<span class="sd">                  if schemas are changed in Shotgun.</span>
+
+<span class="sd">        :param str entity_type: A Shotgun Entity type.</span>
+<span class="sd">        :param str field_name: A Shotgun field name, e.g. &#39;sg_my_precious&#39;.</span>
+<span class="sd">        :returns: The Shotgun schema for the given field as a dictionary or `None`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">entity_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">schema_field_read</span><span class="p">(</span>
+                <span class="n">entity_type</span>
+            <span class="p">)</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">field</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.clear_cached_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema">[docs]</a>    <span class="k">def</span> <span class="nf">clear_cached_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear all cached Shotgun schema or just the cached schema for the given</span>
+<span class="sd">        Shotgun Entity type.</span>
+
+<span class="sd">        :param str entity_type: A Shotgun Entity type or None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">entity_type</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Clearing cached Shotgun schema for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">entity_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">entity_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Clearing all cached Shotgun schemas&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.get_entity_name_field"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_entity_name_field">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_entity_name_field</span><span class="p">(</span><span class="n">entity_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the Shotgun name field to use for the specified entity type.</span>
+
+<span class="sd">        :param str entity_type: The entity type to get the name field for.</span>
+<span class="sd">        :returns: The name field for the specified entity type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Deal with some known special cases and assume &quot;code&quot; for anything else.</span>
+        <span class="k">return</span> <span class="n">SG_ENTITY_SPECIAL_NAME_FIELDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="s2">&quot;code&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.is_project_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.is_project_entity">[docs]</a>    <span class="k">def</span> <span class="nf">is_project_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return `True` if the given Shotgun Entity type is a project Entity,</span>
+<span class="sd">        that is an Entity linked to a Project, `False` if it is a non-project</span>
+<span class="sd">        Entity.</span>
+
+<span class="sd">        :param str entity_type: A Shotgun Entity type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">entity_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">schema_field_read</span><span class="p">(</span>
+                <span class="n">entity_type</span>
+            <span class="p">)</span>
+        <span class="c1"># We only check for standard Shotgun project field</span>
+        <span class="n">field_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">field_schema</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># We don&#39;t need to check the field data type: it is not possible to</span>
+        <span class="c1"># to create a custom &quot;project&quot; field (it would be sg_project) and it</span>
+        <span class="c1"># is very unlikely that anyone would even try to tweak this critical</span>
+        <span class="c1"># standard field.</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.consolidate_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.consolidate_entity">[docs]</a>    <span class="k">def</span> <span class="nf">consolidate_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Consolidate the given Shotgun Entity: collect additional field values,</span>
+<span class="sd">        ensure the Entity name is available under a &quot;name&quot; key.</span>
+
+<span class="sd">        :param shotgun_entity: A Shotgun Entity dictionary with at least its id</span>
+<span class="sd">                               and its type.</span>
+<span class="sd">        :param fields: An optional list of fields to add to the query.</span>
+<span class="sd">        :returns: The consolidated Shotgun Entity or `None` if it can&#39;t be retrieved.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Define the fields we need to handle the Entity type.</span>
+        <span class="n">needed_fields</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">entity_type</span> <span class="o">=</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="n">name_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entity_name_field</span><span class="p">(</span><span class="n">entity_type</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">entity_type</span> <span class="o">==</span> <span class="s2">&quot;HumanUser&quot;</span><span class="p">:</span>
+            <span class="n">needed_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">name_field</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">entity_type</span> <span class="o">==</span> <span class="s2">&quot;Task&quot;</span><span class="p">:</span>
+            <span class="n">needed_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">name_field</span><span class="p">,</span> <span class="s2">&quot;task_assignees&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">needed_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">name_field</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_project_entity</span><span class="p">(</span><span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]):</span>
+            <span class="n">needed_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="n">needed_fields</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+
+        <span class="c1"># Do a Shotgun query if any field is missing</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">needed</span> <span class="k">for</span> <span class="n">needed</span> <span class="ow">in</span> <span class="n">needed_fields</span> <span class="k">if</span> <span class="n">needed</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shotgun_entity</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">consolidated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
+                <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                <span class="p">[[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]],</span>
+                <span class="n">missing</span> <span class="o">+</span> <span class="n">shotgun_entity</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">consolidated</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to find </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) in Shotgun&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                        <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">shotgun_entity</span> <span class="o">=</span> <span class="n">consolidated</span>
+
+        <span class="c1"># Ensure a consistent way to retrieve the Entity name</span>
+        <span class="k">if</span> <span class="n">name_field</span> <span class="o">!=</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span>
+            <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="n">name_field</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">shotgun_entity</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.match_entity_by_name"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.match_entity_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">match_entity_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">entity_types</span><span class="p">,</span> <span class="n">shotgun_project</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve a Shotgun Entity with the given name from the given list of</span>
+<span class="sd">        Entity types.</span>
+
+<span class="sd">        Project Shotgun Entities are restricted to the given Shotgun Project.</span>
+
+<span class="sd">        :param str name: A name to match.</span>
+<span class="sd">        :param entity_types: A list of Shotgun Entity types to consider.</span>
+<span class="sd">        :param shotgun_project: A Shotgun Project dictionary.</span>
+<span class="sd">        :return: A Shotgun Entity dictionary or `None`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">entity_type</span> <span class="ow">in</span> <span class="n">entity_types</span><span class="p">:</span>
+            <span class="n">name_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entity_name_field</span><span class="p">(</span>
+                <span class="n">entity_type</span>
+            <span class="p">)</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="p">[[</span><span class="n">name_field</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">]]</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">name_field</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_project_entity</span><span class="p">(</span><span class="n">entity_type</span><span class="p">):</span>
+                <span class="nb">filter</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">shotgun_project</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">)</span>
+            <span class="n">sg_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
+                <span class="n">entity_type</span><span class="p">,</span>
+                <span class="nb">filter</span><span class="p">,</span>
+                <span class="n">fields</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">sg_value</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span><span class="n">sg_value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.get_entity_page_url"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_entity_page_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_entity_page_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the Shotgun page url for the given Entity.</span>
+
+<span class="sd">        :param shotgun_entity: A Shotgun Entity dictionary with at least a &#39;type&#39;</span>
+<span class="sd">                               key and an &#39;id&#39; key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/detail/</span><span class="si">%s</span><span class="s2">/</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_wrapped_shotgun_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a wrapped Shotgun method which encodes all parameters and decodes</span>
+<span class="sd">        the result before returning it.</span>
+
+<span class="sd">        :param str method_name: A :class:`~shotgun_api3.shotgun.Shotgun` method name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">method_to_wrap</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="p">,</span> <span class="n">method_name</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">safe_args</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">safe_kwargs</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">method_to_wrap</span><span class="p">(</span><span class="o">*</span><span class="n">safe_args</span><span class="p">,</span> <span class="o">**</span><span class="n">safe_kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">utf8_to_unicode</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapped</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when an attribute can&#39;t be found on this class instance.</span>
+
+<span class="sd">        Check if the name is one of the Shotgun method names we need to wrap,</span>
+<span class="sd">        return a wrapped method if it is the case.</span>
+<span class="sd">        Return the :class:`shotgun_api3.shotgun.Shotgun` attribute otherwise.</span>
+
+<span class="sd">        :param str attribute_name: The attribute name to retrieve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_WRAP_SHOTGUN_METHODS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_wrapped_shotgun_method</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">)</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Autodesk Inc..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

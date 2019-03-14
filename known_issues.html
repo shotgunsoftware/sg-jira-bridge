@@ -1,0 +1,243 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Known Issues &amp; Compatibility Notes &mdash; Shotgun Jira Bridge  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
+        <link rel="prev" title="Developer Resources" href="developer.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Shotgun Jira Bridge
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Known Issues &amp; Compatibility Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Shotgun Jira Bridge</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Known Issues &amp; Compatibility Notes</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="known-issues-compatibility-notes">
+<span id="known-issues"></span><h1>Known Issues &amp; Compatibility Notes<a class="headerlink" href="#known-issues-compatibility-notes" title="Permalink to this headline">¶</a></h1>
+<p>Because Shotgun and Jira are both highly customizable and have different APIs,
+there are some cases where things may not match up as expected. There are also
+cases where certain features have not been implemented yet.</p>
+<ul class="simple">
+<li>Deletion events are not handled yet.</li>
+<li>SG Jira Bridge does not create entities in Shotgun, it will only update
+existing ones. This means syncing can only <em>initiate</em> from Shotgun and not
+from Jira. If an entity in Shotgun that was synced with an issue in Jira is
+deleted, it will not currently be re-created in Shotgun.</li>
+<li>In most cases only one <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code> can handle a
+given event. The exception is with the <strong>Sync In Jira</strong> event which is a
+special case that is handled by the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">EnableSyncingHandler</span></code> which is a container
+for multiple handlers.</li>
+<li>Notes in Shotgun can be linked to multiple entities, but Comments in Jira
+can only be linked to a single Issue. Notes linked to multiple entities in
+Shotgun will be synced in Jira but only linked to a single Issue. There is
+no logic to choosing which Issue the Note is linked to other than the first
+one that the Bridge encounters.</li>
+<li>Shotgun Notes contain a subject and content, while Jira Comments have only
+a body. When syncing Notes from Shotgun to Jira, a special formatting is
+used to mimic the structure that Shotgun uses. Updates to a Comment in Jira
+must retain this formatting otherwise the Comment will not sync back to
+Shotgun.</li>
+<li>Note Replies in Shotgun are not currently handled by SG Jira Bridge. Jira
+has no concept of replies, or threading in Comments. This workflow is
+being investigated.</li>
+<li>Duplicating an Entity in Shotgun that is currently synced with Jira, will
+also duplicate the <strong>Jira Key</strong> field, possibly causing data corruption.
+We recommend not duplicating synced Entities in Shotgun. Alternatively, you
+may enable unique values on the <strong>Jira Key</strong> in Shotgun, however this will
+now generate an error in Shotgun if a synced Entity is duplicated. Perhaps
+it’s better than possibly corrupting the synced Jira Issue.</li>
+<li>Jira single-line <cite>Text Field</cite> fields are limited to 255 characters. When
+syncing from Shotgun to Jira, if the Shotgun field is mapped to a Jira
+single-line Text Field, and the value is longer than 255 characters, a
+warning is logged, the synced value will be truncated and an addendum added
+that says to look in Shotgun for the full value. This could cause data loss
+if the field is then updated in Jira which will overwrite the original value
+in Shotgun.</li>
+</ul>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="developer.html" class="btn btn-neutral" title="Developer Resources" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Autodesk Inc..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

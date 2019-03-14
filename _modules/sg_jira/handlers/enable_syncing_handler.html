@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sg_jira.handlers.enable_syncing_handler &mdash; Shotgun Jira Bridge  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Shotgun Jira Bridge
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Shotgun Jira Bridge</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>sg_jira.handlers.enable_syncing_handler</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sg_jira.handlers.enable_syncing_handler</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2018 Autodesk, Inc.  All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this software is subject to the terms of the Autodesk license agreement</span>
+<span class="c1"># provided at the time of installation or download, or which otherwise accompanies</span>
+<span class="c1"># this software in either electronic or hard copy form.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">..constants</span> <span class="k">import</span> <span class="n">SHOTGUN_SYNC_IN_JIRA_FIELD</span>
+<span class="kn">from</span> <span class="nn">.sync_handler</span> <span class="k">import</span> <span class="n">SyncHandler</span>
+
+
+<div class="viewcode-block" id="EnableSyncingHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler">[docs]</a><span class="k">class</span> <span class="nc">EnableSyncingHandler</span><span class="p">(</span><span class="n">SyncHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A handler which combines multiple handlers to start syncing Tasks and Entities</span>
+<span class="sd">    linked to them when a Task &quot;Sync In Jira&quot; (sg_sync_in_jira) checkbox field</span>
+<span class="sd">    is changed in Shotgun.</span>
+
+<span class="sd">    A full sync is performed each time the checkbox is turned on. This allows</span>
+<span class="sd">    to manually force a re-sync if needed by just setting off the checkbox, and</span>
+<span class="sd">    then back to on.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EnableSyncingHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">,</span> <span class="n">handlers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate a new handler which combines the provided handlers.</span>
+
+<span class="sd">        The first handler in the list is assumed to be a primary handler, the</span>
+<span class="sd">        others are assumed to be secondary handlers.</span>
+
+<span class="sd">        Events will be sent to secondary handlers for processing only if the</span>
+<span class="sd">        primary handler was able to successfully process them.</span>
+
+<span class="sd">        This allows to control from the primary handler if a Shotgun Entity should</span>
+<span class="sd">        be synced or not, and then automatically start syncing secondary Entities</span>
+<span class="sd">        which are linked to this primary Entity, e.g. Notes on a Task, without</span>
+<span class="sd">        having to explicitely enable syncing for the linked Entities.</span>
+
+<span class="sd">        Combined handlers shouldn&#39;t accept the events which are accepted by this</span>
+<span class="sd">        handler, but they need to be able to process them.</span>
+
+<span class="sd">        :param syncer: A :class:`~sg_jira.Syncer` instance.</span>
+<span class="sd">        :param handlers: A non empty list of :class:`SyncHandler` instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">EnableSyncingHandler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">syncer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">handlers</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one handler needs to be provided&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_primary_handler</span> <span class="o">=</span> <span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_secondary_handlers</span> <span class="o">=</span> <span class="n">handlers</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span></div>
+
+<div class="viewcode-block" id="EnableSyncingHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the Jira and Shotgun site, ensure that the sync can safely happen.</span>
+<span class="sd">        This can be used as well to cache any value which is slow to retrieve.</span>
+
+<span class="sd">        Run all handlers setup.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_primary_handler</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_secondary_handlers</span><span class="p">:</span>
+            <span class="n">handler</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EnableSyncingHandler.accept_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accept or reject the given event for the given Shotgun Entity.</span>
+
+<span class="sd">        :returns: `True` if the event is accepted for processing, `False` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># We only accept Tasks</span>
+        <span class="k">if</span> <span class="n">entity_type</span> <span class="o">!=</span> <span class="s2">&quot;Task&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;attribute_name&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">field</span> <span class="o">==</span> <span class="n">SHOTGUN_SYNC_IN_JIRA_FIELD</span><span class="p">:</span>
+            <span class="c1"># Check the value which was set</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;new_value&quot;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="EnableSyncingHandler.process_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.process_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process the given Shotgun event for the given Shotgun Entity</span>
+
+<span class="sd">        :param str entity_type: The Shotgun Entity type to sync.</span>
+<span class="sd">        :param int entity_id: The id of the Shotgun Entity to sync.</span>
+<span class="sd">        :param event: A dictionary with the event for the change.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Run the primary handler, stop processing if the primary handler</span>
+        <span class="c1"># didn&#39;t perform anything.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Dispatching event to primary handler </span><span class="si">%s</span><span class="s2">. Event: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_primary_handler</span><span class="p">,</span>
+                <span class="n">event</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primary_handler</span><span class="o">.</span><span class="n">process_shotgun_event</span><span class="p">(</span>
+            <span class="n">entity_type</span><span class="p">,</span>
+            <span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">event</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Run all the secondary handlers</span>
+        <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_secondary_handlers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Dispatching event to secondary handler </span><span class="si">%s</span><span class="s2">. Event: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">handler</span><span class="p">,</span>
+                    <span class="n">event</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">handler</span><span class="o">.</span><span class="n">process_shotgun_event</span><span class="p">(</span>
+                <span class="n">entity_type</span><span class="p">,</span>
+                <span class="n">entity_id</span><span class="p">,</span>
+                <span class="n">event</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="EnableSyncingHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.accept_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accept or reject the given event for the given Jira resource.</span>
+
+<span class="sd">        This handler rejects all Jira events.</span>
+
+<span class="sd">        :param str resource_type: The type of Jira resource sync, e.g. Issue.</span>
+<span class="sd">        :param str resource_id: The id of the Jira resource to sync.</span>
+<span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
+<span class="sd">        :returns: True if the event is accepted for processing, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Autodesk Inc..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

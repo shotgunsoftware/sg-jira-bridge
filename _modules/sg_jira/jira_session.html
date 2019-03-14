@@ -1,0 +1,780 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sg_jira.jira_session &mdash; Shotgun Jira Bridge  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Shotgun Jira Bridge
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Shotgun Jira Bridge</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>sg_jira.jira_session</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for sg_jira.jira_session</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2018 Autodesk, Inc.  All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this software is subject to the terms of the Autodesk license agreement</span>
+<span class="c1"># provided at the time of installation or download, or which otherwise accompanies</span>
+<span class="c1"># this software in either electronic or hard copy form.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">jira</span> <span class="k">import</span> <span class="n">JIRAError</span>
+<span class="kn">import</span> <span class="nn">jira</span>
+
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">JIRA_SHOTGUN_TYPE_FIELD</span><span class="p">,</span> <span class="n">JIRA_SHOTGUN_ID_FIELD</span><span class="p">,</span> <span class="n">JIRA_SHOTGUN_URL_FIELD</span>
+<span class="kn">from</span> <span class="nn">.constants</span> <span class="k">import</span> <span class="n">JIRA_RESULT_PAGING</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="JiraSession"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession">[docs]</a><span class="k">class</span> <span class="nc">JiraSession</span><span class="p">(</span><span class="n">jira</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">JIRA</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extend :class:`jira.JIRA` with helpers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="JiraSession.__init__"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_site</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate a JiraSession.</span>
+
+<span class="sd">        Connect to the given Jira site with given parameters.</span>
+
+<span class="sd">        :param str jira_site: A Jira site url.</span>
+<span class="sd">        :raises RuntimeError: on Jira connection errors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">JiraSession</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                <span class="n">jira_site</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">JIRAError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Jira puts some huge html / javascript code in the exception</span>
+            <span class="c1"># string so we catch it to issue a more reasonable message.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to connect to </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="n">e</span><span class="p">),</span>
+                <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="c1"># Check the status code</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to connect to </span><span class="si">%s</span><span class="s2"> (error code </span><span class="si">%d</span><span class="s2">), &quot;</span>
+                    <span class="s2">&quot;please check your credentials&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_site</span><span class="p">,</span>
+                        <span class="n">e</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to connect to </span><span class="si">%s</span><span class="s2">. See the log for details.&quot;</span> <span class="o">%</span> <span class="n">jira_site</span>
+            <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connected to </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">jira_site</span><span class="p">)</span>
+
+        <span class="c1"># A dictionary where keys are Jira field name and values are their field id.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="JiraSession.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the Jira site and cache site level values.</span>
+
+<span class="sd">        :raises RuntimeError: if the Jira site was not correctly configured to</span>
+<span class="sd">                 be used with this bridge.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Build a mapping from Jira field names to their id for fast lookup.</span>
+        <span class="k">for</span> <span class="n">jira_field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span><span class="p">[</span><span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_type_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_issue_field_id</span><span class="p">(</span>
+            <span class="n">JIRA_SHOTGUN_TYPE_FIELD</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_type_field</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Missing required custom Jira field </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">JIRA_SHOTGUN_TYPE_FIELD</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_id_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_issue_field_id</span><span class="p">(</span><span class="n">JIRA_SHOTGUN_ID_FIELD</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_id_field</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Missing required custom Jira field </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">JIRA_SHOTGUN_ID_FIELD</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_url_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_issue_field_id</span><span class="p">(</span><span class="n">JIRA_SHOTGUN_URL_FIELD</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_url_field</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Missing required custom Jira field </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">JIRA_SHOTGUN_URL_FIELD</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="JiraSession.get_jira_issue_field_id"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_jira_issue_field_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_issue_field_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the Jira field id for the Issue field with the given name.</span>
+
+<span class="sd">        :returns: The id as a string or None if the field is unknown.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">jira_shotgun_type_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the id of the Jira field used to store the type of a linked Shotgun</span>
+<span class="sd">        Entity.</span>
+
+<span class="sd">        Two custom fields are used in Jira to store a reference to a Shotgun</span>
+<span class="sd">        Entity: its Shotgun Entity type and id. This method returns the id of</span>
+<span class="sd">        the Jira field used to store the Shotgun type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_type_field</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">jira_shotgun_id_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the id of the Jira field used to store the id of a linked Shotgun</span>
+<span class="sd">        Entity.</span>
+
+<span class="sd">        Two custom fields are used in Jira to store a reference to a Shotgun</span>
+<span class="sd">        Entity: its Shotgun Entity type and id. This method returns the id of</span>
+<span class="sd">        the Jira field used to store the Shotgun id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_id_field</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">jira_shotgun_url_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the id of the Jira field used to store the url of a linked Shotgun</span>
+<span class="sd">        Entity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_url_field</span>
+
+<div class="viewcode-block" id="JiraSession.sanitize_jira_update_value"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.sanitize_jira_update_value">[docs]</a>    <span class="k">def</span> <span class="nf">sanitize_jira_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">,</span> <span class="n">jira_field_schema</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform sanity checks for the given Jira value and ensure it can be used</span>
+<span class="sd">        to update the Jira field with the given schema.</span>
+
+<span class="sd">        :returns: A Jira value which can safely be used to update the Jira field.</span>
+<span class="sd">        :raises UserWarning: if a safe value can&#39;t be obtained.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If the value is empty but required, check if Jira will be able to use</span>
+        <span class="c1"># a default value. Default values are only available when creating Issues</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_value</span> <span class="ow">and</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;required&quot;</span><span class="p">]:</span>
+            <span class="c1"># Create meta data has a &quot;hasDefaultValue&quot; property, edit meta data</span>
+            <span class="c1"># does not have this property.</span>
+            <span class="n">has_default</span> <span class="o">=</span> <span class="n">jira_field_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hasDefaultValue&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">has_default</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">UserWarning</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid value </span><span class="si">%s</span><span class="s2">: Jira field </span><span class="si">%s</span><span class="s2"> requires a value and does&quot;</span>
+                    <span class="s2">&quot;not provide a default value&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_value</span><span class="p">,</span>
+                        <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="c1"># Jira doesn&#39;t allow single-line text entry fields to be longer than</span>
+        <span class="c1"># 255 characters, so we truncate the string data and add a little</span>
+        <span class="c1"># message -- so users know to look at Shotgun. Note that this</span>
+        <span class="c1"># &quot;feature&quot; could result in data loss; if the truncated text is</span>
+        <span class="c1"># subsequently modified in Jira, the truncated result will be sent</span>
+        <span class="c1"># to Shotgun by the Jira sync webhook.</span>
+        <span class="k">if</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;string&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># Reference:</span>
+            <span class="c1"># com.atlassian.jira.plugin.system.customfieldtypes:textfield</span>
+            <span class="c1"># com.atlassian.jira.plugin.system.customfieldtypes:textarea</span>
+            <span class="k">if</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;com.atlassian.jira.plugin.system.customfieldtypes:textfield&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">jira_value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;String data for Jira field </span><span class="si">%s</span><span class="s2"> is too long (&gt; 255 chars). &quot;</span>
+                        <span class="s2">&quot;Truncating for display in Jira.&quot;</span> <span class="o">%</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;... [see Shotgun].&quot;</span>
+                    <span class="n">jira_value</span> <span class="o">=</span> <span class="n">jira_value</span><span class="p">[:(</span><span class="mi">255</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="p">))]</span> <span class="o">+</span> <span class="n">message</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Sanitized Jira value for </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                <span class="n">jira_value</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">jira_value</span></div>
+
+<div class="viewcode-block" id="JiraSession.find_jira_assignee_for_issue"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.find_jira_assignee_for_issue">[docs]</a>    <span class="k">def</span> <span class="nf">find_jira_assignee_for_issue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jira_issue</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a Jira user the given issue can be assigned to, based</span>
+<span class="sd">        on the given email address.</span>
+
+<span class="sd">        A Jira Project must be specified when creating an Issue. A Jira Issue must</span>
+<span class="sd">        be specified when editing an Issue.</span>
+
+<span class="sd">        :param jira_project: A :class:`jira.resources.Project` instance or None.</span>
+<span class="sd">        :param jira_issue: A :class:`jira.Issue` instance or None.</span>
+<span class="sd">        :param user_email: An email address as a string.</span>
+<span class="sd">        :returns: A :class:`jira.resources.User` instance or None.</span>
+<span class="sd">        :raises ValueError: if no Project nor Issue is specified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_jira_user</span><span class="p">(</span>
+            <span class="n">user_email</span><span class="p">,</span>
+            <span class="n">jira_project</span><span class="p">,</span>
+            <span class="n">jira_issue</span><span class="p">,</span>
+            <span class="n">for_assignment</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_search_allowed_users_for_issue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">issueKey</span><span class="p">,</span> <span class="n">startAt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxResults</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wrapper around jira.search_allowed_users_for_issue to make its parameter</span>
+<span class="sd">        consistent with jira.search_assignable_users_for_issues parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Note: this does not work and requires a user name or email to be specified.</span>
+        <span class="c1"># There are some various discussions about it, mentionning that using</span>
+        <span class="c1"># &quot;.&quot; or &quot;%&quot; or &quot;_&quot; could act as a wildcard but none of them worked.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_allowed_users_for_issue</span><span class="p">(</span>
+            <span class="n">user</span> <span class="k">if</span> <span class="n">user</span> <span class="k">else</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+            <span class="n">projectKey</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">key</span> <span class="k">if</span> <span class="n">project</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">issueKey</span><span class="o">=</span><span class="n">issueKey</span><span class="p">,</span>
+            <span class="n">startAt</span><span class="o">=</span><span class="n">startAt</span><span class="p">,</span>
+            <span class="n">maxResults</span><span class="o">=</span><span class="n">maxResults</span>
+        <span class="p">)</span>
+        <span class="c1"># An attempt to use a query param instead of the username param, which is</span>
+        <span class="c1"># being deprecated, used by the method above. This didn&#39;t work better ...</span>
+        <span class="c1"># https://developer.atlassian.com/cloud/jira/platform/rest/v2?_ga=2.239994883.1204798848.1547548670-1513186087.1542632955#api-api-2-user-search-query-key-get</span>
+<span class="c1">#        params = {</span>
+<span class="c1">#            &quot;query&quot;: user or &quot;_&quot;</span>
+<span class="c1">#        }</span>
+<span class="c1">#        if issueKey is not None:</span>
+<span class="c1">#            params[&quot;issueKey&quot;] = issueKey</span>
+<span class="c1">#        if project is not None:</span>
+<span class="c1">#            params[&quot;projectKey&quot;] = project.key</span>
+<span class="c1">#        return self.jira._fetch_pages(</span>
+<span class="c1">#            jira.resources.User,</span>
+<span class="c1">#            None,</span>
+<span class="c1">#            &quot;user/viewissue/search&quot;,</span>
+<span class="c1">#            startAt,</span>
+<span class="c1">#            maxResults,</span>
+<span class="c1">#            params</span>
+<span class="c1">#        )</span>
+
+<div class="viewcode-block" id="JiraSession.find_jira_user"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.find_jira_user">[docs]</a>    <span class="k">def</span> <span class="nf">find_jira_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jira_issue</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">for_assignment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a Jira an assignable user or with browse permission for the given</span>
+<span class="sd">        Project or Issue, with the given email address. Either a jira_project </span>
+<span class="sd">        or jira_issue must be provided.</span>
+
+<span class="sd">        .. note:: Due to problems with user searching in Jira, this method always</span>
+<span class="sd">                  returns assignable users for the time being.</span>
+
+<span class="sd">        :param user_email: An email address as a string.</span>
+<span class="sd">        :param jira_project: A :class:`jira.resources.Project` instance or None.</span>
+<span class="sd">        :param jira_issue: A :class:`jira.Issue` instance or None.</span>
+<span class="sd">        :param for_assignment: A boolean, if `False` the user just needs to have read</span>
+<span class="sd">                            permission. If `True` the user needs to be suitable for</span>
+<span class="sd">                            Issue assignments.</span>
+<span class="sd">        :returns: A :class:`jira.resources.User` instance or None.</span>
+<span class="sd">        :raises ValueError: if no Project nor Issue is specified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_project</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">jira_issue</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Either a Jira Project or a Jira Issue must be specified&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user_email</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">for_assignment</span><span class="p">:</span>
+            <span class="n">search_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_assignable_users_for_issues</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># See comments in _search_allowed_users_for_issue: searching for users</span>
+            <span class="c1"># does not seem to work very well, so, for the time being, we use the</span>
+            <span class="c1"># only method that can be trusted and only consider assignable users.</span>
+            <span class="c1"># search_method = self._search_allowed_users_for_issue</span>
+            <span class="n">search_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_assignable_users_for_issues</span>
+
+        <span class="c1"># Note: There is a Jira bug that prevents searching by email address from working on</span>
+        <span class="c1"># some instances. In this case, we fall back on paging through ALL results to</span>
+        <span class="c1"># ensure don&#39;t incorrectly miss matching the user.</span>
+        <span class="c1"># See: https://jira.atlassian.com/browse/JRASERVER-61772</span>
+        <span class="c1"># See: https://jira.atlassian.com/browse/JRACLOUD-61772</span>
+
+        <span class="c1"># TODO: Possible source of the problem</span>
+        <span class="c1"># Users need to have the global &quot;Browse users and groups&quot; permission.</span>
+        <span class="c1"># We don&#39;t have this permission by default for some reason.</span>
+        <span class="c1"># It&#39;s currently only assigned to the **jira-developers** group.</span>
+        <span class="c1"># Something to double check and see if we can spot this in the setup</span>
+        <span class="c1"># check and report the problem. And get rid of the fallback code.</span>
+
+        <span class="n">jira_assignee</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Direct user search with their email</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Looking up </span><span class="si">%s</span><span class="s2"> in assignable users&quot;</span> <span class="o">%</span> <span class="n">user_email</span><span class="p">)</span>
+        <span class="n">jira_users</span> <span class="o">=</span> <span class="n">search_method</span><span class="p">(</span>
+            <span class="n">user_email</span><span class="p">,</span>
+            <span class="n">project</span><span class="o">=</span><span class="n">jira_project</span><span class="p">,</span>
+            <span class="n">issueKey</span><span class="o">=</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span> <span class="k">if</span> <span class="n">jira_issue</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">maxResults</span><span class="o">=</span><span class="n">JIRA_RESULT_PAGING</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">jira_users</span><span class="p">:</span>
+            <span class="n">jira_assignee</span> <span class="o">=</span> <span class="n">jira_users</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">jira_users</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Found multiple assignable Jira users with email address </span><span class="si">%s</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;Using the first one: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">user_email</span><span class="p">,</span>
+                        <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ju</span><span class="o">.</span><span class="n">emailAddress</span><span class="p">,</span> <span class="n">ju</span><span class="o">.</span><span class="n">accountId</span><span class="p">)</span> <span class="k">for</span> <span class="n">ju</span> <span class="ow">in</span> <span class="n">jira_users</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found Jira Assignee </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jira_assignee</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">jira_assignee</span>
+
+        <span class="c1"># Because of the bug mentioned above, fall back on matching users ourself.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;No assignable users found matching </span><span class="si">%s</span><span class="s2">. Searching all assignable users &quot;</span>
+            <span class="s2">&quot;manually&quot;</span> <span class="o">%</span> <span class="n">user_email</span>
+        <span class="p">)</span>
+        <span class="n">uemail</span> <span class="o">=</span> <span class="n">user_email</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Querying all assignable users starting at #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">start_idx</span><span class="p">)</span>
+        <span class="n">jira_users</span> <span class="o">=</span> <span class="n">search_method</span><span class="p">(</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="n">project</span><span class="o">=</span><span class="n">jira_project</span><span class="p">,</span>
+            <span class="n">issueKey</span><span class="o">=</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span> <span class="k">if</span> <span class="n">jira_issue</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">maxResults</span><span class="o">=</span><span class="n">JIRA_RESULT_PAGING</span><span class="p">,</span>
+            <span class="n">startAt</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">while</span> <span class="n">jira_users</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">jira_user</span> <span class="ow">in</span> <span class="n">jira_users</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">emailAddress</span> <span class="ow">and</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">emailAddress</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">uemail</span><span class="p">:</span>
+                    <span class="n">jira_assignee</span> <span class="o">=</span> <span class="n">jira_user</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">jira_assignee</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">start_idx</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">jira_users</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Querying all assignable users starting at #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">start_idx</span>
+                <span class="p">)</span>
+                <span class="n">jira_users</span> <span class="o">=</span> <span class="n">search_method</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">project</span><span class="o">=</span><span class="n">jira_project</span><span class="p">,</span>
+                    <span class="n">issueKey</span><span class="o">=</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span> <span class="k">if</span> <span class="n">jira_issue</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">maxResults</span><span class="o">=</span><span class="n">JIRA_RESULT_PAGING</span><span class="p">,</span>
+                    <span class="n">startAt</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">%s</span><span class="s2"> users&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">jira_users</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_assignee</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">jira_issue</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to find a Jira user with email </span><span class="si">%s</span><span class="s2"> for Issue </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">user_email</span><span class="p">,</span>
+                        <span class="n">jira_issue</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to find a Jira user with email </span><span class="si">%s</span><span class="s2"> for Project </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">user_email</span><span class="p">,</span>
+                        <span class="n">jira_project</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found Jira Assignee </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jira_assignee</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jira_assignee</span></div>
+
+<div class="viewcode-block" id="JiraSession.set_jira_issue_status"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.set_jira_issue_status">[docs]</a>    <span class="k">def</span> <span class="nf">set_jira_issue_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_status_name</span><span class="p">,</span> <span class="n">comment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attempt to change the Jira Issue status to the given value.</span>
+
+<span class="sd">        Lookup for a Jira transition where the target status is the</span>
+<span class="sd">        given one and try to apply it.</span>
+
+<span class="sd">        :param jira_issue: A :class:`jira.Issue` instance.</span>
+<span class="sd">        :param str jira_status: A Jira status name, e.g. `In Progress`.</span>
+<span class="sd">        :param comment: A string, a comment to apply to the Jira transition.</span>
+<span class="sd">        :return: `True` if the status could be set, `False` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">jira_status_name</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira issue </span><span class="si">%s</span><span class="s2"> status is already &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_status_name</span>
+            <span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Retrieve available transitions for the issue including fields on the</span>
+        <span class="c1"># transition screen.</span>
+        <span class="n">jira_transitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span>
+            <span class="n">jira_issue</span><span class="p">,</span>
+            <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;transitions.fields&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">tra</span> <span class="ow">in</span> <span class="n">jira_transitions</span><span class="p">:</span>
+            <span class="c1"># Match a transition with the expected status name</span>
+            <span class="k">if</span> <span class="n">tra</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">jira_status_name</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Found transition for Jira Issue </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_issue</span><span class="p">,</span>
+                        <span class="n">jira_status_name</span><span class="p">,</span>
+                        <span class="n">tra</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="c1"># Iterate over any fields for transition and find required fields</span>
+                <span class="c1"># that don&#39;t have a default value. Set the value using our defaults.</span>
+                <span class="c1"># NOTE: This only supports text fields right now.</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="s2">&quot;fields&quot;</span> <span class="ow">in</span> <span class="n">tra</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">details</span> <span class="ow">in</span> <span class="n">tra</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                        <span class="c1"># If field is required, it doesn&#39;t currently have a value and</span>
+                        <span class="c1"># there is no default value provided by Jira, use our hardcoded</span>
+                        <span class="c1"># default value.</span>
+                        <span class="c1"># Eventually, this should be moved to a flexible framework for clients</span>
+                        <span class="c1"># to customize on their own like Hooks.</span>
+                        <span class="c1"># Note: This is not reliable. The &quot;fields&quot; key we get back from the</span>
+                        <span class="c1"># transitions call above only includes fields on the transition screen</span>
+                        <span class="c1"># and each field&#39;s &quot;required&quot; key refers to whether the field is</span>
+                        <span class="c1"># globally set as required. However, you can set a validator</span>
+                        <span class="c1"># on the transition that requires a globally optional field be non-empty.</span>
+                        <span class="c1"># The field will still show up as &quot;required=False&quot; since the field isn&#39;t</span>
+                        <span class="c1"># configured as a globally required field.</span>
+                        <span class="k">if</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;required&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span>
+                            <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="n">field_name</span><span class="p">)</span>
+                            <span class="ow">and</span> <span class="ow">not</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hasDefaultValue&quot;</span><span class="p">)</span>
+                        <span class="p">):</span>
+                            <span class="c1"># The resolution field is often required in transitions. We don&#39;t</span>
+                            <span class="c1"># currently support configuring this so we use the first</span>
+                            <span class="c1"># allowed value.</span>
+                            <span class="k">if</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;resolution&quot;</span><span class="p">:</span>
+                                <span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;allowedValues&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                    <span class="s2">&quot;Setting resolution to first allowedValue: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                                    <span class="n">details</span><span class="p">[</span><span class="s2">&quot;allowedValues&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                                <span class="p">)</span>
+                            <span class="c1"># Text fields are just filled with our default value to satisfy</span>
+                            <span class="c1"># the requirement.</span>
+                            <span class="k">elif</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span>
+                                <span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">comment</span>
+
+                <span class="c1"># We add a comment by default in case it is required by the transition validator.</span>
+                <span class="c1"># Note that the comment will only be saved if it is visible on a transition</span>
+                <span class="c1"># screen.</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="n">comment</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="c1"># If there are any required text fields we have</span>
+                <span class="c1"># provided values for, then add the &quot;fields&quot; param. When &quot;fields&quot; is specified,</span>
+                <span class="c1"># all other keyword params are ignored (including the comment param setup above).</span>
+                <span class="k">if</span> <span class="n">fields</span><span class="p">:</span>
+                    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fields</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Transitioning Issue </span><span class="si">%s</span><span class="s2"> to &#39;</span><span class="si">%s</span><span class="s2">&#39; with params: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
+                    <span class="n">tra</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                    <span class="n">params</span>
+                <span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transition_issue</span><span class="p">(</span>
+                    <span class="n">jira_issue</span><span class="p">,</span>
+                    <span class="n">tra</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="o">**</span><span class="n">params</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Couldn&#39;t find a Jira transition with </span><span class="si">%s</span><span class="s2"> as target for Issue </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">jira_status_name</span><span class="p">,</span>
+                <span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Available transitions are </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jira_transitions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="JiraSession.create_issue_from_data"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.create_issue_from_data">[docs]</a>    <span class="k">def</span> <span class="nf">create_issue_from_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an Issue from the given data.</span>
+
+<span class="sd">        Sanity check the data against Jira create meta data. Try to amend the</span>
+<span class="sd">        data, if possible, to complete the Issue creation. Raise `ValueError` if</span>
+<span class="sd">        the data can&#39;t be amended to complete the Issue creation.</span>
+
+<span class="sd">        :param jira_project: A :class:`jira.resources.Project` instance.</span>
+<span class="sd">        :param str issue_type: The target Issue type name.</span>
+<span class="sd">        :param data: A dictionary where keys are Jira Issue field ids and values</span>
+<span class="sd">                     are Jira values.</span>
+<span class="sd">        :returns: A :class:`jira.Issue` instance.</span>
+<span class="sd">        :raises RuntimeError: if the Jira create meta data can&#39;t be retrieved.</span>
+<span class="sd">        :raises ValueError: if invalid and unfixable data is provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">jira_issue_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">issue_type_by_name</span><span class="p">(</span><span class="n">issue_type</span><span class="p">)</span>
+        <span class="c1"># Retrieve creation meta data for the project / issue type</span>
+        <span class="c1"># Note: there is a new simpler Project type in Jira where createmeta is not</span>
+        <span class="c1"># available.</span>
+        <span class="c1"># https://confluence.atlassian.com/jirasoftwarecloud/working-with-agility-boards-945104895.html</span>
+        <span class="c1"># https://community.developer.atlassian.com/t/jira-cloud-next-gen-projects-and-connect-apps/23681/14</span>
+        <span class="c1"># It seems a Project `simplified` key can help distinguish between old</span>
+        <span class="c1"># school projects and new simpler projects.</span>
+        <span class="c1"># TODO: cache the retrieved data to avoid multiple requests to the server</span>
+        <span class="n">create_meta_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createmeta</span><span class="p">(</span>
+            <span class="n">jira_project</span><span class="p">,</span>
+            <span class="n">issuetypeIds</span><span class="o">=</span><span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;projects.issuetypes.fields&quot;</span>
+        <span class="p">)</span>
+        <span class="c1"># We asked for a single project / single issue type, so we can just pick</span>
+        <span class="c1"># the first entry, if it exists.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;issuetypes&quot;</span><span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Create meta data for Project </span><span class="si">%s</span><span class="s2"> Issue type </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">jira_project</span><span class="p">,</span>
+                <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">create_meta_data</span>
+            <span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to retrieve create meta data for Project </span><span class="si">%s</span><span class="s2"> Issue type </span><span class="si">%s</span><span class="s2">.&quot;</span>  <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">jira_project</span><span class="p">,</span>
+                    <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">fields_createmeta</span> <span class="o">=</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;issuetypes&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Make a shallow copy so we can add/delete keys</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;issuetype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">raw</span>
+
+        <span class="c1"># Check if we are missing any required data which does not have a default</span>
+        <span class="c1"># value.</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">jira_create_field</span> <span class="ow">in</span> <span class="n">fields_createmeta</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">jira_create_field</span><span class="p">[</span><span class="s2">&quot;required&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">jira_create_field</span><span class="p">[</span><span class="s2">&quot;hasDefaultValue&quot;</span><span class="p">]:</span>
+                    <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">jira_create_field</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to create Jira </span><span class="si">%s</span><span class="s2"> Issue. The following required data is missing: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;issuetype&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                    <span class="n">missing</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># Check if we&#39;re trying to set any value which can&#39;t be set and validate</span>
+        <span class="c1"># empty values.</span>
+        <span class="n">invalid_fields</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">data_keys</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>  <span class="c1"># Retrieve all keys so we can delete them in the dict</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data_keys</span><span class="p">:</span>
+            <span class="c1"># Filter out anything which can&#39;t be used in creation.</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fields_createmeta</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Jira field </span><span class="si">%s</span><span class="s2"> cannot be set when creating an Issue. Removing it &quot;</span>
+                    <span class="s2">&quot;from the request.&quot;</span> <span class="o">%</span> <span class="n">k</span>
+                <span class="p">)</span>
+                <span class="k">del</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">and</span> <span class="n">fields_createmeta</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;required&quot;</span><span class="p">]:</span>
+                <span class="c1"># Handle required fields with empty value</span>
+                <span class="k">if</span> <span class="n">fields_createmeta</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;hasDefaultValue&quot;</span><span class="p">]:</span>
+                    <span class="c1"># Empty field data which Jira will set default values for should be removed in</span>
+                    <span class="c1"># order for Jira to properly set the default. Jira will complain if we leave it</span>
+                    <span class="c1"># in.</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;Removing Jira field </span><span class="si">%s</span><span class="s2"> with an empty value from data payload so &quot;</span>
+                        <span class="s2">&quot;Jira will set the default value.&quot;</span> <span class="o">%</span> <span class="n">k</span>
+                    <span class="p">)</span>
+                    <span class="k">del</span> <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Empty field data isn&#39;t valid if the field is required and doesn&#39;t have a</span>
+                    <span class="c1"># default value in Jira.</span>
+                    <span class="n">invalid_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">invalid_fields</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to create Jira Issue. The following fields are required and cannot &quot;</span>
+                <span class="s2">&quot;be empty: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">invalid_fields</span>
+            <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Creating Jira issue with </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_issue</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="JiraSession.get_jira_issue_edit_meta"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_jira_issue_edit_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_issue_edit_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the edit metadata for the given Jira Issue.</span>
+
+<span class="sd">        :param jira_issue: A :class:`jira.Issue`.</span>
+<span class="sd">        :returns: The Jira Issue edit metadata `fields` property.</span>
+<span class="sd">        :raises RuntimeError: if the edit metadata can&#39;t be retrieved for the</span>
+<span class="sd">                 given Issue.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Retrieve edit meta data for the issue</span>
+        <span class="c1"># TODO: cache the retrieved data to avoid multiple requests to the server</span>
+        <span class="n">edit_meta_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">editmeta</span><span class="p">(</span><span class="n">jira_issue</span><span class="p">)</span>
+        <span class="n">jira_edit_fields</span> <span class="o">=</span> <span class="n">edit_meta_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fields&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_edit_fields</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to retrieve edit meta data for </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">. &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">issuetype</span><span class="p">,</span>
+                    <span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">jira_edit_fields</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Autodesk Inc..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

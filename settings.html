@@ -1,0 +1,347 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Settings &mdash; Shotgun Jira Bridge  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
+        <link rel="next" title="Debugging" href="debugging.html"/>
+        <link rel="prev" title="Quick Start" href="quickstart.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Shotgun Jira Bridge
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sync-settings">Sync Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#useful-patterns">Useful Patterns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Shotgun Jira Bridge</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Settings</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="settings">
+<h1>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h1>
+<p>Settings are defined in the <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file in the root of the repo.
+Since the settings are stored in a Python file, it allows for a lot of
+flexiblity to adapt to your specific environment requirements if needed.
+The settings file contains three main sections:</p>
+<div class="section" id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<p>Credentials are retrieved by default from environment variables:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SITE</span></code>: the Shotgun site url</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_NAME</span></code>: a Shotgun script user name</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_KEY</span></code>: the Shotgun script user Application Key</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_SITE</span></code>: the Jira server url</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER</span></code>: the system name of the Jira user used to
+connect for the sync.  This is usually your email address you
+sign in to Jira with. Jira does not have a concept of a “script”
+user so this will need to be the designated user account that
+will control the sync updates. It will need appropriate
+permissions to make any changes required.</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER_SECRET</span></code>: the Jira user password</li>
+</ul>
+<p>You may set these in your environment or by installing
+<a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a> and defining these
+in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Shotgun credentials</span>
+<span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgunstudio.com&#39;</span>
+<span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">&#39;sg-jira-bridge&#39;</span>
+<span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>
+
+<span class="c1"># Jira credentials</span>
+<span class="n">SGJIRA_JIRA_SITE</span><span class="o">=</span><span class="s1">&#39;https://mystudio.atlassian.net&#39;</span>
+<span class="n">SGJIRA_JIRA_USER</span><span class="o">=</span><span class="s1">&#39;richard.hendricks@piedpiper.com&#39;</span>
+<span class="n">SGJIRA_JIRA_USER_SECRET</span><span class="o">=</span><span class="s1">&#39;youkn0wwh@tapa$5word1smAKeitag0odone3&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>The SG-Jira-Bridge uses standard Python logging. The logging configuration is
+stored in a <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> <em>dict</em> using the standard <a class="reference external" href="https://docs.python.org/2/library/logging.config.html#module-logging.config" title="(in Python v2.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging.config</span></code></a> format.</p>
+</div>
+<div class="section" id="sync-settings">
+<h2>Sync Settings<a class="headerlink" href="#sync-settings" title="Permalink to this headline">¶</a></h2>
+<p>The sync settings are stored in a <code class="docutils literal notranslate"><span class="pre">SYNC</span></code> <em>dict</em> in the format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SYNC</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;sync_settings_name&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># The Syncer class to use with the module name included</span>
+        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;sg_jira.MyCustomSyncer&quot;</span><span class="p">,</span>
+        <span class="c1"># And the specific settings which are passed to its __init__() method</span>
+        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;my_setting_name&quot;</span><span class="p">:</span> <span class="s2">&quot;My Setting Value&quot;</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Each key is a settings name that contains a dictionary containing the syncer
+and the settings to use. The key is the settings name used when composing the
+URL for SG Jira Bridge. For example,
+<code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code> uses the settings named
+<code class="docutils literal notranslate"><span class="pre">my_settings</span></code>.</p>
+<ul class="simple">
+<li><strong>syncer</strong>: The syncer class to use in the format <code class="docutils literal notranslate"><span class="pre">module_name.class_name</span></code>.</li>
+<li><strong>settings</strong>: A dictionary containing the settings for the syncer where the
+key is the setting name and value is it’s value. These settings will be used
+as parameters when instantiating the syncer class.</li>
+</ul>
+<p>Each set of <code class="docutils literal notranslate"><span class="pre">SYNC</span></code> settings defined in your <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file must
+define a single <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code>.</p>
+<p>Custom syncers can be referenced in the settings file with their module path
+and their specific settings. You can easily allow the bridge to load your
+syncer by adding the directory that contains your custom syncer using
+<code class="docutils literal notranslate"><span class="pre">sys.path</span></code>.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Additional paths can be added for custom syncers</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;./examples&quot;</span><span class="p">))</span>
+
+<span class="n">SYNC</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># The syncer class to use</span>
+        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;sg_jira.TaskIssueSyncer&quot;</span><span class="p">,</span>
+        <span class="c1"># And the specific settings which are passed to its __init__() method</span>
+        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="s2">&quot;bar&quot;</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># Example of a custom syncer with an additional parameter to define</span>
+        <span class="c1"># a log level.</span>
+        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;example_sync.ExampleSync&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="useful-patterns">
+<h3>Useful Patterns<a class="headerlink" href="#useful-patterns" title="Permalink to this headline">¶</a></h3>
+<p>Rather than having to edit your settings in order to enable/disable testing,
+it may be useful to have two settings for your custom syncer, one for
+production and one for testing. In your testing settings you may wish to
+simply enable <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> level logging messages.</p>
+<p>You can take it a step further and have a base settings definition and then
+load that for other settings and only override the settings you need. This
+overly simplified example might look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="n">SYNC</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># The syncer class to use</span>
+        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;sg_jira.TaskIssueSyncer&quot;</span><span class="p">,</span>
+        <span class="c1"># And the specific settings which are passed to its __init__() method</span>
+        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="s2">&quot;bar&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;orange&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;do_something&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># create settings for default_test from default</span>
+<span class="n">SYNC</span><span class="p">[</span><span class="s2">&quot;test_settings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">SYNC</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+
+<span class="c1"># override the settings we need</span>
+<span class="n">SYNC</span><span class="p">[</span><span class="s2">&quot;test_settings&quot;</span><span class="p">][</span><span class="s2">&quot;settings&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+    <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="debugging.html" class="btn btn-neutral float-right" title="Debugging" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral" title="Quick Start" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Autodesk Inc..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
