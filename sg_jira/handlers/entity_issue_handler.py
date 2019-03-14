@@ -221,7 +221,7 @@ class EntityIssueHandler(SyncHandler):
 
         # Bail out if the target Jira field is not editable
         if jira_field not in jira_fields:
-            self._logger.debug(
+            self._logger.warning(
                 "Not syncing Shotgun %s.%s to Jira. Target Jira %s %s field "
                 "is not editable" % (
                     shotgun_entity_type,

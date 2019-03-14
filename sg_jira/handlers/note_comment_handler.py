@@ -165,7 +165,7 @@ class NoteCommentHandler(SyncHandler):
         field = meta["attribute_name"]
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting Shotgun event for unsupported field %s: %s" % (
+                "Rejecting Shotgun event for unsupported Shotgun field %s: %s" % (
                     field, event
                 )
             )

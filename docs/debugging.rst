@@ -31,10 +31,20 @@ a good amount of detail to audit what is happening with each request.
                 "console", "file"
             ],
         },
+        "loggers": {
+            # Set web server level to WARNING so we don't hear about every request
+            # If you want to see the requests in the logs, set this to INFO.
+            "webapp": {
+                "level": "WARNING"
+            }
+        },
         # Some formatters, mainly as examples
         "formatters": {
             "verbose": {
-                "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+                "format": "%(asctime)s %(levelname)s [%(module)s %(process)d %(thread)d] %(message)s"
+            },
+            "standard": {
+                "format": "%(asctime)s %(levelname)s [%(module)s] %(message)s"
             },
             "simple": {
                 "format": "%(levelname)s:%(name)s:%(message)s"
@@ -44,20 +54,22 @@ a good amount of detail to audit what is happening with each request.
         "handlers": {
             # Print out any message to stdout
             "console": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.StreamHandler",
-                "formatter": "simple"
+                "formatter": "standard"
             },
             "file": {
                 "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
-                "formatter": "simple",
+                "formatter": "standard",
+                # this location should be updated to where you store logs
                 "filename": "/tmp/sg_jira.log",
                 "maxBytes": 1024 * 1024,
                 "backupCount": 5
             },
         },
     }
+
 
 Testing on a Machine Not Accessible to Jira
 ===========================================

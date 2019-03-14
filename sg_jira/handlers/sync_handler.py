@@ -340,8 +340,8 @@ class SyncHandler(object):
                         )
                         current_sg_value.append(sg_value)
                     else:
-                        self._logger.debug(
-                            "Couldn't find a %s named '%s' from Shotgun" % (
+                        self._logger.warning(
+                            "Couldn't find a %s named '%s' in Shotgun" % (
                                 " or ".join(allowed_entities),
                                 added
                             )
