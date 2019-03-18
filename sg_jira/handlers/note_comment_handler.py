@@ -238,6 +238,18 @@ class NoteCommentHandler(SyncHandler):
                 )
             )
             return False
+        
+        # When we process the first event for a new Note, the entire Note is
+        # loaded and created in Jira. Subsequent events that remain from the
+        # creation in Shotgun should be ignored.
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
+            self._logger.debug(
+                "Rejecting Shotgun event for Note.%s field update during "
+                "create. Comment was already created in Jira: %s" % (
+                    shotgun_field, event
+                )
+            )
+            return False
 
         meta = event["meta"]
         shotgun_field = meta["attribute_name"]
@@ -250,6 +262,12 @@ class NoteCommentHandler(SyncHandler):
                 meta["removed"],
             )
 
+        self._logger.debug(
+            "Shotgun Note (%d).%s updated" % (
+                sg_entity["id"],
+                shotgun_field
+            )
+        )
         # Update the Jira comment body
         return self._sync_note_content_to_jira(sg_entity)
 
