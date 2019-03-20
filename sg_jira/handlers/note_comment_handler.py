@@ -238,6 +238,24 @@ class NoteCommentHandler(SyncHandler):
                 )
             )
             return False
+        
+        # When a Note is created in Shotgun, a unique event is generated for 
+        # each field value set in the creation of the Note. These events
+        # have an additional "in_create" key in the metadata, identifying them
+        # as events from the initial create event. 
+        # When the bridge processes the first event, it loads all of the Note 
+        # field values from Shotgun and creates the Jira Comment with those 
+        # values. So the remaining Shotgun events with the "in_create"
+        # metadata key can be ignored, since we've already handled all of
+        # those field updates.
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
+            self._logger.debug(
+                "Rejecting Shotgun event for Note.%s field update during "
+                "create. Comment was already created in Jira: %s" % (
+                    shotgun_field, event
+                )
+            )
+            return False
 
         meta = event["meta"]
         shotgun_field = meta["attribute_name"]
@@ -250,6 +268,12 @@ class NoteCommentHandler(SyncHandler):
                 meta["removed"],
             )
 
+        self._logger.debug(
+            "Shotgun Note (%d).%s updated" % (
+                sg_entity["id"],
+                shotgun_field
+            )
+        )
         # Update the Jira comment body
         return self._sync_note_content_to_jira(sg_entity)
 
