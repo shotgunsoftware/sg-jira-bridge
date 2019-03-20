@@ -248,6 +248,10 @@ class NoteCommentHandler(SyncHandler):
         # values. So the remaining Shotgun events with the "in_create"
         # metadata key can be ignored, since we've already handled all of
         # those field updates.
+
+        # We use the Jira id field value to check if we're processing the first 
+        # event. If it exists with in_create, we know the comment has been 
+        # already created.
         if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
             self._logger.debug(
                 "Rejecting Shotgun event for Note.%s field update during "
