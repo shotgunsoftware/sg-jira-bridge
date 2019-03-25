@@ -103,6 +103,16 @@ Jira Webhook
 
 Setting Up Your Config and Env
 ******************************
+
+There are two different pieces to setting up the Shotgun Jira Bridge. There's the bridge itself
+(``sg-jira-bridge``), which handles all of the syncing of data between Shotgun and Jira. Then 
+there's the Shotgun Event Daemon (``shotgunEvents``), which handles dispatching supported Shotgun 
+events to the bridge.
+
+Since they are installed in different locations and each setup has different python module 
+requirements, the instructions below describe how to setup an environment for each of them 
+separately. 
+
 SG Jira Bridge
 ==============
 Installing Required Modules
@@ -110,10 +120,6 @@ Installing Required Modules
 We recommend `setting up a virtual environment <https://docs.python-guide.org/dev/virtualenvs/>`_.
 Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed in your global Python installation.
 A ``requirements.txt`` file is provided to install all required packages.
-
-.. note::
-
-    If you use ``pipenv``, see :ref:`using-pipenv`.
 
 .. code-block:: bash
 
@@ -127,7 +133,7 @@ A ``requirements.txt`` file is provided to install all required packages.
     $ venv/Scripts/activate
 
     # Install required packages
-    pip install -r requirements.txt
+    pip install -r /path/to/sg-jira-bridge/requirements.txt
 
 
 Settings
@@ -170,10 +176,6 @@ Installing Required Modules
 We recommend `setting up a virtual environment <https://docs.python-guide.org/dev/virtualenvs/>`_.
 Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed in your global Python installation.
 
-.. note::
-
-    If you use ``pipenv``, see :ref:`using-pipenv`.
-
 .. code-block:: bash
 
     # create a virtualenv
@@ -185,12 +187,14 @@ Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed i
     # On Windows (using PowerShell)
     $ venv/Scripts/activate
 
-    # Install required packages
-    pip install requests https://github.com/shotgunsoftware/python-api/archive/v3.0.38.zip
+    # Install required packages for the trigger. 
+    # Note: This requirements.txt is in the "sg-jira-bridge/triggers" 
+    #       subdirectory, NOT in the root of the project.
+    pip install -r /path/to/sg-jira-bridge/triggers/requirements.txt
 
 Enable the SG Jira Trigger
 --------------------------
-Add the path to the SG Jira Bridge ``sg_jira_event_trigger.py`` file to the the
+Add the path to the SG Jira Bridge ``sg_jira_event_trigger.py`` file to the
 shotgunEvents conf file::
 
     ...
@@ -199,7 +203,7 @@ shotgunEvents conf file::
 
     # A comma delimited list of paths where the framework should look for plugins to
     # load.
-    paths: /path/to/sg_jira_bridge/sg_events_triggers, /path/to/your/other/shotgun/plugins
+    paths: /path/to/sg_jira_bridge/triggers, /path/to/any/other/shotgun/plugins
     ...
 
 Authentication

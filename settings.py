@@ -11,6 +11,9 @@ import os
 import sys
 import logging
 
+# Documentation for these settings are available at 
+# https://developer.shotgunsoftware.com/sg-jira-bridge/settings.html
+
 try:
     # Allow users to define their sensible data in a .env file and
     # load it in environment variables with python-dotenv.
@@ -79,6 +82,7 @@ LOGGING = {
             "level": "INFO",
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "standard",
+            # this location should be updated to where you store logs
             "filename": "/tmp/sg_jira.log",
             "maxBytes": 1024 * 1024,
             "backupCount": 5

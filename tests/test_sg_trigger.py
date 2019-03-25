@@ -14,7 +14,7 @@ import mock
 from shotgun_api3.lib import mockgun
 
 from test_base import TestBase
-import sg_jira_event_trigger
+from triggers import sg_jira_event_trigger
 
 logger = logging.getLogger(__name__)
 

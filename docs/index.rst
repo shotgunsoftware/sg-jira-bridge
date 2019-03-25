@@ -24,7 +24,6 @@ is configured  in Jira for your Project.
     settings
     debugging
     developer
-    additional_info
     known_issues
 
 
