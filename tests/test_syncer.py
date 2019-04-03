@@ -13,6 +13,7 @@ from test_sync_base import TestSyncBase
 from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 import sg_jira
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+from sg_jira.constants import SHOTGUN_JIRA_URL_FIELD
 from sg_jira.handlers.note_comment_handler import COMMENT_BODY_TEMPLATE
 
 # A list of Shotgun Projects
@@ -1688,6 +1689,14 @@ class TestJiraSyncer(TestSyncBase):
         updated_task = bridge.shotgun.find_one(
             sg_task["type"],
             [["id", "is", sg_task["id"]]],
-            fields=sg_task.keys() + [SHOTGUN_JIRA_ID_FIELD]
+            fields=sg_task.keys() + [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD]
         )
         self.assertIsNotNone(updated_task[SHOTGUN_JIRA_ID_FIELD])
+        issue = bridge.jira.issue(updated_task[SHOTGUN_JIRA_ID_FIELD])
+        # make sure we're setting the Jira URL and it's what we expect
+        self.assertIsNotNone(updated_task[SHOTGUN_JIRA_URL_FIELD])
+        expected_url = {
+            "name": "View in Jira",
+            "url": issue.permalink()
+        }
+        self.assertEqual(updated_task[SHOTGUN_JIRA_URL_FIELD], expected_url)

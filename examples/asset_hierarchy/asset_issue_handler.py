@@ -6,7 +6,7 @@
 #
 
 from sg_jira.handlers import EntityIssueHandler
-from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_URL_FIELD
 from sg_jira.errors import InvalidShotgunValue
 
 
@@ -323,7 +323,13 @@ class AssetIssueHandler(EntityIssueHandler):
                 self._shotgun.update(
                     shotgun_asset["type"],
                     shotgun_asset["id"],
-                    {SHOTGUN_JIRA_ID_FIELD: jira_issue.key}
+                    {
+                        SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+                        SHOTGUN_JIRA_URL_FIELD: {
+                            "url": jira_issue.permalink(),
+                            "name": "View in Jira"
+                        }
+                    }
                 )
                 updated = True
 
@@ -483,6 +489,7 @@ class AssetIssueHandler(EntityIssueHandler):
         This can be used as well to cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field("Asset", SHOTGUN_JIRA_ID_FIELD, "text")
+        self._shotgun.assert_field("Asset", SHOTGUN_JIRA_URL_FIELD, "url")
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """

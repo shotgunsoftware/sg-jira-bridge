@@ -40,7 +40,7 @@ class Syncer(object):
     @property
     def shotgun(self):
         """
-        Return a connected :class:`ShotgunSession` instance.
+        Return a connected :class:`~shotgun_session.ShotgunSession` instance.
         """
         return self._bridge.shotgun
 

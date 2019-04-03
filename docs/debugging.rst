@@ -193,4 +193,18 @@ You can see there's no ``na`` status here::
     }
 
 
+Time Tracking: Original Estimate is Required
+--------------------------------------------
+If you encounter the following error::
 
+    JIRAError: JiraError HTTP 400 url: https://myjira.atlassian.net/rest/api/2/issue
+	    text: Time Tracking: Original Estimate is required.
+
+This means you have Time Tracking enabled on your Jira site and set as a
+required field. However, Time Tracking is not on your default Issue creation
+screen. 
+
+**Solution**
+
+Add Time Tracking to the default Issue creation screen for this project and
+this error should be resolved.
