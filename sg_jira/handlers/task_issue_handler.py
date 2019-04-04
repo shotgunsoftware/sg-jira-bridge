@@ -78,7 +78,12 @@ class TaskIssueHandler(EntityIssueHandler):
         Check the Jira and Shotgun site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
         """
-        self._shotgun.assert_field("Task", SHOTGUN_JIRA_ID_FIELD, "text")
+        self._shotgun.assert_field(
+            "Task", 
+            SHOTGUN_JIRA_ID_FIELD, 
+            "text",
+            check_unique=True
+        )
         self._shotgun.assert_field("Task", SHOTGUN_SYNC_IN_JIRA_FIELD, "checkbox")
         self._shotgun.assert_field("Task", SHOTGUN_JIRA_URL_FIELD, "url")
 
@@ -135,6 +140,9 @@ class TaskIssueHandler(EntityIssueHandler):
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
         """
+        meta = event["meta"]
+        shotgun_field = meta["attribute_name"]
+
         task_fields = [
             "content",
             "task_assignees",
@@ -189,21 +197,39 @@ class TaskIssueHandler(EntityIssueHandler):
             )
             return False
 
+        # When an Entity is created in Shotgun, a unique event is generated for 
+        # each field value set in the creation of the Entity. These events
+        # have an additional "in_create" key in the metadata, identifying them
+        # as events from the initial create event.  
+        #       
+        # When the bridge processes the first event, it loads all of the Entity 
+        # field values from Shotgun and creates the Jira Issue with those 
+        # values. So the remaining Shotgun events with the "in_create"
+        # metadata key can be ignored since we've already handled all of
+        # those field updates.
+
+        # We use the Jira id field value to check if we're processing the first 
+        # event. If it exists with in_create, we know the comment has already
+        # been created.
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
+            self._logger.debug(
+                "Rejecting Shotgun event for %s.%s field update during "
+                "create. Issue was already created in Jira: %s" % (
+                    sg_entity["type"],
+                    shotgun_field, 
+                    event
+                )
+            )
+            return False
+
         jira_issue = None
         if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
             # Retrieve the Jira Issue
-            jira_issue = self.get_jira_issue(sg_entity[SHOTGUN_JIRA_ID_FIELD])
+            jira_issue = self._get_jira_issue_and_validate(
+                sg_entity[SHOTGUN_JIRA_ID_FIELD],
+                sg_entity
+            )
             if not jira_issue:
-                # Better to stop now for the time being.
-                # The Issue could have been deleted, and we don't want to keep
-                # recreating it. So we play safe until we correctly handle the
-                # deleted case.
-                self._logger.warning(
-                    "Unable to find a Jira Issue %s for Shotgun Task %s" % (
-                        sg_entity[SHOTGUN_JIRA_ID_FIELD],
-                        sg_entity,
-                    )
-                )
                 return False
 
         # Create it if needed

@@ -204,6 +204,8 @@ JIRA_ISSUE_FIELDS = {
     },
     "workratio": -1
 }
+JIRA_ISSUE_SG_TYPE_FIELD = "customfield_11502"
+JIRA_ISSUE_SG_ID_FIELD = "customfield_11501"
 
 JIRA_EVENT = {
     "changelog": {
@@ -697,7 +699,13 @@ class TestJiraSyncer(TestSyncBase):
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         bridge.jira.set_projects([JIRA_PROJECT])
-        issue = bridge.jira.create_issue({})
+        # We validate the Issue syncs back to the same SG entity.
+        issue = bridge.jira.create_issue(
+            {
+                JIRA_ISSUE_SG_TYPE_FIELD: "Task",
+                JIRA_ISSUE_SG_ID_FIELD: 3
+            }
+        )
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
         sg_tags = [{
             "type": "Tag",
@@ -1692,6 +1700,7 @@ class TestJiraSyncer(TestSyncBase):
             fields=sg_task.keys() + [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD]
         )
         self.assertIsNotNone(updated_task[SHOTGUN_JIRA_ID_FIELD])
+
         issue = bridge.jira.issue(updated_task[SHOTGUN_JIRA_ID_FIELD])
         # make sure we're setting the Jira URL and it's what we expect
         self.assertIsNotNone(updated_task[SHOTGUN_JIRA_URL_FIELD])
@@ -1700,3 +1709,58 @@ class TestJiraSyncer(TestSyncBase):
             "url": issue.permalink()
         }
         self.assertEqual(updated_task[SHOTGUN_JIRA_URL_FIELD], expected_url)
+
+    def test_mismatched_sg_jira_ids(self, mocked_sg):
+        """
+        Test we correctly catch when the Jira Issue is linked to 
+        a different SG entity from the one trying to sync to it and 
+        don't sync it.
+        This will also be the case for catching when SG entities are
+        duplicated if unique values aren't enforced on the Jira Key field.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        bridge.jira.set_projects([JIRA_PROJECT])
+        # Create an issue that is definitely not linked back to the synced Task
+        issue = bridge.jira.create_issue(
+            {
+                JIRA_ISSUE_SG_TYPE_FIELD: "Task",
+                JIRA_ISSUE_SG_ID_FIELD: 00000
+            }
+        )
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+
+        synced_task = {
+            "type": "Task",
+            "id": 3,
+            "content": "Task One/2",
+            "sg_description": "foo",
+            "project": SG_PROJECTS[1],
+            SHOTGUN_JIRA_ID_FIELD: issue.key,
+            SHOTGUN_SYNC_IN_JIRA_FIELD: True,
+        }
+        self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS + [synced_task])
+        
+        # make sure Task is not synced to Issue that is linked to a different
+        # SG entity
+        event = {
+            "user": {"type": "HumanUser", "id": 1},
+            "project": {"type": "Project", "id": 2},
+            "meta": {
+                "type": "attribute_change",
+                "attribute_name": "sg_description",
+                "entity_type": "Task",
+                "entity_id": synced_task["id"],
+                "field_data_type": "text",
+                "old_value": synced_task["sg_description"],
+                "new_value": "new description"
+            }
+        }            
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "task_issue",
+                "Task",
+                synced_task["id"],
+                event
+            )
+        )

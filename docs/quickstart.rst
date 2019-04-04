@@ -35,15 +35,19 @@ The following fields must be created in Shotgun for each of the
 following entity types:
 
 ===========   ====================   =========   ==========================   ==========================
-Entity Type   Field Name             Data Type   Display                      Description
+Entity Type   Field Name             Data Type   Display Name (recommended)   Description
 ===========   ====================   =========   ==========================   ==========================
 Project       ``sg_jira_sync_url``   File/Link   Jira Sync URL                URL of SG Jira Bridge (see below)
-Project       ``sg_jira_key``        Text        Jira Key                     Synced Project Key value in Jira
-Task          ``sg_jira_key``        Text        Jira Key                     Synced Issue Key value in Jira
+Project       ``sg_jira_key``        Text        Jira Key*                    Synced Project Key value in Jira
+Task          ``sg_jira_key``        Text        Jira Key*                    Synced Issue Key value in Jira
 Task          ``sg_sync_in_jira``    Checkbox    Sync In Jira                 Enable/Disable syncing for this Task
 Task          ``sg_jira_url``        File/Link   Jira URL                     Link to synced Issue in Jira
-Note          ``sg_jira_key``        Text        Jira Key                     Synced Issue Key/Comment ID in Jira
+Note          ``sg_jira_key``        Text        Jira Key*                    Synced Issue Key/Comment ID in Jira
 ===========   ====================   =========   ==========================   ==========================
+
+.. note::
+    \* All ``sg_jira_key`` fields must be configured with the "*Ensure unique 
+    values per project*" setting **checked**.
 
 Configure your Shotgun Project
 ==============================
@@ -56,7 +60,7 @@ Configure your Shotgun Project entity with your Jira Sync Settings:
 |              |                                          | Jira Bridge webserver                   |
 +--------------+------------------------------------------+-----------------------------------------+
 | Jira Key     | <JIRA PROJECT KEY>                       | The Project Key in Jira for the Project |
-|              |                                          | you're syncing (eg ``TEST``)            |
+|              |                                          | you're syncing (eg ``TEST``).           |
 +--------------+------------------------------------------+-----------------------------------------+
 
 
