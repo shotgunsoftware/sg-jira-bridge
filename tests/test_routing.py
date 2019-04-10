@@ -131,7 +131,7 @@ class TestRouting(TestBase):
             server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("HTTP/1.0 200" in raw_response)
+        self.assertTrue("HTTP/1.1 200" in raw_response)
         self.assertTrue("<p>Syncing with valid settings.</p>" in raw_response)
         # POST request with invalid payload
         handler = webapp.RequestHandler(
@@ -176,7 +176,7 @@ class TestRouting(TestBase):
             server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("HTTP/1.0 200" in raw_response)
+        self.assertTrue("HTTP/1.1 200" in raw_response)
         self.assertTrue("<p>Syncing with valid settings.</p>" in raw_response)
         # POST request with invalid path: a resource type and key must be provided
         handler = webapp.RequestHandler(
@@ -210,7 +210,7 @@ class TestRouting(TestBase):
             server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("HTTP/1.0 200" in raw_response)
+        self.assertTrue("HTTP/1.1 200" in raw_response)
         self.assertTrue(
             ("<p>Syncing with %s settings.</p>" % UNICODE_STRING) in raw_response
         )
