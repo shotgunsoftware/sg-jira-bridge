@@ -46,6 +46,9 @@ class MockServer(object):
     def sync_in_shotgun(self, *args, **kwargs):
         return True
 
+    def admin_reset(self, *args, **kwargs):
+        return True
+
 
 class MockRequest(object):
     """
@@ -111,19 +114,68 @@ class TestRouting(TestBase):
             os.path.join(self._fixtures_path, "schemas", "sg-jira")
         )
 
-    def test_sg_route(self, mocked_finish, mocked_jira, mocked_sg):
+    def test_bad_routes(self, mocked_finish, mocked_jira, mocked_sg):
         """
-        Test routing from SG to Jira
+        Test all bad routes fail
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
         """
         server = MockServer()
-        # GET request with an invalid settings name
+        
+        # GET request with an invalid action
         handler = webapp.RequestHandler(
-            MockRequest("/sg2jira/default", None),
+            MockRequest("/badaction", None),
             ("localhost", -1),
             server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("400 Invalid settings name default" in raw_response)
+        self.assertTrue("400 Invalid request path /badaction" in raw_response)
+        
+        # GET request with an invalid action but valid settings name
+        handler = webapp.RequestHandler(
+            MockRequest("/badaction/valid", None),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("400 Invalid request path /badaction/valid" in raw_response)
+        
+        # POST request with an invalid action
+        handler = webapp.RequestHandler(
+            MockRequest("/badaction", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("400 Invalid request path /badaction" in raw_response)
+        
+        # POST request with an invalid action but valid settings name
+        handler = webapp.RequestHandler(
+            MockRequest("/badaction/valid", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("400 Invalid request path /badaction/valid" in raw_response)
+
+    def test_sg_route(self, mocked_finish, mocked_jira, mocked_sg):
+        """
+        Test routing from SG to Jira
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
+        """
+        server = MockServer()
+        # GET request with an invalid settings name
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/badsettings", None),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("400 Invalid settings name badsettings" in raw_response)
+        
         # GET request with a valid settings name
         handler = webapp.RequestHandler(
             MockRequest("/sg2jira/valid", None),
@@ -133,7 +185,8 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue("HTTP/1.1 200" in raw_response)
         self.assertTrue("<p>Syncing with valid settings.</p>" in raw_response)
-        # POST request with invalid payload
+        
+        # POST request with invalid payload missing entity information
         handler = webapp.RequestHandler(
             MockRequest("/sg2jira/valid", {"foo": "blah"}),
             ("localhost", -1),
@@ -144,12 +197,82 @@ class TestRouting(TestBase):
             "Invalid request payload {u'foo': u'blah'}, unable to retrieve a "
             "Shotgun Entity type and its id" in raw_response
         )
-        payload = {
-            "entity_type": "Task",
-            "entity_id": "999",
-        }
+
+        # POST request with invalid entity info in path
         handler = webapp.RequestHandler(
-            MockRequest("/sg2jira/valid", payload),
+            MockRequest("/sg2jira/valid/Task/notanumber", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(
+            "Invalid Shotgun Task id notanumber, it must be a "
+            "number." in raw_response
+        )
+
+        # POST request with invalid path: missing entity_id
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid/Task", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(
+            "Invalid request path /sg2jira/valid/Task" in raw_response
+        )
+        
+        # POST request with invalid settings name - Task in path
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/badsettings/Task/123", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("Invalid settings name badsettings" in raw_response)
+
+        # Invalid Task Payload missing entity_id
+        invalid_payload = {
+            "entity_type": "Task"
+        }
+        # POST request with invalid payload missing entity_type
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid", invalid_payload),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("Invalid request payload" in raw_response)
+
+        # Invalid Task Payload missing entity_type
+        invalid_payload = {
+            "entity_id": 123
+        }
+        # POST request with invalid payload missing entity_type
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid", invalid_payload),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("Invalid request payload" in raw_response)
+
+        # Valid Task Payload
+        valid_payload = {
+            "entity_type": "Task",
+            "entity_id": 999,
+        }
+        # POST request with invalid settings name - Task in payload
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/badsettings", valid_payload),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("Invalid settings name badsettings" in raw_response)
+
+        # POST request with valid payload
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid", valid_payload),
             ("localhost", -1),
             server
         )
@@ -159,16 +282,20 @@ class TestRouting(TestBase):
     def test_jira_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
         Test routing from Jira to SG
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
         """
         server = MockServer()
         # GET request with an invalid settings name
         handler = webapp.RequestHandler(
-            MockRequest("/jira2sg/default", None),
+            MockRequest("/jira2sg/badsettings", None),
             ("localhost", -1),
             server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("400 Invalid settings name default" in raw_response)
+        self.assertTrue("400 Invalid settings name badsettings" in raw_response)
+        
         # GET request with a valid settings name
         handler = webapp.RequestHandler(
             MockRequest("/jira2sg/valid", None),
@@ -178,7 +305,8 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue("HTTP/1.1 200" in raw_response)
         self.assertTrue("<p>Syncing with valid settings.</p>" in raw_response)
-        # POST request with invalid path: a resource type and key must be provided
+        
+        # POST request with invalid path: missing resource type and key
         handler = webapp.RequestHandler(
             MockRequest("/jira2sg/valid", {"foo": "blah"}),
             ("localhost", -1),
@@ -189,8 +317,80 @@ class TestRouting(TestBase):
             "Invalid request path /jira2sg/valid, it must include a Jira "
             "resource type and its key" in raw_response
         )
+        
+        # POST request with invalid path: missing resource key
+        handler = webapp.RequestHandler(
+            MockRequest("/jira2sg/valid/issue", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(
+            "Invalid request path /jira2sg/valid/issue" in raw_response
+        )
+        
+        # POST request with invalid settings name
+        handler = webapp.RequestHandler(
+            MockRequest("/jira2sg/badsettings/issue/BLAH", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("Invalid settings name badsettings" in raw_response)
+
+        # POST request with valid path
         handler = webapp.RequestHandler(
             MockRequest("/jira2sg/valid/issue/BLAH", {"foo": "blah"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("200 POST request successful" in raw_response)
+
+    def test_admin_route(self, mocked_finish, mocked_jira, mocked_sg):
+        """
+        Test routing to Admin
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
+        """
+        server = MockServer()
+
+        # GET admin requests are not supported, ensure they fail as expected
+        
+        # GET admin action with a valid settings name instead of action
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/valid", None),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("400 Invalid request path /admin/valid" in raw_response)
+        
+        # GET valid admin action path should fail with GET
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/reset", None),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue("HTTP/1.1 400" in raw_response)
+        self.assertTrue("400 Invalid request path /admin/reset" in raw_response)
+        
+        # POST request with invalid admin action
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/badaction", {"foo": "bar"}),
+            ("localhost", -1),
+            server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(
+            "Invalid admin path '/admin/badaction'" in raw_response
+        )
+
+        # POST request with a valid admin action should succeed.
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/reset", {"foo": "bar"}),
             ("localhost", -1),
             server
         )

@@ -107,6 +107,15 @@ def get_sg_jira_bridge_version():
     return "dev"
 
 
+class SgJiraBridgeBadRequestError(Exception):
+    """
+    Custom exception so we can differentiate between errors we raise that
+    should return 4xx error codes and errors in the application which should
+    return 500 error codes.
+    """
+    pass
+
+
 class Server(BaseHTTPServer.HTTPServer):
     """
     A web server
@@ -128,6 +137,12 @@ class Server(BaseHTTPServer.HTTPServer):
         Just pass the given parameters to the SG Jira Brige method.
         """
         return self._sg_jira.sync_in_shotgun(*args, **kwargs)
+
+    def admin_reset(self, *args, **kwargs):
+        """
+        Just pass the given parameters to the SG Jira Brige method.
+        """
+        return self._sg_jira.reset(*args, **kwargs)
 
     @property
     def sync_settings_names(self):
@@ -208,16 +223,15 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if len(path_parts) == 1 and path_parts[0] == "favicon.ico":
             self.send_error(404)
             return
-        if len(path_parts) < 2:
-            self.send_error(400, "Invalid request path %s" % self.path)
-            return
+
         if path_parts[0] == "sg2jira":
             title = "Shotgun to Jira"
         elif path_parts[0] == "jira2sg":
             title = "Jira to Shotgun"
         else:
-            self.send_error(400, "Invalid action %s" % path_parts[0])
+            self.send_error(400, "Invalid request path %s" % self.path)
             return
+        
         settings_name = path_parts[1]
         if settings_name not in self.server.sync_settings_names:
             self.send_error(400, "Invalid settings name %s" % settings_name)
@@ -240,118 +254,194 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         Post url paths need to have the form::
 
-          sg2jira/Settings name[/SG Entity type/SG Entity id]
-          jira2sg/Settings name/Jira Resource type/Jira Resource key
+          sg2jira/<settings_name>[/<sg_entity_type>/<sg_entity_id>]
+          jira2sg/<settings_name>/<jira_resource_type>/<jira_resource_key>
+          admin/reset
 
         If the SG Entity is not specified in the path, it must be specified in
         the provided payload.
         """
+        # /sg2jira/default[/Task/123]
+        # /jira2sg/default/Issue/KEY-123
+        # /admin/reset
         try:
-            direction = None
-            settings_name = None
-            entity_type = None
-            entity_key = None
             parsed = urlparse.urlparse(self.path)
-            # Extract path components from the path, ignore leading '/' and
-            # discard empty values coming from '/' at the end or multiple
-            # contiguous '/'.
-            path_parts = [x for x in parsed.path[1:].split("/") if x]
-            if len(path_parts) == 4:
-                direction, settings_name, entity_type, entity_key = path_parts
-            elif len(path_parts) == 2:
-                direction, settings_name = path_parts
-            else:
-                self.send_error(400, "Invalid request path %s" % self.path)
-                return
-
             # Extract additional query parameters.
             # What they could be is still TBD, may be things like `dry_run=1`?
             parameters = {}
             if parsed.query:
                 parameters = urlparse.parse_qs(parsed.query, True, True)
-            # Read the body to get the payload.
-            content_type = self.headers.getheader("content-type")
-            # Check the content type, if not set we assume json.
-            # We can have a charset just after the content type, e.g.
-            # application/json; charset=UTF-8.
-            if content_type and not re.search(r"\s*application/json\s*;?", content_type):
-                self.send_error(
-                    400,
-                    "Invalid content-type %s, it must be 'application/json'" % content_type
-                )
-                return
-            content_len = int(self.headers.getheader("content-length", 0))
-            body = self.rfile.read(content_len)
-            payload = {}
-            if body:
-                payload = json.loads(body)
 
-            # Basic routing: extract the synch direction and additional values
-            # from the path.
-            if direction == "sg2jira":
-                if not entity_type or not entity_key:
-                    # We need to retrieve this from the payload.
-                    entity_type = payload.get("entity_type")
-                    entity_key = payload.get("entity_id")
-                if not entity_type or not entity_key:
-                    self.send_error(
-                        400,
-                        "Invalid request payload %s, unable to retrieve "
-                        "a Shotgun Entity type and its id." % (payload)
-                    )
-                    return
-                # We could have a str or int here depending on how it was sent.
-                try: 
-                    entity_key = int(entity_key)
-                except ValueError:
-                    self.send_error(
-                        400,
-                        "Invalid Shotgun %s id %s, it must be a number." % (
-                            entity_type,
-                            entity_key,
-                        )
-                    )
-                    return
-
-                self.server.sync_in_jira(
-                    settings_name,
-                    entity_type,
-                    int(entity_key),
-                    event=payload,
-                    **parameters
-                )
-            elif direction == "jira2sg":
-                if not entity_type or not entity_key:
-                    # We can't retrieve this easily from the webhook payload without
-                    # hard coding a list of supported resource types, so we require
-                    # it to be specified in the path for the time being.
-                    self.send_error(
-                        400,
-                        "Invalid request path %s, it must include a Jira resource "
-                        "type and its key" % self.path
-                    )
-                    return
-                # Settings name/Jira Resource type/Jira Resource key.
-                self.server.sync_in_shotgun(
-                    settings_name,
-                    entity_type,
-                    entity_key,
-                    event=payload,
-                    **parameters
-                )
+            # Extract path components from the path, ignore leading '/' and
+            # discard empty values coming from '/' at the end or multiple
+            # contiguous '/'.
+            path_parts = [x for x in parsed.path[1:].split("/") if x]
+            
+            if not path_parts:
+                self.send_error(400, "Invalid request path %s" % self.path)
+            # Treat the command
+            if path_parts[0] == "admin":
+                self._handle_admin_request(path_parts, parameters)
+            elif path_parts[0] in ["sg2jira", "jira2sg"]:
+                self._handle_sync_request(path_parts, parameters)
             else:
                 self.send_error(
                     400,
-                    "Invalid request path %s, don't know how to handle %s" % (
+                    "Invalid request path %s: unknown command %s" % (
                         self.path,
-                        direction
+                        path_parts[0]
                     )
                 )
                 return
+
             self.post_response(200, "POST request successful")
+        
+        except SgJiraBridgeBadRequestError as e:
+            self.send_error(400, e.message)
         except Exception as e:
             self.send_error(500, e.message)
             logger.debug(e, exc_info=True)
+
+    def _read_payload(self):
+        """
+        Read the body of a request to get the payload.
+        
+        :returns: payload as a dictionary or empty dict if there was no payload
+        """
+        content_type = self.headers.getheader("content-type")
+        # Check the content type, if not set we assume json.
+        # We can have a charset just after the content type, e.g.
+        # application/json; charset=UTF-8.
+        if content_type and not re.search(r"\s*application/json\s*;?", content_type):
+            raise SgJiraBridgeBadRequestError(
+                "Invalid content-type %s, it must be 'application/json'" % content_type
+            )
+
+        content_len = int(self.headers.getheader("content-length", 0))
+        body = self.rfile.read(content_len)
+        payload = {}
+        if body:
+            payload = json.loads(body)
+
+        return payload
+
+    def _handle_sync_request(self, path_parts, parameters):
+        """
+        Handle a request to sync between Shotgun and Jira in either direction.
+
+        At this point, only the action (the first path_part) from the request 
+        path has been validated. The rest of the path_parts still need to be 
+        validated before we proceed. We expect the path to for this request to 
+        be one of the following:
+
+            sg2jira/<settings_name>[/<sg_entity_type>/<sg_entity_id>]
+            jira2sg/<settings_name>/<jira_resource_type>/<jira_resource_key>
+        
+        If the SG Entity is not specified in the path, it must be present in
+        the loaded payload.
+
+        :param list path_parts: List of strings representing each part of the 
+            URL path that this request accessed. For example,  
+            ``["sg2jira", "default", "Task", "123"]``.
+        :param dict parameters: Optional additional parameters that were extracted
+            from the url.
+        :raises SgJiraBridgeBadRequestError: If there is any problem we detect with the
+            path, or payload.
+        """
+        entity_type = None
+        entity_key = None
+        if len(path_parts) == 4:
+            direction, settings_name, entity_type, entity_key = path_parts
+        elif len(path_parts) == 2:
+            direction, settings_name = path_parts
+        else:
+            raise SgJiraBridgeBadRequestError("Invalid request path %s" % self.path)
+
+        if settings_name not in self.server.sync_settings_names:
+            raise SgJiraBridgeBadRequestError(
+                "Invalid settings name %s" % settings_name
+            )
+
+        payload = self._read_payload()
+
+        if direction == "sg2jira":
+            # Ensure we get a valid entity_type and entity_id
+            if not entity_type or not entity_key:
+                # We need to retrieve this from the payload.
+                entity_type = payload.get("entity_type")
+                entity_key = payload.get("entity_id")
+            if not entity_type or not entity_key:
+                raise SgJiraBridgeBadRequestError(
+                    "Invalid request payload %s, unable to retrieve "
+                    "a Shotgun Entity type and its id." % payload
+                )
+            # We could have a str or int here depending on how it was sent.
+            try: 
+                entity_key = int(entity_key)
+            except ValueError as e:
+                # log the original exception before we obfuscate it
+                logger.debug(e, exc_info=True)
+                raise SgJiraBridgeBadRequestError(
+                    "Invalid Shotgun %s id %s, it must be a number." % (
+                        entity_type,
+                        entity_key,
+                    )
+                )
+
+            self.server.sync_in_jira(
+                settings_name,
+                entity_type,
+                int(entity_key),
+                event=payload,
+                **parameters
+            )
+
+        elif direction == "jira2sg":
+            if not entity_type or not entity_key:
+                # We can't retrieve this easily from the webhook payload without
+                # hard coding a list of supported resource types, so we require
+                # it to be specified in the path for the time being.
+                raise SgJiraBridgeBadRequestError(
+                    "Invalid request path %s, it must include a Jira resource "
+                    "type and its key" % self.path
+                )
+
+            self.server.sync_in_shotgun(
+                settings_name,
+                entity_type,
+                entity_key,
+                event=payload,
+                **parameters
+            )
+
+    def _handle_admin_request(self, path_parts, parameters):
+        """
+        Handle admin request to the server.
+
+        Currently handles a single action, ``reset`` which resets the Bridge
+        in order to clear out the Shotgun schema cache. 
+
+        At this point, only the action (the first path_part) from the request 
+        path has been validated. The rest of the path_parts still need to be 
+        validated before we proceed.
+
+            admin/reset
+
+        :param list path_parts: List of strings representing each part of the 
+            URL path that this request accessed. For example,  
+            ``["admin", "reset"]``.
+        :param dict parameters: Optional additional parameters that were extracted
+            from the url.
+        :raises SgJiraBridgeBadRequestError: If there is any problem we detect with the
+            path, or payload.
+        """
+        # The only function we respond to now is reset
+        if len(path_parts) != 2 or path_parts[1] != "reset":
+            raise SgJiraBridgeBadRequestError(
+                "Invalid admin path '%s'. Action is not set or unsupported." % self.path
+            )
+        
+        self.server.admin_reset(**parameters)
 
     def log_message(self, format, *args):
         """

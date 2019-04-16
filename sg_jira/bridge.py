@@ -228,6 +228,15 @@ class Bridge(object):
         """
         return self._sync_settings.keys()
 
+    def reset(self):
+        """
+        Reset the bridge.
+
+        Clears all caches.
+        """
+        logger.debug("Resetting bridge")
+        self.shotgun.clear_cached_field_schema()
+
     def get_syncer(self, name):
         """
         Returns a :class:`Syncer` instance for the given settings name.
@@ -297,7 +306,7 @@ class Bridge(object):
             # to unicode before processing.
             safe_event = utf8_to_unicode(event)
             syncer = self.get_syncer(settings_name)
-            # See comment in Syncer class: we assume copmlicated logic can be
+            # See comment in Syncer class: we assume complicated logic can be
             # handled in a single handler, so we don't have to support multiple
             # handlers.
             handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
