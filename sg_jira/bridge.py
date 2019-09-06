@@ -72,6 +72,7 @@ class Bridge(object):
         )
         self._shotgun.add_user_agent("sg_jira_sync")
 
+        self._jira_user = jira_user
         self._jira = JiraSession(
             jira_site,
             basic_auth=(
@@ -219,7 +220,7 @@ class Bridge(object):
 
         :returns: A string with the username.
         """
-        return urllib.unquote_plus(self.jira.current_user())
+        return urllib.unquote_plus(self.jira.current_user() or self._jira_user)
 
     @property
     def jira(self):
