@@ -162,7 +162,18 @@ and define these in a ``.env`` file.
     # Jira credentials
     SGJIRA_JIRA_SITE='https://mystudio.atlassian.net'
     SGJIRA_JIRA_USER='richard.hendricks@piedpiper.com'
-    SGJIRA_JIRA_USER_SECRET='youkn0wwh@tapa$5word1smAKeitag0odone3'  # replace with your user's password
+    SGJIRA_JIRA_USER_SECRET='youkn0wwh@tapa$5word1smAKeitag0odone3'  # replace with your user's password or API key
+
+.. note::
+
+    **Jira Cloud** requires the use of an API token and will not work with
+    a user password. See https://confluence.atlassian.com/x/Vo71Nw for information 
+    on how to generate a token.
+    
+    **Jira Server** will still work with a user password and does not support 
+    API tokens.
+
+    For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/ 
 
 .. note::
 

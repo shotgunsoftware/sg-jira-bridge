@@ -45,13 +45,20 @@ class Bridge(object):
         """
         Instatiate a new bridge between the given SG site and Jira site.
 
+        .. note::
+            Jira Cloud requires the use of an API token and will not work with
+            a user's password. See https://confluence.atlassian.com/x/Vo71Nw
+            for information on how to generate a token.
+            Jira Server will still work with a users's password and does not
+            support API tokens.
+
         :param str sg_site: A Shotgun site url.
         :param str sg_script: A Shotgun script user name.
         :param str sg_script_key: The script user key for the Shotgun script.
         :param str jira_site: A Jira site url.
         :param str jira_user: A Jira user name, either his email address or short
                               name.
-        :param str jira_secret: The Jira user password.
+        :param str jira_secret: The Jira user password or API key.
         :param sync_settings: A dictionary where keys are settings names.
         :param str sg_http_proxy: Optional, a http proxy to use for the Shotgun
                                   connection, or None.
@@ -65,9 +72,10 @@ class Bridge(object):
         )
         self._shotgun.add_user_agent("sg_jira_sync")
 
+        self._jira_user = jira_user
         self._jira = JiraSession(
             jira_site,
-            auth=(
+            basic_auth=(
                 jira_user,
                 jira_secret
             ),
@@ -212,7 +220,7 @@ class Bridge(object):
 
         :returns: A string with the username.
         """
-        return urllib.unquote_plus(self.jira.current_user())
+        return urllib.unquote_plus(self.jira.current_user() or self._jira_user)
 
     @property
     def jira(self):
