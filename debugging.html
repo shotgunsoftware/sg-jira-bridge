@@ -13,43 +13,40 @@
 
   
   
+  
+  
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
-        <link rel="next" title="Developer Resources" href="developer.html"/>
-        <link rel="prev" title="Settings" href="settings.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer Resources" href="developer.html" />
+    <link rel="prev" title="Settings" href="settings.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
+   
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -80,7 +77,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
@@ -92,6 +92,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#common-issues">Common Issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#runtimeerror-maximum-recursion-depth-exceeded">RuntimeError: maximum recursion depth exceeded</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#not-seeing-changes-sync">Not Seeing Changes Sync</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sg-jira-bridge-webapp-isn-t-responding">SG Jira Bridge Webapp Isn’t Responding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shotgun-changes-aren-t-syncing-to-jira">Shotgun changes aren’t syncing to Jira</a></li>
@@ -114,32 +115,52 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">Shotgun Jira Bridge</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Shotgun Jira Bridge</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Debugging</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Debugging</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -245,6 +266,21 @@ you to specify the hostname you wish to use.</p>
 </div>
 <div class="section" id="common-issues">
 <h2>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="runtimeerror-maximum-recursion-depth-exceeded">
+<h3>RuntimeError: maximum recursion depth exceeded<a class="headerlink" href="#runtimeerror-maximum-recursion-depth-exceeded" title="Permalink to this headline">¶</a></h3>
+<p>If you are seeing this error in your logs when trying to start the web service,
+you may be using an old version the Shotgun Jira Bridge and need to update.</p>
+<p>Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
+Jira client library to generate this error. Updating to the latest version of
+Shotgun Jira Bridge transitions the authentication to use Basic Auth.</p>
+<p>You will need to generate an API token and use this as your user secret (password).
+User passwords are no longer supported by Jira Cloud. See
+<a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a> for information on how to generate a
+token.</p>
+<p>Jira Server should be unaffected by this error as it still works with user
+passwords and does not support API tokens.</p>
+<p>For more information, see: <a class="reference external" href="https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/">https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/</a></p>
+</div>
 <div class="section" id="not-seeing-changes-sync">
 <h3>Not Seeing Changes Sync<a class="headerlink" href="#not-seeing-changes-sync" title="Permalink to this headline">¶</a></h3>
 <p>When you make a change in Shotgun or Jira, the bridge evaluates whether the
@@ -335,15 +371,16 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
 
 
            </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="developer.html" class="btn btn-neutral float-right" title="Developer Resources" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="developer.html" class="btn btn-neutral float-right" title="Developer Resources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="settings.html" class="btn btn-neutral" title="Settings" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="settings.html" class="btn btn-neutral float-left" title="Settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -352,11 +389,11 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc..
+        &copy; Copyright 2019, Autodesk Inc.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -369,36 +406,15 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

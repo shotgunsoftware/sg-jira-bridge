@@ -104,6 +104,25 @@ Starting ngrok
 
 Common Issues
 =============
+RuntimeError: maximum recursion depth exceeded
+----------------------------------------------
+If you are seeing this error in your logs when trying to start the web service,
+you may be using an old version the Shotgun Jira Bridge and need to update.
+
+Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
+Jira client library to generate this error. Updating to the latest version of
+Shotgun Jira Bridge transitions the authentication to use Basic Auth.
+
+You will need to generate an API token and use this as your user secret (password). 
+User passwords are no longer supported by Jira Cloud. See 
+https://confluence.atlassian.com/x/Vo71Nw for information on how to generate a 
+token.
+
+Jira Server should be unaffected by this error as it still works with user 
+passwords and does not support API tokens.
+
+For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/
+
 Not Seeing Changes Sync
 -----------------------
 When you make a change in Shotgun or Jira, the bridge evaluates whether the

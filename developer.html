@@ -13,43 +13,40 @@
 
   
   
+  
+  
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
-        <link rel="next" title="Known Issues &amp; Compatibility Notes" href="known_issues.html"/>
-        <link rel="prev" title="Debugging" href="debugging.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Known Issues &amp; Compatibility Notes" href="known_issues.html" />
+    <link rel="prev" title="Debugging" href="debugging.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
+   
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -80,7 +77,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
@@ -138,32 +138,52 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">Shotgun Jira Bridge</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Shotgun Jira Bridge</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Developer Resources</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Developer Resources</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -352,7 +372,7 @@ must be overridden <em>in addition to the ones required by</em>
 <dl class="class">
 <dt id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property">class </em><code class="descclassname">sg_jira.shotgun_session.</code><code class="descname">ShotgunSession</code><span class="sig-paren">(</span><em>base_url</em>, <em>script_name=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wraps a <a class="reference external" href="https://developer.shotgunsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.0.38)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developer.shotgunsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
 <p>Ensures all the values we get from Shotgun are unicode and not utf-8 encoded
 strings. Utf-8 encodes unicode values before sending them to Shotgun.</p>
@@ -552,7 +572,7 @@ be used with this bridge.</td>
 <dl class="class">
 <dt id="sg_jira.jira_session.JiraSession">
 <em class="property">class </em><code class="descclassname">sg_jira.jira_session.</code><code class="descname">JiraSession</code><span class="sig-paren">(</span><em>jira_site</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extend <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.JIRA" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.JIRA</span></code></a> with helpers.</p>
+<dd><p>Extend <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.JIRA" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.JIRA</span></code></a> with helpers.</p>
 <dl class="method">
 <dt id="sg_jira.jira_session.JiraSession.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>jira_site</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.__init__" title="Permalink to this definition">¶</a></dt>
@@ -589,7 +609,7 @@ are Jira values.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
@@ -615,7 +635,7 @@ be specified when editing an Issue.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>jira_project</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</li>
-<li><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</li>
+<li><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</li>
 <li><strong>user_email</strong> – An email address as a string.</li>
 </ul>
 </td>
@@ -648,7 +668,7 @@ returns assignable users for the time being.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>user_email</strong> – An email address as a string.</li>
 <li><strong>jira_project</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</li>
-<li><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</li>
+<li><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</li>
 <li><strong>for_assignment</strong> – A boolean, if <cite>False</cite> the user just needs to have read
 permission. If <cite>True</cite> the user needs to be suitable for
 Issue assignments.</li>
@@ -673,7 +693,7 @@ Issue assignments.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The Jira Issue edit metadata <cite>fields</cite> property.</td>
 </tr>
@@ -753,7 +773,7 @@ given one and try to apply it.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance.</li>
+<li><strong>jira_issue</strong> – A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance.</li>
 <li><strong>jira_status</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira status name, e.g. <cite>In Progress</cite>.</li>
 <li><strong>comment</strong> – A string, a comment to apply to the Jira transition.</li>
 </ul>
@@ -799,6 +819,14 @@ sync events.</p>
 <dt id="sg_jira.Bridge.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>sg_site</em>, <em>sg_script</em>, <em>sg_script_key</em>, <em>jira_site</em>, <em>jira_user</em>, <em>jira_secret</em>, <em>sync_settings=None</em>, <em>sg_http_proxy=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instatiate a new bridge between the given SG site and Jira site.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Jira Cloud requires the use of an API token and will not work with
+a user’s password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a>
+for information on how to generate a token.
+Jira Server will still work with a users’s password and does not
+support API tokens.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -810,7 +838,7 @@ sync events.</p>
 <li><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</li>
 <li><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira user name, either his email address or short
 name.</li>
-<li><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira user password.</li>
+<li><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira user password or API key.</li>
 <li><strong>sync_settings</strong> – A dictionary where keys are settings names.</li>
 <li><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Optional, a http proxy to use for the Shotgun
 connection, or None.</li>
@@ -1215,7 +1243,7 @@ provides some helpers which can be useful to all handlers.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</td>
 </tr>
@@ -1371,7 +1399,7 @@ value which is slow to retrieve.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</td>
 </tr>
@@ -1544,7 +1572,7 @@ handler, but they need to be able to process them.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc2.dev9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference external" href="https://jira.readthedocs.io/en/master/api.html#jira.Issue" title="(in jira-python v2.0.1.0rc3.dev22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code></a> instance or None.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</td>
 </tr>
@@ -1749,15 +1777,16 @@ for the continuous integration and run the following validations:</p>
 
 
            </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="known_issues.html" class="btn btn-neutral float-right" title="Known Issues &amp; Compatibility Notes" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="known_issues.html" class="btn btn-neutral float-right" title="Known Issues &amp; Compatibility Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="debugging.html" class="btn btn-neutral" title="Debugging" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="debugging.html" class="btn btn-neutral float-left" title="Debugging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1766,11 +1795,11 @@ for the continuous integration and run the following validations:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc..
+        &copy; Copyright 2019, Autodesk Inc.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1783,36 +1812,15 @@ for the continuous integration and run the following validations:</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
