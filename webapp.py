@@ -10,7 +10,9 @@ import argparse
 import urlparse
 import BaseHTTPServer
 import json
+import socket
 import ssl
+import sys
 import logging
 
 import sg_jira
@@ -264,7 +266,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         logger.error(message)
 
 
-def run_server(port, settings, keyfile=None, certfile=None):
+def run_server(port, listen_address, settings, keyfile=None, certfile=None):
     """
     Run the server until a shutdown is requested.
 
@@ -275,7 +277,7 @@ def run_server(port, settings, keyfile=None, certfile=None):
     """
     httpd = Server(
         settings,
-        ("localhost", port), RequestHandler
+        (listen_address, port), RequestHandler
     )
     if keyfile and certfile:
         # Activate https
@@ -302,6 +304,11 @@ def main():
         help="The port number to listen to.",
     )
     parser.add_argument(
+        "--listen_address",
+        default="127.0.0.1",
+        help="The IPv4 address that the server binds to. Use 0.0.0.0 to bind on all network interfaces. Default is localhost.",
+    )
+    parser.add_argument(
         "--settings",
         help="Full path to settings file.",
         required=True
@@ -319,8 +326,15 @@ def main():
     if args.ssl_context:
         keyfile, certfile = args.ssl_context
 
+    try:
+        socket.inet_aton(args.listen_address)
+    except socket.error:
+        print "The specified listen address is not a valid IPv4 address."
+        sys.exit(1)
+
     run_server(
         port=args.port,
+        listen_address=args.listen_address,
         settings=args.settings,
         keyfile=keyfile,
         certfile=certfile,
