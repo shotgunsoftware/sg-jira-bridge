@@ -159,6 +159,14 @@ class Syncer(object):
         # Check we didn't trigger the event to avoid infinite loops.
         user = event.get("user")
         if user:
+            # TODO: Need to run this code on the local install of JIRA and
+            if "accountId" in user and user["accountId"] == self.bridge.jira.current_user_id():
+                self._logger.debug("Rejecting event %s triggered by us (%s)" % (
+                    event,
+                    user["accountId"],
+                ))
+                return None
+
             if user["name"].lower() == self.bridge.current_jira_username.lower():
                 self._logger.debug("Rejecting event %s triggered by us (%s)" % (
                     event,

@@ -86,6 +86,24 @@ class JiraSession(jira.client.JIRA):
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
             )
 
+    # This is a partial port of the code found in the master branch of the JIRA module.
+    # Instead of using it to retrieve the current user name, we'll use it to get
+    # the current account id.
+    # https://github.com/pycontribs/jira/blob/ca306d7e59caa739e8707fec8be3c260340684ac/jira/client.py#L3326-L3348
+    def current_user_id(self):
+        """
+        Returns the account-id of the current user. For anonymous
+        users it will return a value that evaluates as False.
+
+        :rtype: str
+        """
+        if not hasattr(self, '_myself'):
+            url = self._get_url('myself')
+            r = self._session.get(url, headers=self._options['headers'])
+            r_json = r.json()
+            self._myself = r_json
+        return self._myself["accountId"]
+
     def get_jira_issue_field_id(self, name):
         """
         Return the Jira field id for the Issue field with the given name.
