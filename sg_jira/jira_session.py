@@ -89,11 +89,12 @@ class JiraSession(jira.client.JIRA):
     # This is a partial port of the code found in the master branch of the JIRA module.
     # Instead of using it to retrieve the current user name, we'll use it to get
     # the current account id.
+    # Once the 2.1.0 of the API gets released, we'll reevaluate this code and implement
+    # the logic with the proper API calls.
     # https://github.com/pycontribs/jira/blob/ca306d7e59caa739e8707fec8be3c260340684ac/jira/client.py#L3326-L3348
     def current_user_id(self):
         """
-        Returns the account-id of the current user. For anonymous
-        users it will return a value that evaluates as False.
+        Returns the account-id of the current user.
 
         :rtype: str
         """

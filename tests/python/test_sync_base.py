@@ -73,9 +73,9 @@ class TestSyncBase(TestBase):
             "schemas", "sg-jira",
         ))
 
-        # Mocks the current_user_id which depends on introspecting
-        # data coming back from the JIRA API and that we won't
-        # simulate for these tests.
+        # Mocks the "current_user_id" method which depends on
+        # introspecting data coming back from the JIRA API and
+        # that we won't simulate for these tests.
         patcher = mock.patch.object(
             sg_jira.jira_session.JiraSession,
             "current_user_id",
