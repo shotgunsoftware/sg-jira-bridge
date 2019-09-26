@@ -98,9 +98,9 @@ class JiraSession(jira.client.JIRA):
 
         :rtype: str
         """
-        if not hasattr(self, '_myself'):
-            url = self._get_url('myself')
-            r = self._session.get(url, headers=self._options['headers'])
+        if not hasattr(self, "_myself"):
+            url = self._get_url("myself")
+            r = self._session.get(url, headers=self._options["headers"])
             r_json = r.json()
             self._myself = r_json
         return self._myself["accountId"]
