@@ -159,13 +159,31 @@ class Syncer(object):
         # Check we didn't trigger the event to avoid infinite loops.
         user = event.get("user")
         if user:
-            if user["name"].lower() == self.bridge.current_jira_username.lower():
+            if "accountId" in user and user["accountId"] == self.bridge.jira.current_user_id():
+                self._logger.debug("Rejecting event %s triggered by us (%s)" % (
+                    event,
+                    user["accountId"],
+                ))
+                return None
+
+            # TODO: It's hard to tell if these next to ifs are actually needed anymore.
+            # From testing it seems that accountId is always set, so testing for name
+            # and emailAddress is probably not needed anymore. We've left these tests
+            # for now as we don't have access to a JIRA local instance to test on, which
+            # may (but unlikely) behave differently.
+
+            # On GDPR compliant versions of JIRA, the name field is not returned.
+            if "name" in user and user["name"].lower() == self.bridge.current_jira_username.lower():
                 self._logger.debug("Rejecting event %s triggered by us (%s)" % (
                     event,
                     user["name"],
                 ))
                 return None
-            if user["emailAddress"].lower() == self.bridge.current_jira_username.lower():
+
+            # The email field is always present, even on GDPR versions of JIRA, but set to "?".
+            # Protect ourselves here by testing for it's presence since it wouldn't be surprising
+            # if it was completely removed at some point.
+            if "emailAddress" in user and user["emailAddress"].lower() == self.bridge.current_jira_username.lower():
                 self._logger.debug("Rejecting event %s triggered by us (%s)" % (
                     event,
                     user["emailAddress"],

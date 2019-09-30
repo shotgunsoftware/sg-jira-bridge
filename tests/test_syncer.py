@@ -297,7 +297,7 @@ class TestJiraSyncer(TestSyncBase):
         correctly handled.
         """
         # Bad setup should raise an exception
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             RuntimeError,
             "Sorry, I'm bad!",
             self._get_syncer,
@@ -308,7 +308,7 @@ class TestJiraSyncer(TestSyncBase):
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
         )
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             RuntimeError,
             "Sorry, I'm bad!",
             bridge.sync_in_jira,
@@ -321,7 +321,7 @@ class TestJiraSyncer(TestSyncBase):
                 "meta": SG_EVENT_META
             }
         )
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             RuntimeError,
             "Sorry, I'm bad!",
             bridge.sync_in_jira,
@@ -519,7 +519,7 @@ class TestJiraSyncer(TestSyncBase):
         # Test missing values in data
         with mock.patch.object(syncer.jira, "createmeta", return_value=createmeta) as m_cmeta:  # noqa
             # This should fail because of missing data for the required "Faked" field
-            self.assertRaisesRegexp(
+            self.assertRaisesRegex(
                 ValueError,
                 r"Unable to create Jira Task Issue. The following required data is missing: \['Faked'\]",
                 bridge.sync_in_jira,
