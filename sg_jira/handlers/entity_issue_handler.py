@@ -758,7 +758,7 @@ class EntityIssueHandler(SyncHandler):
         example, integer changes are not available as integer values in the `to`
         and `from` values (both are `None`), they are only available as strings
         in the `toString` and `fromString` values. So we use the string values
-        or the actual values on a case by cases basis, dependending on the target
+        or the actual values on a case by cases basis, depending on the target
         data type.
 
         :param shotgun_entity: A Shotgun Entity dictionary with at least a type
