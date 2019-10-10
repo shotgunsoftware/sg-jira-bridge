@@ -54,32 +54,43 @@ class InterationTest(TestCase):
         cls._jira_user_1 = cls._jira.myself()[cls.USER_ID_FIELD]
         cls._jira_user_2 = os.environ["SGJIRA_JIRA_TEST_USER_2"]
 
-    def _try_for(self, functor, description=None, max_time=20.0):
+    def _expect(self, functor, description=None, max_time=20.0):
+        """
+        Try a executing successfully a functor for the given number of seconds
+        until it stops raising an error.
+        """
         before = time.time()
 
-        result = functor()
-        if result is not None:
-            return result
+        try:
+            return functor()
+        except Exception:
+            pass
 
         nb_tries = 2
-        while (before + max_time) > time.time():
+        while True:
             time.sleep(1)
-            print("Retrying '{0}'({1})...".format(description or functor.__name__, nb_tries))
-            result = functor()
-            if result is not None:
-                return result
-            nb_tries += 1
-
-        raise RuntimeError("Did not complete under {0} seconds.".format(max_time))
+            print(
+                "Retrying '{0}'({1})...".format(
+                    description or functor.__name__, nb_tries
+                )
+            )
+            try:
+                return functor()
+            except Exception:
+                if (before + max_time) > time.time():
+                    nb_tries += 1
+                else:
+                    raise
 
     def _get_jira_key(self, entity):
         def wait_for_jira_key():
             result = self._sg.find_one(
                 entity["type"], [["id", "is", entity["id"]]], ["sg_jira_key"]
             )
-            return None if result["sg_jira_key"] is None else result["sg_jira_key"]
+            self.assertIsNotNone(result["sg_jira_key"])
+            return result["sg_jira_key"]
 
-        return self._try_for(wait_for_jira_key)
+        return self._expect(wait_for_jira_key)
 
     def _create_task(self, name):
         new_sg_task = self._sg.create(
@@ -96,7 +107,7 @@ class InterationTest(TestCase):
         self._test_create_task()
         # self._update_status_from_shotgun()
         # self._update_status_from_jira()
-        # self._test_update_assignment_from_shotgun()
+        self._test_update_assignment_from_shotgun()
         self._test_update_assignment_from_jira()
 
     def _test_create_task(self):
@@ -112,15 +123,10 @@ class InterationTest(TestCase):
 
     def _update_status_from_shotgun(self):
         def wait_for_issue_in_progress():
-            issue = self._issue
-            if issue.fields.status.name == "In Progress":
-                return issue
-            else:
-                return None
+            self.assertEqual(self._issue.fields.status.name, "In Progress")
 
         self._sg.update("Task", self._sg_task["id"], {"sg_status_list": "ip"})
-        issue = self._try_for(wait_for_issue_in_progress)
-        self.assertEqual(issue.fields.status.name, "In Progress")
+        self._expect(wait_for_issue_in_progress)
 
     def _set_jira_status(self, issue, status_name):
         jira_transitions = self._jira.transitions(issue, expand="transitions.fields")
@@ -138,25 +144,17 @@ class InterationTest(TestCase):
             task = self._sg.find_one(
                 "Task", [["id", "is", self._sg_task["id"]]], ["sg_status_list"]
             )
-            if task["sg_status_list"] == "fin":
-                return task
-            else:
-                return None
+            self.assertEqual(task["sg_status_list"], "fin")
 
         self._set_jira_status(self._issue, "Done")
-        task = self._try_for(wait_for_shotgun_status_final)
-        self.assertEqual(task["sg_status_list"], "fin")
+        self._expect(wait_for_shotgun_status_final)
 
     def _test_update_assignment_from_shotgun(self):
         def wait_for_assignee_to_change(expected_user_id):
-            assignee = self._issue.fields.assignee
-            if not assignee:
-                return None
-            user_id = getattr(assignee, self.USER_ID_FIELD)
-            if user_id == expected_user_id:
-                return user_id
-            else:
-                return None
+            self.assertEqual(
+                getattr(self._issue.fields.assignee, self.USER_ID_FIELD),
+                expected_user_id,
+            )
 
         # Assign the ticket to a user in Shotgun
         self._sg.update(
@@ -164,13 +162,26 @@ class InterationTest(TestCase):
         )
 
         # Make sure
-        user_id = self._try_for(lambda: wait_for_assignee_to_change(self._jira_user_1), "wait_for_assignee_to_change_to_1")
-        self.assertEqual(user_id, self._jira_user_1)
+        self._expect(
+            lambda: wait_for_assignee_to_change(self._jira_user_1),
+            "wait_for_assignee_to_change_to_1",
+        )
 
         self._sg.update(
             "Task", self._sg_task["id"], {"task_assignees": [self._sg_user_2]}
         )
-        user_id = self._try_for(lambda: wait_for_assignee_to_change(self._jira_user_2), "wait_for_assignee_to_change_to_2")
+        self._expect(
+            lambda: wait_for_assignee_to_change(self._jira_user_2),
+            "wait_for_assignee_to_change_to_2",
+        )
+
+        # TODO: Understand how the bridge deals with multiple task assignees and how
+        # it decides which one gets set on the JIRA ticket.
+
+        # self._sg.update(
+        #     "Task", self._sg_task["id"], {"task_assignees": [self._sg_user_1, self._sg_user_2]}
+        # )
+        # self._expect(lambda: wait_for_assignee_to_change(self._jira_user_2), "wait_for_assignee_to_change_to_2")
 
     def _test_update_assignment_from_jira(self):
         pass
