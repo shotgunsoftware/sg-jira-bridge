@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2018 Autodesk, Inc.  All rights reserved.
 #
 # Use of this software is subject to the terms of the Autodesk license agreement
@@ -78,8 +79,8 @@ def run_tests():
         help="Output directory for xml reports",
     )
     # Dump the environment for debug purpose
-    for name, value in os.environ.iteritems():
-        logger.info("Env %s: %s" % (name, value))
+    for name in sorted(os.environ, key=lambda x: x.lower()):
+        logger.info("Env %s: %s" % (name, os.environ[name]))
     args, other_args = parser.parse_known_args()
     runner = TestRunner(args.xmlout)
     return runner.run_tests(other_args)
