@@ -158,10 +158,10 @@ class TestIntegration(TestCase):
         try:
             thread.start()
             self._test_create_task()
-            # self._update_status_from_shotgun()
-            # self._update_status_from_jira()
+            self._update_status_from_shotgun()
+            self._update_status_from_jira()
             self._test_update_assignment_from_shotgun()
-            #self._test_update_assignment_from_jira()
+            self._test_update_assignment_from_jira()
         finally:
             thread.stop()
 
@@ -254,18 +254,17 @@ class TestIntegration(TestCase):
 
         def wait_for_assignee_to_change(expected_user_ids):
             asssignees = self._sg.find_one("Task", [["id", "is", self._sg_task["id"]]], ["task_assignees"])["task_assignees"]
-            self.assertEqual(len(asssignees), len(expected_user_ids))
-            self.assertEqual({a["id"] for a in asssignees}, expected_user_id)
+            self.assertEqual({a["id"] for a in asssignees}, {u["id"] for u in expected_user_ids})
 
         self._expect(
-            lambda: wait_for_assignee_to_change(self._sg_user_1["id"]),
+            lambda: wait_for_assignee_to_change([self._sg_user_1]),
             "waiting_for_sg_user_1_on_task",
         )
 
         self._jira.assign_issue(self._jira_key, self._jira_user_2_login)
 
         self._expect(
-            lambda: wait_for_assignee_to_change(self._sg_user_2["id"]),
+            lambda: wait_for_assignee_to_change([self._sg_user_2]),
             "waiting_for_sg_user_2_on_task",
         )
 
