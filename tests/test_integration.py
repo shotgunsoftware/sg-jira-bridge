@@ -161,12 +161,14 @@ class TestIntegration(TestCase):
         try:
             thread.start()
             self._test_create_task()
-            # self._update_status_from_shotgun()
-            # self._update_status_from_jira()
-            # self._test_update_assignment_from_shotgun()
-            # self._test_update_assignment_from_jira()
-            # self._test_update_ccs_from_shotgun()
-            self._test_update_ccs_from_jira()
+            self._update_status_from_shotgun()
+            self._update_status_from_jira()
+            self._test_update_assignment_from_shotgun()
+            self._test_update_assignment_from_jira()
+            self._test_update_ccs_from_shotgun()
+            # TODO: Watchers updates are not pushed to the webhook for some reason,
+            # so they never get updated in Shotgun.
+            # self._test_update_ccs_from_jira()
         finally:
             thread.stop()
 
