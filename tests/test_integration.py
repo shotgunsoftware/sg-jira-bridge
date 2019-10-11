@@ -93,13 +93,13 @@ class TestIntegration(TestCase):
         )
 
         cls._jira_user_1 = cls._jira.myself()[cls.USER_ID_FIELD]
-        cls._jira_user_1_name = cls._jira.myself()["name"]
+        cls._jira_user_1_login = cls._jira.myself()["name"]
         # We have a chicken and egg problem here.
         # JIRA Server can only retrieve user info via the name.
         # JIRA Cloud can only retrieve user info via the id.
         # So we're going to have to pass those two in.
-        cls._jira_user_2 = os.environ["SGJIRA_JIRA_TEST_USER_2"]
-        cls._jira_user_2_name = os.environ["SGJIRA_JIRA_TEST_USER_2_NAME"]
+        cls._jira_user_2 = cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2_LOGIN"]).key
+        cls._jira_user_2_login = os.environ["SGJIRA_JIRA_TEST_USER_2_LOGIN"]
 
     def _expect(self, functor, description=None, max_time=20.0):
         """
@@ -160,8 +160,8 @@ class TestIntegration(TestCase):
             self._test_create_task()
             # self._update_status_from_shotgun()
             # self._update_status_from_jira()
-            # self._test_update_assignment_from_shotgun()
-            self._test_update_assignment_from_jira()
+            self._test_update_assignment_from_shotgun()
+            #self._test_update_assignment_from_jira()
         finally:
             thread.stop()
 
@@ -206,10 +206,13 @@ class TestIntegration(TestCase):
 
     def _test_update_assignment_from_shotgun(self):
         def wait_for_assignee_to_change(expected_user_id):
-            self.assertEqual(
-                getattr(self._issue.fields.assignee, self.USER_ID_FIELD),
-                expected_user_id,
-            )
+            if expected_user_id is None:
+                self.assertIsNone(self._issue.fields.assignee)
+            else:
+                self.assertEqual(
+                    getattr(self._issue.fields.assignee, self.USER_ID_FIELD),
+                    expected_user_id,
+                )
 
         # Assign the ticket to a user in Shotgun
         self._sg.update(
@@ -230,6 +233,14 @@ class TestIntegration(TestCase):
             "waiting_for_jira_user_2_on_issue",
         )
 
+        self._sg.update(
+            "Task", self._sg_task["id"], {"task_assignees": []}
+        )
+        self._expect(
+            lambda: wait_for_assignee_to_change(None),
+            "waiting_for_cleared_assignment_on_issue",
+        )
+
         # TODO: Understand how the bridge deals with multiple task assignees and how
         # it decides which one gets set on the JIRA ticket.
 
@@ -239,24 +250,19 @@ class TestIntegration(TestCase):
         # self._expect(lambda: wait_for_assignee_to_change(self._jira_user_2), "wait_for_assignee_to_change_to_2")
 
     def _test_update_assignment_from_jira(self):
-        self._jira.assign_issue(self._jira_key, self._jira_user_1_name)
+        self._jira.assign_issue(self._jira_key, self._jira_user_1_login)
 
-        def wait_for_assignee_to_change(expected_user_id):
+        def wait_for_assignee_to_change(expected_user_ids):
             asssignees = self._sg.find_one("Task", [["id", "is", self._sg_task["id"]]], ["task_assignees"])["task_assignees"]
-            self.assertEqual(len(asssignees), 1)
-            self.assertEqual(asssignees[0]["id"], expected_user_id)
+            self.assertEqual(len(asssignees), len(expected_user_ids))
+            self.assertEqual({a["id"] for a in asssignees}, expected_user_id)
 
         self._expect(
             lambda: wait_for_assignee_to_change(self._sg_user_1["id"]),
             "waiting_for_sg_user_1_on_task",
         )
 
-        self._jira.assign_issue(self._jira_key, self._jira_user_2_name)
-
-        def wait_for_assignee_to_change(expected_user_id):
-            asssignees = self._sg.find_one("Task", [["id", "is", self._sg_task["id"]]], ["task_assignees"])["task_assignees"]
-            self.assertEqual(len(asssignees), 1)
-            self.assertEqual(asssignees[0]["id"], expected_user_id)
+        self._jira.assign_issue(self._jira_key, self._jira_user_2_login)
 
         self._expect(
             lambda: wait_for_assignee_to_change(self._sg_user_2["id"]),
