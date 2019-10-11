@@ -301,7 +301,7 @@ def run_server(port, settings, keyfile=None, certfile=None):
     :param str keyfile: Optional path to a PEM key file to run in https mode.
     :param str certfile:  Optional path to a PEM certificate file to run in https mode.
     """
-    create_server(port, settings, keyfile, cerfile).serve_forever()
+    create_server(port, settings, keyfile, certfile).serve_forever()
 
 
 def main():
