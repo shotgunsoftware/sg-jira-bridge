@@ -11,14 +11,55 @@ from pprint import pprint
 import os
 import time
 import pdb
+import threading
 
 from shotgun_api3 import Shotgun
 from jira import JIRA
 
 from unittest2 import TestCase
 
+import webapp
 
-class InterationTest(TestCase):
+# Inspired by https://docs.python.org/2/library/basehttpserver.html#more-examples
+class ServerThread(threading.Thread):
+    """
+    Thread that spawns the jira bridge server.
+
+    When stop is invoked, the bridge is closed.
+    """
+    def __init__(self):
+        """
+        init.
+        """
+        super(ServerThread, self).__init__()
+        self._httpd = webapp.create_server(
+            9090,
+            os.path.join(os.path.dirname(__file__), "bridge_settings.py"),
+        )
+
+    def run(self):
+        """
+        Handles requests until the server is closed.
+        """
+        try:
+            self._httpd.serve_forever()
+        except Exception:
+            # Simply swallow the error that will be raised here because of the
+            # socket closure.
+            pass
+
+    def stop(self):
+        """
+        Stop the server.
+        """
+        # We're closing the socket violently, since handle_request is a blocking
+        # call.
+        try:
+            self._httpd.socket.close()
+        except:
+            pass
+
+class TestIntegration(TestCase):
 
     USER_ID_FIELD = "key"
 
@@ -104,11 +145,19 @@ class InterationTest(TestCase):
         """
         Test the integration.
         """
-        self._test_create_task()
-        # self._update_status_from_shotgun()
-        # self._update_status_from_jira()
-        self._test_update_assignment_from_shotgun()
-        self._test_update_assignment_from_jira()
+        thread = ServerThread()
+        # Ideally the thread start/top would be done in setUp/tearDown, but when hitting
+        # CTRL-C to end the tests the tearDown handlers are not invoked. This would
+        # leave the process handing because there is still a thread running.
+        try:
+            thread.start()
+            self._test_create_task()
+            # self._update_status_from_shotgun()
+            # self._update_status_from_jira()
+            self._test_update_assignment_from_shotgun()
+            self._test_update_assignment_from_jira()
+        finally:
+            thread.stop()
 
     def _test_create_task(self):
         # Create a task and make sure it gets synced across
