@@ -27,14 +27,14 @@ class ServerThread(threading.Thread):
 
     When stop is invoked, the bridge is closed.
     """
+
     def __init__(self):
         """
         init.
         """
         super(ServerThread, self).__init__()
         self._httpd = webapp.create_server(
-            9090,
-            os.path.join(os.path.dirname(__file__), "bridge_settings.py"),
+            9090, os.path.join(os.path.dirname(__file__), "bridge_settings.py")
         )
 
     def run(self):
@@ -58,6 +58,7 @@ class ServerThread(threading.Thread):
             self._httpd.socket.close()
         except:
             pass
+
 
 class TestIntegration(TestCase):
 
@@ -98,7 +99,9 @@ class TestIntegration(TestCase):
         # JIRA Server can only retrieve user info via the name.
         # JIRA Cloud can only retrieve user info via the id.
         # So we're going to have to pass those two in.
-        cls._jira_user_2 = cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2_LOGIN"]).key
+        cls._jira_user_2 = cls._jira.user(
+            os.environ["SGJIRA_JIRA_TEST_USER_2_LOGIN"]
+        ).key
         cls._jira_user_2_login = os.environ["SGJIRA_JIRA_TEST_USER_2_LOGIN"]
 
     def _expect(self, functor, description=None, max_time=20.0):
@@ -162,7 +165,7 @@ class TestIntegration(TestCase):
             # self._update_status_from_jira()
             # self._test_update_assignment_from_shotgun()
             # self._test_update_assignment_from_jira()
-            self._test_update_ccs_from_shotgun()
+            # self._test_update_ccs_from_shotgun()
             self._test_update_ccs_from_jira()
         finally:
             thread.stop()
@@ -170,6 +173,11 @@ class TestIntegration(TestCase):
     def _test_create_task(self):
         # Create a task and make sure it gets synced across
         self._sg_task, self._jira_key = self._create_task("Test")
+        print(
+            "Test Issue can be found at {0}/browse/{1}".format(
+                os.environ["SGJIRA_JIRA_SITE"], self._jira_key
+            )
+        )
         self.assertEqual(
             getattr(self._issue.fields.reporter, self.USER_ID_FIELD), self._jira_user_1
         )
@@ -235,9 +243,7 @@ class TestIntegration(TestCase):
             "waiting_for_jira_user_2_on_issue",
         )
 
-        self._sg.update(
-            "Task", self._sg_task["id"], {"task_assignees": []}
-        )
+        self._sg.update("Task", self._sg_task["id"], {"task_assignees": []})
         self._expect(
             lambda: wait_for_assignee_to_change(None),
             "waiting_for_cleared_assignment_on_issue",
@@ -255,8 +261,12 @@ class TestIntegration(TestCase):
         self._jira.assign_issue(self._jira_key, self._jira_user_1_login)
 
         def wait_for_assignee_to_change(expected_user_ids):
-            asssignees = self._sg.find_one("Task", [["id", "is", self._sg_task["id"]]], ["task_assignees"])["task_assignees"]
-            self.assertEqual({a["id"] for a in asssignees}, {u["id"] for u in expected_user_ids})
+            asssignees = self._sg.find_one(
+                "Task", [["id", "is", self._sg_task["id"]]], ["task_assignees"]
+            )["task_assignees"]
+            self.assertEqual(
+                {a["id"] for a in asssignees}, {u["id"] for u in expected_user_ids}
+            )
 
         self._expect(
             lambda: wait_for_assignee_to_change([self._sg_user_1]),
@@ -275,40 +285,83 @@ class TestIntegration(TestCase):
             self.assertEqual(
                 # The first watcher is the daemon so skip it.
                 {w.key for w in self._jira.watchers(self._jira_key).watchers[1:]},
-                set(expected_users)
+                set(expected_users),
             )
 
-        self._sg.update("Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_1]})
+        self._sg.update(
+            "Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_1]}
+        )
         self._expect(
             lambda: wait_for_watchers_to_be_assigned([self._jira_user_1]),
-            "waiting_for_jira_1_to_be_watching"
+            "waiting_for_jira_1_to_be_watching",
         )
 
-        self._sg.update("Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_2]})
+        self._sg.update(
+            "Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_2]}
+        )
         self._expect(
             lambda: wait_for_watchers_to_be_assigned([self._jira_user_2]),
-            "waiting_for_jira_2_to_be_watching"
+            "waiting_for_jira_2_to_be_watching",
         )
 
-        self._sg.update("Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_1, self._sg_user_2]})
+        self._sg.update(
+            "Task",
+            self._sg_task["id"],
+            {"addressings_cc": [self._sg_user_1, self._sg_user_2]},
+        )
         self._expect(
-            lambda: wait_for_watchers_to_be_assigned([self._jira_user_2, self._jira_user_1]),
-            "waiting_for_jira_1_and_2_to_be_watching"
+            lambda: wait_for_watchers_to_be_assigned(
+                [self._jira_user_2, self._jira_user_1]
+            ),
+            "waiting_for_jira_1_and_2_to_be_watching",
         )
 
-        self._sg.update("Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_1]})
+        self._sg.update(
+            "Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_1]}
+        )
         self._expect(
             lambda: wait_for_watchers_to_be_assigned([self._jira_user_1]),
-            "waiting_for_jira_1_to_be_watching"
+            "waiting_for_jira_1_to_be_watching",
         )
 
         self._sg.update("Task", self._sg_task["id"], {"addressings_cc": []})
         self._expect(
             lambda: wait_for_watchers_to_be_assigned([]),
-            "waiting_for_no_one_to_be_watching"
+            "waiting_for_no_one_to_be_watching",
         )
 
     def _test_update_ccs_from_jira(self):
-        pass
+        def wait_for_addressings_update(expected_users):
+            def key_fn(entity):
+                return entity["id"]
 
+            self.assertEqual(
+                sorted(
+                    self._sg.find_one(
+                        "Task", [["id", "is", self._sg_task["id"]]], ["addressings_cc"]
+                    )["addressings_cc"],
+                    key=key_fn,
+                ),
+                sorted(expected_users, key=key_fn),
+            )
 
+        self._jira.add_watcher(self._jira_key, self._jira_user_1)
+        self._expect(
+            lambda: wait_for_addressings_update([self._sg_user_1]),
+            "waiting_for_user_1_cced",
+        )
+
+        self._jira.add_watcher(self._jira_key, self._jira_user_2)
+        self._expect(
+            lambda: wait_for_addressings_update([self._sg_user_1, self._sg_user_2]),
+            "waiting_for_user_1_and_2_cced",
+        )
+
+        self._jira.remove_watcher(self._jira_key, self._jira_user_2)
+        self._expect(
+            lambda: wait_for_addressings_update([self._sg_user_1]),
+            "waiting_for_user_1_cced",
+        )
+
+        self._jira.remove_watcher(self._jira_key, self._jira_user_1)
+        self._expect(lambda: wait_for_addressings_update([]), "waiting_for_no_one_cced")
