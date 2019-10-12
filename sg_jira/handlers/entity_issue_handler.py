@@ -903,20 +903,8 @@ class EntityIssueHandler(SyncHandler):
         to_assignee = change["to"]
         if data_type == "multi_entity":
             if from_assignee:
-                # Try to remove the old assignee from the Shotgun assignment
-                jira_user = self._jira.user(from_assignee)
-                sg_user = self._shotgun.find_one(
-                    "HumanUser",
-                    [["email", "is", jira_user.emailAddress]],
-                    ["email", "name"]
-                )
-                if not sg_user:
-                    self._logger.debug(
-                        "Unable to find a Shotgun user with email address %s" % (
-                            jira_user.emailAddress
-                        )
-                    )
-                else:
+                sg_user = self._jira_user_to_shotgun(shotgun_field, user_id=from_assignee, failure_is_fatal=False)
+                if sg_user is not None:
                     for i, current_sg in enumerate(current_sg_assignment):
                         if current_sg["type"] == sg_user["type"] and current_sg["id"] == sg_user["id"]:
                             self._logger.debug(
@@ -931,22 +919,12 @@ class EntityIssueHandler(SyncHandler):
                             # iterating
                             break
             if to_assignee:
+                jira_user = jira_issue["fields"]["assignee"]
+                sg_user = self._jira_user_to_shotgun(
+                    shotgun_field, user_id=to_assignee, jira_user=jira_user
+                )
                 # Try to add the new assignee to the Shotgun assignment
                 # Use the Issue assignee value to avoid a Jira user query
-                jira_user = jira_issue["fields"]["assignee"]
-                sg_user = self._shotgun.find_one(
-                    "HumanUser",
-                    [["email", "is", jira_user["emailAddress"]]],
-                    ["email", "name"]
-                )
-                if not sg_user:
-                    raise InvalidJiraValue(
-                        shotgun_field,
-                        jira_user,
-                        "Unable to find a Shotgun user with email address %s" % (
-                            jira_user["emailAddress"]
-                        )
-                    )
                 for current_sg_user in current_sg_assignment:
                     if current_sg_user["type"] == sg_user["type"] and current_sg_user["id"] == sg_user["id"]:
                         break
@@ -959,20 +937,10 @@ class EntityIssueHandler(SyncHandler):
                     current_sg_assignment.append(sg_user)
         else:  # data_type == "entity":
             if from_assignee:
-                # Try to remove the old assignee from the Shotgun assignment
-                jira_user = self._jira.user(from_assignee)
-                sg_user = self._shotgun.find_one(
-                    "HumanUser",
-                    [["email", "is", jira_user.emailAddress]],
-                    ["email", "name"]
+                sg_user = self._jira_user_to_shotgun(
+                    shotgun_field, user_id=from_assignee, failure_is_fatal=False
                 )
-                if not sg_user:
-                    self._logger.debug(
-                        "Unable to find a Shotgun user with email address %s" % (
-                            jira_user.emailAddress
-                        )
-                    )
-                else:
+                if sg_user is not None:
                     if current_sg_assignment["type"] == sg_user["type"] and current_sg_assignment["id"] == sg_user["id"]:
                         self._logger.debug(
                             "Removing user %s from Shotgun assignment" % (
@@ -987,18 +955,40 @@ class EntityIssueHandler(SyncHandler):
                 # Note that we are dealing here with a Jira raw value dict, not
                 # a jira.resources.Resource instance.
                 jira_user = jira_issue["fields"]["assignee"]
-                sg_user = self._shotgun.find_one(
-                    "HumanUser",
-                    [["email", "is", jira_user["emailAddress"]]],
-                    ["email", "name"]
+                sg_user = self._jira_user_to_shotgun(
+                    shotgun_field, user_id=to_assignee, jira_user=jira_user
                 )
-                if not sg_user:
-                    raise InvalidJiraValue(
-                        shotgun_field,
-                        jira_user,
-                        "Unable to find a Shotgun user with email address %s" % (
-                            jira_user["emailAddress"]
-                        )
-                    )
                 current_sg_assignment = sg_user
         return current_sg_assignment
+
+    def _jira_user_to_shotgun(self, shotgun_field, user_id=None, jira_user=None, failure_is_fatal=True):
+
+        if jira_user is not None:
+            emailAddress = jira_user["emailAddress"]
+        elif user_id is not None:
+            emailAddress = self._jira.user(user_id, payload="key").emailAddress
+        else:
+            raise RuntimeError("jira_user or user_id cannot be both None.")
+
+        sg_user = self._shotgun.find_one(
+            "HumanUser",
+            [["email", "is", emailAddress]],
+            ["email", "name"]
+        )
+        if not sg_user:
+            if failure_is_fatal:
+                raise InvalidJiraValue(
+                    shotgun_field,
+                    jira_user,
+                    "Unable to find a Shotgun user with email address %s" % (
+                        emailAddress
+                    )
+                )
+            else:
+                self._logger.debug(
+                    "Unable to find a Shotgun user with email address %s" % (
+                        jira_user.emailAddress
+                    )
+                )
+        return sg_user
+
