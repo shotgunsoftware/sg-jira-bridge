@@ -8,3 +8,4 @@
 from .bridge import Bridge
 from .syncer import Syncer
 from .task_issue_syncer import TaskIssueSyncer
+from .argument_parser import get_default_argument_parser

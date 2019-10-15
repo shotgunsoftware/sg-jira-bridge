@@ -18,7 +18,7 @@ class EntityIssueHandler(SyncHandler):
     Base class for handlers syncing a Shotgun Entity to a Jira Issue.
     """
 
-    ACCOUNT_ID_RE = re.compile("^[0-9a-f]*$")
+    ACCOUNT_ID_RE = re.compile("^[0-9a-f:-]*$")
 
     def __init__(self, syncer, issue_type):
         """
@@ -975,7 +975,7 @@ class EntityIssueHandler(SyncHandler):
         if jira_user is not None:
             emailAddress = jira_user["emailAddress"]
         elif user_id is not None:
-            emailAddress = self._jira.user(user_id, payload="key").emailAddress
+            emailAddress = self._jira.user(user_id).emailAddress
         else:
             raise RuntimeError("jira_user or user_id cannot be both None.")
 

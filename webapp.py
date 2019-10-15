@@ -6,7 +6,6 @@
 #
 
 import re
-import argparse
 import urlparse
 import BaseHTTPServer
 import json
@@ -15,10 +14,6 @@ import logging
 import sys
 
 import sg_jira
-
-DESCRIPTION = """
-A simple web app frontend to the SG Jira bridge.
-"""
 
 HMTL_TEMPLATE = """
 <html>
@@ -308,25 +303,7 @@ def main():
     """
     Retrieve command line arguments and start the server.
     """
-    parser = argparse.ArgumentParser(
-        description=DESCRIPTION
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=9090,
-        help="The port number to listen to.",
-    )
-    parser.add_argument(
-        "--settings",
-        help="Full path to settings file.",
-        required=True
-    )
-    parser.add_argument(
-        "--ssl_context",
-        help="A key and certificate file pair to run the server in https mode.",
-        nargs=2,
-    )
+    parser = sg_jira.get_default_argument_parser()
 
     args = parser.parse_args()
 

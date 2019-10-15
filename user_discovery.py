@@ -8,5 +8,13 @@
 import sg_jira
 
 
-bridge = sg_jira.Bridge.get_bridge("settings.py")
-bridge.sync_jira_users_into_shotgun()
+parser = sg_jira.get_default_argument_parser()
+parser.add_argument(
+    "--project",
+    type=str,
+    help="The name of any Jira project that will be synced with Shotgun."
+)
+args = parser.parse_args()
+
+bridge = sg_jira.Bridge.get_bridge(args.settings)
+bridge.sync_jira_users_into_shotgun(args.project)

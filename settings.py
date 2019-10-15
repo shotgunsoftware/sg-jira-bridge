@@ -74,7 +74,7 @@ LOGGING = {
     "handlers": {
         # Print out any message to stdout
         "console": {
-            "level": "DEBUG",
+            "level": "ERROR",
             "class": "logging.StreamHandler",
             "formatter": "standard"
         },
