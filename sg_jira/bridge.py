@@ -347,3 +347,31 @@ class Bridge(object):
             logger.exception(e)
             raise
         return synced
+
+    def sync_jira_users_into_shotgun(self):
+        if "sg_jira_account_id" not in self._shotgun.schema_field_read("HumanUser"):
+            print("Creating HumanUser.sg_jira_account_id.")
+            self._shotgun.schema_field_create("HumanUser", "text", "Jira Account Id")
+
+        # TODO: There should be a way to single out users that do not have to be synced,
+        # like users who have the same email on both accounts.
+        users = self._shotgun.find(
+            "HumanUser",
+            [["sg_jira_account_id", "is", None], ["email", "is_not", None]],
+            ["email", "login"]
+        )
+
+        for user in users:
+            jira_user = self._jira.find_jira_assignee_for_issue(
+                user["email"],
+                jira_project=self._jira.project("JCC")
+            )
+            if jira_user is None:
+                continue
+            #print("Associating Shotgun's {0} to JIRA's {1}".format(user["login"], jira_user.name.decode("utf8")))
+            self._shotgun.update(
+                "HumanUser",
+                user["id"],
+                {"sg_jira_account_id": jira_user.accountId}
+            )
+            print("Shotgun user {0} has been matched to a corresponding JIRA user.".format(user["login"]))

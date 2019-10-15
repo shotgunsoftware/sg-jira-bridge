@@ -53,7 +53,9 @@ class JiraSession(jira.client.JIRA):
             raise RuntimeError(
                 "Unable to connect to %s. See the log for details." % jira_site
             )
-        logger.info("Connected to %s." % jira_site)
+
+        self._is_jira_cloud = "accountId" in self.myself()
+        logger.info("Connected to %s (JIRA %s)" % (jira_site, "Cloud" if self._is_jira_cloud else "Server"))
 
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
@@ -85,6 +87,10 @@ class JiraSession(jira.client.JIRA):
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
             )
+
+    @property
+    def is_jira_cloud(self):
+        return self._is_jira_cloud
 
     # This is a partial port of the code found in the master branch of the JIRA module.
     # Instead of using it to retrieve the current user name, we'll use it to get

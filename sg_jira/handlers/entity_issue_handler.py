@@ -5,6 +5,8 @@
 # this software in either electronic or hard copy form.
 #
 
+import re
+
 import jira
 
 from ..errors import InvalidShotgunValue, InvalidJiraValue
@@ -16,6 +18,8 @@ class EntityIssueHandler(SyncHandler):
     Base class for handlers syncing a Shotgun Entity to a Jira Issue.
     """
 
+    ACCOUNT_ID_RE = re.compile("[0-9a-f]*")
+
     def __init__(self, syncer, issue_type):
         """
         Instantiate an Entity Issue handler for the given syncer.
@@ -25,6 +29,11 @@ class EntityIssueHandler(SyncHandler):
         """
         super(EntityIssueHandler, self).__init__(syncer)
         self._issue_type = issue_type
+
+        if self._jira.is_jira_cloud:
+            self._jira_user_to_shotgun = self._jira_cloud_user_to_shotgun
+        else:
+            self._jira_user_to_shotgun = self._jira_server_user_to_shotgun
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """
@@ -961,7 +970,7 @@ class EntityIssueHandler(SyncHandler):
                 current_sg_assignment = sg_user
         return current_sg_assignment
 
-    def _jira_user_to_shotgun(self, shotgun_field, user_id=None, jira_user=None, failure_is_fatal=True):
+    def _jira_server_user_to_shotgun(self, shotgun_field, user_id=None, jira_user=None, failure_is_fatal=True):
 
         if jira_user is not None:
             emailAddress = jira_user["emailAddress"]
@@ -988,6 +997,36 @@ class EntityIssueHandler(SyncHandler):
                 self._logger.debug(
                     "Unable to find a Shotgun user with email address %s" % (
                         jira_user.emailAddress
+                    )
+                )
+        return sg_user
+
+
+    def _jira_cloud_user_to_shotgun(self, shotgun_field, user_id=None, jira_user=None, failure_is_fatal=True):
+
+        # When the user field is updated via the JIRA API, the user's name is passed
+        # in instead of the account id, so retrieve that instead.
+        if self.ACCOUNT_ID_RE.match(user_id) is None:
+            user_id = self._jira.user(user_id).accountId
+
+        sg_user = self._shotgun.find_one(
+            "HumanUser",
+            [["sg_jira_account_id", "is", user_id]],
+            ["email", "name"]
+        )
+        if not sg_user:
+            if failure_is_fatal:
+                raise InvalidJiraValue(
+                    shotgun_field,
+                    jira_user,
+                    "Unable to find a Shotgun user with JIRA accountId %s" % (
+                        user_id
+                    )
+                )
+            else:
+                self._logger.debug(
+                    "Unable to find a Shotgun user with JIRA accountId %s" % (
+                        user_id
                     )
                 )
         return sg_user
