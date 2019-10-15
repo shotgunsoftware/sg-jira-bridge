@@ -518,6 +518,9 @@ class MockedJira(object):
         """
         return "ford.prefect1"
 
+    def myself(self):
+        return JIRA_USER
+
     def fields(self):
         """
         Mocked Jira method.

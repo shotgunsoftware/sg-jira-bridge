@@ -16,7 +16,7 @@ import threading
 from shotgun_api3 import Shotgun
 from jira import JIRA
 
-from unittest2 import TestCase
+from unittest2 import TestCase, skipIf
 
 import webapp
 
@@ -60,18 +60,41 @@ class ServerThread(threading.Thread):
             pass
 
 
+@skipIf("SGJIRA_SG_TEST_PROJECT" not in os.environ, "missing some environment variables")
 class TestIntegration(TestCase):
 
     USER_ID_FIELD = "key"
 
     @classmethod
     def setUpClass(cls):
+
+        # Connect to Shotgun
         cls._sg = Shotgun(
             os.environ["SGJIRA_SG_SITE"],
-            login=os.environ["SGJIRA_TEST_SG_USER"],
-            password=os.environ["SGJIRA_TEST_SG_PASSWORD"],
+            login=os.environ["SGJIRA_SG_TEST_USER"],
+            password=os.environ["SGJIRA_SG_TEST_PASSWORD"],
         )
 
+        # Resolve the project by name
+        cls._sg_project = cls._sg.find_one(
+            "Project",
+            [["name", "is", os.environ["SGJIRA_SG_TEST_PROJECT"]]]
+        )
+        assert(cls._sg_project is not None)
+
+        # Resolve first Shotgun user
+        cls._sg_user_1 = cls._sg.find_one(
+            "HumanUser", [["login", "is", os.environ["SGJIRA_SG_TEST_USER"]]]
+        )
+        assert(cls._sg_user_1 is not None)
+
+        # Resolve second Shotgun user.
+        cls._sg_user_2 = cls._sg.find_one(
+            "HumanUser", [["login", "is", os.environ["SGJIRA_SG_TEST_USER_2"]]]
+        )
+        assert(cls._sg_user_2 is not None)
+
+        # Connecet to JIRA.
         cls._jira = JIRA(
             os.environ["SGJIRA_JIRA_SITE"],
             basic_auth=(
@@ -80,29 +103,24 @@ class TestIntegration(TestCase):
             ),
         )
 
-        cls._sg_project = {
-            "type": "Project",
-            "id": int(os.environ["SGJIRA_TEST_SG_PROJECT_ID"]),
-        }
-        cls._jira_project = os.environ["SGJIRA_TEST_JIRA_PROJECT_KEY"]
+        # Resolve JIRA Project key.
+        cls._jira_project = os.environ["SGJIRA_JIRA_TEST_PROJECT_KEY"]
+        assert(cls._jira_project is not None)
 
-        cls._sg_user_1 = cls._sg.find_one(
-            "HumanUser", [["login", "is", os.environ["SGJIRA_TEST_SG_USER"]]]
-        )
-        cls._sg_user_2 = cls._sg.find_one(
-            "HumanUser", [["id", "is", int(os.environ["SGJIRA_TEST_SG_USER_2"])]]
-        )
-
+        # Resolve first JIRA user key.
         cls._jira_user_1 = cls._jira.myself()[cls.USER_ID_FIELD]
         cls._jira_user_1_login = cls._jira.myself()["name"]
+
         # We have a chicken and egg problem here.
         # JIRA Server can only retrieve user info via the name.
         # JIRA Cloud can only retrieve user info via the id.
         # So we're going to have to pass those two in.
-        cls._jira_user_2 = cls._jira.user(
-            os.environ["SGJIRA_JIRA_TEST_USER_2_LOGIN"]
-        ).key
-        cls._jira_user_2_login = os.environ["SGJIRA_JIRA_TEST_USER_2_LOGIN"]
+        cls._jira_user_2 = getattr(
+            cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]),
+            cls.USER_ID_FIELD
+        )
+
+        cls._jira_user_2_login = cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]).name
 
     def _expect(self, functor, description=None, max_time=20.0):
         """
@@ -179,9 +197,6 @@ class TestIntegration(TestCase):
             "Test Issue can be found at {0}/browse/{1}".format(
                 os.environ["SGJIRA_JIRA_SITE"], self._jira_key
             )
-        )
-        self.assertEqual(
-            getattr(self._issue.fields.reporter, self.USER_ID_FIELD), self._jira_user_1
         )
 
     @property
@@ -260,8 +275,6 @@ class TestIntegration(TestCase):
         # self._expect(lambda: wait_for_assignee_to_change(self._jira_user_2), "wait_for_assignee_to_change_to_2")
 
     def _test_update_assignment_from_jira(self):
-        self._jira.assign_issue(self._jira_key, self._jira_user_1_login)
-
         def wait_for_assignee_to_change(expected_user_ids):
             asssignees = self._sg.find_one(
                 "Task", [["id", "is", self._sg_task["id"]]], ["task_assignees"]
@@ -269,6 +282,8 @@ class TestIntegration(TestCase):
             self.assertEqual(
                 {a["id"] for a in asssignees}, {u["id"] for u in expected_user_ids}
             )
+
+        self._jira.assign_issue(self._jira_key, self._jira_user_1_login)
 
         self._expect(
             lambda: wait_for_assignee_to_change([self._sg_user_1]),

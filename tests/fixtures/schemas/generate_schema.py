@@ -10,6 +10,7 @@ A script to generate Shotgun schema for Mockgun.
 """
 import argparse
 import os
+import getpass
 
 from shotgun_api3 import Shotgun
 from shotgun_api3.lib import mockgun
@@ -26,14 +27,13 @@ def main():
     )
     parser.add_argument(
         "--shotgun",
-        nargs=3,
         help="A SG site url, a script name and its key",
         required=True,
     )
     args = parser.parse_args()
 
-    sg_url, sg_script, sg_key = args.shotgun
-    sg = Shotgun(sg_url, sg_script, sg_key)
+    sg_url = args.shotgun
+    sg = Shotgun(sg_url, login=raw_input("Login: "), password=getpass.getpass())
     schema_dir = args.path
     if not os.path.exists(schema_dir):
         os.makedirs(schema_dir)

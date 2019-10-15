@@ -21,6 +21,10 @@ SG_PROJECTS = [
     {"id": 2, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY}
 ]
 
+SG_USERS = [
+    {"id": 1, "type": "HumanUser", "login": "ford.prefect", "sg_jira_account_id": JIRA_USER["accountId"]},
+]
+
 # A list of Shotgun Tasks
 SG_TASKS = [
     {
@@ -808,6 +812,7 @@ class TestJiraSyncer(TestSyncBase):
             "type": "HumanUser",
             "name": "Ford Prefect",
             "id": 1,
+            "sg_jira_account_id": JIRA_USER["accountId"],
             "email": JIRA_USER["emailAddress"]
         })
         self.add_to_sg_mock_db(bridge.shotgun, {
@@ -816,6 +821,7 @@ class TestJiraSyncer(TestSyncBase):
             "type": "HumanUser",
             "name": "Sync sync",
             "id": 2,
+            "sg_jira_account_id": JIRA_USER_2["accountId"],
             "email": JIRA_USER_2["emailAddress"]
         })
 
