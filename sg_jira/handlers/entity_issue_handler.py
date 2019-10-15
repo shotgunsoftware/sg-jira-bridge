@@ -18,7 +18,7 @@ class EntityIssueHandler(SyncHandler):
     Base class for handlers syncing a Shotgun Entity to a Jira Issue.
     """
 
-    ACCOUNT_ID_RE = re.compile("[0-9a-f]*")
+    ACCOUNT_ID_RE = re.compile("^[0-9a-f]*$")
 
     def __init__(self, syncer, issue_type):
         """
@@ -1003,11 +1003,29 @@ class EntityIssueHandler(SyncHandler):
 
 
     def _jira_cloud_user_to_shotgun(self, shotgun_field, user_id=None, jira_user=None, failure_is_fatal=True):
-
         # When the user field is updated via the JIRA API, the user's name is passed
         # in instead of the account id, so retrieve that instead.
         if self.ACCOUNT_ID_RE.match(user_id) is None:
-            user_id = self._jira.user(user_id).accountId
+            self._logger.debug("Received user 'name'. Resolving accountId.")
+            user = self._jira.user(user_id)
+            if not user:
+                if failure_is_fatal:
+                    raise InvalidJiraValue(
+                        shotgun_field,
+                        jira_user,
+                        "Unable to find a Shotgun user with JIRA name %s" % (
+                            user_id
+                        )
+                    )
+                else:
+                    self._logger.debug(
+                        "Unable to find a Shotgun user with JIRA name %s" % (
+                            user_id
+                        )
+                    )
+                    return None
+            user_id = user.accountId
+
 
         sg_user = self._shotgun.find_one(
             "HumanUser",
