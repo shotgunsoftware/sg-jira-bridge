@@ -97,41 +97,12 @@ class Bridge(object):
         settings_file_path = os.path.abspath(settings_file)
 
         # Read settings
-        settings = cls.read_settings(settings_file_path)
+        logger_settings, shotgun_settings, jira_settings, sync_settings = cls.read_settings(
+            settings_file_path
+        )
 
-        # Set logging from settings
-        logger_settings = settings[LOGGING_SETTINGS_KEY]
         if logger_settings:
             logging.config.dictConfig(logger_settings)
-
-        # Retrieve Shotgun connection settings
-        shotgun_settings = settings[SHOTGUN_SETTINGS_KEY]
-        if not shotgun_settings:
-            raise ValueError("Missing Shotgun settings in %s" % settings_file_path)
-        missing = [
-            name for name in ["site", "script_name", "script_key"] if not shotgun_settings.get(name)
-        ]
-        if missing:
-            raise ValueError(
-                "Missing Shotgun setting values %s in %s" % (missing, settings_file_path)
-            )
-
-        # Retrieve Jira connection settings
-        jira_settings = settings[JIRA_SETTINGS_KEY]
-        if not jira_settings:
-            raise ValueError("Missing Jira settings in %s" % settings_file_path)
-
-        missing = [
-            name for name in ["site", "user", "secret"] if not jira_settings.get(name)
-        ]
-        if missing:
-            raise ValueError(
-                "Missing Jira setting values %s in %s" % (missing, settings_file_path)
-            )
-
-        sync_settings = settings[SYNC_SETTINGS_KEY]
-        if not sync_settings:
-            raise ValueError("Missing sync settings in %s" % settings_file_path)
 
         logger.info("Successfully read settings from %s" % settings_file_path)
         try:
@@ -186,10 +157,43 @@ class Bridge(object):
             if mfile:
                 mfile.close()
         # Retrieve all properties we handle and provide empty values if missing
-        result = dict(
+        settings = dict(
             [(prop_name, getattr(module, prop_name, None)) for prop_name in ALL_SETTINGS_KEYS]
         )
-        return result
+        
+        # Set logging from settings
+        logger_settings = settings[LOGGING_SETTINGS_KEY]
+
+        # Retrieve Shotgun connection settings
+        shotgun_settings = settings[SHOTGUN_SETTINGS_KEY]
+        if not shotgun_settings:
+            raise ValueError("Missing Shotgun settings in %s" % settings_file_path)
+        missing = [
+            name for name in ["site", "script_name", "script_key"] if not shotgun_settings.get(name)
+        ]
+        if missing:
+            raise ValueError(
+                "Missing Shotgun setting values %s in %s" % (missing, settings_file_path)
+            )
+
+        # Retrieve Jira connection settings
+        jira_settings = settings[JIRA_SETTINGS_KEY]
+        if not jira_settings:
+            raise ValueError("Missing Jira settings in %s" % settings_file_path)
+
+        missing = [
+            name for name in ["site", "user", "secret"] if not jira_settings.get(name)
+        ]
+        if missing:
+            raise ValueError(
+                "Missing Jira setting values %s in %s" % (missing, settings_file_path)
+            )
+
+        sync_settings = settings[SYNC_SETTINGS_KEY]
+        if not sync_settings:
+            raise ValueError("Missing sync settings in %s" % settings_file_path)
+
+        return logger_settings, shotgun_settings, jira_settings, sync_settings
 
     @property
     def shotgun(self):
@@ -348,48 +352,3 @@ class Bridge(object):
             raise
         return synced
 
-    def sync_jira_users_into_shotgun(self, project_key):
-        print("Ensuring HumanUser.sg_jira_account_id exists.")
-        if "sg_jira_account_id" not in self._shotgun.schema_field_read("HumanUser"):
-            print("Creating HumanUser.sg_jira_account_id.")
-            self._shotgun.schema_field_create("HumanUser", "text", "Jira Account Id")
-
-        print("Locating JIRA project %s" % project_key)
-        project = self._jira.project(project_key)
-
-        # TODO: There should be a way to single out users that do not have to be synced,
-        # like users who have the same email on both accounts.
-        print("Retrieving all Shotgun users")
-        users = self._shotgun.find(
-            "HumanUser",
-            # User's without email or with TBD (test users) should not be considered.
-            [["email", "is_not", None], ["email", "is_not", "TBD"]],
-            ["email", "login", "sg_jira_account_id"],
-            order=[{"field_name": "id", "direction": "asc"}]
-        )
-        # Track which emails have already been mapped.
-        visited_emails = {
-            user["email"] for user in users if user["sg_jira_account_id"] is not None
-        }
-
-        for user in users:
-            # User has already been seen, so skipping it.
-            if user["email"] in visited_emails:
-                print("Shotgun user %s (%s) has previously been associated with a JIRA account." % (user["login"], user["email"]))
-                continue
-
-            jira_user = self._jira.find_jira_assignee_for_issue(
-                user["email"],
-                jira_project=project
-            )
-            if jira_user is None:
-                continue
-
-            #print("Associating Shotgun's {0} to JIRA's {1}".format(user["login"], jira_user.name.decode("utf8")))
-            self._shotgun.update(
-                "HumanUser",
-                user["id"],
-                {"sg_jira_account_id": jira_user.accountId}
-            )
-            print("Shotgun user {0} has been matched to a corresponding JIRA user.".format(user["login"]))
-            visited_emails.add(user["email"])

@@ -18,7 +18,15 @@ class EntityIssueHandler(SyncHandler):
     Base class for handlers syncing a Shotgun Entity to a Jira Issue.
     """
 
-    ACCOUNT_ID_RE = re.compile("^[0-9a-f:-]*$")
+    # This will match JIRA accounts in the following format
+    # 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0
+    # 24 hexdecimal characters: 5b6a25ab7c14b729f2208297
+    # We're only matching the first 20 characters instead of the first 24, since the
+    # account id format isn't documented.
+    # It could in theory match a very long user name that uses hexadecimal characters
+    # only, but that would be unlikely.
+    # https://regex101.com/r/E1ysHQ/1
+    ACCOUNT_ID_RE = re.compile("^[0-9a-f:-]{20}")
 
     def __init__(self, syncer, issue_type):
         """
@@ -30,6 +38,9 @@ class EntityIssueHandler(SyncHandler):
         super(EntityIssueHandler, self).__init__(syncer)
         self._issue_type = issue_type
 
+        # Due to GDPR, some changes were done to JIRA Cloud which complicates
+        # matching users by email. So let's use the right resolver based
+        # on the server type.
         if self._jira.is_jira_cloud:
             self._jira_user_to_shotgun = self._jira_cloud_user_to_shotgun
         else:
@@ -912,7 +923,7 @@ class EntityIssueHandler(SyncHandler):
         to_assignee = change["to"]
         if data_type == "multi_entity":
             if from_assignee:
-                sg_user = self._jira_user_to_shotgun(shotgun_field, user_id=from_assignee, failure_is_fatal=False)
+                sg_user = self._jira_user_to_shotgun(shotgun_field, user_id=from_assignee, raise_on_missing_user=False)
                 if sg_user is not None:
                     for i, current_sg in enumerate(current_sg_assignment):
                         if current_sg["type"] == sg_user["type"] and current_sg["id"] == sg_user["id"]:
@@ -947,7 +958,7 @@ class EntityIssueHandler(SyncHandler):
         else:  # data_type == "entity":
             if from_assignee:
                 sg_user = self._jira_user_to_shotgun(
-                    shotgun_field, user_id=from_assignee, failure_is_fatal=False
+                    shotgun_field, user_id=from_assignee, raise_on_missing_user=False
                 )
                 if sg_user is not None:
                     if current_sg_assignment["type"] == sg_user["type"] and current_sg_assignment["id"] == sg_user["id"]:
@@ -970,8 +981,20 @@ class EntityIssueHandler(SyncHandler):
                 current_sg_assignment = sg_user
         return current_sg_assignment
 
-    def _jira_server_user_to_shotgun(self, shotgun_field, user_id=None, jira_user=None, failure_is_fatal=True):
+    def _jira_server_user_to_shotgun(self, shotgun_field, user_id, jira_user=None, raise_on_missing_user=True):
+        """
+        Resolve the Shotgun user associated to the JIRA user passed in.
 
+        This method should be called against a JIRA local server.
+
+        :param str shotgun_field: Field to sync the value to in Shotgun.
+        :param str user_id: Value of the to or from of a JIRA changelog.
+        :param dict jira_user: Value of the user section of the webhook payload.
+        :param bool raise_on_missing_user: Indicate how to handle unknown users.
+
+        :returns: A Shotgun user entity dictionary.
+        :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.
+        """
         if jira_user is not None:
             emailAddress = jira_user["emailAddress"]
         elif user_id is not None:
@@ -985,7 +1008,7 @@ class EntityIssueHandler(SyncHandler):
             ["email", "name"]
         )
         if not sg_user:
-            if failure_is_fatal:
+            if raise_on_missing_user:
                 raise InvalidJiraValue(
                     shotgun_field,
                     jira_user,
@@ -1002,38 +1025,54 @@ class EntityIssueHandler(SyncHandler):
         return sg_user
 
 
-    def _jira_cloud_user_to_shotgun(self, shotgun_field, user_id=None, jira_user=None, failure_is_fatal=True):
-        # When the user field is updated via the JIRA API, the user's name is passed
-        # in instead of the account id, so retrieve that instead.
-        if self.ACCOUNT_ID_RE.match(user_id) is None:
-            self._logger.debug("Received user 'name'. Resolving accountId.")
+    def _jira_cloud_user_to_shotgun(self, shotgun_field, user_id, jira_user=None, raise_on_missing_user=True):
+        """
+        Resolve the Shotgun user associated to the JIRA user passed in.
+
+        This method should be called against a JIRA Cloud server.
+
+        :param str shotgun_field: Field to sync the value to in Shotgun.
+        :param str user_id: Value of the to or from of a JIRA changelog.
+        :param dict jira_user: User resource, typically the assignee field on an issue. Can be None
+        :param bool raise_on_missing_user: Indicate how to handle unknown users.
+
+        :returns: A Shotgun user entity dictionary.
+        :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.
+        """
+        # If the jira_user has been passed in, just use the accountId!
+        if jira_user is not None:
+            user_id = jira_user["accountId"]
+        # We didn't receive the jira_user, this happens when the from field is
+        # passed in to this method, so we'll have use the user id passed in.
+        #
+        # Interestingly, when the a user field is updated via the JIRA API,
+        # the username is passed in instead of the account id, so we'll have to
+        # resolve it.
+        elif self.ACCOUNT_ID_RE.match(user_id) is None:
+            self._logger.debug("The changelog's to/from contains a user name. accountId will be retrieved.")
             user = self._jira.user(user_id)
             if not user:
-                if failure_is_fatal:
+                if raise_on_missing_user:
                     raise InvalidJiraValue(
                         shotgun_field,
                         jira_user,
-                        "Unable to find a Shotgun user with JIRA name %s" % (
-                            user_id
-                        )
+                        "Unable to find JIRA user %s" % (user_id)
                     )
                 else:
                     self._logger.debug(
-                        "Unable to find a Shotgun user with JIRA name %s" % (
-                            user_id
-                        )
+                        "Unable to find JIRA user %s" % (user_id)
                     )
-                    return None
+                return None
             user_id = user.accountId
 
-
+        # Now that we have an accountId, let's find that user in Shotgun.
         sg_user = self._shotgun.find_one(
             "HumanUser",
             [["sg_jira_account_id", "is", user_id]],
             ["email", "name"]
         )
         if not sg_user:
-            if failure_is_fatal:
+            if raise_on_missing_user:
                 raise InvalidJiraValue(
                     shotgun_field,
                     jira_user,

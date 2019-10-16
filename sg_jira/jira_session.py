@@ -54,6 +54,7 @@ class JiraSession(jira.client.JIRA):
                 "Unable to connect to %s. See the log for details." % jira_site
             )
 
+        # accountId's are only found on JIRA Cloud. The latest version of JIRA server do not have them.
         self._is_jira_cloud = "accountId" in self.myself()
         logger.info("Connected to %s (JIRA %s)" % (jira_site, "Cloud" if self._is_jira_cloud else "Server"))
 
