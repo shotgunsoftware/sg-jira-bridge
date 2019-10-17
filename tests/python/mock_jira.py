@@ -8,6 +8,7 @@
 import copy
 from jira.resources import Project as JiraProject
 from jira.resources import IssueType, Issue, User, Comment, IssueLink
+from jira import JIRAError
 
 # Faked Jira Project, Issue, change log and event
 JIRA_PROJECT_KEY = "UTest"
@@ -473,6 +474,17 @@ class MockedJira(object):
         """
         return self._projects
 
+    def project(self, project_id):
+        """
+        Mocked Jira method
+        Return a :class:`JiraProject`
+        """
+        for project in self._projects:
+            if project.key == project_id:
+                return project
+        raise JIRAError("Unable to find resource Project({})".format(project_id))
+
+
     def createmeta(self, *args, **kwargs):
         """
         Mocked Jira method.
@@ -715,9 +727,11 @@ class MockedJira(object):
             # Mock Jira REST api bug
             return []
 
-        if startAt == 0:
-            return [User(None, None, JIRA_USER_2)] * maxResults
-        return [User(None, None, JIRA_USER)]
+        # Create a list of users.
+        users = [User(None, None, JIRA_USER_2)] * maxResults + [User(None, None, JIRA_USER)]
+
+        # Return the requested slice.
+        return users[startAt: startAt + maxResults]
 
     def user(self, id):
         """

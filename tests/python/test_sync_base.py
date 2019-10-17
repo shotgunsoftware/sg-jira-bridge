@@ -73,20 +73,7 @@ class TestSyncBase(TestBase):
             "schemas", "sg-jira",
         ))
 
-        # Patch the JiraSession base class to use our MockedJira instead of
-        # the jira.client.Jira class.
-        patcher = mock.patch.object(
-            sg_jira.jira_session.JiraSession,
-            "__bases__",
-            (MockedJira,)
-        )
-        patcher.is_local = True
-        patcher.start()
-        # FIXME: the patcher fails with TypeError: can't delete JiraSession.__bases__
-        # in its __exit__. We don't need the original jira.client.Jira class
-        # in these tests, so restoring it is not an issue, but this is not
-        # clean and should be fixed.
-        # self.addCleanup(patcher.stop)
+        self._mock_jira_session_bases()
 
         # TODO: add a Shotgun patcher so deriving classes don't have to patch
         # Shotgun themselves.

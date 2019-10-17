@@ -12,6 +12,7 @@ from sg_jira.entity_issue_handler import EntityIssueHandler
 
 from unittest2 import TestCase
 
+
 class TestHierarchySyncer(TestCase):
     """
     Test hierarchy syncer example.

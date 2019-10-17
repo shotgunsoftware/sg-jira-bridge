@@ -60,7 +60,9 @@ class ServerThread(threading.Thread):
             pass
 
 
-@skipIf("SGJIRA_SG_TEST_PROJECT" not in os.environ, "missing some environment variables")
+@skipIf(
+    "SGJIRA_SG_TEST_PROJECT" not in os.environ, "missing some environment variables"
+)
 class TestIntegration(TestCase):
 
     USER_ID_FIELD = "key"
@@ -77,22 +79,21 @@ class TestIntegration(TestCase):
 
         # Resolve the project by name
         cls._sg_project = cls._sg.find_one(
-            "Project",
-            [["name", "is", os.environ["SGJIRA_SG_TEST_PROJECT"]]]
+            "Project", [["name", "is", os.environ["SGJIRA_SG_TEST_PROJECT"]]]
         )
-        assert(cls._sg_project is not None)
+        assert cls._sg_project is not None
 
         # Resolve first Shotgun user
         cls._sg_user_1 = cls._sg.find_one(
             "HumanUser", [["login", "is", os.environ["SGJIRA_SG_TEST_USER"]]]
         )
-        assert(cls._sg_user_1 is not None)
+        assert cls._sg_user_1 is not None
 
         # Resolve second Shotgun user.
         cls._sg_user_2 = cls._sg.find_one(
             "HumanUser", [["login", "is", os.environ["SGJIRA_SG_TEST_USER_2"]]]
         )
-        assert(cls._sg_user_2 is not None)
+        assert cls._sg_user_2 is not None
 
         # Connecet to JIRA.
         cls._jira = JIRA(
@@ -105,7 +106,7 @@ class TestIntegration(TestCase):
 
         # Resolve JIRA Project key.
         cls._jira_project = os.environ["SGJIRA_JIRA_TEST_PROJECT_KEY"]
-        assert(cls._jira_project is not None)
+        assert cls._jira_project is not None
 
         # Resolve first JIRA user key.
         cls._jira_user_1 = cls._jira.myself()[cls.USER_ID_FIELD]
@@ -116,11 +117,12 @@ class TestIntegration(TestCase):
         # JIRA Cloud can only retrieve user info via the id.
         # So we're going to have to pass those two in.
         cls._jira_user_2 = getattr(
-            cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]),
-            cls.USER_ID_FIELD
+            cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]), cls.USER_ID_FIELD
         )
 
-        cls._jira_user_2_login = cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]).name
+        cls._jira_user_2_login = cls._jira.user(
+            os.environ["SGJIRA_JIRA_TEST_USER_2"]
+        ).name
 
     def _expect(self, functor, description=None, max_time=20.0):
         """
