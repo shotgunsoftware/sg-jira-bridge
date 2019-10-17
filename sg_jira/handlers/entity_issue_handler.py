@@ -1087,4 +1087,3 @@ class EntityIssueHandler(SyncHandler):
                     )
                 )
         return sg_user
-

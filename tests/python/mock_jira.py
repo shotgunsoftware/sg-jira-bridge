@@ -484,7 +484,6 @@ class MockedJira(object):
                 return project
         raise JIRAError("Unable to find resource Project({})".format(project_id))
 
-
     def createmeta(self, *args, **kwargs):
         """
         Mocked Jira method.

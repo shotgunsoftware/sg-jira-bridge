@@ -24,7 +24,15 @@ class TestBase(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), "..", "fixtures")
         )
 
-    def _mock_jira_session_bases(self):
+    def mock_jira_session_bases(self):
+        """
+        Replace the JiraSession base class to be MockedJira
+        so we can run tests without an actual connection to
+        JIRA.
+        """
+        # Do not use mock.patcher for this, as the patcher's exit
+        # method will try to delete the bases before restoring them,
+        # which will raise an error.
         self.__old_bases = JiraSession.__bases__
         JiraSession.__bases__ = (MockedJira,)
         def restore_bases():

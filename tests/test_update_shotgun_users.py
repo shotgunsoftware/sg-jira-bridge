@@ -17,7 +17,6 @@ from mock_jira import MockedJira, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 from test_base import TestBase
 
 
-
 class TestUpdateShotgunUsers(TestBase):
     """
     Test hierarchy syncer example.
@@ -25,15 +24,13 @@ class TestUpdateShotgunUsers(TestBase):
 
     def setUp(self):
         # Switch to a schema with needed fields
-        self.set_sg_mock_schema(os.path.join(
-            os.path.dirname(__file__),
-            "fixtures", "schemas", "sg-jira",
-        ))
-        self._shotgun = mockgun.Shotgun(
-            "http://unit_test_mock_sg",
-            "mock_user", "mock_key"
+        self.set_sg_mock_schema(
+            os.path.join(os.path.dirname(__file__), "fixtures", "schemas", "sg-jira")
         )
-        self._mock_jira_session_bases()
+        self._shotgun = mockgun.Shotgun(
+            "http://unit_test_mock_sg", "mock_user", "mock_key"
+        )
+        self.mock_jira_session_bases()
 
         self.add_to_sg_mock_db(
             self._shotgun,
@@ -43,30 +40,30 @@ class TestUpdateShotgunUsers(TestBase):
                     "id": 1,
                     "login": "ford.prefect.admin",
                     "email": "fprefect@weefree.com",
-                    "sg_jira_account_id": None
+                    "sg_jira_account_id": None,
                 },
                 {
                     "type": "HumanUser",
                     "id": 2,
                     "login": "ford.prefect",
                     "email": "fprefect@weefree.com",
-                    "sg_jira_account_id": None
+                    "sg_jira_account_id": None,
                 },
                 {
                     "type": "HumanUser",
                     "id": 3,
                     "login": "sync.sync",
                     "email": "syncsync.@foo.com",
-                    "sg_jira_account_id": None
+                    "sg_jira_account_id": None,
                 },
                 {
                     "type": "HumanUser",
                     "id": 4,
                     "login": "joe.smith",
                     "email": "joe.smith@foo.com",
-                    "sg_jira_account_id": None
-                }
-            ]
+                    "sg_jira_account_id": None,
+                },
+            ],
         )
 
         self._jira = JiraSession("https://somesite")
@@ -81,9 +78,7 @@ class TestUpdateShotgunUsers(TestBase):
         # 2. Each email gets the appropriate accountId
         # 3. Users that do not exist are not matched.
         sync_jira_users_into_shotgun(self._shotgun, self._jira, "UTest")
-        self._assert_sg_users_account_ids(
-            JIRA_USER, None, JIRA_USER_2, None
-        )
+        self._assert_sg_users_account_ids(JIRA_USER, None, JIRA_USER_2, None)
 
     def test_transfering_account_id_works(self):
         """
@@ -94,12 +89,12 @@ class TestUpdateShotgunUsers(TestBase):
         # User 1 and 2 have the same email, so we'll transfer the account id to the second
         # user.
         self._shotgun.update("HumanUser", 1, {"sg_jira_account_id": None})
-        self._shotgun.update("HumanUser", 2, {"sg_jira_account_id": JIRA_USER["accountId"]})
+        self._shotgun.update(
+            "HumanUser", 2, {"sg_jira_account_id": JIRA_USER["accountId"]}
+        )
         # Running the script again shouldn't change anything.
         sync_jira_users_into_shotgun(self._shotgun, self._jira, "UTest")
-        self._assert_sg_users_account_ids(
-            None, JIRA_USER, JIRA_USER_2, None
-        )
+        self._assert_sg_users_account_ids(None, JIRA_USER, JIRA_USER_2, None)
 
     def test_new_users_get_assigned(self):
         """
@@ -107,12 +102,11 @@ class TestUpdateShotgunUsers(TestBase):
         are set.
         """
         # We'll fake a user having already been assigned.
-        self._shotgun.update("HumanUser", 2, {"sg_jira_account_id": JIRA_USER["accountId"]})
-        sync_jira_users_into_shotgun(self._shotgun, self._jira, "UTest")
-        self._assert_sg_users_account_ids(
-            None, JIRA_USER, JIRA_USER_2, None
+        self._shotgun.update(
+            "HumanUser", 2, {"sg_jira_account_id": JIRA_USER["accountId"]}
         )
-
+        sync_jira_users_into_shotgun(self._shotgun, self._jira, "UTest")
+        self._assert_sg_users_account_ids(None, JIRA_USER, JIRA_USER_2, None)
 
     def _assert_sg_users_account_ids(self, *jira_users):
         """
@@ -137,9 +131,8 @@ class TestUpdateShotgunUsers(TestBase):
         :param dict expected_jira_user: Expected JIRA user dictionary. Can be None.
         """
         account_id = self._shotgun.find_one(
-            "HumanUser",
-            [["id", "is", entity_id]],
-            ["sg_jira_account_id"]
+            "HumanUser", [["id", "is", entity_id]], ["sg_jira_account_id"]
         )["sg_jira_account_id"]
-        self.assertEqual(account_id, expected_jira_user["accountId"] if expected_jira_user else None)
-
+        self.assertEqual(
+            account_id, expected_jira_user["accountId"] if expected_jira_user else None
+        )

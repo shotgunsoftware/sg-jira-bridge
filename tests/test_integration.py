@@ -34,7 +34,7 @@ class ServerThread(threading.Thread):
         """
         super(ServerThread, self).__init__()
         self._httpd = webapp.create_server(
-            9090, os.path.join(os.path.dirname(__file__), "bridge_settings.py")
+            9090, os.path.join(os.path.dirname(__file__), "..", "settings.py")
         )
 
     def run(self):
@@ -60,16 +60,41 @@ class ServerThread(threading.Thread):
             pass
 
 
-@skipIf(
-    "SGJIRA_SG_TEST_PROJECT" not in os.environ, "missing some environment variables"
-)
+missing_env_vars = [
+    env_var
+    for env_var in [
+        "SGJIRA_SG_SITE",
+        "SGJIRA_SG_TEST_USER",
+        "SGJIRA_SG_TEST_PASSWORD",
+        "SGJIRA_SG_TEST_PROJECT",
+        "SGJIRA_SG_TEST_USER",
+        "SGJIRA_SG_TEST_USER_2",
+        "SGJIRA_JIRA_SITE",
+        "SGJIRA_JIRA_TEST_USER",
+        "SGJIRA_JIRA_TEST_USER_SECRET",
+        "SGJIRA_JIRA_TEST_PROJECT_KEY",
+        "SGJIRA_JIRA_TEST_USER_2",
+    ]
+    if env_var not in os.environ
+]
+
+
+@skipIf(len(missing_env_vars) > 0, "missing {}".format(", ".join(missing_env_vars)))
 class TestIntegration(TestCase):
+    """
+    Integration test for the bridge. This test uses actual
+    JIRA and Shotgun servers.
+
+    It expects a collection of environment
+    """
 
     USER_ID_FIELD = "key"
 
     @classmethod
     def setUpClass(cls):
-
+        """
+        Connect to both servers and resolve all users.
+        """
         # Connect to Shotgun
         cls._sg = Shotgun(
             os.environ["SGJIRA_SG_SITE"],
@@ -112,10 +137,6 @@ class TestIntegration(TestCase):
         cls._jira_user_1 = cls._jira.myself()[cls.USER_ID_FIELD]
         cls._jira_user_1_login = cls._jira.myself()["name"]
 
-        # We have a chicken and egg problem here.
-        # JIRA Server can only retrieve user info via the name.
-        # JIRA Cloud can only retrieve user info via the id.
-        # So we're going to have to pass those two in.
         cls._jira_user_2 = getattr(
             cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]), cls.USER_ID_FIELD
         )
@@ -124,10 +145,13 @@ class TestIntegration(TestCase):
             os.environ["SGJIRA_JIRA_TEST_USER_2"]
         ).name
 
-    def _expect(self, functor, description=None, max_time=20.0):
+    def _expect(self, functor, description=None, max_time=20):
         """
-        Try a executing successfully a functor for the given number of seconds
-        until it stops raising an error.
+        Execute a functor until it stops raising errors unless the maximum time is reached.
+
+        :param callable functor: Method to call.
+        :param str description: String to print during retries.
+        :param int max_time: Number of seconds to wait before giving up.
         """
         before = time.time()
 
@@ -153,6 +177,14 @@ class TestIntegration(TestCase):
                     raise
 
     def _get_jira_key(self, entity):
+        """
+        Wait until the JIRA key is available on the given entity.
+
+        :param dict entity: Shotgun entity dict with keys type and id.
+
+        :returns: The jira key for that project.
+        """
+
         def wait_for_jira_key():
             result = self._sg.find_one(
                 entity["type"], [["id", "is", entity["id"]]], ["sg_jira_key"]
@@ -163,6 +195,13 @@ class TestIntegration(TestCase):
         return self._expect(wait_for_jira_key)
 
     def _create_task(self, name):
+        """
+        Create a task in Shotgun.
+
+        :param str name: Name of the new task.
+
+        :returns: A tuple of (new task entity dict, JIRA project key).
+        """
         new_sg_task = self._sg.create(
             "Task",
             {"content": name, "sg_sync_in_jira": True, "project": self._sg_project},
@@ -180,19 +219,24 @@ class TestIntegration(TestCase):
         # leave the process handing because there is still a thread running.
         try:
             thread.start()
+            # Each of these tests could be run in their own test, but the it would
+            # take much longer to run because you'd have to create a task for each.
             self._test_create_task()
-            self._update_status_from_shotgun()
-            self._update_status_from_jira()
+            self._test_update_status_from_shotgun()
+            self._test_update_status_from_jira()
             self._test_update_assignment_from_shotgun()
             self._test_update_assignment_from_jira()
             self._test_update_ccs_from_shotgun()
             # TODO: Watchers updates are not pushed to the webhook for some reason,
-            # so they never get updated in Shotgun.
+            # so we can't test them. The test was already written, so we'll keep it.
             # self._test_update_ccs_from_jira()
         finally:
             thread.stop()
 
     def _test_create_task(self):
+        """
+        Ensure a task can be created.
+        """
         # Create a task and make sure it gets synced across
         self._sg_task, self._jira_key = self._create_task("Test")
         print(
@@ -203,9 +247,16 @@ class TestIntegration(TestCase):
 
     @property
     def _issue(self):
+        """
+        Resolve the issue associated with the created task.
+        """
         return self._jira.issue(self._jira_key)
 
-    def _update_status_from_shotgun(self):
+    def _test_update_status_from_shotgun(self):
+        """
+        Ensure updating status in Shotgun is reflected in JIRA.
+        """
+
         def wait_for_issue_in_progress():
             self.assertEqual(self._issue.fields.status.name, "In Progress")
 
@@ -213,6 +264,12 @@ class TestIntegration(TestCase):
         self._expect(wait_for_issue_in_progress)
 
     def _set_jira_status(self, issue, status_name):
+        """
+        Update an issue status to the specified one.
+
+        :param issue: sg_jira.resources.Issue to update.
+        :param status_name: Name of the status to switch to.
+        """
         jira_transitions = self._jira.transitions(issue, expand="transitions.fields")
         for tra in jira_transitions:
             # Match a transition with the expected status name
@@ -223,7 +280,11 @@ class TestIntegration(TestCase):
 
         self._jira.transition_issue(self._issue, tra["id"])
 
-    def _update_status_from_jira(self):
+    def _test_update_status_from_jira(self):
+        """
+        Ensure updating status in JIRA is reflected in Shotgun.
+        """
+
         def wait_for_shotgun_status_final():
             task = self._sg.find_one(
                 "Task", [["id", "is", self._sg_task["id"]]], ["sg_status_list"]
@@ -234,6 +295,11 @@ class TestIntegration(TestCase):
         self._expect(wait_for_shotgun_status_final)
 
     def _test_update_assignment_from_shotgun(self):
+        """
+        Ensure updating the task_assignees in Shotgun updates the assignee
+        in JIRA.
+        """
+
         def wait_for_assignee_to_change(expected_user_id):
             if expected_user_id is None:
                 self.assertIsNone(self._issue.fields.assignee)
@@ -268,15 +334,12 @@ class TestIntegration(TestCase):
             "waiting_for_cleared_assignment_on_issue",
         )
 
-        # TODO: Understand how the bridge deals with multiple task assignees and how
-        # it decides which one gets set on the JIRA ticket.
-
-        # self._sg.update(
-        #     "Task", self._sg_task["id"], {"task_assignees": [self._sg_user_1, self._sg_user_2]}
-        # )
-        # self._expect(lambda: wait_for_assignee_to_change(self._jira_user_2), "wait_for_assignee_to_change_to_2")
-
     def _test_update_assignment_from_jira(self):
+        """
+        Ensure updating the assignee in Jira updates the assignee
+        in Shotgun.
+        """
+
         def wait_for_assignee_to_change(expected_user_ids):
             asssignees = self._sg.find_one(
                 "Task", [["id", "is", self._sg_task["id"]]], ["task_assignees"]
@@ -300,6 +363,10 @@ class TestIntegration(TestCase):
         )
 
     def _test_update_ccs_from_shotgun(self):
+        """
+        Ensure updating addressings_cc in Shotgun updates watchers in JIRA.
+        """
+
         def wait_for_watchers_to_be_assigned(expected_users):
             self.assertEqual(
                 # The first watcher is the daemon so skip it.
@@ -350,6 +417,13 @@ class TestIntegration(TestCase):
         )
 
     def _test_update_ccs_from_jira(self):
+        """
+        Ensure updating watchers in JIRA updates the addressing CCs in Shotgun.
+
+        Note that this functionaly has not been written yet, but the test was written
+        before we noticed, so we'll keep it around for when the functionality is added.
+        """
+
         def wait_for_addressings_update(expected_users):
             def key_fn(entity):
                 return entity["id"]

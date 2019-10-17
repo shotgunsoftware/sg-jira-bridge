@@ -126,7 +126,8 @@ class Bridge(object):
         Read the given settings file.
 
         :param str settings_file: Path to a settings Python file.
-        :returns: A dictionary with the settings.
+        :returns: A tuple of settings:
+            (logger settings, shotgun settings, jira settings, sync settings)
         :raises ValueError: if the file does not exist or if its name does not end
                  with ``.py``.
         """
@@ -160,7 +161,7 @@ class Bridge(object):
         settings = dict(
             [(prop_name, getattr(module, prop_name, None)) for prop_name in ALL_SETTINGS_KEYS]
         )
-        
+
         # Set logging from settings
         logger_settings = settings[LOGGING_SETTINGS_KEY]
 
@@ -351,4 +352,3 @@ class Bridge(object):
             logger.exception(e)
             raise
         return synced
-

@@ -104,8 +104,8 @@ def _get_settings():
         epilog=(
             "This script will match the first Shotgun user with a given email with the "
             "associated JIRA user. If for some reason there are multiple Shotgun users "
-            "with the same email, you can go back in Shotgun and reassign the sg_jira_account_id "
-            "value to the right user."
+            "with the same email, you can go back in Shotgun and reassign the "
+            "sg_jira_account_id value to the right Shotgun user."
         ),
     )
     parser.add_argument("--settings", help="Full path to settings file.", required=True)

@@ -73,7 +73,7 @@ class TestSyncBase(TestBase):
             "schemas", "sg-jira",
         ))
 
-        self._mock_jira_session_bases()
+        self.mock_jira_session_bases()
 
         # TODO: add a Shotgun patcher so deriving classes don't have to patch
         # Shotgun themselves.
