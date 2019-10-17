@@ -8,7 +8,7 @@
 
 import mock
 
-from sg_jira.entity_issue_handler import EntityIssueHandler
+from sg_jira.handlers.entity_issue_handler import EntityIssueHandler
 
 from unittest2 import TestCase
 
@@ -24,6 +24,7 @@ class TestHierarchySyncer(TestCase):
         """
         # These are the two formats we're aware of for account id's in JIRA.
         self.assertIsNotNone(
-            EntityIssueHandler.match("123456:60e119d8-6a49-4375-95b6-6740fc8e75e0")
+            EntityIssueHandler.ACCOUNT_ID_RE.match("123456:60e119d8-6a49-4375-95b6-6740fc8e75e0")
         )
-        self.assertIsNotNone(EntityIssueHandler.match("5b6a25ab7c14b729f2208297"))
+        self.assertIsNotNone(EntityIssueHandler.ACCOUNT_ID_RE.match("5b6a25ab7c14b729f2208297"))
+        self.assertIsNone(EntityIssueHandler.ACCOUNT_ID_RE.match("joe.smith"))
