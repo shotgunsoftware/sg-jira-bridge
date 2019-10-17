@@ -57,7 +57,7 @@ HumanUser     ``sg_jira_account_id``   Text        Jira Account Id
 ===========   ======================   =========   ==========================
 
 .. note::
-    The `HumanUser.sg_jira_account_id` field is only necessary if your JIRA server is hosted by Atlassian.
+    The ``HumanUser.sg_jira_account_id`` field is only necessary if your JIRA server is hosted by Atlassian.
 
 Configure your Shotgun Project
 ==============================
@@ -152,8 +152,8 @@ A ``requirements.txt`` file is provided to install all required packages.
 
 .. note::
     If you are upgrading from a previous version of the bridge, we recommend you re-install dependencies
-    as we've had to fork the jira library. As of this writing, it has not been merged in the main JIRA
-    library.
+    as we've had to fork the ``jira`` Python module to add a missing feature. As of this writing, it
+    has not been merged by the ``jira`` module maintainers.
 
 
 Settings
@@ -263,7 +263,7 @@ Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
 
 .. code-block:: bash
 
-    $ python update_shotgun_users --settings <path to your settings.py> --project <id of your project>
+    $ python update_shotgun_users.py --settings <path to your settings.py> --project <id of your project>
 
 .. note::
     For every user found in Shotgun, the script will search for a JIRA user with
@@ -273,7 +273,7 @@ Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
 
     If you wish to change the Shotgun user associated with a JIRA account, e.g. the
     script associated the first Shotgun user with an account when you actually wanted
-    the second one, you can simply take the account id from the `HumanUser.sg_jira_account_id`
+    the second one, you can simply take the account id from the ``HumanUser.sg_jira_account_id``
     field from one user and copy it to another user and then clear the original user's
     account id.
 

@@ -530,6 +530,10 @@ class MockedJira(object):
         return "ford.prefect1"
 
     def myself(self):
+        """
+        Mocked Jira method.
+        Return a dictionary of the fields for the current user.
+        """
         return JIRA_USER
 
     def fields(self):

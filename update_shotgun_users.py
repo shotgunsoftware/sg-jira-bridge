@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2018 Autodesk, Inc.  All rights reserved.
 #
 # Use of this software is subject to the terms of the Autodesk license agreement
@@ -13,6 +14,8 @@ from shotgun_api3 import Shotgun
 from sg_jira import Bridge, JiraSession
 from jira import JIRAError
 
+logger = logging.getLogger("update_shotgun_users")
+
 
 def sync_jira_users_into_shotgun(sg, jira, project_key):
     """
@@ -25,16 +28,16 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
 
     # Let's make sure the sg_jira_account_id field exists and create it
     # if missing.
-    print("Ensuring HumanUser.sg_jira_account_id exists.")
+    logger.info("Ensuring HumanUser.sg_jira_account_id exists.")
     if "sg_jira_account_id" not in sg.schema_field_read("HumanUser"):
-        print("Creating HumanUser.sg_jira_account_id.")
+        logger.info("Creating HumanUser.sg_jira_account_id.")
         sg.schema_field_create("HumanUser", "text", "Jira Account Id")
 
     # Make sure the JIRA project exists.
-    print("Locating JIRA project %s" % project_key)
+    logger.info("Locating JIRA project %s" % project_key)
     project = jira.project(project_key)
 
-    print("Retrieving all Shotgun users")
+    logger.info("Retrieving all Shotgun users")
     users = sg.find(
         "HumanUser",
         # User's without email or with TBD (test users) should not be considered.
@@ -59,7 +62,7 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
 
         # Email has already been mapped to a JIRA user, so skip it.
         if user["email"] in mapped_emails:
-            print(
+            logger.info(
                 "The email '{}' from '{}' has already been associated with a JIRA account.".format(
                     user["email"], user["login"]
                 )
@@ -72,16 +75,11 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
         )
         # If no user want found, let the user know.
         if jira_user is None:
-            print(
-                "No user in JIRA was found with the email '{}' from Shotgun user '{}'.".format(
-                    user["email"], user["login"]
-                )
-            )
             continue
 
         # A JIRA user was found, so let's update Shotgun with it's accountId!
         sg.update("HumanUser", user["id"], {"sg_jira_account_id": jira_user.accountId})
-        print(
+        logger.info(
             "Shotgun user '{}' ('{}') has been matched to a JIRA user with the same email.".format(
                 user["login"], user["email"]
             )
@@ -140,7 +138,7 @@ def main():
     )
 
     if not jira.is_jira_cloud:
-        print("This script can be run for JIRA Cloud only.")
+        logger.error("This script can be run for JIRA Cloud only.")
         return
 
     sg = Shotgun(
@@ -152,7 +150,7 @@ def main():
     try:
         sync_jira_users_into_shotgun(sg, jira, project)
     except JIRAError as e:
-        print("Unexpected error contacting JIRA: {}".format(e))
+        logger.error("Unexpected error contacting JIRA: {}".format(e))
         return
 
 

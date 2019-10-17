@@ -91,6 +91,11 @@ class JiraSession(jira.client.JIRA):
 
     @property
     def is_jira_cloud(self):
+        """
+        Return if the site is a JIRA Cloud site.
+
+        :rerturns: ``True`` if the site is hosted in the cloud, ``False`` otherwise.
+        """
         return self._is_jira_cloud
 
     def get_jira_issue_field_id(self, name):
