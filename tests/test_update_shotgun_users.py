@@ -9,7 +9,7 @@ import os
 
 from shotgun_api3.lib import mockgun
 
-from user_discovery import sync_jira_users_into_shotgun
+from update_shotgun_users import sync_jira_users_into_shotgun
 from sg_jira.jira_session import JiraSession
 
 import mock
@@ -18,7 +18,7 @@ from test_base import TestBase
 
 
 
-class TestUserDiscovery(TestBase):
+class TestUpdateShotgunUsers(TestBase):
     """
     Test hierarchy syncer example.
     """
