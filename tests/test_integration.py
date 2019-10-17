@@ -7,10 +7,8 @@
 # this software in either electronic or hard copy form.
 #
 
-from pprint import pprint
 import os
 import time
-import pdb
 import threading
 
 from shotgun_api3 import Shotgun
@@ -19,6 +17,7 @@ from jira import JIRA
 from unittest2 import TestCase, skipIf
 
 import webapp
+
 
 # Inspired by https://docs.python.org/2/library/basehttpserver.html#more-examples
 class ServerThread(threading.Thread):
@@ -56,7 +55,7 @@ class ServerThread(threading.Thread):
         # call.
         try:
             self._httpd.socket.close()
-        except:
+        except Exception:
             pass
 
 

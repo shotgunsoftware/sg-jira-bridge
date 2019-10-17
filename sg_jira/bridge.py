@@ -131,7 +131,6 @@ class Bridge(object):
         :raises ValueError: if the file does not exist or if its name does not end
                  with ``.py``.
         """
-        result = {}
         full_path = os.path.abspath(settings_file)
         if not os.path.exists(settings_file):
             raise ValueError("Settings file %s does not exist" % full_path)
@@ -140,11 +139,11 @@ class Bridge(object):
                 "Settings file %s is not a Python file with a .py extension" % full_path
             )
 
-        folder, name = os.path.split(full_path)
+        folder, module_name = os.path.split(full_path)
 
         mfile, pathname, description = imp.find_module(
             # Strip the .py extension
-            os.path.splitext(name)[0],
+            os.path.splitext(module_name)[0],
             [folder]
         )
         try:
@@ -168,31 +167,31 @@ class Bridge(object):
         # Retrieve Shotgun connection settings
         shotgun_settings = settings[SHOTGUN_SETTINGS_KEY]
         if not shotgun_settings:
-            raise ValueError("Missing Shotgun settings in %s" % settings_file_path)
+            raise ValueError("Missing Shotgun settings in %s" % full_path)
         missing = [
             name for name in ["site", "script_name", "script_key"] if not shotgun_settings.get(name)
         ]
         if missing:
             raise ValueError(
-                "Missing Shotgun setting values %s in %s" % (missing, settings_file_path)
+                "Missing Shotgun setting values %s in %s" % (missing, full_path)
             )
 
         # Retrieve Jira connection settings
         jira_settings = settings[JIRA_SETTINGS_KEY]
         if not jira_settings:
-            raise ValueError("Missing Jira settings in %s" % settings_file_path)
+            raise ValueError("Missing Jira settings in %s" % full_path)
 
         missing = [
             name for name in ["site", "user", "secret"] if not jira_settings.get(name)
         ]
         if missing:
             raise ValueError(
-                "Missing Jira setting values %s in %s" % (missing, settings_file_path)
+                "Missing Jira setting values %s in %s" % (missing, full_path)
             )
 
         sync_settings = settings[SYNC_SETTINGS_KEY]
         if not sync_settings:
-            raise ValueError("Missing sync settings in %s" % settings_file_path)
+            raise ValueError("Missing sync settings in %s" % full_path)
 
         return logger_settings, shotgun_settings, jira_settings, sync_settings
 

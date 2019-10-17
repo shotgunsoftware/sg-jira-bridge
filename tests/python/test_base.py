@@ -35,10 +35,10 @@ class TestBase(unittest.TestCase):
         # which will raise an error.
         self.__old_bases = JiraSession.__bases__
         JiraSession.__bases__ = (MockedJira,)
+
         def restore_bases():
             JiraSession.__bases__ = self.__old_bases
         self.addCleanup(restore_bases)
-
 
     def set_sg_mock_schema(self, path):
         """

@@ -6,11 +6,8 @@
 #
 
 import os
-import mock
-
 
 from shotgun_api3.lib import mockgun
-from mock_jira import MockedJira, JIRA_USER
 import sg_jira
 
 from test_base import TestBase

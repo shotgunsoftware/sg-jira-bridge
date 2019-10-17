@@ -1024,7 +1024,6 @@ class EntityIssueHandler(SyncHandler):
                 )
         return sg_user
 
-
     def _jira_cloud_user_to_shotgun(self, shotgun_field, user_id, jira_user=None, raise_on_missing_user=True):
         """
         Resolve the Shotgun user associated to the JIRA user passed in.

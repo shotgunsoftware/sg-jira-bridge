@@ -6,8 +6,6 @@
 # this software in either electronic or hard copy form.
 #
 
-import mock
-
 from sg_jira.handlers.entity_issue_handler import EntityIssueHandler
 
 from unittest2 import TestCase

@@ -12,8 +12,7 @@ from shotgun_api3.lib import mockgun
 from update_shotgun_users import sync_jira_users_into_shotgun
 from sg_jira.jira_session import JiraSession
 
-import mock
-from mock_jira import MockedJira, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
+from mock_jira import JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 from test_base import TestBase
 
 

@@ -72,6 +72,6 @@ class TestService(unittest.TestCase):
                 service.stop(pid_f.name)
                 self.assertIsNone(service.status(pid_f.name))
                 self.assertFalse(os.path.exists(pid_f.name))
-            except Exception as e:
+            except Exception:
                 print("Process exit code {}".format(process.exitcode))
                 raise
