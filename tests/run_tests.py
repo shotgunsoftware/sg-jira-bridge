@@ -78,10 +78,18 @@ def run_tests():
         "--xmlout",
         help="Output directory for xml reports",
     )
-    # Dump the environment for debug purpose
-    for name in sorted(os.environ, key=lambda x: x.lower()):
-        logger.info("Env %s: %s" % (name, os.environ[name]))
+    parser.add_argument(
+        "--print-env",
+        action="store_true",
+        help="Print environment variables on startup"
+    )
     args, other_args = parser.parse_known_args()
+
+    if args.print_env:
+        # Dump the environment for debug purpose
+        for name in sorted(os.environ, key=lambda x: x.lower()):
+            logger.info("Env %s: %s" % (name, os.environ[name]))
+
     runner = TestRunner(args.xmlout)
     return runner.run_tests(other_args)
 

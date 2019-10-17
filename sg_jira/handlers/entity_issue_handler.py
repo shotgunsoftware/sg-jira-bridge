@@ -998,7 +998,7 @@ class EntityIssueHandler(SyncHandler):
         if jira_user is not None:
             emailAddress = jira_user["emailAddress"]
         elif user_id is not None:
-            emailAddress = self._jira.user(user_id).emailAddress
+            emailAddress = self._jira.user(user_id, payload="key").emailAddress
         else:
             raise RuntimeError("jira_user or user_id cannot be both None.")
 
@@ -1041,15 +1041,15 @@ class EntityIssueHandler(SyncHandler):
         # If the jira_user has been passed in, just use the accountId!
         if jira_user is not None:
             user_id = jira_user["accountId"]
-        # We didn't receive the jira_user, this happens when the from field is
-        # passed in to this method, so we'll have use the user id passed in.
+        # jira_user is None when the user resolving code is trying to resolve the `from` user in the changelog.
+        # When this happens, we only have a user id in the `from` to indicate what the original value was.
         #
         # Interestingly, when the a user field is updated via the JIRA API,
-        # the username is passed in instead of the account id, so we'll have to
+        # the username is passed in instead of the account id in the `from` field, so we'll have to
         # resolve it.
         elif self.ACCOUNT_ID_RE.match(user_id) is None:
             self._logger.debug("The changelog's to/from contains a user name. accountId will be retrieved.")
-            user = self._jira.user(user_id)
+            user = self._jira.user(user_id, payload="accountId")
             if not user:
                 if raise_on_missing_user:
                     raise InvalidJiraValue(
