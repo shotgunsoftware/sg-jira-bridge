@@ -813,8 +813,11 @@ class TestJiraSyncer(TestSyncBase):
         self._test_jira_assignment(mocked_sg, is_jira_cloud=False)
 
     def _test_jira_assignment(self, mocked_sg, is_jira_cloud):
-
-        # Force JIRA cloud or not on the session, which will impact how data is interpreted.
+        """
+        Test syncing JIRA assignment to Shotgun.
+        """
+        # Force JIRA cloud or not on the session, which will impact how the
+        # webhook data is interpreted.
         patcher = mock.patch(
             "sg_jira.jira_session.JiraSession.is_jira_cloud",
             new_callable=mock.PropertyMock,
