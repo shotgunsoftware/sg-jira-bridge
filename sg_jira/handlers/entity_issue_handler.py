@@ -1019,7 +1019,7 @@ class EntityIssueHandler(SyncHandler):
             else:
                 self._logger.debug(
                     "Unable to find a Shotgun user with email address %s" % (
-                        jira_user.emailAddress
+                        emailAddress
                     )
                 )
         return sg_user
@@ -1049,7 +1049,7 @@ class EntityIssueHandler(SyncHandler):
         # resolve it.
         elif self.ACCOUNT_ID_RE.match(user_id) is None:
             self._logger.debug("The changelog's to/from contains a user name. accountId will be retrieved.")
-            user = self._jira.user(user_id, payload="accountId")
+            user = self._jira.user(user_id, payload="key")
             if not user:
                 if raise_on_missing_user:
                     raise InvalidJiraValue(

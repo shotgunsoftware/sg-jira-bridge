@@ -308,7 +308,7 @@ class JiraSession(jira.client.JIRA):
                     "Found multiple assignable Jira users with email address %s. "
                     "Using the first one: %s" % (
                         user_email,
-                        ["%s (%s)" % (ju.emailAddress, ju.accountId) for ju in jira_users]
+                        ["%s (%s)" % (ju.emailAddress, ju.user) for ju in jira_users]
                     )
                 )
             logger.debug("Found Jira Assignee %s" % jira_assignee)

@@ -736,13 +736,16 @@ class MockedJira(object):
         # Return the requested slice.
         return users[startAt: startAt + maxResults]
 
-    def user(self, id):
+    def user(self, id, payload="username"):
         """
         Mocked Jira method.
         Return :class:`JiraUser`.
         """
-        if id == JIRA_USER["key"]:
+        if payload == "username":
+            payload = "name"
+
+        if id == JIRA_USER[payload]:
             return User(None, None, JIRA_USER)
-        if id == JIRA_USER_2["key"]:
+        if id == JIRA_USER_2[payload]:
             return User(None, None, JIRA_USER_2)
         return None

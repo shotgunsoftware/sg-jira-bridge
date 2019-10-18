@@ -9,6 +9,7 @@
 # Our fork provides a few fixes that are not part of the official API. Unfortunately
 # contributing back is going to be difficult because Python 2 is not supported anymore.
 git+https://github.com/shotgunsoftware/jira.git@2.0.0.sg.1#egg=jira
+
 # Install Shotgun API 3 from archive
 https://github.com/shotgunsoftware/python-api/archive/v3.0.39.zip
 

@@ -52,7 +52,6 @@ class TestSyncBase(TestBase):
         :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.
         """
-
         mocked_sg.return_value = self._get_mocked_sg_handle()
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")

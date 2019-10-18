@@ -32,10 +32,14 @@ class TestHierarchySyncer(TestSyncBase):
     """
 
     def test_shotgun_links_sync(self, mocked_sg):
+        self._test_shotgun_links_sync(mocked_sg, is_jira_cloud=True)
+        self._test_shotgun_links_sync(mocked_sg, is_jira_cloud=False)
+
+    def _test_shotgun_links_sync(self, mocked_sg, is_jira_cloud):
         """
         Test syncing links from SG to Jira.
         """
-        syncer, bridge = self._get_syncer(mocked_sg, name="asset_hierarchy")
+        syncer, bridge = self._get_syncer(mocked_sg, name="asset_hierarchy", is_jira_cloud=is_jira_cloud)
         bridge.jira.set_projects([JIRA_PROJECT])
         issue = bridge.jira.create_issue({})
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)

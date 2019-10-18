@@ -66,6 +66,7 @@ class TestUpdateShotgunUsers(TestBase):
         )
 
         self._jira = JiraSession("https://somesite")
+        self._jira._is_jira_cloud = True
         self._jira.set_projects([JIRA_PROJECT])
 
     def test_users_get_synced_properly(self):
