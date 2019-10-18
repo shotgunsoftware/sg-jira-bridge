@@ -6,10 +6,9 @@
 #
 # List of Python packages needed by this stack
 # Python Jira api
-jira==2.0.0
 # Install Shotgun API 3 from archive
 https://github.com/shotgunsoftware/python-api/archive/v3.0.39.zip
-
+git+https://github.com/shotgunsoftware/jira.git@2.0.0.sg.1#egg=jira
 # Needed to run the Linux service.
 daemonize==2.4.7
 
