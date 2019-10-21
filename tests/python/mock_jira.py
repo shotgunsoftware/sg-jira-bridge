@@ -741,6 +741,11 @@ class MockedJira(object):
         Mocked Jira method.
         Return :class:`JiraUser`.
         """
+        if payload not in ["accountId", "username", "key"]:
+            raise RuntimeError("Unknown payload type: {}".format(payload))
+
+        # The endpoint parameter was username, but the field we need to look up is actually
+        # "name".
         if payload == "username":
             payload = "name"
 

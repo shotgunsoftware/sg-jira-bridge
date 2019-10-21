@@ -1000,6 +1000,9 @@ class EntityIssueHandler(SyncHandler):
         elif user_id is not None:
             emailAddress = self._jira.user(user_id, payload="key").emailAddress
         else:
+            # The code that calls this method should always have a user passed in. If there is not
+            # user_id or jira_user value, we shouldn't even be calling this method in the first
+            # place!
             raise RuntimeError("jira_user or user_id cannot be both None.")
 
         sg_user = self._shotgun.find_one(

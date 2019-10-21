@@ -29,7 +29,7 @@ class ServerThread(threading.Thread):
 
     def __init__(self):
         """
-        init.
+        Init.
         """
         super(ServerThread, self).__init__()
         self._httpd = webapp.create_server(

@@ -6,6 +6,7 @@
 # this software in either electronic or hard copy form.
 #
 
+import sys
 import argparse
 import logging
 
@@ -73,7 +74,8 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
         jira_user = jira.find_jira_assignee_for_issue(
             user["email"], jira_project=project
         )
-        # If no user want found, let the user know.
+        # No user was found, so skip over to the next one. The loggin from the JIRASession takes
+        # care of warning the user here that no matches were found.
         if jira_user is None:
             continue
 
@@ -139,7 +141,7 @@ def main():
 
     if not jira.is_jira_cloud:
         logger.error("This script can be run for JIRA Cloud only.")
-        return
+        return 1
 
     sg = Shotgun(
         shotgun_settings["site"],
@@ -147,12 +149,12 @@ def main():
         api_key=shotgun_settings["script_key"],
     )
 
-    try:
-        sync_jira_users_into_shotgun(sg, jira, project)
-    except JIRAError as e:
-        logger.error("Unexpected error contacting JIRA: {}".format(e))
-        return
+    sync_jira_users_into_shotgun(sg, jira, project)
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
+
+    sys.exit(return_code)

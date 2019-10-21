@@ -29,9 +29,9 @@ The quickest way to get the code required is by cloning the Github repos
 A note about JIRA servers hosted by Atlassian
 *********************************************
 
-In April 2019, Atlassian put a new sets of rules around accessing user data
+In April 2019, Atlassian put a new set of rules around accessing user data
 due to the the European GDPR regulation. Since then, email addresses of JIRA
-users are not accessible anymore.
+users are no longer accessible.
 
 As the Shotgun JIRA bridge relies on this information to pair Shotgun users
 with JIRA users, some extra steps will be required to configure the JIRA
@@ -278,12 +278,14 @@ Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
     account id.
 
     If new users are added to JIRA and Shotgun, simply run this script again and the new user
-    accounts will be paired. Exiting pairings will be left as they were.
+    accounts will be paired. Existing pairings will be left as they were.
 
 .. note::
     Due to API restrictions, we can only search for email addresses of users that have access
     to a given project. By default, all your Shotgun users should have access to a project,
-    so any project id can be used here.
+    so any project id can be used here. If you are granting access to each JIRA project
+    to a different subset of Shotgun users, you will need to run the script once for each
+    project.
 
 Start SG Jira Bridge
 ====================
