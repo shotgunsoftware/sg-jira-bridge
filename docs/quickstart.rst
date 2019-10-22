@@ -152,8 +152,7 @@ A ``requirements.txt`` file is provided to install all required packages.
 
 .. note::
     If you are upgrading from a previous version of the bridge, we recommend you re-install dependencies
-    as we've had to fork the ``jira`` Python module to add a missing feature. As of this writing, it
-    has not been merged by the ``jira`` module maintainers.
+    as we've had to fork the ``jira`` Python module to add a missing feature.
 
 
 Settings
@@ -267,25 +266,25 @@ Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
 
 .. note::
     For every user found in Shotgun, the script will search for a JIRA user with
-    the same email address. Note that if you have multiple users in Shotgun with
+    the same email address. If you have multiple users in Shotgun with
     the same email address, only the first one, i.e. the one with the lowest id,
     will be associated with a JIRA account.
 
     If you wish to change the Shotgun user associated with a JIRA account, e.g. the
     script associated the first Shotgun user with an account when you actually wanted
-    the second one, you can simply take the account id from the ``HumanUser.sg_jira_account_id``
+    the second one, you can take the account id from the ``HumanUser.sg_jira_account_id``
     field from one user and copy it to another user and then clear the original user's
     account id.
 
-    If new users are added to JIRA and Shotgun, simply run this script again and the new user
+    If new users are added to JIRA and Shotgun, run this script again and the new user
     accounts will be paired. Existing pairings will be left as they were.
 
 .. note::
-    Due to API restrictions, we can only search for email addresses of users that have access
-    to a given project. By default, all your Shotgun users should have access to a project,
-    so any project id can be used here. If you are granting access to each JIRA project
-    to a different subset of Shotgun users, you will need to run the script once for each
-    project.
+    Due to JIRA API restrictions, we can only search for email addresses of users
+    that have access to a given JIRA project. By default, all your Shotgun users
+    should have access to a JIRA project, so any project id can be used here.
+    If you are granting access to each JIRA project to a different subset of
+    Shotgun users, you will need to run the script once for each project.
 
 Start SG Jira Bridge
 ====================
