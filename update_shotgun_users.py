@@ -13,7 +13,6 @@ import logging
 from shotgun_api3 import Shotgun
 
 from sg_jira import Bridge, JiraSession
-from jira import JIRAError
 
 logger = logging.getLogger("update_shotgun_users")
 
@@ -156,5 +155,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
-    sys.exit(return_code)
