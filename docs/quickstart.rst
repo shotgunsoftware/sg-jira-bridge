@@ -283,10 +283,11 @@ Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
 
 .. note::
     Due to JIRA API restrictions, we can only search for email addresses of users
-    that have access to a given JIRA project. By default, all your Shotgun users
-    should have access to a JIRA project, so any project id can be used here.
-    If you are granting access to each JIRA project to a different subset of
-    Shotgun users, you will need to run the script once for each project.
+    that can be assigned on issues for a given JIRA project. If all
+    your JIRA users can access any JIRA project, the value for the ``--project``
+    argument can be any project id. If you have restrictions, you will need to
+    run this script once per project so that all your JIRA users can be discovered
+    and paired with a Shotgun user.
 
 Start SG Jira Bridge
 ====================
