@@ -10,6 +10,9 @@ import unittest2 as unittest
 
 from shotgun_api3.lib import mockgun
 
+from sg_jira.jira_session import JiraSession
+from mock_jira import MockedJira
+
 
 class TestBase(unittest.TestCase):
     """
@@ -20,6 +23,22 @@ class TestBase(unittest.TestCase):
         self._fixtures_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "fixtures")
         )
+
+    def mock_jira_session_bases(self):
+        """
+        Replace the JiraSession base class to be MockedJira
+        so we can run tests without an actual connection to
+        JIRA.
+        """
+        # Do not use mock.patcher for this, as the patcher's exit
+        # method will try to delete the bases before restoring them,
+        # which will raise an error.
+        self.__old_bases = JiraSession.__bases__
+        JiraSession.__bases__ = (MockedJira,)
+
+        def restore_bases():
+            JiraSession.__bases__ = self.__old_bases
+        self.addCleanup(restore_bases)
 
     def set_sg_mock_schema(self, path):
         """

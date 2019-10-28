@@ -67,7 +67,11 @@ class TestService(unittest.TestCase):
             # Make sure the daemon has the time to start and store its pid in
             # the pid file.
             time.sleep(1)
-            self.assertIsNotNone(service.status(pid_f.name))
-            service.stop(pid_f.name)
-            self.assertIsNone(service.status(pid_f.name))
-            self.assertFalse(os.path.exists(pid_f.name))
+            try:
+                self.assertIsNotNone(service.status(pid_f.name))
+                service.stop(pid_f.name)
+                self.assertIsNone(service.status(pid_f.name))
+                self.assertFalse(os.path.exists(pid_f.name))
+            except Exception:
+                print("Process exit code {}".format(process.exitcode))
+                raise

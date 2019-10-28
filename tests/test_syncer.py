@@ -22,6 +22,10 @@ SG_PROJECTS = [
     {"id": 2, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY}
 ]
 
+SG_USERS = [
+    {"id": 1, "type": "HumanUser", "login": "ford.prefect", "sg_jira_account_id": JIRA_USER["accountId"]},
+]
+
 # A list of Shotgun Tasks
 SG_TASKS = [
     {
@@ -805,10 +809,32 @@ class TestJiraSyncer(TestSyncBase):
         # The invalid tag should be reject, only the valid one should be there
         self.assertEqual(issue.fields.labels, ["foo"])
 
-    def test_jira_assignment(self, mocked_sg):
+    def test_hosted_jira_assignment(self, mocked_sg):
         """
-        Test syncing Jira assignment to Shotgun
+        Test syncing Jira Cloud assignment to Shotgun
         """
+        self._test_jira_assignment(mocked_sg, is_jira_cloud=True)
+
+    def test_local_jira_assignment(self, mocked_sg):
+        """
+        Test syncing Jira Cloud assignment to Shotgun
+        """
+        self._test_jira_assignment(mocked_sg, is_jira_cloud=False)
+
+    def _test_jira_assignment(self, mocked_sg, is_jira_cloud):
+        """
+        Test syncing JIRA assignment to Shotgun.
+        """
+        # Force JIRA cloud or not on the session, which will impact how the
+        # webhook data is interpreted.
+        patcher = mock.patch(
+            "sg_jira.jira_session.JiraSession.is_jira_cloud",
+            new_callable=mock.PropertyMock,
+            return_value=is_jira_cloud
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
         syncer, bridge = self._get_syncer(mocked_sg)
 
         self.add_to_sg_mock_db(bridge.shotgun, {
@@ -817,6 +843,7 @@ class TestJiraSyncer(TestSyncBase):
             "type": "HumanUser",
             "name": "Ford Prefect",
             "id": 1,
+            "sg_jira_account_id": JIRA_USER["accountId"],
             "email": JIRA_USER["emailAddress"]
         })
         self.add_to_sg_mock_db(bridge.shotgun, {
@@ -825,6 +852,7 @@ class TestJiraSyncer(TestSyncBase):
             "type": "HumanUser",
             "name": "Sync sync",
             "id": 2,
+            "sg_jira_account_id": JIRA_USER_2["accountId"],
             "email": JIRA_USER_2["emailAddress"]
         })
 

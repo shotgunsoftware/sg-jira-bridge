@@ -8,6 +8,7 @@
 import copy
 from jira.resources import Project as JiraProject
 from jira.resources import IssueType, Issue, User, Comment, IssueLink
+from jira import JIRAError
 
 # Faked Jira Project, Issue, change log and event
 JIRA_PROJECT_KEY = "UTest"
@@ -473,6 +474,16 @@ class MockedJira(object):
         """
         return self._projects
 
+    def project(self, project_id):
+        """
+        Mocked Jira method
+        Return a :class:`JiraProject`
+        """
+        for project in self._projects:
+            if project.key == project_id:
+                return project
+        raise JIRAError("Unable to find resource Project({})".format(project_id))
+
     def createmeta(self, *args, **kwargs):
         """
         Mocked Jira method.
@@ -517,6 +528,13 @@ class MockedJira(object):
         Return a string.
         """
         return "ford.prefect1"
+
+    def myself(self):
+        """
+        Mocked Jira method.
+        Return a dictionary of the fields for the current user.
+        """
+        return JIRA_USER
 
     def fields(self):
         """
@@ -712,17 +730,27 @@ class MockedJira(object):
             # Mock Jira REST api bug
             return []
 
-        if startAt == 0:
-            return [User(None, None, JIRA_USER_2)] * maxResults
-        return [User(None, None, JIRA_USER)]
+        # Create a list of users.
+        users = [User(None, None, JIRA_USER_2)] * maxResults + [User(None, None, JIRA_USER)]
 
-    def user(self, id):
+        # Return the requested slice.
+        return users[startAt: startAt + maxResults]
+
+    def user(self, id, payload="username"):
         """
         Mocked Jira method.
         Return :class:`JiraUser`.
         """
-        if id == JIRA_USER["key"]:
+        if payload not in ["accountId", "username", "key"]:
+            raise RuntimeError("Unknown payload type: {}".format(payload))
+
+        # The endpoint parameter was username, but the field we need to look up is actually
+        # "name".
+        if payload == "username":
+            payload = "name"
+
+        if id == JIRA_USER[payload]:
             return User(None, None, JIRA_USER)
-        if id == JIRA_USER_2["key"]:
+        if id == JIRA_USER_2[payload]:
             return User(None, None, JIRA_USER_2)
         return None
