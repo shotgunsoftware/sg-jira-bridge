@@ -264,14 +264,17 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         logger.error(message)
 
 
-def run_server(port, settings, keyfile=None, certfile=None):
+def create_server(port, settings, keyfile=None, certfile=None):
     """
-    Run the server until a shutdown is requested.
+    Create the server.
 
     :param int port: A port number to listen to.
     :param str settings: Path to settings file.
     :param str keyfile: Optional path to a PEM key file to run in https mode.
     :param str certfile:  Optional path to a PEM certificate file to run in https mode.
+
+    :returns: The HTTP Server
+    :type: :class:`BaseHTTPServer.BaseHTTPRequestHandler`
     """
     httpd = Server(
         settings,
@@ -285,7 +288,19 @@ def run_server(port, settings, keyfile=None, certfile=None):
             certfile=certfile,
             server_side=True
         )
-    httpd.serve_forever()
+    return httpd
+
+
+def run_server(port, settings, keyfile=None, certfile=None):
+    """
+    Run the server until a shutdown is requested.
+
+    :param int port: A port number to listen to.
+    :param str settings: Path to settings file.
+    :param str keyfile: Optional path to a PEM key file to run in https mode.
+    :param str certfile:  Optional path to a PEM certificate file to run in https mode.
+    """
+    create_server(port, settings, keyfile, certfile).serve_forever()
 
 
 def main():

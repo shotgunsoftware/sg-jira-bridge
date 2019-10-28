@@ -11,11 +11,15 @@ import mock
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
 
 from test_sync_base import TestSyncBase
-from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT
+from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER
 
 # A list of Shotgun Projects
 SG_PROJECTS = [
     {"id": 1, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY}
+]
+
+SG_USERS = [
+    {"id": 1, "type": "HumanUser", "login": "ford.prefect", "sg_jira_account_id": JIRA_USER["accountId"]},
 ]
 
 
@@ -53,6 +57,7 @@ class TestHierarchySyncer(TestSyncBase):
         }
         self.add_to_sg_mock_db(bridge.shotgun, sg_asset)
         self.add_to_sg_mock_db(bridge.shotgun, synced_task)
+        self.add_to_sg_mock_db(bridge.shotgun, SG_USERS)
 
         self.assertTrue(
             bridge.sync_in_jira(

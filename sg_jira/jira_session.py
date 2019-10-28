@@ -53,7 +53,10 @@ class JiraSession(jira.client.JIRA):
             raise RuntimeError(
                 "Unable to connect to %s. See the log for details." % jira_site
             )
-        logger.info("Connected to %s." % jira_site)
+
+        # accountId's are only found on JIRA Cloud. The latest version of JIRA server do not have them.
+        self._is_jira_cloud = "accountId" in self.myself()
+        logger.info("Connected to %s (JIRA %s)" % (jira_site, "Cloud" if self._is_jira_cloud else "Server"))
 
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
@@ -86,24 +89,14 @@ class JiraSession(jira.client.JIRA):
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
             )
 
-    # This is a partial port of the code found in the master branch of the JIRA module.
-    # Instead of using it to retrieve the current user name, we'll use it to get
-    # the current account id.
-    # Once the 2.1.0 of the API gets released, we'll reevaluate this code and implement
-    # the logic with the proper API calls.
-    # https://github.com/pycontribs/jira/blob/ca306d7e59caa739e8707fec8be3c260340684ac/jira/client.py#L3326-L3348
-    def current_user_id(self):
+    @property
+    def is_jira_cloud(self):
         """
-        Returns the account-id of the current user.
+        Return if the site is a JIRA Cloud site.
 
-        :rtype: str
+        :rerturns: ``True`` if the site is hosted in the cloud, ``False`` otherwise.
         """
-        if not hasattr(self, "_myself"):
-            url = self._get_url("myself")
-            r = self._session.get(url, headers=self._options["headers"])
-            r_json = r.json()
-            self._myself = r_json
-        return self._myself["accountId"]
+        return self._is_jira_cloud
 
     def get_jira_issue_field_id(self, name):
         """
@@ -315,7 +308,7 @@ class JiraSession(jira.client.JIRA):
                     "Found multiple assignable Jira users with email address %s. "
                     "Using the first one: %s" % (
                         user_email,
-                        ["%s (%s)" % (ju.emailAddress, ju.accountId) for ju in jira_users]
+                        ["%s (%s)" % (ju.emailAddress, ju.user) for ju in jira_users]
                     )
                 )
             logger.debug("Found Jira Assignee %s" % jira_assignee)

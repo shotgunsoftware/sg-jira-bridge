@@ -26,6 +26,17 @@ The quickest way to get the code required is by cloning the Github repos
     $ git clone git@github.com:shotgunsoftware/shotgunEvents.git
 
 
+A note about JIRA servers hosted by Atlassian
+*********************************************
+
+In April 2019, Atlassian put a new set of rules around accessing user data
+due to the the European GDPR regulation. Since then, email addresses of JIRA
+users are no longer accessible.
+
+As the Shotgun JIRA bridge relies on this information to pair Shotgun users
+with JIRA users, some extra steps will be required to configure the JIRA
+bridge. This quickstart page will alert you when these extra steps are needed.
+
 
 Setting up Shotgun
 ******************
@@ -34,15 +45,19 @@ Required Fields
 The following fields must be created in Shotgun for each of the
 following entity types:
 
-===========   ====================   =========   ==========================
-Entity Type   Field Name             Data Type   Display Name (recommended)
-===========   ====================   =========   ==========================
-Project       ``sg_jira_sync_url``   File/Link   Jira Sync URL
-Project       ``sg_jira_key``        Text        Jira Key
-Task          ``sg_jira_key``        Text        Jira Key
-Task          ``sg_sync_in_jira``    Checkbox    Sync In Jira
-Note          ``sg_jira_key``        Text        Jira Key
-===========   ====================   =========   ==========================
+===========   ======================   =========   ==========================
+Entity Type   Field Name               Data Type   Display Name (recommended)
+===========   ======================   =========   ==========================
+Project       ``sg_jira_sync_url``     File/Link   Jira Sync URL
+Project       ``sg_jira_key``          Text        Jira Key
+Task          ``sg_jira_key``          Text        Jira Key
+Task          ``sg_sync_in_jira``      Checkbox    Sync In Jira
+Note          ``sg_jira_key``          Text        Jira Key
+HumanUser     ``sg_jira_account_id``   Text        Jira Account Id
+===========   ======================   =========   ==========================
+
+.. note::
+    The ``HumanUser.sg_jira_account_id`` field is only necessary if your JIRA server is hosted by Atlassian.
 
 Configure your Shotgun Project
 ==============================
@@ -83,22 +98,24 @@ Jira Webhook
 - Click "Create Webhook"
 - Add the values for the following:
 
-+--------------+-------------------------------------------------------------------------+
-| Field        | Example                                                                 |
-+==============+=========================================================================+
-| Name         | "SG Jira Bridge Test"                                                   |
-+--------------+-------------------------------------------------------------------------+
-| URL          | ``https://<url_for_sg_jira_bridge>/jira2sg/default/issue/${issue.key}`` |
-+--------------+-------------------------------------------------------------------------+
-| Description  | "Webhook that syncs Jira data with Shotgun using the SG Jira Bridge"    |
-+--------------+-------------------------------------------------------------------------+
-| JQL          | ``project = "Your Project Name"``                                       |
-+--------------+-------------------------------------------------------------------------+
-| Events       | - (`required`) **[x]** Issue: created, updated, deleted                 |
-|              | - (`required`) **[x]** Comment: created, updated, deleted               |
-+--------------+-------------------------------------------------------------------------+
-| Exclude Body | (`required`) **[ ] un-checked**                                         |
-+--------------+-------------------------------------------------------------------------+
++--------------+-----------------------------------------------------------------------------------------+
+| Field        | Example                                                                                 |
++==============+=========================================================================================+
+| Name         | "SG Jira Bridge Test"                                                                   |
++--------------+-----------------------------------------------------------------------------------------+
+| URL          | | ``https://<url_for_sg_jira_bridge>/jira2sg/default/issue/${issue.key}``               |
+|              | | The ``<url_for_sg_jira_bridge>`` is the host name or IP address of the computer you   |
+|              | | will be launching ``webapp.py`` or ``service.py`` from.                               |
++--------------+-----------------------------------------------------------------------------------------+
+| Description  | "Webhook that syncs Jira data with Shotgun using the SG Jira Bridge"                    |
++--------------+-----------------------------------------------------------------------------------------+
+| JQL          | ``project = "Your Project Name"``                                                       |
++--------------+-----------------------------------------------------------------------------------------+
+| Events       | - (`required`) **[x]** Issue: created, updated, deleted                                 |
+|              | - (`required`) **[x]** Comment: created, updated, deleted                               |
++--------------+-----------------------------------------------------------------------------------------+
+| Exclude Body | (`required`) **[ ] un-checked**                                                         |
++--------------+-----------------------------------------------------------------------------------------+
 
 
 Setting Up Your Config and Env
@@ -134,6 +151,10 @@ A ``requirements.txt`` file is provided to install all required packages.
 
     # Install required packages
     pip install -r /path/to/sg-jira-bridge/requirements.txt
+
+.. note::
+    If you are upgrading from a previous version of the bridge, we recommend you re-install dependencies
+    as we've had to fork the ``jira`` Python module to add a missing feature.
 
 
 Settings
@@ -237,6 +258,37 @@ credentials::
 
 Starting Everything Up
 **********************
+
+Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
+===============================================================================
+
+.. code-block:: bash
+
+    $ python update_shotgun_users.py --settings <path to your settings.py> --project <id of your project>
+
+.. note::
+    For every user found in Shotgun, the script will search for a JIRA user with
+    the same email address. If you have multiple users in Shotgun with
+    the same email address, only the first one, i.e. the one with the lowest id,
+    will be associated with a JIRA account.
+
+    If you wish to change the Shotgun user associated with a JIRA account, e.g. the
+    script associated the first Shotgun user with an account when you actually wanted
+    the second one, you can take the account id from the ``HumanUser.sg_jira_account_id``
+    field from one user and copy it to another user and then clear the original user's
+    account id.
+
+    If new users are added to JIRA and Shotgun, run this script again and the new user
+    accounts will be paired. Existing pairings will be left as they were.
+
+.. note::
+    Due to JIRA API restrictions, we can only search for email addresses of users
+    that can be assigned on issues for a given JIRA project. If all
+    your JIRA users can access any JIRA project, the value for the ``--project``
+    argument can be any project id. If you have restrictions, you will need to
+    run this script once per project so that all your JIRA users can be discovered
+    and paired with a Shotgun user.
+
 Start SG Jira Bridge
 ====================
 .. code-block:: bash

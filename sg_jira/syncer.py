@@ -159,7 +159,7 @@ class Syncer(object):
         # Check we didn't trigger the event to avoid infinite loops.
         user = event.get("user")
         if user:
-            if "accountId" in user and user["accountId"] == self.bridge.jira.current_user_id():
+            if self.bridge.jira.is_jira_cloud and user["accountId"] == self.bridge.jira.myself()["accountId"]:
                 self._logger.debug("Rejecting event %s triggered by us (%s)" % (
                     event,
                     user["accountId"],

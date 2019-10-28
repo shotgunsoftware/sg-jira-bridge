@@ -6,11 +6,8 @@
 #
 
 import os
-import mock
-
 
 from shotgun_api3.lib import mockgun
-from mock_jira import MockedJira, JIRA_USER
 import sg_jira
 
 from test_base import TestBase
@@ -55,7 +52,6 @@ class TestSyncBase(TestBase):
         :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.
         """
-
         mocked_sg.return_value = self._get_mocked_sg_handle()
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
@@ -73,31 +69,7 @@ class TestSyncBase(TestBase):
             "schemas", "sg-jira",
         ))
 
-        # Mocks the "current_user_id" method which depends on
-        # introspecting data coming back from the JIRA API and
-        # that we won't simulate for these tests.
-        patcher = mock.patch.object(
-            sg_jira.jira_session.JiraSession,
-            "current_user_id",
-            lambda _: JIRA_USER["accountId"]
-        )
-        patcher.start()
-        self.addCleanup(patcher.stop)
-
-        # Patch the JiraSession base class to use our MockedJira instead of
-        # the jira.client.Jira class.
-        patcher = mock.patch.object(
-            sg_jira.jira_session.JiraSession,
-            "__bases__",
-            (MockedJira,)
-        )
-        patcher.is_local = True
-        patcher.start()
-        # FIXME: the patcher fails with TypeError: can't delete JiraSession.__bases__
-        # in its __exit__. We don't need the original jira.client.Jira class
-        # in these tests, so restoring it is not an issue, but this is not
-        # clean and should be fixed.
-        # self.addCleanup(patcher.stop)
+        self.mock_jira_session_bases()
 
         # TODO: add a Shotgun patcher so deriving classes don't have to patch
         # Shotgun themselves.
