@@ -63,7 +63,6 @@ missing_env_vars = [
     env_var
     for env_var in [
         "SGJIRA_SG_SITE",
-        "SGJIRA_SG_TEST_USER",
         "SGJIRA_SG_TEST_PASSWORD",
         "SGJIRA_SG_TEST_PROJECT",
         "SGJIRA_SG_TEST_USER",
@@ -113,6 +112,7 @@ class TestIntegration(TestCase):
         with JIRA.
     - SGJIRA_JIRA_TEST_USER_2: The login of the user that matches the second
         Shotgun test user.
+    - SGJIRA_JIRA_TEST_PROJECT_KEY: The Jira project for which we should sync data.
 
     The test will take care of starting and stopping the JIRA integration webapp,
     but you are responsible for running your own Shotgun Event daemon.
@@ -273,6 +273,8 @@ class TestIntegration(TestCase):
             self._test_update_assignment_from_shotgun()
             self._test_update_assignment_from_jira()
             self._test_update_ccs_from_shotgun()
+            self._test_update_description_from_shotgun()
+            self._test_update_description_from_jira()
             # TODO: Watchers updates are not pushed to the webhook for some reason,
             # so we can't test them. The test was already written, so we'll keep it.
             # self._test_update_ccs_from_jira()
@@ -504,3 +506,28 @@ class TestIntegration(TestCase):
 
         self._jira.remove_watcher(self._jira_key, self._jira_user_1)
         self._expect(lambda: wait_for_addressings_update([]), "waiting_for_no_one_cced")
+
+    def _test_update_description_from_shotgun(self):
+        """
+        Ensure updating description in Shotgun is reflected in JIRA.
+        """
+
+        def wait_for_shotgun_description_updated():
+            self.assertEqual(self._issue.fields.description, "Description updated in Shotgun")
+
+        self._sg.update("Task", self._sg_task["id"], {"sg_description": "Description updated in Shotgun"})
+        self._expect(wait_for_shotgun_description_updated)
+
+    def _test_update_description_from_jira(self):
+        """
+        Ensure updating description in JIRA is reflected in Shotgun.
+        """
+
+        def wait_for_jira_description_updated():
+            task = self._sg.find_one(
+                "Task", [["id", "is", self._sg_task["id"]]], ["sg_description"]
+            )
+            self.assertEqual(task["sg_description"], "Description updated in Jira")
+
+        self._issue.update(description="Description updated in Jira")
+        self._expect(wait_for_jira_description_updated)
