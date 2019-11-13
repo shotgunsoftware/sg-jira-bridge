@@ -143,7 +143,9 @@ class TestSGTrigger(TestBase):
         )
         self.assertTrue(PROJECT["id"] in routing)
         self.assertTrue(routing[PROJECT["id"]].startswith(url))
-        mocked.assert_called_once()
+        # The first sync for a Project also resets the bridge so it 
+        # generates 2 calls.
+        self.assertEqual(mocked.call_count, 2)
         self.assertTrue(mocked.call_args[0][0].startswith(url))
         # Check the trigger clears its routing cache if the sync url is changed
         project_event = {

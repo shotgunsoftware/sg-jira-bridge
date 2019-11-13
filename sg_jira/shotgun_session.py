@@ -93,10 +93,11 @@ class ShotgunSession(object):
         self.assert_field(
             "Project",
             SHOTGUN_JIRA_ID_FIELD,
-            "text"
+            "text",
+            check_unique=True
         )
 
-    def assert_field(self, entity_type, field_name, field_type):
+    def assert_field(self, entity_type, field_name, field_type, check_unique=False):
         """
         Check if the given field with the given type exists for the given Shotgun
         Entity type.
@@ -104,6 +105,8 @@ class ShotgunSession(object):
         :param str entity_type: A Shotgun Entity type.
         :param str field_name: A Shotgun field name, e.g. 'sg_my_precious'.
         :param str field_type: A Shotgun field type, e.g. 'text'.
+        :param bool check_unique: When ``True``, check the specified field 
+            is configured to only accept unique values. Default is ``False``.
         :raises RuntimeError: if the field does not exist or does not have the
                  expected type.
         """
@@ -116,13 +119,23 @@ class ShotgunSession(object):
             )
         if field["data_type"]["value"] != field_type:
             raise RuntimeError(
-                "Invalid type '%s' for %s.%s, it must be '%s'" % (
+                "Invalid type '%s' for Shotgun field %s.%s, it must be '%s'" % (
                     field["data_type"]["value"],
                     entity_type,
                     field_name,
                     field_type
                 )
             )
+        if check_unique is True:
+            if field["unique"]["value"] is not True:
+                raise RuntimeError(
+                    "Invalid 'unique' property '%s' for Shotgun field %s.%s, "
+                    "it must be 'True'" % (
+                        field["unique"]["value"],
+                        entity_type,
+                        field_name
+                    )
+                )
 
     def get_field_schema(self, entity_type, field_name):
         """

@@ -45,7 +45,12 @@ class NoteCommentHandler(SyncHandler):
         Check the Jira and Shotgun site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
-        self._shotgun.assert_field("Note", SHOTGUN_JIRA_ID_FIELD, "text")
+        self._shotgun.assert_field(
+            "Note", 
+            SHOTGUN_JIRA_ID_FIELD, 
+            "text",
+            check_unique=True
+        )
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
@@ -217,6 +222,10 @@ class NoteCommentHandler(SyncHandler):
         meta = event["meta"]
         shotgun_field = meta["attribute_name"]
 
+        # NOTE: We're don't validate that a Comment is configured to sync with
+        # the source Note that initiated the sync because Jira Comments don't
+        # store any linked Shotgun Entity info like Issues do.
+
         # Note: we don't accept events for the SHOTGUN_SYNC_IN_JIRA_FIELD field
         # but we process them.
         # Accepting the event is done by a higher level handler.
@@ -238,9 +247,29 @@ class NoteCommentHandler(SyncHandler):
                 )
             )
             return False
+        
+        # When an Entity is created in Shotgun, a unique event is generated for 
+        # each field value set in the creation of the Entity. These events
+        # have an additional "in_create" key in the metadata, identifying them
+        # as events from the initial create event.  
+        #       
+        # When the bridge processes the first event, it loads all of the Entity 
+        # field values from Shotgun and creates the Jira Issue with those 
+        # values. So the remaining Shotgun events with the "in_create"
+        # metadata key can be ignored since we've already handled all of
+        # those field updates.
 
-        meta = event["meta"]
-        shotgun_field = meta["attribute_name"]
+        # We use the Jira id field value to check if we're processing the first 
+        # event. If it exists with in_create, we know the comment has already
+        # been created.
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
+            self._logger.debug(
+                "Rejecting Shotgun event for Note.%s field update during "
+                "create. Comment was already created in Jira: %s" % (
+                    shotgun_field, event
+                )
+            )
+            return False
 
         # Update existing synced comment (if any) Issue attachment
         if shotgun_field == "tasks":
@@ -250,6 +279,12 @@ class NoteCommentHandler(SyncHandler):
                 meta["removed"],
             )
 
+        self._logger.debug(
+            "Shotgun Note (%d).%s updated" % (
+                sg_entity["id"],
+                shotgun_field
+            )
+        )
         # Update the Jira comment body
         return self._sync_note_content_to_jira(sg_entity)
 
@@ -388,7 +423,7 @@ class NoteCommentHandler(SyncHandler):
                     continue
                 # Add the Note as a comment to the Issue
                 self._logger.info(
-                    "Shotgun Note (%d) added. Adding as a comment on Jira Issue %s" % (
+                    "Shotgun Note (%d) added. Adding as a new comment on Jira Issue %s" % (
                         shotgun_note["id"],
                         jira_issue.key
                     )

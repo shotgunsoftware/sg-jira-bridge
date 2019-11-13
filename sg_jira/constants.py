@@ -28,6 +28,9 @@ JIRA_SHOTGUN_URL_FIELD = "Shotgun Url"
 # Entity.
 SHOTGUN_JIRA_ID_FIELD = "sg_jira_key"
 
+# A Shotgun File/Link field to a link to the synced issue in Jira.
+SHOTGUN_JIRA_URL_FIELD = "sg_jira_url"
+
 # A Shotgun check box field used to specify which entities should be synced.
 SHOTGUN_SYNC_IN_JIRA_FIELD = "sg_sync_in_jira"
 

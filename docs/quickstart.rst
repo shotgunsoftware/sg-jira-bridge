@@ -26,15 +26,15 @@ The quickest way to get the code required is by cloning the Github repos
     $ git clone git@github.com:shotgunsoftware/shotgunEvents.git
 
 
-A note about JIRA servers hosted by Atlassian
+A note about Jira servers hosted by Atlassian
 *********************************************
 
 In April 2019, Atlassian put a new set of rules around accessing user data
-due to the the European GDPR regulation. Since then, email addresses of JIRA
+due to the the European GDPR regulation. Since then, email addresses of Jira
 users are no longer accessible.
 
-As the Shotgun JIRA bridge relies on this information to pair Shotgun users
-with JIRA users, some extra steps will be required to configure the JIRA
+As the Shotgun Jira bridge relies on this information to pair Shotgun users
+with Jira users, some extra steps will be required to configure the Jira
 bridge. This quickstart page will alert you when these extra steps are needed.
 
 
@@ -45,19 +45,24 @@ Required Fields
 The following fields must be created in Shotgun for each of the
 following entity types:
 
-===========   ======================   =========   ==========================
-Entity Type   Field Name               Data Type   Display Name (recommended)
-===========   ======================   =========   ==========================
-Project       ``sg_jira_sync_url``     File/Link   Jira Sync URL
-Project       ``sg_jira_key``          Text        Jira Key
-Task          ``sg_jira_key``          Text        Jira Key
-Task          ``sg_sync_in_jira``      Checkbox    Sync In Jira
-Note          ``sg_jira_key``          Text        Jira Key
-HumanUser     ``sg_jira_account_id``   Text        Jira Account Id
-===========   ======================   =========   ==========================
+===========   ======================   =========   ==========================   ==========================
+Entity Type   Field Name               Data Type   Display Name (recommended)   Description
+===========   ======================   =========   ==========================   ==========================
+Project       ``sg_jira_sync_url``     File/Link   Jira Sync URL                URL of SG Jira Bridge (see below)
+Project       ``sg_jira_key``          Text        Jira Key*                    Synced Project Key value in Jira
+Task          ``sg_jira_key``          Text        Jira Key*                    Synced Issue Key value in Jira
+Task          ``sg_sync_in_jira``      Checkbox    Sync In Jira                 Enable/Disable syncing for this Task
+Task          ``sg_jira_url``          File/Link   Jira URL                     Link to synced Issue in Jira
+Note          ``sg_jira_key``          Text        Jira Key*                    Synced Issue Key/Comment ID in Jira
+HumanUser     ``sg_jira_account_id``   Text        Jira Account Id              Synced Account Id in Jira.
+===========   ======================   =========   ==========================   ==========================
 
 .. note::
-    The ``HumanUser.sg_jira_account_id`` field is only necessary if your JIRA server is hosted by Atlassian.
+    - All ``sg_jira_key`` fields must be configured with the "*Ensure unique
+      value per project*" setting **checked**.
+    - The ``HumanUser.sg_jira_account_id`` field is only necessary if your
+      Jira server is hosted by Atlassian.
+
 
 Configure your Shotgun Project
 ==============================
@@ -70,12 +75,12 @@ Configure your Shotgun Project entity with your Jira Sync Settings:
 |              |                                          | Jira Bridge webserver                   |
 +--------------+------------------------------------------+-----------------------------------------+
 | Jira Key     | <JIRA PROJECT KEY>                       | The Project Key in Jira for the Project |
-|              |                                          | you're syncing (eg ``TEST``)            |
+|              |                                          | you're syncing (eg ``TEST``).           |
 +--------------+------------------------------------------+-----------------------------------------+
 
 
 
-Setting up JIRA
+Setting up Jira
 ***************
 Required Fields
 ===============
@@ -259,7 +264,7 @@ credentials::
 Starting Everything Up
 **********************
 
-Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
+Match Shotgun users with Jira users (for Jira servers hosted by Atlassian only)
 ===============================================================================
 
 .. code-block:: bash
@@ -267,26 +272,26 @@ Match Shotgun users with JIRA users (for JIRA servers hosted by Atlassian only)
     $ python update_shotgun_users.py --settings <path to your settings.py> --project <id of your project>
 
 .. note::
-    For every user found in Shotgun, the script will search for a JIRA user with
+    For every user found in Shotgun, the script will search for a Jira user with
     the same email address. If you have multiple users in Shotgun with
     the same email address, only the first one, i.e. the one with the lowest id,
-    will be associated with a JIRA account.
+    will be associated with a Jira account.
 
-    If you wish to change the Shotgun user associated with a JIRA account, e.g. the
+    If you wish to change the Shotgun user associated with a Jira account, e.g. the
     script associated the first Shotgun user with an account when you actually wanted
     the second one, you can take the account id from the ``HumanUser.sg_jira_account_id``
     field from one user and copy it to another user and then clear the original user's
     account id.
 
-    If new users are added to JIRA and Shotgun, run this script again and the new user
+    If new users are added to Jira and Shotgun, run this script again and the new user
     accounts will be paired. Existing pairings will be left as they were.
 
 .. note::
-    Due to JIRA API restrictions, we can only search for email addresses of users
-    that can be assigned on issues for a given JIRA project. If all
-    your JIRA users can access any JIRA project, the value for the ``--project``
+    Due to Jira API restrictions, we can only search for email addresses of users
+    that can be assigned on issues for a given Jira project. If all
+    your Jira users can access any Jira project, the value for the ``--project``
     argument can be any project id. If you have restrictions, you will need to
-    run this script once per project so that all your JIRA users can be discovered
+    run this script once per project so that all your Jira users can be discovered
     and paired with a Shotgun user.
 
 Start SG Jira Bridge

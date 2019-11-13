@@ -6,7 +6,7 @@
 #
 
 from sg_jira.handlers import EntityIssueHandler
-from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_URL_FIELD
 from sg_jira.errors import InvalidShotgunValue
 
 
@@ -122,18 +122,14 @@ class AssetIssueHandler(EntityIssueHandler):
         if not jira_issue_key:
             return False
 
-        jira_issue = self.get_jira_issue(jira_issue_key)
+        jira_issue = self._get_jira_issue_and_validate(
+            jira_issue_key,
+            shotgun_asset
+        )
         if not jira_issue:
-            self._logger.warning(
-                "Unable to find Jira Issue %s for Shotgun Asset %s" % (
-                    jira_issue_key,
-                    shotgun_asset
-                )
-            )
-            # Better to stop processing.
             return False
 
-        # Process all supported fields if no event meta data was provied.
+        # Process all supported fields if no event meta data was provided.
         if not event_meta:
             return self._sync_shotgun_fields_to_jira(
                 shotgun_asset,
@@ -323,7 +319,13 @@ class AssetIssueHandler(EntityIssueHandler):
                 self._shotgun.update(
                     shotgun_asset["type"],
                     shotgun_asset["id"],
-                    {SHOTGUN_JIRA_ID_FIELD: jira_issue.key}
+                    {
+                        SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+                        SHOTGUN_JIRA_URL_FIELD: {
+                            "url": jira_issue.permalink(),
+                            "name": "View in Jira"
+                        }
+                    }
                 )
                 updated = True
 
@@ -456,9 +458,14 @@ class AssetIssueHandler(EntityIssueHandler):
             [["tasks", "is", shotgun_task]],
             self._shotgun_asset_fields
         )
+        # make sure we have a full entity needed with the injected "name" key, etc.
+        shotgun_asset = self._shotgun.consolidate_entity(
+            shotgun_asset,
+            fields=self._shotgun_asset_fields
+        )
 
         self._logger.debug(
-            "Retrieved Assets %s linked to Task %s" % (shotgun_asset, shotgun_task)
+            "Retrieved Asset %s linked to Task %s" % (shotgun_asset, shotgun_task)
         )
 
         if not shotgun_asset:
@@ -482,7 +489,13 @@ class AssetIssueHandler(EntityIssueHandler):
         Check the Jira and Shotgun site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
         """
-        self._shotgun.assert_field("Asset", SHOTGUN_JIRA_ID_FIELD, "text")
+        self._shotgun.assert_field(
+            "Asset", 
+            SHOTGUN_JIRA_ID_FIELD, 
+            "text",
+            check_unique=True
+        )
+        self._shotgun.assert_field("Asset", SHOTGUN_JIRA_URL_FIELD, "url")
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -542,6 +555,31 @@ class AssetIssueHandler(EntityIssueHandler):
                 "Unable to find Shotgun %s (%s)." % (
                     entity_type,
                     entity_id
+                )
+            )
+            return False
+
+        # When an Entity is created in Shotgun, a unique event is generated for 
+        # each field value set in the creation of the Entity. These events
+        # have an additional "in_create" key in the metadata, identifying them
+        # as events from the initial create event.  
+        #       
+        # When the bridge processes the first event, it loads all of the Entity 
+        # field values from Shotgun and creates the Jira Issue with those 
+        # values. So the remaining Shotgun events with the "in_create"
+        # metadata key can be ignored since we've already handled all of
+        # those field updates.
+
+        # We use the Jira id field value to check if we're processing the first 
+        # event. If it exists with in_create, we know the comment has already
+        # been created.
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
+            self._logger.debug(
+                "Rejecting Shotgun event for %s.%s field update during "
+                "create. Issue was already created in Jira: %s" % (
+                    sg_entity["type"],
+                    shotgun_field, 
+                    event
                 )
             )
             return False

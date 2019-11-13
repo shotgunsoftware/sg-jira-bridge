@@ -111,6 +111,52 @@ class EntityIssueHandler(SyncHandler):
 
         return True
 
+    def _get_jira_issue_and_validate(self, jira_issue_key, shotgun_entity):
+        """
+        Load Jira Issue with the given Jira key, validate it exists and is 
+        syncing to the given Shotgun Entity. 
+        
+        :param str jira_issue_key: Jira key for the Issue to load
+        :param dict shotgun_entity: Shotgun Entity dictionary
+        :returns: A :class:`jira.Issue` instance if it exists and is valid. 
+            Otherwise ``None``
+        """
+        jira_issue = self.get_jira_issue(jira_issue_key)
+        if not jira_issue:
+            # Better to stop now for the time being.
+            # The Issue could have been deleted, and we don't want to keep
+            # recreating it. So we play safe until we correctly handle the
+            # deleted case.
+            self._logger.warning(
+                "Unable to find Jira Issue %s for Shotgun %s (%d)" % (
+                    jira_issue_key,
+                    shotgun_entity["type"],
+                    shotgun_entity["id"]
+                )
+            )
+            return None
+
+        jira_shotgun_id = getattr(jira_issue.fields, self._jira.jira_shotgun_id_field)
+        jira_shotgun_type = getattr(jira_issue.fields, self._jira.jira_shotgun_type_field)
+        if shotgun_entity["type"] != jira_shotgun_type or shotgun_entity["id"] != int(jira_shotgun_id):
+            # Shotgun schema requirements should prevent multiple Shotgun 
+            # Entities with the same Jira Key. But we also check to be sure 
+            # the Jira Issue has the same Shotgun Entity type and id so we 
+            # can prevent data corruption.
+            self._logger.warning(
+                "Rejecting Jira Issue %s. Expected it to be linked to Shotgun "
+                "%s (%d) but instead it is linked to Shotgun %s (%s)." % (
+                    jira_issue_key,
+                    shotgun_entity["type"],
+                    shotgun_entity["id"],
+                    jira_shotgun_type,
+                    jira_shotgun_id
+                )
+            )
+            return None
+        
+        return jira_issue
+
     def _create_jira_issue_for_entity(
         self,
         sg_entity,
