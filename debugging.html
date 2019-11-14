@@ -17,36 +17,42 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
 
+  
+  
     
 
   
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Developer Resources" href="developer.html" />
-    <link rel="prev" title="Settings" href="settings.html" /> 
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
+        <link rel="next" title="Developer Resources" href="developer.html"/>
+        <link rel="prev" title="Settings" href="settings.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -94,15 +100,17 @@
 <li class="toctree-l2"><a class="reference internal" href="#common-issues">Common Issues</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#runtimeerror-maximum-recursion-depth-exceeded">RuntimeError: maximum recursion depth exceeded</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#not-seeing-changes-sync">Not Seeing Changes Sync</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sg-jira-bridge-webapp-isn-t-responding">SG Jira Bridge Webapp Isn’t Responding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#shotgun-changes-aren-t-syncing-to-jira">Shotgun changes aren’t syncing to Jira</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#jira-changes-aren-t-syncing-to-shotgun">Jira changes aren’t syncing to Shotgun</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#value-can-t-be-translated-to-a-shotgun-jira-value">Value can’t be translated to a Shotgun/Jira value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sg-jira-bridge-webapp-isn-t-responding">SG Jira Bridge Webapp Isn&#8217;t Responding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shotgun-changes-aren-t-syncing-to-jira">Shotgun changes aren&#8217;t syncing to Jira</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jira-changes-aren-t-syncing-to-shotgun">Jira changes aren&#8217;t syncing to Shotgun</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#value-can-t-be-translated-to-a-shotgun-jira-value">Value can&#8217;t be translated to a Shotgun/Jira value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#time-tracking-original-estimate-is-required">Time Tracking: Original Estimate is Required</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -115,7 +123,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Shotgun Jira Bridge</a>
@@ -123,10 +131,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -171,17 +178,17 @@
 <div class="section" id="logging">
 <h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
 <p>The SG-Jira-Bridge uses standard Python logging. The logging configuration is
-stored in a <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> <em>dict</em> in the <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file and uses the
-standard <a class="reference external" href="https://docs.python.org/2/library/logging.config.html#module-logging.config" title="(in Python v2.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging.config</span></code></a> format.</p>
-<p>By default the SG Jira Bridge logs <code class="docutils literal notranslate"><span class="pre">INFO</span></code> messages and above which provide
+stored in a <code class="docutils literal"><span class="pre">LOGGING</span></code> <em>dict</em> in the <code class="docutils literal"><span class="pre">settings.py</span></code> file and uses the
+standard <a class="reference external" href="https://docs.python.org/2/library/logging.config.html#module-logging.config" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">logging.config</span></code></a> format.</p>
+<p>By default the SG Jira Bridge logs <code class="docutils literal"><span class="pre">INFO</span></code> messages and above which provide
 a good amount of detail to audit what is happening with each request.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">If you are troubleshooting or doing development, setting the logging level
-to <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> can be useful. However, this log level is extremely verbose.
-Under normal operation, it is recommended to use <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
+to <code class="docutils literal"><span class="pre">DEBUG</span></code> can be useful. However, this log level is extremely verbose.
+Under normal operation, it is recommended to use <code class="docutils literal"><span class="pre">INFO</span></code>.</p>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define logging</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Define logging</span>
 <span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="s2">&quot;disable_existing_loggers&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -239,26 +246,26 @@ Under normal operation, it is recommended to use <code class="docutils literal n
 <h2>Testing on a Machine Not Accessible to Jira<a class="headerlink" href="#testing-on-a-machine-not-accessible-to-jira" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="installing-ngrok">
 <h3>Installing ngrok<a class="headerlink" href="#installing-ngrok" title="Permalink to this headline">¶</a></h3>
-<p>If you are testing locally, it’s likely your machine isn’t accessible from the
-Jira server (especially if you’re using a Jira cloud server). However, you can
+<p>If you are testing locally, it&#8217;s likely your machine isn&#8217;t accessible from the
+Jira server (especially if you&#8217;re using a Jira cloud server). However, you can
 use ngrok <a class="reference external" href="https://ngrok.com">https://ngrok.com</a> to allow it to securely access your local machine
-for testing and development: <code class="docutils literal notranslate"><span class="pre">ngrok</span> <span class="pre">http</span> <span class="pre">9090</span></code>.</p>
+for testing and development: <code class="docutils literal"><span class="pre">ngrok</span> <span class="pre">http</span> <span class="pre">9090</span></code>.</p>
 <p>To get ngrok running, sign up for a free account at ngrok.com. <a class="reference external" href="https://ngrok.com/download">Download and
 install ngrok</a>. If you use a package manager like
 <a class="reference external" href="https://brew.sh/">Homebrew</a>, you may be able to install from there as well.</p>
-<p>Setup authentication by running <code class="docutils literal notranslate"><span class="pre">ngrok</span> <span class="pre">authtoken</span> <span class="pre">&lt;your</span> <span class="pre">auth</span> <span class="pre">token&gt;</span></code> where
-<code class="docutils literal notranslate"><span class="pre">&lt;your</span> <span class="pre">auth</span> <span class="pre">token&gt;</span></code> is the auth token assigned to your ngrok account. You can
+<p>Setup authentication by running <code class="docutils literal"><span class="pre">ngrok</span> <span class="pre">authtoken</span> <span class="pre">&lt;your</span> <span class="pre">auth</span> <span class="pre">token&gt;</span></code> where
+<code class="docutils literal"><span class="pre">&lt;your</span> <span class="pre">auth</span> <span class="pre">token&gt;</span></code> is the auth token assigned to your ngrok account. You can
 get the token from <a class="reference external" href="https://dashboard.ngrok.com/auth">https://dashboard.ngrok.com/auth</a>.</p>
 </div>
 <div class="section" id="starting-ngrok">
 <h3>Starting ngrok<a class="headerlink" href="#starting-ngrok" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ngrok http <span class="m">9090</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ ngrok http <span class="m">9090</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Each time you start ngrok, it assigns a random hostname to your connection.
-This means you’ll need to update the Jira Webhook you setup to point to the
+This means you&#8217;ll need to update the Jira Webhook you setup to point to the
 correct hostname each time. ngrok does have a paid plan that allows
 you to specify the hostname you wish to use.</p>
 </div>
@@ -286,39 +293,39 @@ passwords and does not support API tokens.</p>
 <p>When you make a change in Shotgun or Jira, the bridge evaluates whether the
 change should be synced to to the target site, tries to convert the value to an
 acceptable value in the target site, and then submits the change.</p>
-<p>If you’re not seeing your changes sync across, there are a few things you can
+<p>If you&#8217;re not seeing your changes sync across, there are a few things you can
 check.</p>
 </div>
 <div class="section" id="sg-jira-bridge-webapp-isn-t-responding">
-<h3>SG Jira Bridge Webapp Isn’t Responding<a class="headerlink" href="#sg-jira-bridge-webapp-isn-t-responding" title="Permalink to this headline">¶</a></h3>
+<h3>SG Jira Bridge Webapp Isn&#8217;t Responding<a class="headerlink" href="#sg-jira-bridge-webapp-isn-t-responding" title="Permalink to this headline">¶</a></h3>
 <p>You can check to see if the Bridge is running by issuing a GET request for the
 sync URL in your browser. Copy the URL you have entered in the
 <strong>Jira Sync URL</strong> field in your Shotgun Project and enter it in your browser.
 You should see a message that says something like:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Shotgun</span> <span class="n">to</span> <span class="n">Jira</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Shotgun</span> <span class="n">to</span> <span class="n">Jira</span>
 <span class="n">Syncing</span> <span class="k">with</span> <span class="n">default</span> <span class="n">settings</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>If there is no connection:</p>
 <ul class="simple">
-<li>Make sure you’ve started the Sg Jira Bridge</li>
+<li>Make sure you&#8217;ve started the Sg Jira Bridge</li>
 <li>Verify the URL you entered is in the correct format.</li>
-<li>Ensure you’re connecting to the correct port number.</li>
+<li>Ensure you&#8217;re connecting to the correct port number.</li>
 </ul>
 <p>If you see an Error Response, the server is running but your URL may not be
 correct. The URL should look like:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">http</span><span class="p">:</span><span class="o">//&lt;</span><span class="n">hostname</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">port</span><span class="o">&gt;/&lt;</span><span class="n">sg2jira</span> <span class="o">|</span> <span class="n">jira2sg</span><span class="o">&gt;/&lt;</span><span class="n">settings_name</span><span class="o">&gt;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">http</span><span class="p">:</span><span class="o">//&lt;</span><span class="n">hostname</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">port</span><span class="o">&gt;/&lt;</span><span class="n">sg2jira</span> <span class="o">|</span> <span class="n">jira2sg</span><span class="o">&gt;/&lt;</span><span class="n">settings_name</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>For example: <code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code></p>
+<p>For example: <code class="docutils literal"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code></p>
 </div>
 <div class="section" id="shotgun-changes-aren-t-syncing-to-jira">
-<h3>Shotgun changes aren’t syncing to Jira<a class="headerlink" href="#shotgun-changes-aren-t-syncing-to-jira" title="Permalink to this headline">¶</a></h3>
+<h3>Shotgun changes aren&#8217;t syncing to Jira<a class="headerlink" href="#shotgun-changes-aren-t-syncing-to-jira" title="Permalink to this headline">¶</a></h3>
 <p>The first place to check is in the shotgunEvents log files to see if the
 trigger was run and issued a successful call to the SG Jira Bridge.</p>
 <p>Next, check the logs for the SG Jira Bridge and see if the request was
 received and processed successfully. The logs should make this very apparent.</p>
-<p>If you don’t see any errors, make sure your Syncer and SyncHandler are
+<p>If you don&#8217;t see any errors, make sure your Syncer and SyncHandler are
 accepting the event for processing.</p>
 <p>Other things to check:</p>
 <ul class="simple">
@@ -329,33 +336,33 @@ Jira</strong> checkbox field is checked)?</li>
 </ul>
 </div>
 <div class="section" id="jira-changes-aren-t-syncing-to-shotgun">
-<h3>Jira changes aren’t syncing to Shotgun<a class="headerlink" href="#jira-changes-aren-t-syncing-to-shotgun" title="Permalink to this headline">¶</a></h3>
+<h3>Jira changes aren&#8217;t syncing to Shotgun<a class="headerlink" href="#jira-changes-aren-t-syncing-to-shotgun" title="Permalink to this headline">¶</a></h3>
 <p>Check the logs for the SG Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.</p>
 <p>If SG Jira Bridge is not receiving the request:</p>
 <ul class="simple">
-<li>Check that your Jira Webhook is setup and configured correctly. If you’re
+<li>Check that your Jira Webhook is setup and configured correctly. If you&#8217;re
 using a local Jira instance, you can also check the logs to see if the
 webhook fired.</li>
 <li>Make sure your SG Jira Bridge is accessible from your Jira server. If you
 are using a Jira Cloud instance and SG Jira Bridge is running inside a
-firewalled environment, you’ll need to open up access to the application
+firewalled environment, you&#8217;ll need to open up access to the application
 or move SG Jira Bridge into some sort of DMZ setup.</li>
 </ul>
 </div>
 <div class="section" id="value-can-t-be-translated-to-a-shotgun-jira-value">
-<h3>Value can’t be translated to a Shotgun/Jira value<a class="headerlink" href="#value-can-t-be-translated-to-a-shotgun-jira-value" title="Permalink to this headline">¶</a></h3>
-<p>If you change a status in Shotgun or Jira and there’s no matching status value
+<h3>Value can&#8217;t be translated to a Shotgun/Jira value<a class="headerlink" href="#value-can-t-be-translated-to-a-shotgun-jira-value" title="Permalink to this headline">¶</a></h3>
+<p>If you change a status in Shotgun or Jira and there&#8217;s no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2019</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">11</span> <span class="mi">15</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">09</span><span class="p">,</span><span class="mi">517</span> <span class="n">WARNING</span> <span class="p">[</span><span class="n">entity_issue_handler</span><span class="p">]</span> <span class="n">Unable</span> <span class="n">to</span> <span class="n">find</span> <span class="n">a</span> <span class="n">matching</span> <span class="n">Jira</span> <span class="n">status</span> <span class="k">for</span> <span class="n">Shotgun</span> <span class="n">status</span> <span class="s1">&#39;na&#39;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">2019</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">11</span> <span class="mi">15</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">09</span><span class="p">,</span><span class="mi">517</span> <span class="n">WARNING</span> <span class="p">[</span><span class="n">entity_issue_handler</span><span class="p">]</span> <span class="n">Unable</span> <span class="n">to</span> <span class="n">find</span> <span class="n">a</span> <span class="n">matching</span> <span class="n">Jira</span> <span class="n">status</span> <span class="k">for</span> <span class="n">Shotgun</span> <span class="n">status</span> <span class="s1">&#39;na&#39;</span>
 </pre></div>
 </div>
 <p>In this case, there is no Jira status defined in the handlers to match with
-the <code class="docutils literal notranslate"><span class="pre">na</span></code> status in Shotgun. Your handler defines a
-<code class="docutils literal notranslate"><span class="pre">_sg_jira_status_mapping()</span></code> property that returns the status mapping.
-You can see there’s no <code class="docutils literal notranslate"><span class="pre">na</span></code> status here:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">return</span> <span class="p">{</span>
+the <code class="docutils literal"><span class="pre">na</span></code> status in Shotgun. Your handler defines a
+<code class="docutils literal"><span class="pre">_sg_jira_status_mapping()</span></code> property that returns the status mapping.
+You can see there&#8217;s no <code class="docutils literal"><span class="pre">na</span></code> status here:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">return</span> <span class="p">{</span>
     <span class="s2">&quot;ip&quot;</span><span class="p">:</span> <span class="s2">&quot;In Progress&quot;</span><span class="p">,</span>
     <span class="s2">&quot;fin&quot;</span><span class="p">:</span> <span class="s2">&quot;Done&quot;</span><span class="p">,</span>
     <span class="s2">&quot;res&quot;</span><span class="p">:</span> <span class="s2">&quot;Done&quot;</span><span class="p">,</span>
@@ -366,12 +373,28 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 </div>
+<div class="section" id="time-tracking-original-estimate-is-required">
+<h3>Time Tracking: Original Estimate is Required<a class="headerlink" href="#time-tracking-original-estimate-is-required" title="Permalink to this headline">¶</a></h3>
+<p>If you encounter the following error:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">JIRAError</span><span class="p">:</span> <span class="n">JiraError</span> <span class="n">HTTP</span> <span class="mi">400</span> <span class="n">url</span><span class="p">:</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">myjira</span><span class="o">.</span><span class="n">atlassian</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">rest</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">issue</span>
+        <span class="n">text</span><span class="p">:</span> <span class="n">Time</span> <span class="n">Tracking</span><span class="p">:</span> <span class="n">Original</span> <span class="n">Estimate</span> <span class="ow">is</span> <span class="n">required</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>This means you have Time Tracking enabled on your Jira site and set as a
+required field. However, Time Tracking is not on your default Issue creation
+screen.</p>
+<p><strong>Solution</strong></p>
+<p>Add Time Tracking to the default Issue creation screen for this project and
+this error should be resolved.</p>
+</div>
 </div>
 </div>
 
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -380,7 +403,7 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
         <a href="developer.html" class="btn btn-neutral float-right" title="Developer Resources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="settings.html" class="btn btn-neutral float-left" title="Settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="settings.html" class="btn btn-neutral" title="Settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -389,11 +412,11 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2019, Autodesk Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -406,15 +429,36 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
   
 
 
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
 
   
   
-    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
    
 
 </body>

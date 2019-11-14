@@ -17,34 +17,41 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
+  
+  
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -84,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../services.html">Installing as a Service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -96,7 +104,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">Shotgun Jira Bridge</a>
@@ -104,10 +112,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -136,6 +143,8 @@
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
         
       </li>
     
@@ -203,7 +212,10 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Unable to connect to </span><span class="si">%s</span><span class="s2">. See the log for details.&quot;</span> <span class="o">%</span> <span class="n">jira_site</span>
             <span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connected to </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">jira_site</span><span class="p">)</span>
+
+        <span class="c1"># accountId&#39;s are only found on JIRA Cloud. The latest version of JIRA server do not have them.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_jira_cloud</span> <span class="o">=</span> <span class="s2">&quot;accountId&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">myself</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connected to </span><span class="si">%s</span><span class="s2"> (JIRA </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="s2">&quot;Cloud&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_jira_cloud</span> <span class="k">else</span> <span class="s2">&quot;Server&quot;</span><span class="p">))</span>
 
         <span class="c1"># A dictionary where keys are Jira field name and values are their field id.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span> <span class="o">=</span> <span class="p">{}</span></div>
@@ -235,6 +247,15 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Missing required custom Jira field </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">JIRA_SHOTGUN_URL_FIELD</span>
             <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_jira_cloud</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return if the site is a JIRA Cloud site.</span>
+
+<span class="sd">        :rerturns: ``True`` if the site is hosted in the cloud, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_jira_cloud</span>
 
 <div class="viewcode-block" id="JiraSession.get_jira_issue_field_id"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_jira_issue_field_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_issue_field_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -446,7 +467,7 @@
                     <span class="s2">&quot;Found multiple assignable Jira users with email address </span><span class="si">%s</span><span class="s2">. &quot;</span>
                     <span class="s2">&quot;Using the first one: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="n">user_email</span><span class="p">,</span>
-                        <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ju</span><span class="o">.</span><span class="n">emailAddress</span><span class="p">,</span> <span class="n">ju</span><span class="o">.</span><span class="n">accountId</span><span class="p">)</span> <span class="k">for</span> <span class="n">ju</span> <span class="ow">in</span> <span class="n">jira_users</span><span class="p">]</span>
+                        <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ju</span><span class="o">.</span><span class="n">emailAddress</span><span class="p">,</span> <span class="n">ju</span><span class="o">.</span><span class="n">user</span><span class="p">)</span> <span class="k">for</span> <span class="n">ju</span> <span class="ow">in</span> <span class="n">jira_users</span><span class="p">]</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found Jira Assignee </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jira_assignee</span><span class="p">)</span>
@@ -736,7 +757,9 @@
 </pre></div>
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -745,11 +768,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2019, Autodesk Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -762,15 +785,36 @@
   
 
 
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
 
   
   
-    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
    
 
 </body>

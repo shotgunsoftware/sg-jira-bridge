@@ -17,34 +17,41 @@
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
+  
+  
     
 
   
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -84,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../services.html">Installing as a Service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -96,7 +104,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">Shotgun Jira Bridge</a>
@@ -104,10 +112,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -137,6 +144,8 @@
     
       <li class="wy-breadcrumbs-aside">
         
+            
+        
       </li>
     
   </ul>
@@ -155,6 +164,8 @@
 <span class="c1"># this software in either electronic or hard copy form.</span>
 <span class="c1">#</span>
 
+<span class="kn">import</span> <span class="nn">re</span>
+
 <span class="kn">import</span> <span class="nn">jira</span>
 
 <span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">InvalidShotgunValue</span><span class="p">,</span> <span class="n">InvalidJiraValue</span>
@@ -166,6 +177,16 @@
 <span class="sd">    Base class for handlers syncing a Shotgun Entity to a Jira Issue.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># This will match JIRA accounts in the following format</span>
+    <span class="c1"># 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0</span>
+    <span class="c1"># 24 hexdecimal characters: 5b6a25ab7c14b729f2208297</span>
+    <span class="c1"># We&#39;re only matching the first 20 characters instead of the first 24, since the</span>
+    <span class="c1"># account id format isn&#39;t documented.</span>
+    <span class="c1"># It could in theory match a very long user name that uses hexadecimal characters</span>
+    <span class="c1"># only, but that would be unlikely.</span>
+    <span class="c1"># https://regex101.com/r/E1ysHQ/1</span>
+    <span class="n">ACCOUNT_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^[0-9a-f:-]</span><span class="si">{20}</span><span class="s2">&quot;</span><span class="p">)</span>
+
 <div class="viewcode-block" id="EntityIssueHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate an Entity Issue handler for the given syncer.</span>
@@ -174,7 +195,15 @@
 <span class="sd">        :param str issue_type: A target Issue type, e.g. &#39;Task&#39;, &#39;Story&#39;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">EntityIssueHandler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">syncer</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span> <span class="o">=</span> <span class="n">issue_type</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span> <span class="o">=</span> <span class="n">issue_type</span>
+
+        <span class="c1"># Due to GDPR, some changes were done to JIRA Cloud which complicates</span>
+        <span class="c1"># matching users by email. So let&#39;s use the right resolver based</span>
+        <span class="c1"># on the server type.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">is_jira_cloud</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_cloud_user_to_shotgun</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_server_user_to_shotgun</span></div>
 
 <div class="viewcode-block" id="EntityIssueHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.accept_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -240,6 +269,52 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_jira_issue_and_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue_key</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load Jira Issue with the given Jira key, validate it exists and is </span>
+<span class="sd">        syncing to the given Shotgun Entity. </span>
+<span class="sd">        </span>
+<span class="sd">        :param str jira_issue_key: Jira key for the Issue to load</span>
+<span class="sd">        :param dict shotgun_entity: Shotgun Entity dictionary</span>
+<span class="sd">        :returns: A :class:`jira.Issue` instance if it exists and is valid. </span>
+<span class="sd">            Otherwise ``None``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">jira_issue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_issue</span><span class="p">(</span><span class="n">jira_issue_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_issue</span><span class="p">:</span>
+            <span class="c1"># Better to stop now for the time being.</span>
+            <span class="c1"># The Issue could have been deleted, and we don&#39;t want to keep</span>
+            <span class="c1"># recreating it. So we play safe until we correctly handle the</span>
+            <span class="c1"># deleted case.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to find Jira Issue </span><span class="si">%s</span><span class="s2"> for Shotgun </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">jira_issue_key</span><span class="p">,</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">jira_shotgun_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_id_field</span><span class="p">)</span>
+        <span class="n">jira_shotgun_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_type_field</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">jira_shotgun_type</span> <span class="ow">or</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jira_shotgun_id</span><span class="p">):</span>
+            <span class="c1"># Shotgun schema requirements should prevent multiple Shotgun </span>
+            <span class="c1"># Entities with the same Jira Key. But we also check to be sure </span>
+            <span class="c1"># the Jira Issue has the same Shotgun Entity type and id so we </span>
+            <span class="c1"># can prevent data corruption.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Rejecting Jira Issue </span><span class="si">%s</span><span class="s2">. Expected it to be linked to Shotgun &quot;</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) but instead it is linked to Shotgun </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">jira_issue_key</span><span class="p">,</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="n">jira_shotgun_type</span><span class="p">,</span>
+                    <span class="n">jira_shotgun_id</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        
+        <span class="k">return</span> <span class="n">jira_issue</span>
 
     <span class="k">def</span> <span class="nf">_create_jira_issue_for_entity</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -908,7 +983,7 @@
 <span class="sd">        example, integer changes are not available as integer values in the `to`</span>
 <span class="sd">        and `from` values (both are `None`), they are only available as strings</span>
 <span class="sd">        in the `toString` and `fromString` values. So we use the string values</span>
-<span class="sd">        or the actual values on a case by cases basis, dependending on the target</span>
+<span class="sd">        or the actual values on a case by cases basis, depending on the target</span>
 <span class="sd">        data type.</span>
 
 <span class="sd">        :param shotgun_entity: A Shotgun Entity dictionary with at least a type</span>
@@ -1053,20 +1128,8 @@
         <span class="n">to_assignee</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;multi_entity&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">from_assignee</span><span class="p">:</span>
-                <span class="c1"># Try to remove the old assignee from the Shotgun assignment</span>
-                <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">from_assignee</span><span class="p">)</span>
-                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
-                    <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span>
-                    <span class="p">[[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">emailAddress</span><span class="p">]],</span>
-                    <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Unable to find a Shotgun user with email address </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                            <span class="n">jira_user</span><span class="o">.</span><span class="n">emailAddress</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
+                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span><span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">from_assignee</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sg_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">current_sg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">current_sg_assignment</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">current_sg</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">current_sg</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -1081,22 +1144,12 @@
                             <span class="c1"># iterating</span>
                             <span class="k">break</span>
             <span class="k">if</span> <span class="n">to_assignee</span><span class="p">:</span>
+                <span class="n">jira_user</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;assignee&quot;</span><span class="p">]</span>
+                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span>
+                    <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">to_assignee</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="n">jira_user</span>
+                <span class="p">)</span>
                 <span class="c1"># Try to add the new assignee to the Shotgun assignment</span>
                 <span class="c1"># Use the Issue assignee value to avoid a Jira user query</span>
-                <span class="n">jira_user</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;assignee&quot;</span><span class="p">]</span>
-                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
-                    <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span>
-                    <span class="p">[[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">]]],</span>
-                    <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
-                        <span class="n">shotgun_field</span><span class="p">,</span>
-                        <span class="n">jira_user</span><span class="p">,</span>
-                        <span class="s2">&quot;Unable to find a Shotgun user with email address </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                            <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">]</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
                 <span class="k">for</span> <span class="n">current_sg_user</span> <span class="ow">in</span> <span class="n">current_sg_assignment</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">current_sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">current_sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]:</span>
                         <span class="k">break</span>
@@ -1109,20 +1162,10 @@
                     <span class="n">current_sg_assignment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sg_user</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># data_type == &quot;entity&quot;:</span>
             <span class="k">if</span> <span class="n">from_assignee</span><span class="p">:</span>
-                <span class="c1"># Try to remove the old assignee from the Shotgun assignment</span>
-                <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">from_assignee</span><span class="p">)</span>
-                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
-                    <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span>
-                    <span class="p">[[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">emailAddress</span><span class="p">]],</span>
-                    <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span>
+                    <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">from_assignee</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">False</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Unable to find a Shotgun user with email address </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                            <span class="n">jira_user</span><span class="o">.</span><span class="n">emailAddress</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sg_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">current_sg_assignment</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">current_sg_assignment</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                             <span class="s2">&quot;Removing user </span><span class="si">%s</span><span class="s2"> from Shotgun assignment&quot;</span> <span class="o">%</span> <span class="p">(</span>
@@ -1137,25 +1180,126 @@
                 <span class="c1"># Note that we are dealing here with a Jira raw value dict, not</span>
                 <span class="c1"># a jira.resources.Resource instance.</span>
                 <span class="n">jira_user</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;assignee&quot;</span><span class="p">]</span>
-                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
-                    <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span>
-                    <span class="p">[[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">]]],</span>
-                    <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span>
+                    <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">to_assignee</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="n">jira_user</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
+                <span class="n">current_sg_assignment</span> <span class="o">=</span> <span class="n">sg_user</span>
+        <span class="k">return</span> <span class="n">current_sg_assignment</span>
+
+    <span class="k">def</span> <span class="nf">_jira_server_user_to_shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resolve the Shotgun user associated to the JIRA user passed in.</span>
+
+<span class="sd">        This method should be called against a JIRA local server.</span>
+
+<span class="sd">        :param str shotgun_field: Field to sync the value to in Shotgun.</span>
+<span class="sd">        :param str user_id: Value of the to or from of a JIRA changelog.</span>
+<span class="sd">        :param dict jira_user: Value of the user section of the webhook payload.</span>
+<span class="sd">        :param bool raise_on_missing_user: Indicate how to handle unknown users.</span>
+
+<span class="sd">        :returns: A Shotgun user entity dictionary.</span>
+<span class="sd">        :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">emailAddress</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">emailAddress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="s2">&quot;key&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">emailAddress</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The code that calls this method should always have a user passed in. If there is not</span>
+            <span class="c1"># user_id or jira_user value, we shouldn&#39;t even be calling this method in the first</span>
+            <span class="c1"># place!</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;jira_user or user_id cannot be both None.&quot;</span><span class="p">)</span>
+
+        <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
+            <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span>
+            <span class="p">[[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">emailAddress</span><span class="p">]],</span>
+            <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">raise_on_missing_user</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
+                    <span class="n">shotgun_field</span><span class="p">,</span>
+                    <span class="n">jira_user</span><span class="p">,</span>
+                    <span class="s2">&quot;Unable to find a Shotgun user with email address </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">emailAddress</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to find a Shotgun user with email address </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">emailAddress</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sg_user</span>
+
+    <span class="k">def</span> <span class="nf">_jira_cloud_user_to_shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resolve the Shotgun user associated to the JIRA user passed in.</span>
+
+<span class="sd">        This method should be called against a JIRA Cloud server.</span>
+
+<span class="sd">        :param str shotgun_field: Field to sync the value to in Shotgun.</span>
+<span class="sd">        :param str user_id: Value of the to or from of a JIRA changelog.</span>
+<span class="sd">        :param dict jira_user: User resource, typically the assignee field on an issue. Can be None</span>
+<span class="sd">        :param bool raise_on_missing_user: Indicate how to handle unknown users.</span>
+
+<span class="sd">        :returns: A Shotgun user entity dictionary.</span>
+<span class="sd">        :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If the jira_user has been passed in, just use the accountId!</span>
+        <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">user_id</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;accountId&quot;</span><span class="p">]</span>
+        <span class="c1"># jira_user is None when the user resolving code is trying to resolve the `from` user in the changelog.</span>
+        <span class="c1"># When this happens, we only have a user id in the `from` to indicate what the original value was.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Interestingly, when the a user field is updated via the JIRA API,</span>
+        <span class="c1"># the username is passed in instead of the account id in the `from` field, so we&#39;ll have to</span>
+        <span class="c1"># resolve it.</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ACCOUNT_ID_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;The changelog&#39;s to/from contains a user name. accountId will be retrieved.&quot;</span><span class="p">)</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="s2">&quot;key&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">raise_on_missing_user</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
                         <span class="n">shotgun_field</span><span class="p">,</span>
                         <span class="n">jira_user</span><span class="p">,</span>
-                        <span class="s2">&quot;Unable to find a Shotgun user with email address </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                            <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">]</span>
-                        <span class="p">)</span>
+                        <span class="s2">&quot;Unable to find JIRA user </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
                     <span class="p">)</span>
-                <span class="n">current_sg_assignment</span> <span class="o">=</span> <span class="n">sg_user</span>
-        <span class="k">return</span> <span class="n">current_sg_assignment</span></div>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;Unable to find JIRA user </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">user_id</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">accountId</span>
+
+        <span class="c1"># Now that we have an accountId, let&#39;s find that user in Shotgun.</span>
+        <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
+            <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span>
+            <span class="p">[[</span><span class="s2">&quot;sg_jira_account_id&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]],</span>
+            <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">raise_on_missing_user</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
+                    <span class="n">shotgun_field</span><span class="p">,</span>
+                    <span class="n">jira_user</span><span class="p">,</span>
+                    <span class="s2">&quot;Unable to find a Shotgun user with JIRA accountId </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">user_id</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to find a Shotgun user with JIRA accountId </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">user_id</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sg_user</span></div>
 </pre></div>
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -1164,11 +1308,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2019, Autodesk Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1181,15 +1325,36 @@
   
 
 
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
 
   
   
-    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
    
 
 </body>

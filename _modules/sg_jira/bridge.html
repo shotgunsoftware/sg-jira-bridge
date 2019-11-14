@@ -17,34 +17,41 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
+  
+  
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -84,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../services.html">Installing as a Service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -96,7 +104,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">Shotgun Jira Bridge</a>
@@ -104,10 +112,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -136,6 +143,8 @@
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
         
       </li>
     
@@ -235,8 +244,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Bridge.get_bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.get_bridge">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_bridge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Bridge.get_bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.get_bridge">[docs]</a>    <span class="k">def</span> <span class="nf">get_bridge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the given settings and instantiate a new :class:`Bridge` with them.</span>
 
@@ -247,41 +256,12 @@
         <span class="n">settings_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings_file</span><span class="p">)</span>
 
         <span class="c1"># Read settings</span>
-        <span class="n">settings</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">read_settings</span><span class="p">(</span><span class="n">settings_file_path</span><span class="p">)</span>
+        <span class="n">logger_settings</span><span class="p">,</span> <span class="n">shotgun_settings</span><span class="p">,</span> <span class="n">jira_settings</span><span class="p">,</span> <span class="n">sync_settings</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">read_settings</span><span class="p">(</span>
+            <span class="n">settings_file_path</span>
+        <span class="p">)</span>
 
-        <span class="c1"># Set logging from settings</span>
-        <span class="n">logger_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">LOGGING_SETTINGS_KEY</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">logger_settings</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">dictConfig</span><span class="p">(</span><span class="n">logger_settings</span><span class="p">)</span>
-
-        <span class="c1"># Retrieve Shotgun connection settings</span>
-        <span class="n">shotgun_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">SHOTGUN_SETTINGS_KEY</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_settings</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Shotgun settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">settings_file_path</span><span class="p">)</span>
-        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;script_name&quot;</span><span class="p">,</span> <span class="s2">&quot;script_key&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Missing Shotgun setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">settings_file_path</span><span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="c1"># Retrieve Jira connection settings</span>
-        <span class="n">jira_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">JIRA_SETTINGS_KEY</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Jira settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">settings_file_path</span><span class="p">)</span>
-
-        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;secret&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Missing Jira setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">settings_file_path</span><span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="n">sync_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">SYNC_SETTINGS_KEY</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_settings</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing sync settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">settings_file_path</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Successfully read settings from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">settings_file_path</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -299,17 +279,17 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="k">raise</span></div>
 
-<div class="viewcode-block" id="Bridge.read_settings"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.read_settings">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">read_settings</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Bridge.read_settings"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.read_settings">[docs]</a>    <span class="k">def</span> <span class="nf">read_settings</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the given settings file.</span>
 
 <span class="sd">        :param str settings_file: Path to a settings Python file.</span>
-<span class="sd">        :returns: A dictionary with the settings.</span>
+<span class="sd">        :returns: A tuple of settings:</span>
+<span class="sd">            (logger settings, shotgun settings, jira settings, sync settings)</span>
 <span class="sd">        :raises ValueError: if the file does not exist or if its name does not end</span>
 <span class="sd">                 with ``.py``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">settings_file</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Settings file </span><span class="si">%s</span><span class="s2"> does not exist&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
@@ -318,11 +298,11 @@
                 <span class="s2">&quot;Settings file </span><span class="si">%s</span><span class="s2"> is not a Python file with a .py extension&quot;</span> <span class="o">%</span> <span class="n">full_path</span>
             <span class="p">)</span>
 
-        <span class="n">folder</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+        <span class="n">folder</span><span class="p">,</span> <span class="n">module_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
 
         <span class="n">mfile</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span>
             <span class="c1"># Strip the .py extension</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">module_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
             <span class="p">[</span><span class="n">folder</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -336,10 +316,43 @@
             <span class="k">if</span> <span class="n">mfile</span><span class="p">:</span>
                 <span class="n">mfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="c1"># Retrieve all properties we handle and provide empty values if missing</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="p">[(</span><span class="n">prop_name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">prop_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span> <span class="k">for</span> <span class="n">prop_name</span> <span class="ow">in</span> <span class="n">ALL_SETTINGS_KEYS</span><span class="p">]</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div>
+
+        <span class="c1"># Set logging from settings</span>
+        <span class="n">logger_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">LOGGING_SETTINGS_KEY</span><span class="p">]</span>
+
+        <span class="c1"># Retrieve Shotgun connection settings</span>
+        <span class="n">shotgun_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">SHOTGUN_SETTINGS_KEY</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_settings</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Shotgun settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;script_name&quot;</span><span class="p">,</span> <span class="s2">&quot;script_key&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Missing Shotgun setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Retrieve Jira connection settings</span>
+        <span class="n">jira_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">JIRA_SETTINGS_KEY</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Jira settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
+
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;secret&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Missing Jira setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">sync_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">SYNC_SETTINGS_KEY</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_settings</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing sync settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">logger_settings</span><span class="p">,</span> <span class="n">shotgun_settings</span><span class="p">,</span> <span class="n">jira_settings</span><span class="p">,</span> <span class="n">sync_settings</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -385,6 +398,15 @@
 <span class="sd">        Return the list of sync settings this bridge handles.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_settings</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Bridge.reset"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset the bridge.</span>
+
+<span class="sd">        Clears all caches.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Resetting bridge&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">clear_cached_field_schema</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Bridge.get_syncer"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.get_syncer">[docs]</a>    <span class="k">def</span> <span class="nf">get_syncer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -455,7 +477,7 @@
             <span class="c1"># to unicode before processing.</span>
             <span class="n">safe_event</span> <span class="o">=</span> <span class="n">utf8_to_unicode</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
             <span class="n">syncer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_syncer</span><span class="p">(</span><span class="n">settings_name</span><span class="p">)</span>
-            <span class="c1"># See comment in Syncer class: we assume copmlicated logic can be</span>
+            <span class="c1"># See comment in Syncer class: we assume complicated logic can be</span>
             <span class="c1"># handled in a single handler, so we don&#39;t have to support multiple</span>
             <span class="c1"># handlers.</span>
             <span class="n">handler</span> <span class="o">=</span> <span class="n">syncer</span><span class="o">.</span><span class="n">accept_shotgun_event</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">safe_event</span><span class="p">)</span>
@@ -500,7 +522,9 @@
 </pre></div>
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -509,11 +533,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2019, Autodesk Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -526,15 +550,36 @@
   
 
 
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
 
   
   
-    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
    
 
 </body>

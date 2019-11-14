@@ -17,36 +17,42 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
 
+  
+  
     
 
   
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Settings" href="settings.html" />
-    <link rel="prev" title="Overview" href="index.html" /> 
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
+        <link rel="next" title="Settings" href="settings.html"/>
+        <link rel="prev" title="Overview" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -85,12 +91,13 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getting-the-code">Getting the Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-note-about-jira-servers-hosted-by-atlassian">A note about Jira servers hosted by Atlassian</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#setting-up-shotgun">Setting up Shotgun</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#required-fields">Required Fields</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configure-your-shotgun-project">Configure your Shotgun Project</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-jira">Setting up JIRA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-jira">Setting up Jira</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Required Fields</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#jira-webhook">Jira Webhook</a></li>
 </ul>
@@ -111,6 +118,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#starting-everything-up">Starting Everything Up</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#match-shotgun-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only">Match Shotgun users with Jira users (for Jira servers hosted by Atlassian only)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#start-sg-jira-bridge">Start SG Jira Bridge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#start-shotgunevents">Start shotgunEvents</a></li>
 </ul>
@@ -121,6 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -133,7 +142,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Shotgun Jira Bridge</a>
@@ -141,10 +150,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -202,11 +210,20 @@
 <li>SG Jira Bridge: <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge">https://github.com/shotgunsoftware/sg-jira-bridge</a></li>
 <li>shotgunEvents: <a class="reference external" href="https://github.com/shotgunsoftware/shotgunEvents">https://github.com/shotgunsoftware/shotgunEvents</a></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /path/to/put/this
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /path/to/put/this
 $ git clone git@github.com:shotgunsoftware/sg-jira-bridge.git
 $ git clone git@github.com:shotgunsoftware/shotgunEvents.git
 </pre></div>
 </div>
+</div>
+<div class="section" id="a-note-about-jira-servers-hosted-by-atlassian">
+<h2>A note about Jira servers hosted by Atlassian<a class="headerlink" href="#a-note-about-jira-servers-hosted-by-atlassian" title="Permalink to this headline">¶</a></h2>
+<p>In April 2019, Atlassian put a new set of rules around accessing user data
+due to the the European GDPR regulation. Since then, email addresses of Jira
+users are no longer accessible.</p>
+<p>As the Shotgun Jira bridge relies on this information to pair Shotgun users
+with Jira users, some extra steps will be required to configure the Jira
+bridge. This quickstart page will alert you when these extra steps are needed.</p>
 </div>
 <div class="section" id="setting-up-shotgun">
 <h2>Setting up Shotgun<a class="headerlink" href="#setting-up-shotgun" title="Permalink to this headline">¶</a></h2>
@@ -216,46 +233,74 @@ $ git clone git@github.com:shotgunsoftware/shotgunEvents.git
 following entity types:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="17%" />
-<col width="30%" />
-<col width="14%" />
-<col width="39%" />
+<col width="11%" />
+<col width="21%" />
+<col width="9%" />
+<col width="25%" />
+<col width="35%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Entity Type</th>
 <th class="head">Field Name</th>
 <th class="head">Data Type</th>
 <th class="head">Display Name (recommended)</th>
+<th class="head">Description</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>Project</td>
-<td><code class="docutils literal notranslate"><span class="pre">sg_jira_sync_url</span></code></td>
+<td><code class="docutils literal"><span class="pre">sg_jira_sync_url</span></code></td>
 <td>File/Link</td>
 <td>Jira Sync URL</td>
+<td>URL of SG Jira Bridge (see below)</td>
 </tr>
 <tr class="row-odd"><td>Project</td>
-<td><code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code></td>
+<td><code class="docutils literal"><span class="pre">sg_jira_key</span></code></td>
 <td>Text</td>
-<td>Jira Key</td>
+<td>Jira Key*</td>
+<td>Synced Project Key value in Jira</td>
 </tr>
 <tr class="row-even"><td>Task</td>
-<td><code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code></td>
+<td><code class="docutils literal"><span class="pre">sg_jira_key</span></code></td>
 <td>Text</td>
-<td>Jira Key</td>
+<td>Jira Key*</td>
+<td>Synced Issue Key value in Jira</td>
 </tr>
 <tr class="row-odd"><td>Task</td>
-<td><code class="docutils literal notranslate"><span class="pre">sg_sync_in_jira</span></code></td>
+<td><code class="docutils literal"><span class="pre">sg_sync_in_jira</span></code></td>
 <td>Checkbox</td>
 <td>Sync In Jira</td>
+<td>Enable/Disable syncing for this Task</td>
 </tr>
-<tr class="row-even"><td>Note</td>
-<td><code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code></td>
+<tr class="row-even"><td>Task</td>
+<td><code class="docutils literal"><span class="pre">sg_jira_url</span></code></td>
+<td>File/Link</td>
+<td>Jira URL</td>
+<td>Link to synced Issue in Jira</td>
+</tr>
+<tr class="row-odd"><td>Note</td>
+<td><code class="docutils literal"><span class="pre">sg_jira_key</span></code></td>
 <td>Text</td>
-<td>Jira Key</td>
+<td>Jira Key*</td>
+<td>Synced Issue Key/Comment ID in Jira</td>
+</tr>
+<tr class="row-even"><td>HumanUser</td>
+<td><code class="docutils literal"><span class="pre">sg_jira_account_id</span></code></td>
+<td>Text</td>
+<td>Jira Account Id</td>
+<td>Synced Account Id in Jira.</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ul class="last simple">
+<li>All <code class="docutils literal"><span class="pre">sg_jira_key</span></code> fields must be configured with the &#8220;<em>Ensure unique
+value per project</em>&#8221; setting <strong>checked</strong>.</li>
+<li>The <code class="docutils literal"><span class="pre">HumanUser.sg_jira_account_id</span></code> field is only necessary if your
+Jira server is hosted by Atlassian.</li>
+</ul>
+</div>
 </div>
 <div class="section" id="configure-your-shotgun-project">
 <h3>Configure your Shotgun Project<a class="headerlink" href="#configure-your-shotgun-project" title="Permalink to this headline">¶</a></h3>
@@ -274,21 +319,21 @@ following entity types:</p>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>Jira Sync URL</td>
-<td><code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/default</span></code></td>
-<td>The address where you’ll run the SG
+<td><code class="docutils literal"><span class="pre">http://localhost:9090/sg2jira/default</span></code></td>
+<td>The address where you&#8217;ll run the SG
 Jira Bridge webserver</td>
 </tr>
 <tr class="row-odd"><td>Jira Key</td>
 <td>&lt;JIRA PROJECT KEY&gt;</td>
 <td>The Project Key in Jira for the Project
-you’re syncing (eg <code class="docutils literal notranslate"><span class="pre">TEST</span></code>)</td>
+you&#8217;re syncing (eg <code class="docutils literal"><span class="pre">TEST</span></code>).</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <div class="section" id="setting-up-jira">
-<h2>Setting up JIRA<a class="headerlink" href="#setting-up-jira" title="Permalink to this headline">¶</a></h2>
+<h2>Setting up Jira<a class="headerlink" href="#setting-up-jira" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id1">
 <h3>Required Fields<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>The following fields must be created in Jira and made available in Boards:</p>
@@ -324,13 +369,13 @@ you’re syncing (eg <code class="docutils literal notranslate"><span class="pre
 <h3>Jira Webhook<a class="headerlink" href="#jira-webhook" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Navigate to the Jira system settings (<em>Settings &gt; System &gt; WebHooks</em>)</li>
-<li>Click “Create Webhook”</li>
+<li>Click &#8220;Create Webhook&#8221;</li>
 <li>Add the values for the following:</li>
 </ul>
 <table border="1" class="docutils">
 <colgroup>
-<col width="16%" />
-<col width="84%" />
+<col width="14%" />
+<col width="86%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Field</th>
@@ -339,16 +384,21 @@ you’re syncing (eg <code class="docutils literal notranslate"><span class="pre
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>Name</td>
-<td>“SG Jira Bridge Test”</td>
+<td>&#8220;SG Jira Bridge Test&#8221;</td>
 </tr>
 <tr class="row-odd"><td>URL</td>
-<td><code class="docutils literal notranslate"><span class="pre">https://&lt;url_for_sg_jira_bridge&gt;/jira2sg/default/issue/${issue.key}</span></code></td>
+<td><div class="first last line-block">
+<div class="line"><code class="docutils literal"><span class="pre">https://&lt;url_for_sg_jira_bridge&gt;/jira2sg/default/issue/${issue.key}</span></code></div>
+<div class="line">The <code class="docutils literal"><span class="pre">&lt;url_for_sg_jira_bridge&gt;</span></code> is the host name or IP address of the computer you</div>
+<div class="line">will be launching <code class="docutils literal"><span class="pre">webapp.py</span></code> or <code class="docutils literal"><span class="pre">service.py</span></code> from.</div>
+</div>
+</td>
 </tr>
 <tr class="row-even"><td>Description</td>
-<td>“Webhook that syncs Jira data with Shotgun using the SG Jira Bridge”</td>
+<td>&#8220;Webhook that syncs Jira data with Shotgun using the SG Jira Bridge&#8221;</td>
 </tr>
 <tr class="row-odd"><td>JQL</td>
-<td><code class="docutils literal notranslate"><span class="pre">project</span> <span class="pre">=</span> <span class="pre">&quot;Your</span> <span class="pre">Project</span> <span class="pre">Name&quot;</span></code></td>
+<td><code class="docutils literal"><span class="pre">project</span> <span class="pre">=</span> <span class="pre">&quot;Your</span> <span class="pre">Project</span> <span class="pre">Name&quot;</span></code></td>
 </tr>
 <tr class="row-even"><td>Events</td>
 <td><ul class="first last simple">
@@ -366,9 +416,9 @@ you’re syncing (eg <code class="docutils literal notranslate"><span class="pre
 </div>
 <div class="section" id="setting-up-your-config-and-env">
 <h2>Setting Up Your Config and Env<a class="headerlink" href="#setting-up-your-config-and-env" title="Permalink to this headline">¶</a></h2>
-<p>There are two different pieces to setting up the Shotgun Jira Bridge. There’s the bridge itself
-(<code class="docutils literal notranslate"><span class="pre">sg-jira-bridge</span></code>), which handles all of the syncing of data between Shotgun and Jira. Then
-there’s the Shotgun Event Daemon (<code class="docutils literal notranslate"><span class="pre">shotgunEvents</span></code>), which handles dispatching supported Shotgun
+<p>There are two different pieces to setting up the Shotgun Jira Bridge. There&#8217;s the bridge itself
+(<code class="docutils literal"><span class="pre">sg-jira-bridge</span></code>), which handles all of the syncing of data between Shotgun and Jira. Then
+there&#8217;s the Shotgun Event Daemon (<code class="docutils literal"><span class="pre">shotgunEvents</span></code>), which handles dispatching supported Shotgun
 events to the bridge.</p>
 <p>Since they are installed in different locations and each setup has different python module
 requirements, the instructions below describe how to setup an environment for each of them
@@ -379,8 +429,8 @@ separately.</p>
 <h4>Installing Required Modules<a class="headerlink" href="#installing-required-modules" title="Permalink to this headline">¶</a></h4>
 <p>We recommend <a class="reference external" href="https://docs.python-guide.org/dev/virtualenvs/">setting up a virtual environment</a>.
 Ensure you have <a class="reference external" href="https://pypi.org/project/virtualenv/">virtualenv</a> installed in your global Python installation.
-A <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file is provided to install all required packages.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a virtualenv</span>
+A <code class="docutils literal"><span class="pre">requirements.txt</span></code> file is provided to install all required packages.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># create a virtualenv</span>
 $ virtualenv venv
 
 <span class="c1"># Activate the virtualenv</span>
@@ -393,18 +443,23 @@ $ venv/Scripts/activate
 pip install -r /path/to/sg-jira-bridge/requirements.txt
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you are upgrading from a previous version of the bridge, we recommend you re-install dependencies
+as we&#8217;ve had to fork the <code class="docutils literal"><span class="pre">jira</span></code> Python module to add a missing feature.</p>
+</div>
 </div>
 <div class="section" id="settings">
 <h4>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h4>
-<p>Settings are defined in the <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file in the root of the repo. For the quickstart,
+<p>Settings are defined in the <code class="docutils literal"><span class="pre">settings.py</span></code> file in the root of the repo. For the quickstart,
 the default settings are fine as-is.</p>
 </div>
 <div class="section" id="authentication">
 <h4>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h4>
 <p>Credentials are retrieved from environment variables. You may set these in your
 environment or use <a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a>
-and define these in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Shotgun credentials</span>
+and define these in a <code class="docutils literal"><span class="pre">.env</span></code> file.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Shotgun credentials</span>
 <span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgunstudio.com&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">&#39;sg-jira-bridge&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>  <span class="c1"># replace with your api key</span>
@@ -426,7 +481,7 @@ API tokens.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Since Jira does not have a concept of a “script” user, <code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER</span></code>
+<p class="last">Since Jira does not have a concept of a &#8220;script&#8221; user, <code class="docutils literal"><span class="pre">SGJIRA_JIRA_USER</span></code>
 will need to be the designated user account, with appropriate
 permissions, that will control the sync updates.</p>
 </div>
@@ -440,7 +495,7 @@ permissions, that will control the sync updates.</p>
 <h4>Installing Required Modules<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
 <p>We recommend <a class="reference external" href="https://docs.python-guide.org/dev/virtualenvs/">setting up a virtual environment</a>.
 Ensure you have <a class="reference external" href="https://pypi.org/project/virtualenv/">virtualenv</a> installed in your global Python installation.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a virtualenv</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># create a virtualenv</span>
 $ virtualenv venv
 
 <span class="c1"># Activate the virtualenv</span>
@@ -458,9 +513,9 @@ pip install -r /path/to/sg-jira-bridge/triggers/requirements.txt
 </div>
 <div class="section" id="enable-the-sg-jira-trigger">
 <h4>Enable the SG Jira Trigger<a class="headerlink" href="#enable-the-sg-jira-trigger" title="Permalink to this headline">¶</a></h4>
-<p>Add the path to the SG Jira Bridge <code class="docutils literal notranslate"><span class="pre">sg_jira_event_trigger.py</span></code> file to the
+<p>Add the path to the SG Jira Bridge <code class="docutils literal"><span class="pre">sg_jira_event_trigger.py</span></code> file to the
 shotgunEvents conf file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">...</span>
 <span class="p">[</span><span class="n">plugins</span><span class="p">]</span>
 <span class="c1"># Plugin related settings</span>
 
@@ -475,14 +530,14 @@ shotgunEvents conf file:</p>
 <h4>Authentication<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
 <p>The trigger uses the following environment variables to retrieve Shotgun
 credentials:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sg_jira_event_trigger.py credentials</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># sg_jira_event_trigger.py credentials</span>
 <span class="n">SGDAEMON_SGJIRA_NAME</span><span class="o">=</span><span class="s1">&#39;sg_jira_event_trigger&#39;</span>
 <span class="n">SGDAEMON_SGJIRA_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>  <span class="c1"># replace with your api key</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The trigger uses it’s own authentication to Shotgun, independent of the
+<p class="last">The trigger uses it&#8217;s own authentication to Shotgun, independent of the
 auth used in the SG Jira Bridge Server and the main shotgunEvents settings.
 We highly recommend you add an additional Script User in Shotgun solely
 for this trigger.</p>
@@ -492,40 +547,69 @@ for this trigger.</p>
 </div>
 <div class="section" id="starting-everything-up">
 <h2>Starting Everything Up<a class="headerlink" href="#starting-everything-up" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="match-shotgun-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only">
+<h3>Match Shotgun users with Jira users (for Jira servers hosted by Atlassian only)<a class="headerlink" href="#match-shotgun-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ python update_shotgun_users.py --settings &lt;path to your settings.py&gt; --project &lt;id of your project&gt;
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>For every user found in Shotgun, the script will search for a Jira user with
+the same email address. If you have multiple users in Shotgun with
+the same email address, only the first one, i.e. the one with the lowest id,
+will be associated with a Jira account.</p>
+<p>If you wish to change the Shotgun user associated with a Jira account, e.g. the
+script associated the first Shotgun user with an account when you actually wanted
+the second one, you can take the account id from the <code class="docutils literal"><span class="pre">HumanUser.sg_jira_account_id</span></code>
+field from one user and copy it to another user and then clear the original user&#8217;s
+account id.</p>
+<p class="last">If new users are added to Jira and Shotgun, run this script again and the new user
+accounts will be paired. Existing pairings will be left as they were.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Due to Jira API restrictions, we can only search for email addresses of users
+that can be assigned on issues for a given Jira project. If all
+your Jira users can access any Jira project, the value for the <code class="docutils literal"><span class="pre">--project</span></code>
+argument can be any project id. If you have restrictions, you will need to
+run this script once per project so that all your Jira users can be discovered
+and paired with a Shotgun user.</p>
+</div>
+</div>
 <div class="section" id="start-sg-jira-bridge">
 <h3>Start SG Jira Bridge<a class="headerlink" href="#start-sg-jira-bridge" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python webapp.py --settings &lt;path to your settings.py&gt; --port <span class="m">9090</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ python webapp.py --settings &lt;path to your settings.py&gt; --port <span class="m">9090</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="start-shotgunevents">
 <h3>Start shotgunEvents<a class="headerlink" href="#start-shotgunevents" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./shotgunEventDaemon.py foreground
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ ./shotgunEventDaemon.py foreground
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This starts the event daemon in foreground mode, logging everything to the
-terminal which is helpful for testing. When running in production, you’ll
-start it with <code class="docutils literal notranslate"><span class="pre">./shotgunEventDaemon.py</span> <span class="pre">start</span></code></p>
+terminal which is helpful for testing. When running in production, you&#8217;ll
+start it with <code class="docutils literal"><span class="pre">./shotgunEventDaemon.py</span> <span class="pre">start</span></code></p>
 </div>
 </div>
 </div>
 <div class="section" id="testing-it-out">
 <h2>Testing It Out<a class="headerlink" href="#testing-it-out" title="Permalink to this headline">¶</a></h2>
-<p>Once everything is running you’re ready to test it!</p>
+<p>Once everything is running you&#8217;re ready to test it!</p>
 <ul class="simple">
 <li>Create an Asset in Shotgun with a TaskTemplate appied.</li>
-<li>Toggle the <strong>Sync In Jira</strong> checkbox <code class="docutils literal notranslate"><span class="pre">on</span></code> for one of the Tasks.</li>
+<li>Toggle the <strong>Sync In Jira</strong> checkbox <code class="docutils literal"><span class="pre">on</span></code> for one of the Tasks.</li>
 <li>Navigate to your Jira site to see the Issue created for that Task.</li>
 <li>Change the status in Jira to see the status change in Shotgun.</li>
 </ul>
-<p>If things don’t seem to be working, check the output from SG Jira Bridge and
+<p>If things don&#8217;t seem to be working, check the output from SG Jira Bridge and
 shotgunEvents in your terminal window for log messages.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">For any synced entity, Shotgun stores the associated Jira key in the
-<code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code> field which will update automatically when you initially
+<code class="docutils literal"><span class="pre">sg_jira_key</span></code> field which will update automatically when you initially
 sync the Task. Jira stores the associated Shotgun Entity type and ID in
 the <strong>Shotgun Type</strong> and <strong>Shotgun ID</strong> fields as well as a link to the
 entity in Shotgun in the <strong>Shotgun URL</strong> field. This is a good indicator
@@ -536,7 +620,9 @@ that things are working correctly.</p>
 
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -545,7 +631,7 @@ that things are working correctly.</p>
         <a href="settings.html" class="btn btn-neutral float-right" title="Settings" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -554,11 +640,11 @@ that things are working correctly.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2019, Autodesk Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -571,15 +657,36 @@ that things are working correctly.</p>
   
 
 
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
 
   
   
-    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
    
 
 </body>

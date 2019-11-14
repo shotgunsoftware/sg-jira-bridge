@@ -17,35 +17,41 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
 
+  
+  
     
 
   
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Developer Resources" href="developer.html" /> 
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
+        <link rel="prev" title="Installing as a Service" href="services.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -85,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -97,7 +104,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Shotgun Jira Bridge</a>
@@ -105,10 +112,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -159,10 +165,10 @@ cases where certain features have not been implemented yet.</p>
 existing ones. This means syncing can only <em>initiate</em> from Shotgun and not
 from Jira. If an entity in Shotgun that was synced with an issue in Jira is
 deleted, it will not currently be re-created in Shotgun.</li>
-<li>In most cases only one <a class="reference internal" href="developer.html#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> can handle a
+<li>In most cases only one <a class="reference internal" href="developer.html#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal"><span class="pre">SyncHandler</span></code></a> can handle a
 given event. The exception is with the <strong>Sync In Jira</strong> event which is a
 special case that is handled by the
-<a class="reference internal" href="developer.html#sg_jira.handlers.EnableSyncingHandler" title="sg_jira.handlers.EnableSyncingHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnableSyncingHandler</span></code></a> which is a container
+<a class="reference internal" href="developer.html#sg_jira.handlers.EnableSyncingHandler" title="sg_jira.handlers.EnableSyncingHandler"><code class="xref py py-class docutils literal"><span class="pre">EnableSyncingHandler</span></code></a> which is a container
 for multiple handlers.</li>
 <li>Notes in Shotgun can be linked to multiple entities, but Comments in Jira
 can only be linked to a single Issue. Notes linked to multiple entities in
@@ -182,7 +188,7 @@ also duplicate the <strong>Jira Key</strong> field, possibly causing data corrup
 We recommend not duplicating synced Entities in Shotgun. Alternatively, you
 may enable unique values on the <strong>Jira Key</strong> in Shotgun, however this will
 now generate an error in Shotgun if a synced Entity is duplicated. Perhaps
-it’s better than possibly corrupting the synced Jira Issue.</li>
+it&#8217;s better than possibly corrupting the synced Jira Issue.</li>
 <li>Jira single-line <cite>Text Field</cite> fields are limited to 255 characters. When
 syncing from Shotgun to Jira, if the Shotgun field is mapped to a Jira
 single-line Text Field, and the value is longer than 255 characters, a
@@ -195,14 +201,16 @@ in Shotgun.</li>
 
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="developer.html" class="btn btn-neutral float-left" title="Developer Resources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="services.html" class="btn btn-neutral" title="Installing as a Service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -211,11 +219,11 @@ in Shotgun.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2019, Autodesk Inc..
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -228,15 +236,36 @@ in Shotgun.</li>
   
 
 
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
 
   
   
-    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
    
 
 </body>
