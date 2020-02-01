@@ -11,6 +11,7 @@ import logging
 import logging.config
 import importlib
 import urllib
+import threading
 
 from .shotgun_session import ShotgunSession
 from .jira_session import JiraSession
@@ -22,6 +23,12 @@ from .utils import utf8_to_unicode
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
+
+# The bridge webserver is multithreaded, which means we need to
+# track Shotgun connections via the API per thread. The SG Python
+# API is not threadsafe, and using a single, global connection
+# across all threads will lead to some weird behavior.
+_g_sg_cached_connections = threading.local()
 
 
 class Bridge(object):
@@ -64,13 +71,27 @@ class Bridge(object):
                                   connection, or None.
         """
         super(Bridge, self).__init__()
-        self._shotgun = ShotgunSession(
+
+        self._sg_site = sg_site
+        self._sg_script = sg_script
+        self._sg_script_key = sg_script_key
+        self._sg_http_proxy = sg_http_proxy
+
+        # Even though we will end up needing a connection per thread, we
+        # still need to do a one-time check to make sure the site we're
+        # connecting to is setup properly for use with the bridge. That
+        # logic is run via the setup() method on the session object, so
+        # we will connect here and call that a single time since there's
+        # no reason to do that validation pass from each thread when we
+        # create new connections.
+        shotgun = ShotgunSession(
             sg_site,
             script_name=sg_script,
             api_key=sg_script_key,
             http_proxy=sg_http_proxy,
         )
-        self._shotgun.add_user_agent("sg_jira_sync")
+        shotgun.add_user_agent("sg_jira_sync")
+        shotgun.setup()
 
         self._jira_user = jira_user
         self._jira = JiraSession(
@@ -83,7 +104,6 @@ class Bridge(object):
         self._sync_settings = sync_settings or {}
         self._syncers = {}
         self._jira.setup()
-        self._shotgun.setup()
 
     @classmethod
     def get_bridge(cls, settings_file):
@@ -200,7 +220,23 @@ class Bridge(object):
         """
         Return a connected :class:`~shotgun_session.ShotgunSession` instance.
         """
-        return self._shotgun
+        # This ensures we end up with a connection per thread. See the comment
+        # at the top of this file where the global cache is initialized for a
+        # full explanation.
+        global _g_sg_cached_connections
+        sg = getattr(_g_sg_cached_connections, "sg", None)
+
+        if sg is None:
+            sg = ShotgunSession(
+                self._sg_site,
+                script_name=self._sg_script,
+                api_key=self._sg_script_key,
+                http_proxy=self._sg_http_proxy,
+            )
+            sg.add_user_agent("sg_jira_sync")
+            _g_sg_cached_connections.sg = sg
+
+        return sg
 
     @property
     def current_shotgun_user(self):
@@ -209,7 +245,7 @@ class Bridge(object):
 
         :returns: A Shotgun record dictionary with an `id` key and a `type` key.
         """
-        return self._shotgun.current_user
+        return self.shotgun.current_user
 
     @property
     def current_jira_username(self):
@@ -323,7 +359,7 @@ class Bridge(object):
             # handlers.
             handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
             if handler:
-                self._shotgun.set_session_uuid(safe_event.get("session_uuid"))
+                self.shotgun.set_session_uuid(safe_event.get("session_uuid"))
                 synced = handler.process_shotgun_event(
                     entity_type,
                     entity_id,
