@@ -24,12 +24,6 @@ logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 
-# The bridge webserver is multithreaded, which means we need to
-# track Shotgun connections via the API per thread. The SG Python
-# API is not threadsafe, and using a single, global connection
-# across all threads will lead to some weird behavior.
-_g_sg_cached_connections = threading.local()
-
 
 class Bridge(object):
     """
@@ -38,6 +32,13 @@ class Bridge(object):
     The bridge handles connections to the Shotgun and Jira servers and dispatches
     sync events.
     """
+
+    # The bridge webserver is multithreaded, which means we need to
+    # track Shotgun connections via the API per thread. The SG Python
+    # API is not threadsafe, and using a single, global connection
+    # across all threads will lead to some weird behavior.
+    _SG_CACHED_CONNECTIONS = threading.local()
+
     def __init__(
         self,
         sg_site,
@@ -223,8 +224,7 @@ class Bridge(object):
         # This ensures we end up with a connection per thread. See the comment
         # at the top of this file where the global cache is initialized for a
         # full explanation.
-        global _g_sg_cached_connections
-        sg = getattr(_g_sg_cached_connections, "sg", None)
+        sg = getattr(self._SG_CACHED_CONNECTIONS, "sg", None)
 
         if sg is None:
             sg = ShotgunSession(
@@ -234,7 +234,7 @@ class Bridge(object):
                 http_proxy=self._sg_http_proxy,
             )
             sg.add_user_agent("sg_jira_sync")
-            _g_sg_cached_connections.sg = sg
+            self._SG_CACHED_CONNECTIONS.sg = sg
 
         return sg
 
