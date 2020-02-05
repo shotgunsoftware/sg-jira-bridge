@@ -127,8 +127,6 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
         # Note: BaseHTTPServer.HTTPServer is not a new style class so we can't use
         # super here.
         BaseHTTPServer.HTTPServer.__init__(self, *args, **kwargs)
-
-        self.request_queue_size = 15
         self._sg_jira = sg_jira.Bridge.get_bridge(settings)
 
     def sync_in_jira(self, *args, **kwargs):
