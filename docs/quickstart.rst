@@ -59,7 +59,10 @@ HumanUser     ``sg_jira_account_id``   Text        Jira Account Id              
 
 .. note::
     - All ``sg_jira_key`` fields must be configured with the "*Ensure unique
-      value per project*" setting **checked**.
+      value per project*" setting **checked**. This setting can be found by
+      showing the relevant field in an entity spreadsheet view and then
+      right clicking the header for that column. Select the ``Configure field...``
+      menu option.
     - The ``HumanUser.sg_jira_account_id`` field is only necessary if your
       Jira server is hosted by Atlassian.
 
@@ -121,6 +124,12 @@ Jira Webhook
 +--------------+-----------------------------------------------------------------------------------------+
 | Exclude Body | (`required`) **[ ] un-checked**                                                         |
 +--------------+-----------------------------------------------------------------------------------------+
+
+.. note::
+    If you are setting up a local development environment and need Jira to have access to localhost
+    in order for the Jira webhook to successfully delivery its payload to the bridge, be sure to
+    follow the instructions in the ``Testing on a Machine Not Accessible to Jira`` section of the
+    debugging guide.
 
 
 Setting Up Your Config and Env
@@ -200,7 +209,12 @@ and define these in a ``.env`` file.
 
     Since Jira does not have a concept of a "script" user, ``SGJIRA_JIRA_USER``
     will need to be the designated user account, with appropriate
-    permissions, that will control the sync updates.
+    permissions, that will control the sync updates. Note that the user should
+    not be your personal user account, as the bridge will ignore and not sync
+    to Shotgun any events triggered in Jira by that user. This ensures that
+    the bridge will not end up in a "ping pong" state, where it bounces the
+    same event back-and-forth between Jira and Shotgun. As such, you will need
+    to create a dedicated user account in Jira for use with the bridge.
 
 
 shotgunEvents

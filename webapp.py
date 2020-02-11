@@ -14,6 +14,8 @@ import ssl
 import logging
 import subprocess
 
+from SocketServer import ThreadingMixIn
+
 import sg_jira
 
 DESCRIPTION = """
@@ -116,9 +118,10 @@ class SgJiraBridgeBadRequestError(Exception):
     pass
 
 
-class Server(BaseHTTPServer.HTTPServer):
+class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """
-    A web server
+    Basic server with threading functionality mixed in. This will help the server
+    keep up with a high volume of throughput from Shotgun and Jira.
     """
     def __init__(self, settings, *args, **kwargs):
         # Note: BaseHTTPServer.HTTPServer is not a new style class so we can't use
