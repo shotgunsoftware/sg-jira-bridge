@@ -180,7 +180,7 @@ class EntityIssueHandler(SyncHandler):
 
         # Retrieve the reporter, either the user who created the Entity or the
         # Jira user used to run the syncing.
-        reporter_name = self._jira.current_user()
+        reporter = self._jira.myself()
         created_by = sg_entity["created_by"]
         if created_by["type"] == "HumanUser":
             user = self._shotgun.consolidate_entity(created_by)
@@ -194,7 +194,12 @@ class EntityIssueHandler(SyncHandler):
                 # otherwise use the reporter name retrieved from the user used
                 # to run the bridge.
                 if jira_user:
-                    reporter_name = jira_user.name
+                    # Jira Cloud no longer supports the name field and Jira server does not support
+                    # accountId. So we need different behaviour based on the type of Jira we're using
+                    if self._jira.is_jira_cloud:
+                        reporter = {"accountId": jira_user.accountId}
+                    else:
+                        reporter = {"name": jira_user.name}
         else:
             self._logger.debug(
                 "Ignoring created_by '%s' since it's not a HumanUser." % created_by
@@ -213,7 +218,7 @@ class EntityIssueHandler(SyncHandler):
             self._jira.jira_shotgun_id_field: "%d" % sg_entity["id"],
             self._jira.jira_shotgun_type_field: sg_entity["type"],
             self._jira.jira_shotgun_url_field: shotgun_url,
-            "reporter": {"name": reporter_name},
+            "reporter": reporter,
         }
         if properties:
             data.update(properties)
