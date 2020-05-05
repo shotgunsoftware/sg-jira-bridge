@@ -273,6 +273,8 @@ credentials::
     We highly recommend you add an additional Script User in Shotgun solely
     for this trigger.
 
+.. note::
+    If you are using sg-jira-bridge v0.2.2 or later, these environment variables can also be defined in the ``.env`` file from the SG Jira Bridge section
 
 
 Starting Everything Up
