@@ -14,14 +14,11 @@ import logging
 # Documentation for these settings are available at 
 # https://developer.shotgunsoftware.com/sg-jira-bridge/settings.html
 
-try:
-    # Allow users to define their sensible data in a .env file and
-    # load it in environment variables with python-dotenv.
-    # https://pypi.org/project/python-dotenv/
-    from dotenv import load_dotenv
-    load_dotenv(override=True)
-except ImportError:
-    pass
+# Allow users to define their sensitive data in a .env file and
+# load it in environment variables with python-dotenv.
+# https://pypi.org/project/python-dotenv/
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 # Shotgun site and credentials
 SHOTGUN = {
@@ -74,7 +71,7 @@ LOGGING = {
     "handlers": {
         # Print out any message to stdout
         "console": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "standard"
         },
