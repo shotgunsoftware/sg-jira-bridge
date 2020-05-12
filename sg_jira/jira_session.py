@@ -56,7 +56,13 @@ class JiraSession(jira.client.JIRA):
 
         # accountId's are only found on JIRA Cloud. The latest version of JIRA server do not have them.
         self._is_jira_cloud = "accountId" in self.myself()
-        logger.info("Connected to %s (JIRA %s)" % (jira_site, "Cloud" if self._is_jira_cloud else "Server"))
+        self._account_id_field = "accountId" if self._is_jira_cloud else "key"
+
+        logger.info("Connected to %s on %s (JIRA %s)" % (
+            self.myself()[self._account_id_field],
+            jira_site,
+            "Cloud" if self._is_jira_cloud else "Server")
+        )
 
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
@@ -331,7 +337,7 @@ class JiraSession(jira.client.JIRA):
         )
         while jira_users:
             for jira_user in jira_users:
-                if jira_user.emailAddress and jira_user.emailAddress.lower() == uemail:
+                if hasattr(jira_user, "emailAddress") and jira_user.emailAddress and jira_user.emailAddress.lower() == uemail:
                     jira_assignee = jira_user
                     break
             if jira_assignee:

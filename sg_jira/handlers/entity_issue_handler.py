@@ -673,11 +673,11 @@ class EntityIssueHandler(SyncHandler):
                     # Jira handles that gracefully.
                     self._logger.debug(
                         "Removing %s from %s watchers list." % (
-                            jira_user.name,
+                            jira_user.displayName,
                             jira_issue
                         )
                     )
-                    self._jira.remove_watcher(jira_issue, jira_user.name)
+                    self._jira.remove_watcher(jira_issue, jira_user.user_id)
 
         for user in added:
             if user["type"] != "HumanUser":
@@ -692,11 +692,11 @@ class EntityIssueHandler(SyncHandler):
                 if jira_user:
                     self._logger.debug(
                         "Adding %s to %s watchers list." % (
-                            jira_user.name,
+                            jira_user.displayName,
                             jira_issue
                         )
                     )
-                    self._jira.add_watcher(jira_issue, jira_user.name)
+                    self._jira.add_watcher(jira_issue, jira_user.user_id)
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
@@ -1049,7 +1049,7 @@ class EntityIssueHandler(SyncHandler):
         if jira_user is not None:
             emailAddress = jira_user["emailAddress"]
         elif user_id is not None:
-            emailAddress = self._jira.user(user_id, payload="key").emailAddress
+            emailAddress = self._jira.user(user_id).emailAddress
         else:
             # The code that calls this method should always have a user passed in. If there is not
             # user_id or jira_user value, we shouldn't even be calling this method in the first
