@@ -110,7 +110,7 @@ class TestIntegration(TestCase):
         Shotgun test user.
     - SGJIRA_JIRA_TEST_USER_SECRET: The secret of the user used to authenticate
         with JIRA.
-    - SGJIRA_JIRA_TEST_USER_2: The login of the user that matches the second
+    - SGJIRA_JIRA_TEST_USER_2: The login (Jira Server) or accountId (Jira Cloud) of the user that matches the second
         Shotgun test user.
     - SGJIRA_JIRA_TEST_PROJECT_KEY: The Jira project for which we should sync data.
 
