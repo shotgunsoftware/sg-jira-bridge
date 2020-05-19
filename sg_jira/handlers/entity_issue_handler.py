@@ -180,7 +180,7 @@ class EntityIssueHandler(SyncHandler):
 
         # Retrieve the reporter, either the user who created the Entity or the
         # Jira user used to run the syncing.
-        reporter_name = self._jira.current_user()
+        reporter = self._jira.myself()
         created_by = sg_entity["created_by"]
         if created_by["type"] == "HumanUser":
             user = self._shotgun.consolidate_entity(created_by)
@@ -194,7 +194,12 @@ class EntityIssueHandler(SyncHandler):
                 # otherwise use the reporter name retrieved from the user used
                 # to run the bridge.
                 if jira_user:
-                    reporter_name = jira_user.name
+                    # Jira Cloud no longer supports the name field and Jira server does not support
+                    # accountId. So we need different behaviour based on the type of Jira we're using
+                    if self._jira.is_jira_cloud:
+                        reporter = {"accountId": jira_user.accountId}
+                    else:
+                        reporter = {"name": jira_user.name}
         else:
             self._logger.debug(
                 "Ignoring created_by '%s' since it's not a HumanUser." % created_by
@@ -213,7 +218,7 @@ class EntityIssueHandler(SyncHandler):
             self._jira.jira_shotgun_id_field: "%d" % sg_entity["id"],
             self._jira.jira_shotgun_type_field: sg_entity["type"],
             self._jira.jira_shotgun_url_field: shotgun_url,
-            "reporter": {"name": reporter_name},
+            "reporter": reporter,
         }
         if properties:
             data.update(properties)
@@ -668,11 +673,11 @@ class EntityIssueHandler(SyncHandler):
                     # Jira handles that gracefully.
                     self._logger.debug(
                         "Removing %s from %s watchers list." % (
-                            jira_user.name,
+                            jira_user.displayName,
                             jira_issue
                         )
                     )
-                    self._jira.remove_watcher(jira_issue, jira_user.name)
+                    self._jira.remove_watcher(jira_issue, jira_user.user_id)
 
         for user in added:
             if user["type"] != "HumanUser":
@@ -687,11 +692,11 @@ class EntityIssueHandler(SyncHandler):
                 if jira_user:
                     self._logger.debug(
                         "Adding %s to %s watchers list." % (
-                            jira_user.name,
+                            jira_user.displayName,
                             jira_issue
                         )
                     )
-                    self._jira.add_watcher(jira_issue, jira_user.name)
+                    self._jira.add_watcher(jira_issue, jira_user.user_id)
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
@@ -1044,7 +1049,7 @@ class EntityIssueHandler(SyncHandler):
         if jira_user is not None:
             emailAddress = jira_user["emailAddress"]
         elif user_id is not None:
-            emailAddress = self._jira.user(user_id, payload="key").emailAddress
+            emailAddress = self._jira.user(user_id).emailAddress
         else:
             # The code that calls this method should always have a user passed in. If there is not
             # user_id or jira_user value, we shouldn't even be calling this method in the first

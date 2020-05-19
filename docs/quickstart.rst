@@ -167,8 +167,12 @@ A ``requirements.txt`` file is provided to install all required packages.
     pip install -r /path/to/sg-jira-bridge/requirements.txt
 
 .. note::
-    If you are upgrading from a previous version of the bridge, we recommend you re-install dependencies
-    as we've had to fork the ``jira`` Python module to add a missing feature.
+    If you are upgrading from a previous version of the bridge, we recommend you upgrade the dependencies
+    as we've had to fork the ``jira`` Python module to add a missing feature:
+
+    .. code-block::
+
+        pip install --upgrade -r /path/to/sg-jira-bridge/requirements.txt
 
 
 Settings
@@ -273,7 +277,23 @@ credentials::
     We highly recommend you add an additional Script User in Shotgun solely
     for this trigger.
 
+.. note::
+    If you are using sg-jira-bridge v0.2.2 or later, these environment variables can also be defined in the ``.env``
+    file from the SG Jira Bridge section
 
+
+Define a Mapping Between Jira and Shotgun Status Names
+-------------------------------------------------------
+The bridge needs to know how to map a status in Shotgun to a status in Jira and vice versa. Your status names likely
+differ from the default ones. Make sure the values in
+`TaskIssueHandler._sg_jira_status_mapping <https://github.com/shotgunsoftware/sg-jira-bridge/blob/725f63c19b45529f2507c530c7923cb4d55459e1/sg_jira/handlers/task_issue_handler.py#L47/>`_
+match the names used in your workflow::
+
+    return {
+        "wtg": "Backlog",
+        "rdy": "Selected For Development",
+        "ip": "In Progress",
+    }
 
 Starting Everything Up
 **********************

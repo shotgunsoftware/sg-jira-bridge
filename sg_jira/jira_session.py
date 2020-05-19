@@ -10,6 +10,12 @@ import logging
 from jira import JIRAError
 import jira
 
+# Since we are using pbr in the forked jira repo, the tags we are using are marked as dev versions and
+# pip doesn't update them as expected.
+if not hasattr(jira.User, "user_id"):
+    raise ImportError('The jira version installed is too old. Make sure it is updated to 2.0.0.sg.2+. '
+                      'You can do this by using "pip install -r /path/to/requirements.txt --upgrade"')
+
 from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD
 from .constants import JIRA_RESULT_PAGING
 
@@ -56,7 +62,13 @@ class JiraSession(jira.client.JIRA):
 
         # accountId's are only found on JIRA Cloud. The latest version of JIRA server do not have them.
         self._is_jira_cloud = "accountId" in self.myself()
-        logger.info("Connected to %s (JIRA %s)" % (jira_site, "Cloud" if self._is_jira_cloud else "Server"))
+        self._account_id_field = "accountId" if self._is_jira_cloud else "key"
+
+        logger.info("Connected to %s on %s (JIRA %s)" % (
+            self.myself()[self._account_id_field],
+            jira_site,
+            "Cloud" if self._is_jira_cloud else "Server")
+        )
 
         # A dictionary where keys are Jira field name and values are their field id.
         self._jira_fields_map = {}
@@ -308,7 +320,7 @@ class JiraSession(jira.client.JIRA):
                     "Found multiple assignable Jira users with email address %s. "
                     "Using the first one: %s" % (
                         user_email,
-                        ["%s (%s)" % (ju.emailAddress, ju.user) for ju in jira_users]
+                        ["%s (%s)" % (ju.emailAddress, ju.displayName) for ju in jira_users]
                     )
                 )
             logger.debug("Found Jira Assignee %s" % jira_assignee)
@@ -331,7 +343,7 @@ class JiraSession(jira.client.JIRA):
         )
         while jira_users:
             for jira_user in jira_users:
-                if jira_user.emailAddress and jira_user.emailAddress.lower() == uemail:
+                if hasattr(jira_user, "emailAddress") and jira_user.emailAddress and jira_user.emailAddress.lower() == uemail:
                     jira_assignee = jira_user
                     break
             if jira_assignee:

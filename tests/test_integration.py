@@ -110,7 +110,7 @@ class TestIntegration(TestCase):
         Shotgun test user.
     - SGJIRA_JIRA_TEST_USER_SECRET: The secret of the user used to authenticate
         with JIRA.
-    - SGJIRA_JIRA_TEST_USER_2: The login of the user that matches the second
+    - SGJIRA_JIRA_TEST_USER_2: The login (Jira Server) or accountId (Jira Cloud) of the user that matches the second
         Shotgun test user.
     - SGJIRA_JIRA_TEST_PROJECT_KEY: The Jira project for which we should sync data.
 
@@ -133,8 +133,6 @@ class TestIntegration(TestCase):
     Once you connect to the server on localhost:8080, you can request a trial license
     or paste your own license.
     """
-
-    USER_ID_FIELD = "key"
 
     @classmethod
     def setUpClass(cls):
@@ -166,7 +164,7 @@ class TestIntegration(TestCase):
         )
         assert cls._sg_user_2 is not None
 
-        # Connecet to JIRA.
+        # Connect to JIRA.
         cls._jira = JIRA(
             os.environ["SGJIRA_JIRA_SITE"],
             basic_auth=(
@@ -175,21 +173,15 @@ class TestIntegration(TestCase):
             ),
         )
 
+        cls._user_id_field = "accountId" if "accountId" in cls._jira.myself() else "key"
+
         # Resolve JIRA Project key.
         cls._jira_project = os.environ["SGJIRA_JIRA_TEST_PROJECT_KEY"]
         assert cls._jira_project is not None
 
         # Resolve first JIRA user key.
-        cls._jira_user_1 = cls._jira.myself()[cls.USER_ID_FIELD]
-        cls._jira_user_1_login = cls._jira.myself()["name"]
-
-        cls._jira_user_2 = getattr(
-            cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]), cls.USER_ID_FIELD
-        )
-
-        cls._jira_user_2_login = cls._jira.user(
-            os.environ["SGJIRA_JIRA_TEST_USER_2"]
-        ).name
+        cls._jira_user_1_id = cls._jira.myself()[cls._user_id_field]
+        cls._jira_user_2_id = cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]).user_id
 
     def _expect(self, functor, description=None, max_time=20):
         """
@@ -259,12 +251,12 @@ class TestIntegration(TestCase):
         """
         Test the integration.
         """
-        thread = ServerThread()
+        self._server = ServerThread()
         # Ideally the thread start/top would be done in setUp/tearDown, but when hitting
         # CTRL-C to end the tests the tearDown handlers are not invoked. This would
         # leave the process handing because there is still a thread running.
         try:
-            thread.start()
+            self._server.start()
             # Each of these tests could be run in their own test, but the it would
             # take much longer to run because you'd have to create a task for each.
             self._test_create_task()
@@ -279,7 +271,7 @@ class TestIntegration(TestCase):
             # so we can't test them. The test was already written, so we'll keep it.
             # self._test_update_ccs_from_jira()
         finally:
-            thread.stop()
+            self._server.stop()
 
     def _test_create_task(self):
         """
@@ -353,7 +345,7 @@ class TestIntegration(TestCase):
                 self.assertIsNone(self._issue.fields.assignee)
             else:
                 self.assertEqual(
-                    getattr(self._issue.fields.assignee, self.USER_ID_FIELD),
+                    getattr(self._issue.fields.assignee, self._user_id_field),
                     expected_user_id,
                 )
 
@@ -364,7 +356,7 @@ class TestIntegration(TestCase):
 
         # Make sure
         self._expect(
-            lambda: wait_for_assignee_to_change(self._jira_user_1),
+            lambda: wait_for_assignee_to_change(self._jira_user_1_id),
             "waiting_for_jira_user_1_on_issue",
         )
 
@@ -372,7 +364,7 @@ class TestIntegration(TestCase):
             "Task", self._sg_task["id"], {"task_assignees": [self._sg_user_2]}
         )
         self._expect(
-            lambda: wait_for_assignee_to_change(self._jira_user_2),
+            lambda: wait_for_assignee_to_change(self._jira_user_2_id),
             "waiting_for_jira_user_2_on_issue",
         )
 
@@ -396,14 +388,14 @@ class TestIntegration(TestCase):
                 {a["id"] for a in asssignees}, {u["id"] for u in expected_user_ids}
             )
 
-        self._jira.assign_issue(self._jira_key, self._jira_user_1_login)
+        self._jira.assign_issue(self._jira_key, self._jira_user_1_id)
 
         self._expect(
             lambda: wait_for_assignee_to_change([self._sg_user_1]),
             "waiting_for_sg_user_1_on_task",
         )
 
-        self._jira.assign_issue(self._jira_key, self._jira_user_2_login)
+        self._jira.assign_issue(self._jira_key, self._jira_user_2_id)
 
         self._expect(
             lambda: wait_for_assignee_to_change([self._sg_user_2]),
@@ -416,9 +408,11 @@ class TestIntegration(TestCase):
         """
 
         def wait_for_watchers_to_be_assigned(expected_users):
+            uid_field = self._user_id_field
+            server_account = self._server._httpd._sg_jira.jira.myself()[uid_field]
             self.assertEqual(
-                # The first watcher is the daemon so skip it.
-                {w.key for w in self._jira.watchers(self._jira_key).watchers[1:]},
+                # Skip the daemon
+                {getattr(w, uid_field) for w in self._jira.watchers(self._jira_key).watchers if getattr(w, uid_field) != server_account},
                 set(expected_users),
             )
 
@@ -426,7 +420,7 @@ class TestIntegration(TestCase):
             "Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_1]}
         )
         self._expect(
-            lambda: wait_for_watchers_to_be_assigned([self._jira_user_1]),
+            lambda: wait_for_watchers_to_be_assigned([self._jira_user_1_id]),
             "waiting_for_jira_1_to_be_watching",
         )
 
@@ -434,7 +428,7 @@ class TestIntegration(TestCase):
             "Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_2]}
         )
         self._expect(
-            lambda: wait_for_watchers_to_be_assigned([self._jira_user_2]),
+            lambda: wait_for_watchers_to_be_assigned([self._jira_user_2_id]),
             "waiting_for_jira_2_to_be_watching",
         )
 
@@ -445,7 +439,7 @@ class TestIntegration(TestCase):
         )
         self._expect(
             lambda: wait_for_watchers_to_be_assigned(
-                [self._jira_user_2, self._jira_user_1]
+                [self._jira_user_2_id, self._jira_user_1_id]
             ),
             "waiting_for_jira_1_and_2_to_be_watching",
         )
@@ -454,7 +448,7 @@ class TestIntegration(TestCase):
             "Task", self._sg_task["id"], {"addressings_cc": [self._sg_user_1]}
         )
         self._expect(
-            lambda: wait_for_watchers_to_be_assigned([self._jira_user_1]),
+            lambda: wait_for_watchers_to_be_assigned([self._jira_user_1_id]),
             "waiting_for_jira_1_to_be_watching",
         )
 
@@ -486,25 +480,25 @@ class TestIntegration(TestCase):
                 sorted(expected_users, key=key_fn),
             )
 
-        self._jira.add_watcher(self._jira_key, self._jira_user_1)
+        self._jira.add_watcher(self._jira_key, self._jira_user_1_id)
         self._expect(
             lambda: wait_for_addressings_update([self._sg_user_1]),
             "waiting_for_user_1_cced",
         )
 
-        self._jira.add_watcher(self._jira_key, self._jira_user_2)
+        self._jira.add_watcher(self._jira_key, self._jira_user_2_id)
         self._expect(
             lambda: wait_for_addressings_update([self._sg_user_1, self._sg_user_2]),
             "waiting_for_user_1_and_2_cced",
         )
 
-        self._jira.remove_watcher(self._jira_key, self._jira_user_2)
+        self._jira.remove_watcher(self._jira_key, self._jira_user_2_id)
         self._expect(
             lambda: wait_for_addressings_update([self._sg_user_1]),
             "waiting_for_user_1_cced",
         )
 
-        self._jira.remove_watcher(self._jira_key, self._jira_user_1)
+        self._jira.remove_watcher(self._jira_key, self._jira_user_1_id)
         self._expect(lambda: wait_for_addressings_update([]), "waiting_for_no_one_cced")
 
     def _test_update_description_from_shotgun(self):

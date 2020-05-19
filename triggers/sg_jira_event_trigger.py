@@ -9,6 +9,13 @@ import os
 import logging
 import requests
 import urlparse
+
+# Allow users to define their sensitive data in a .env file and
+# load it in environment variables with python-dotenv.
+# https://pypi.org/project/python-dotenv/
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 """
 A Shotgun event daemon plugin which sends all events to the SG/Jira bridge.
 
