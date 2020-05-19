@@ -10,6 +10,12 @@ import logging
 from jira import JIRAError
 import jira
 
+# Since we are using pbr in the forked jira repo, the tags we are using are marked as dev versions and
+# pip doesn't update them as expected.
+if not hasattr(jira.User, "user_id"):
+    raise ImportError('The jira version installed is too old. Make sure it is updated to 2.0.0.sg.2+. '
+                      'You can do this by using "pip install -r /path/to/requirements.txt --upgrade"')
+
 from .constants import JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD
 from .constants import JIRA_RESULT_PAGING
 

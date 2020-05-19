@@ -167,8 +167,12 @@ A ``requirements.txt`` file is provided to install all required packages.
     pip install -r /path/to/sg-jira-bridge/requirements.txt
 
 .. note::
-    If you are upgrading from a previous version of the bridge, we recommend you re-install dependencies
-    as we've had to fork the ``jira`` Python module to add a missing feature.
+    If you are upgrading from a previous version of the bridge, we recommend you upgrade the dependencies
+    as we've had to fork the ``jira`` Python module to add a missing feature:
+
+    .. code-block::
+
+        pip install --upgrade -r /path/to/sg-jira-bridge/requirements.txt
 
 
 Settings
