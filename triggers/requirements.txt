@@ -19,4 +19,4 @@ requests==2.21.0
 https://github.com/shotgunsoftware/python-api/archive/v3.0.39.zip
 
 # Allows defining env vars in a .env file that can be loaded at runtime
-python-dotenv==0.10.1
+python-dotenv==0.13.0
