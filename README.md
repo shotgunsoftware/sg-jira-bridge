@@ -1,3 +1,5 @@
+[![Linting](https://img.shields.io/badge/PEP8%20by-Hound%20CI-a873d1.svg)](https://houndci.com)
+
 # Shotgun Jira Bridge
 
 Shotgun Jira Bridge is a simple synchronization setup between Shotgun and Jira. It's designed to get you up and running quickly with basic sync functionality for Tasks, Issues, and Notes. 
