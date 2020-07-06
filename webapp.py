@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
+from __future__ import print_function
 import re
 import argparse
 import urlparse
@@ -551,4 +552,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print "Shutting down..."
+        print("Shutting down...")

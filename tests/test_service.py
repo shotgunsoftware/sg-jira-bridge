@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
+from __future__ import print_function
 import os
 import sys
 import unittest2 as unittest

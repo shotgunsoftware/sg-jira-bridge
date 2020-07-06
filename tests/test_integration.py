@@ -7,6 +7,7 @@
 # this software in either electronic or hard copy form.
 #
 
+from __future__ import print_function
 import os
 import time
 import threading
