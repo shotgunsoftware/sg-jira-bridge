@@ -74,7 +74,7 @@ class TaskIssueHandler(EntityIssueHandler):
         # meaning that we handle a specific Jira field but there is not a direct
         # mapping to a Shotgun field and a special logic must be implemented
         # and called to perform the update to Shotgun.
-        return [field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field]
+        return [field for field in self.__ISSUE_FIELDS_MAPPING.values() if field]
 
     def setup(self):
         """
@@ -92,7 +92,7 @@ class TaskIssueHandler(EntityIssueHandler):
         Return the list of Shotgun fields that this handler can process for a
         Shotgun to Jira event.
         """
-        return self.__TASK_FIELDS_MAPPING.keys()
+        return list(self.__TASK_FIELDS_MAPPING.keys())
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -357,7 +357,7 @@ class TaskIssueHandler(EntityIssueHandler):
             exclude_shotgun_fields = []
 
         issue_data = {}
-        for sg_field, jira_field in self.__TASK_FIELDS_MAPPING.iteritems():
+        for sg_field, jira_field in self.__TASK_FIELDS_MAPPING.items():
             if sg_field in exclude_shotgun_fields:
                 continue
 

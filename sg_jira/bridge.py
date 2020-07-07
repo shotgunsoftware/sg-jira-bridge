@@ -273,7 +273,7 @@ class Bridge(object):
         """
         Return the list of sync settings this bridge handles.
         """
-        return self._sync_settings.keys()
+        return list(self._sync_settings.keys())
 
     def reset(self):
         """

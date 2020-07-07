@@ -8,12 +8,13 @@
 #
 
 import re
+import six
 
 from test_base import TestBase
 import sg_jira
 
 UNICODE_STRING = u"unicode_îéö_😀"
-UTF8_ENCODED_STRING = UNICODE_STRING.encode("utf-8")
+UTF8_ENCODED_STRING = six.ensure_str(UNICODE_STRING)
 
 
 class TestUtils(TestBase):

@@ -4,6 +4,7 @@
 # provided at the time of installation or download, or which otherwise accompanies
 # this software in either electronic or hard copy form.
 #
+import six
 
 
 def utf8_to_unicode(value):
@@ -18,6 +19,11 @@ def utf8_to_unicode(value):
     :raises ValueError: if a converted UTF-8 decoded key is already present in the
              original value of a dictionary.
     """
+
+    if six.py3:
+        # we only have unicode values in Python 3 so no need to loop over everything.
+        return value
+
     if isinstance(value, list):
         # Convert all values
         return [utf8_to_unicode(x) for x in value]
@@ -29,13 +35,15 @@ def utf8_to_unicode(value):
     if isinstance(value, dict):
         # Convert the keys and the values
         decoded = {}
-        for k, v in value.iteritems():
+        for k, v in value.items():
             # We need to check if there is a potential conflict between the
             # decoded key and an existing unicode key, so we can't blindly call
-            # ourself here.
+            # our self here.
             if isinstance(k, str):
-                decoded_key = k.decode("utf-8")
-                if decoded_key in [x for x in value.keys() if isinstance(x, unicode)]:
+                decoded_key = six.ensure_text(k)
+                if decoded_key in [
+                    x for x in value.keys() if isinstance(x, six.text_type)
+                ]:
                     raise ValueError(
                         "UTF-8 decoded key %s is already present in dictionary "
                         "being decoded" % (decoded_key,)
@@ -46,7 +54,7 @@ def utf8_to_unicode(value):
         return decoded
 
     if isinstance(value, str):
-        return value.decode("utf-8")
+        return six.ensure_text(value)
 
     # Nothing to do, return the value unchanged.
     return value
@@ -63,23 +71,27 @@ def unicode_to_utf8(value):
     :raises ValueError: if a converted UTF-8 encoded key is already present in the
              original value of a dictionary.
     """
+    if six.py3:
+        # In python 3 strings are unicode, so just return the value.
+        return value
+
     if isinstance(value, list):
         # Convert all values
         return [unicode_to_utf8(x) for x in value]
 
     if isinstance(value, tuple):
-        # Convert all values
+        # Convert all values.
         return tuple([unicode_to_utf8(x) for x in value])
 
     if isinstance(value, dict):
-        # Convert the keys and the values
+        # Convert the keys and the values.
         encoded = {}
-        for k, v in value.iteritems():
+        for k, v in value.items():
             # We need to check if there is a potential conflict between the
             # encoded key and an existing str key, so we can't blindly call
-            # ourself here.
-            if isinstance(k, unicode):
-                encoded_key = k.encode("utf-8")
+            # our self here.
+            if isinstance(k, six.text_type):
+                encoded_key = six.ensure_str(k)
                 if encoded_key in [x for x in value.keys() if isinstance(x, str)]:
                     # Note: we issue the error with the unicode value to be
                     # consistent with our convention where everything is unicode
@@ -95,8 +107,8 @@ def unicode_to_utf8(value):
             encoded[encoded_key] = unicode_to_utf8(v)
         return encoded
 
-    if isinstance(value, unicode):
-        return value.encode("utf-8")
+    if isinstance(value, six.text_type):
+        return six.ensure_str(value)
 
     # Nothing to do, return the value unchanged.
     return value

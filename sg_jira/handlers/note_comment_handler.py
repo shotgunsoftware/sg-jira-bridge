@@ -55,7 +55,7 @@ class NoteCommentHandler(SyncHandler):
         Return the list of Shotgun fields that this handler can process for a
         Shotgun to Jira event.
         """
-        return self.__NOTE_FIELDS_MAPPING.keys()
+        return list(self.__NOTE_FIELDS_MAPPING.keys())
 
     def _compose_jira_comment_body(self, shotgun_note):
         """

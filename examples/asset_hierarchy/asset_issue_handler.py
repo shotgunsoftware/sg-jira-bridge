@@ -81,14 +81,14 @@ class AssetIssueHandler(EntityIssueHandler):
         # meaning that we handle a specific Jira field but there is not a direct
         # mapping to a Shotgun field and a special logic must be implemented
         # and called to perform the update to Shotgun.
-        return [field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field]
+        return [field for field in self.__ISSUE_FIELDS_MAPPING.values() if field]
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
         Return the list of Shotgun fields that this handler can process for a
         Shotgun to Jira event.
         """
-        return self.__ASSET_FIELDS_MAPPING.keys()
+        return list(self.__ASSET_FIELDS_MAPPING.keys())
 
     def _get_jira_issue_field_for_shotgun_field(
         self, shotgun_entity_type, shotgun_field
@@ -367,7 +367,7 @@ class AssetIssueHandler(EntityIssueHandler):
             exclude_shotgun_fields = []
 
         issue_data = {}
-        for sg_field, jira_field in self.__ASSET_FIELDS_MAPPING.iteritems():
+        for sg_field, jira_field in self.__ASSET_FIELDS_MAPPING.items():
             if sg_field in exclude_shotgun_fields:
                 continue
 

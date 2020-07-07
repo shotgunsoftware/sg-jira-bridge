@@ -8,6 +8,7 @@
 #
 
 import os
+import six
 import StringIO
 import json
 import mock
@@ -29,7 +30,7 @@ Content-Length: %d
 """
 
 UNICODE_STRING = u"unicode_îéö_😀"
-UTF8_ENCODED_STRING = UNICODE_STRING.encode("utf-8")
+UTF8_ENCODED_STRING = six.ensure_str(UNICODE_STRING)
 
 
 class MockServer(object):
