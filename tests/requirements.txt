@@ -10,3 +10,4 @@
 mock==2.0.0
 unittest-xml-reporting==2.2.0
 unittest2==1.1.0
+xmlrunner
