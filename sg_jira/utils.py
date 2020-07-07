@@ -20,7 +20,7 @@ def utf8_to_unicode(value):
              original value of a dictionary.
     """
 
-    if six.py3:
+    if six.PY3:
         # we only have unicode values in Python 3 so no need to loop over everything.
         return value
 
@@ -71,7 +71,7 @@ def unicode_to_utf8(value):
     :raises ValueError: if a converted UTF-8 encoded key is already present in the
              original value of a dictionary.
     """
-    if six.py3:
+    if six.PY3:
         # In python 3 strings are unicode, so just return the value.
         return value
 
