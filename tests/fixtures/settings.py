@@ -47,7 +47,7 @@ LOGGING = {
         "level": "INFO",
         "handlers": ["console"],
     },
-    "loggers": {"sg_jira.syncer": {"level": "WARNING",}},
+    "loggers": {"sg_jira.syncer": {"level": "WARNING"}},
     # Some formatters, mainly as examples
     "formatters": {
         "verbose": {
@@ -85,17 +85,17 @@ SYNC = {
     "bad_setup": {
         # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
-        "settings": {"fail_on_setup": True,},
+        "settings": {"fail_on_setup": True},
     },
     "bad_sg_accept": {
         # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
-        "settings": {"fail_on_sg_accept": True,},
+        "settings": {"fail_on_sg_accept": True},
     },
     "bad_sg_sync": {
         # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
-        "settings": {"fail_on_sg_sync": True,},
+        "settings": {"fail_on_sg_sync": True},
     },
     "example": {
         # Example of a custom syncer with an additional parameter to define
@@ -107,7 +107,7 @@ SYNC = {
         # The syncer class to use
         "syncer": "asset_hierarchy.AssetHierarchySyncer",
         # And its specific settings which are passed to its __init__ method
-        "settings": {"asset_issue_type": "Story", "task_issue_type": "Task",},
+        "settings": {"asset_issue_type": "Story", "task_issue_type": "Task"},
     },
     "unicode_😀": {
         # The syncer class to use

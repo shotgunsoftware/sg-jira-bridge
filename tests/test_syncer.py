@@ -712,9 +712,9 @@ class TestJiraSyncer(TestSyncBase):
         )
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
         sg_tags = [
-            {"type": "Tag", "id": 1, "name": "foo",},
-            {"type": "Tag", "id": 2, "name": "bar",},
-            {"type": "Tag", "id": 3, "name": "invalid for Jira",},
+            {"type": "Tag", "id": 1, "name": "foo"},
+            {"type": "Tag", "id": 2, "name": "bar"},
+            {"type": "Tag", "id": 3, "name": "invalid for Jira"},
         ]
         self.add_to_sg_mock_db(bridge.shotgun, sg_tags)
 
@@ -946,10 +946,10 @@ class TestJiraSyncer(TestSyncBase):
         sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
 
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
-        self.add_to_sg_mock_db(bridge.shotgun, {"type": "Tag", "id": 1, "name": "foo",})
-        self.add_to_sg_mock_db(bridge.shotgun, {"type": "Tag", "id": 2, "name": "bar",})
+        self.add_to_sg_mock_db(bridge.shotgun, {"type": "Tag", "id": 1, "name": "foo"})
+        self.add_to_sg_mock_db(bridge.shotgun, {"type": "Tag", "id": 2, "name": "bar"})
         self.add_to_sg_mock_db(
-            bridge.shotgun, {"type": "Tag", "id": 3, "name": "precious",}
+            bridge.shotgun, {"type": "Tag", "id": 3, "name": "precious"}
         )
         self.add_to_sg_mock_db(
             bridge.shotgun,
