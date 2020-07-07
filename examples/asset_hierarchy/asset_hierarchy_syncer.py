@@ -39,11 +39,12 @@ class AssetHierarchySyncer(Syncer):
         # synced without having to manually select them. A full sync is performed
         # when the Task checkbox is turned on.
         self._enable_syncing_handler = EnableSyncingHandler(
-            self, [
+            self,
+            [
                 self._task_issue_handler,
                 self._asset_issue_handler,
-                self._note_comment_handler
-            ]
+                self._note_comment_handler,
+            ],
         )
 
     @property
@@ -55,5 +56,5 @@ class AssetHierarchySyncer(Syncer):
             self._enable_syncing_handler,
             self._task_issue_handler,
             self._note_comment_handler,
-            self._asset_issue_handler
+            self._asset_issue_handler,
         ]

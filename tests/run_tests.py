@@ -13,6 +13,7 @@ import unittest2 as unittest
 import xmlrunner
 
 import logging
+
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("run_tests")
 logger.setLevel(logging.INFO)
@@ -22,6 +23,7 @@ class TestRunner(object):
     """
     A test runner which auto discovers all tests and supports xml output.
     """
+
     def __init__(self, xml_output=None):
         """
         :param xml_output: Directory path where xml reports are generated.
@@ -30,12 +32,10 @@ class TestRunner(object):
         self._xml_output = xml_output
         # Tweak Python path so our modules can be found
         sys.path.insert(
-            0,
-            os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+            0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         )
         sys.path.insert(
-            0,
-            os.path.abspath(os.path.join(os.path.dirname(__file__), "python"))
+            0, os.path.abspath(os.path.join(os.path.dirname(__file__), "python"))
         )
 
     def setup_suite(self, test_names):
@@ -62,7 +62,9 @@ class TestRunner(object):
         if self._xml_output:
             return xmlrunner.XMLTestRunner(output=self._xml_output).run(self.suite)
         else:
-            return unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(self.suite)
+            return unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(
+                self.suite
+            )
 
 
 def run_tests():
@@ -71,17 +73,14 @@ def run_tests():
 
     :returns: A :class:`unittest.TestResult` instance.
     """
-    parser = argparse.ArgumentParser(
-        description="run tests"
-    )
+    parser = argparse.ArgumentParser(description="run tests")
     parser.add_argument(
-        "--xmlout",
-        help="Output directory for xml reports",
+        "--xmlout", help="Output directory for xml reports",
     )
     parser.add_argument(
         "--print-env",
         action="store_true",
-        help="Print environment variables on startup"
+        help="Print environment variables on startup",
     )
     args, other_args = parser.parse_known_args()
 

@@ -17,6 +17,7 @@ class ExtMockgun(mockgun.Shotgun):
     """
     Add missing mocked methods to mockgun.Shotgun
     """
+
     def add_user_agent(*args, **kwargs):
         pass
 
@@ -35,15 +36,12 @@ class TestSyncBase(TestBase):
 
     All test methods will have an extra mocked_sg parameter.
     """
+
     def _get_mocked_sg_handle(self):
         """
         Return a mocked SG handle.
         """
-        return ExtMockgun(
-            "https://mocked.my.com",
-            "Ford Prefect",
-            "xxxxxxxxxx",
-        )
+        return ExtMockgun("https://mocked.my.com", "Ford Prefect", "xxxxxxxxxx",)
 
     def _get_syncer(self, mocked_sg, name="task_issue"):
         """
@@ -64,10 +62,9 @@ class TestSyncBase(TestBase):
         Test setup.
         """
         super(TestSyncBase, self).setUp()
-        self.set_sg_mock_schema(os.path.join(
-            self._fixtures_path,
-            "schemas", "sg-jira",
-        ))
+        self.set_sg_mock_schema(
+            os.path.join(self._fixtures_path, "schemas", "sg-jira",)
+        )
 
         self.mock_jira_session_bases()
 

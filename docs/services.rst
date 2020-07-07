@@ -15,7 +15,7 @@ accepts parameters from the command-line and responds to the standard commands::
 Parameters
 ==========
 - **-h**: Display the usage help.
-- **--pid_file**: Full path to the pid file used by the service. Defaults to 
+- **--pid_file**: Full path to the pid file used by the service. Defaults to
   ``/tmp/sg_jira.pid``.
 - **--log_file**: An optional log file to use for the daemon output. By
   default the daemon uses a syslog handler.
@@ -25,25 +25,25 @@ Parameters
 Windows
 *******
 The ``win_service.py`` script can be installed to allow the Service Manager
-to control Shotgun Jira Bridge. 
+to control Shotgun Jira Bridge.
 
 Environment Variables
 =====================
 Environment variables are used to specify the settings and port parameters.
 
 - ``SGJIRA_SETTINGS_FILE``: Full path to settings file for the web app. If not
-  provided, the app will look for a ``settings.py`` file in the root of the 
-  Shotgun Jira Bridge directory (where it exists in the default structure). 
-- ``SGJIRA_PORT_NUMBER``: The port number for the web app to listen on. 
+  provided, the app will look for a ``settings.py`` file in the root of the
+  Shotgun Jira Bridge directory (where it exists in the default structure).
+- ``SGJIRA_PORT_NUMBER``: The port number for the web app to listen on.
   Defaults to ``9090``.
 
 Installing the Service
 ======================
-The Windows service requires the 
-`Python for Win32 (pywin32) extensions <https://pypi.org/project/pywin32/>`_. 
+The Windows service requires the
+`Python for Win32 (pywin32) extensions <https://pypi.org/project/pywin32/>`_.
 
 .. note::
-    If installing pywin32 with ``pip install pywin32``, the following must be 
+    If installing pywin32 with ``pip install pywin32``, the following must be
     run after the installation in order to allow it to manage services::
 
         python Scripts/pywin32_postinstall.py -install

@@ -14,6 +14,7 @@ import urlparse
 # load it in environment variables with python-dotenv.
 # https://pypi.org/project/python-dotenv/
 from dotenv import load_dotenv
+
 load_dotenv(override=True)
 
 """
@@ -30,7 +31,7 @@ SCHEMA_CHANGE_EVENT_TYPES = [
     "Shotgun_DisplayColumn_Retirement",
     "Shotgun_Status_New",
     "Shotgun_Status_Change",
-    "Shotgun_Status_Retirement"
+    "Shotgun_Status_Retirement",
 ]
 
 
@@ -68,7 +69,7 @@ def registerCallbacks(reg):
         process_event,
         event_filter,
         dispatch_routes,
-        stopOnError=False
+        stopOnError=False,
     )
 
     # Set the logging level for this particular plugin. Let debug and above
@@ -90,9 +91,9 @@ def process_event(sg, logger, event, dispatch_routes):
     if event.get("event_type") in SCHEMA_CHANGE_EVENT_TYPES:
         # A schema change has occurred. Clear the dispatch routes so that
         # the next time an event is processed for a Project, the bridge will
-        # be reset, clearing the schema cache. 
-        # TODO: We blindly clear all routes for all Projects here. If two 
-        # different webapps are being used, they will both be unnecessarily 
+        # be reset, clearing the schema cache.
+        # TODO: We blindly clear all routes for all Projects here. If two
+        # different webapps are being used, they will both be unnecessarily
         # cleared. Possibly be smarter and only clear the routes for the
         # affected Projects.
         dispatch_routes.clear()
@@ -116,9 +117,7 @@ def process_event(sg, logger, event, dispatch_routes):
     project = event.get("project")
     # If there is no Project associated with the event, just ignore it
     if not project:
-        logger.debug(
-            "Ignoring event %s not associated with any Project" % event
-        )
+        logger.debug("Ignoring event %s not associated with any Project" % event)
         return
 
     sync_server_url = _get_dispatch_route(sg, logger, project, dispatch_routes)
@@ -163,13 +162,14 @@ def process_event(sg, logger, event, dispatch_routes):
     }
 
     # Just send a POST request with the event meta data as payload.
-    sync_url = "%s/%s/%d" % (sync_server_url, payload["entity_type"], payload["entity_id"])
+    sync_url = "%s/%s/%d" % (
+        sync_server_url,
+        payload["entity_type"],
+        payload["entity_id"],
+    )
     logger.debug("Posting event %s to %s" % (payload["meta"], sync_url))
     # Post application/json request
-    response = requests.post(
-        sync_url,
-        json=payload,
-    )
+    response = requests.post(sync_url, json=payload,)
     response.raise_for_status()
     logger.debug("Event successfully processed.")
 
@@ -177,7 +177,7 @@ def process_event(sg, logger, event, dispatch_routes):
 def _get_dispatch_route(sg, logger, project, dispatch_routes):
     """
     Return the sg-jira-bridge sync url for the given Project.
-    
+
     :param sg: Shotgun API handle.
     :param logger: Logger instance.
     :param list project: A Shotgun Project entity dictionary.
@@ -191,17 +191,13 @@ def _get_dispatch_route(sg, logger, project, dispatch_routes):
         # routing, if any, from Shotgun.
         logger.info("Retrieving sync routing for Project %d" % project["id"])
         sg_project = sg.find_one(
-            "Project",
-            [["id", "is", project["id"]]],
-            ["name", "sg_jira_sync_url"]
+            "Project", [["id", "is", project["id"]]], ["name", "sg_jira_sync_url"]
         )
         if not sg_project:
             # This shouldn't happen, but better to be safe here.
             logger.warning(
                 "Unable to find a Shotgun Project "
-                "with id %d, skipping event..." % (
-                    project["id"]
-                )
+                "with id %d, skipping event..." % (project["id"])
             )
             dispatch_routes[project["id"]] = None
             return
@@ -209,11 +205,11 @@ def _get_dispatch_route(sg, logger, project, dispatch_routes):
         sync_url = _get_project_sync_url(sg_project.get("sg_jira_sync_url"), logger)
         dispatch_routes[sg_project["id"]] = sync_url
 
-        # We reset the schema cache the very first time we treat a route. 
+        # We reset the schema cache the very first time we treat a route.
         # This enables:
-        #   - Resetting the schema cache if the event daemon is restarted, 
+        #   - Resetting the schema cache if the event daemon is restarted,
         #     without having to restart the web app.
-        #   - Triggering a schema cache reset by emptying the 
+        #   - Triggering a schema cache reset by emptying the
         #     dispatch_routes cache when a schema change is detected in Shotgun.
         if sync_url:
             _reset_bridge(sync_url, logger)
@@ -224,7 +220,7 @@ def _get_dispatch_route(sg, logger, project, dispatch_routes):
 def _get_project_sync_url(sg_field_value, logger):
     """
     Return sync url from Shotgun File/Link field.
-    
+
     :param sg_field_value: Shotgun File/Link field value as a dict or ``None``.
     :param logger: Logger instance.
     :returns: URL for sync as a str or ``None``.
@@ -246,9 +242,9 @@ def _get_project_sync_url(sg_field_value, logger):
             sync_url = sg_field_value.get("url")
             if sync_url and sync_url.endswith("/"):
                 sync_url = sync_url[:-1]
-    
+
     # There is a value in the sg_field_value but it's not what we expect.
-    if sync_url is None and sg_field_value: 
+    if sync_url is None and sg_field_value:
         logger.warning(
             "Sync URL could not be extracted from %s. Expected a dictionary "
             "representing a web link like {'link_type': 'web', 'url': "
@@ -260,8 +256,8 @@ def _get_project_sync_url(sg_field_value, logger):
 
 def _reset_bridge(server_url, logger):
     """
-    Reset the Jira bridge 
-    
+    Reset the Jira bridge
+
     :param str server_url: Sync URL of the SG Jira Bridge.
     :param logger: Logger instance.
     """
@@ -274,7 +270,7 @@ def _reset_bridge(server_url, logger):
             "from %s." % server_url
         )
         return
-    
+
     reset_url = "%s://%s/admin/reset" % (parsed_url.scheme, parsed_url.netloc)
     logger.debug("Posting to %s" % reset_url)
     response = requests.post(reset_url)

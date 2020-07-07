@@ -5,12 +5,6 @@
 # this software in either electronic or hard copy form.
 #
 
-#
-# List of Python packages needed by the SG Jira Bridge event trigger
-#
-
-# Requests 
-requests==2.21.0
 
 # Shotgun API 3 from Github releases
 # Note: It is recommended you replace this version with the latest
@@ -20,3 +14,9 @@ https://github.com/shotgunsoftware/python-api/archive/v3.0.39.zip
 
 # Allows defining env vars in a .env file that can be loaded at runtime
 python-dotenv==0.13.0
+#
+# List of Python packages needed by the SG Jira Bridge event trigger
+#
+
+# Requests
+requests==2.21.0

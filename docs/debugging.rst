@@ -4,11 +4,11 @@ Debugging
 Logging
 =======
 The SG-Jira-Bridge uses standard Python logging. The logging configuration is
-stored in a ``LOGGING`` *dict* in the ``settings.py`` file and uses the 
+stored in a ``LOGGING`` *dict* in the ``settings.py`` file and uses the
 standard :mod:`logging.config` format.
 
 By default the SG Jira Bridge logs ``INFO`` messages and above which provide
-a good amount of detail to audit what is happening with each request. 
+a good amount of detail to audit what is happening with each request.
 
 .. warning::
 
@@ -78,14 +78,14 @@ Installing ngrok
 ----------------
 If you are testing locally, it's likely your machine isn't accessible from the
 Jira server (especially if you're using a Jira cloud server). However, you can
-use ngrok https://ngrok.com to allow it to securely access your local machine 
+use ngrok https://ngrok.com to allow it to securely access your local machine
 for testing and development: ``ngrok http 9090``.
 
 To get ngrok running, sign up for a free account at ngrok.com. `Download and
 install ngrok <https://ngrok.com/download>`_. If you use a package manager like
 `Homebrew <https://brew.sh/>`_, you may be able to install from there as well.
 
-Setup authentication by running ``ngrok authtoken <your auth token>`` where 
+Setup authentication by running ``ngrok authtoken <your auth token>`` where
 ``<your auth token>`` is the auth token assigned to your ngrok account. You can
 get the token from https://dashboard.ngrok.com/auth.
 
@@ -96,7 +96,7 @@ Starting ngrok
     $ ngrok http 9090
 
 .. note::
-    Each time you start ngrok, it assigns a random hostname to your connection. 
+    Each time you start ngrok, it assigns a random hostname to your connection.
     This means you'll need to update the Jira Webhook you setup to point to the
     correct hostname each time. ngrok does have a paid plan that allows
     you to specify the hostname you wish to use.
@@ -113,12 +113,12 @@ Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
 Jira client library to generate this error. Updating to the latest version of
 Shotgun Jira Bridge transitions the authentication to use Basic Auth.
 
-You will need to generate an API token and use this as your user secret (password). 
-User passwords are no longer supported by Jira Cloud. See 
-https://confluence.atlassian.com/x/Vo71Nw for information on how to generate a 
+You will need to generate an API token and use this as your user secret (password).
+User passwords are no longer supported by Jira Cloud. See
+https://confluence.atlassian.com/x/Vo71Nw for information on how to generate a
 token.
 
-Jira Server should be unaffected by this error as it still works with user 
+Jira Server should be unaffected by this error as it still works with user
 passwords and does not support API tokens.
 
 For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/
@@ -144,7 +144,7 @@ You should see a message that says something like::
 
 If there is no connection:
 
-- Make sure you've started the Sg Jira Bridge 
+- Make sure you've started the Sg Jira Bridge
 - Verify the URL you entered is in the correct format.
 - Ensure you're connecting to the correct port number.
 
@@ -221,7 +221,7 @@ If you encounter the following error::
 
 This means you have Time Tracking enabled on your Jira site and set as a
 required field. However, Time Tracking is not on your default Issue creation
-screen. 
+screen.
 
 **Solution**
 

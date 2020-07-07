@@ -18,6 +18,7 @@ try:
     # load it in environment variables with python-dotenv.
     # https://pypi.org/project/python-dotenv/
     from dotenv import load_dotenv
+
     load_dotenv(override=True)
 except ImportError:
     pass
@@ -44,23 +45,15 @@ LOGGING = {
     "root": {
         # Set default logging level for all loggers and add the console handler
         "level": "INFO",
-        "handlers": [
-            "console"
-        ],
+        "handlers": ["console"],
     },
-    "loggers": {
-        "sg_jira.syncer": {
-            "level": "WARNING",
-        }
-    },
+    "loggers": {"sg_jira.syncer": {"level": "WARNING",}},
     # Some formatters, mainly as examples
     "formatters": {
         "verbose": {
             "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
         },
-        "simple": {
-            "format": "%(levelname)s:%(name)s:%(message)s"
-        },
+        "simple": {"format": "%(levelname)s:%(name)s:%(message)s"},
     },
     # Define the logging handlers
     "handlers": {
@@ -68,76 +61,58 @@ LOGGING = {
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
-            "formatter": "simple"
+            "formatter": "simple",
         },
     },
 }
 # Sync settings. Keys are settings name.
 
 # Add the ./ folder to the Python path so test syncers can be loaded by unit tests
-sys.path.append(os.path.abspath(
-    os.path.dirname(__file__),
-))
+sys.path.append(os.path.abspath(os.path.dirname(__file__),))
 
 # Add the ../../examples folder to the Python path so example syncers can be loaded by unit tests
-sys.path.append(os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "examples")
-))
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "examples"))
+)
 
 SYNC = {
     "task_issue": {
         # The syncer class to use
         "syncer": "sg_jira.TaskIssueSyncer",
         # And its specific settings which are passed to its __init__ method
-        "settings": {
-            "foo": "blah"
-        },
+        "settings": {"foo": "blah"},
     },
     "bad_setup": {
         # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
-        "settings": {
-            "fail_on_setup": True,
-        },
+        "settings": {"fail_on_setup": True,},
     },
     "bad_sg_accept": {
         # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
-        "settings": {
-            "fail_on_sg_accept": True,
-        },
+        "settings": {"fail_on_sg_accept": True,},
     },
     "bad_sg_sync": {
         # A syncer which fails in various stages
         "syncer": "syncers.bad_syncer.BadSyncer",
-        "settings": {
-            "fail_on_sg_sync": True,
-        },
+        "settings": {"fail_on_sg_sync": True,},
     },
     "example": {
         # Example of a custom syncer with an additional parameter to define
         # a log level.
         "syncer": "example_sync.ExampleSync",
-        "settings": {
-            "log_level": logging.DEBUG
-        },
+        "settings": {"log_level": logging.DEBUG},
     },
     "asset_hierarchy": {
         # The syncer class to use
         "syncer": "asset_hierarchy.AssetHierarchySyncer",
         # And its specific settings which are passed to its __init__ method
-        "settings": {
-            "asset_issue_type": "Story",
-            "task_issue_type": "Task",
-        },
+        "settings": {"asset_issue_type": "Story", "task_issue_type": "Task",},
     },
     "unicode_😀": {
         # The syncer class to use
         "syncer": "sg_jira.TaskIssueSyncer",
         # And its specific settings which are passed to its __init__ method
-        "settings": {
-            "foo_îéö😀": "blah_îéö😀"
-        },
-
-    }
+        "settings": {"foo_îéö😀": "blah_îéö😀"},
+    },
 }

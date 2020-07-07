@@ -136,13 +136,13 @@ Setting Up Your Config and Env
 ******************************
 
 There are two different pieces to setting up the Shotgun Jira Bridge. There's the bridge itself
-(``sg-jira-bridge``), which handles all of the syncing of data between Shotgun and Jira. Then 
-there's the Shotgun Event Daemon (``shotgunEvents``), which handles dispatching supported Shotgun 
+(``sg-jira-bridge``), which handles all of the syncing of data between Shotgun and Jira. Then
+there's the Shotgun Event Daemon (``shotgunEvents``), which handles dispatching supported Shotgun
 events to the bridge.
 
-Since they are installed in different locations and each setup has different python module 
-requirements, the instructions below describe how to setup an environment for each of them 
-separately. 
+Since they are installed in different locations and each setup has different python module
+requirements, the instructions below describe how to setup an environment for each of them
+separately.
 
 SG Jira Bridge
 ==============
@@ -183,7 +183,7 @@ the default settings are fine as-is.
 Authentication
 --------------
 Credentials are retrieved from environment variables. You may set these in your
-environment or use `python-dotenv <https://pypi.org/project/python-dotenv>`_ 
+environment or use `python-dotenv <https://pypi.org/project/python-dotenv>`_
 and define these in a ``.env`` file.
 
 ::
@@ -201,13 +201,13 @@ and define these in a ``.env`` file.
 .. note::
 
     **Jira Cloud** requires the use of an API token and will not work with
-    a user password. See https://confluence.atlassian.com/x/Vo71Nw for information 
+    a user password. See https://confluence.atlassian.com/x/Vo71Nw for information
     on how to generate a token.
-    
-    **Jira Server** will still work with a user password and does not support 
+
+    **Jira Server** will still work with a user password and does not support
     API tokens.
 
-    For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/ 
+    For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/
 
 .. note::
 
@@ -242,8 +242,8 @@ Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed i
     # On Windows (using PowerShell)
     $ venv/Scripts/activate
 
-    # Install required packages for the trigger. 
-    # Note: This requirements.txt is in the "sg-jira-bridge/triggers" 
+    # Install required packages for the trigger.
+    # Note: This requirements.txt is in the "sg-jira-bridge/triggers"
     #       subdirectory, NOT in the root of the project.
     pip install -r /path/to/sg-jira-bridge/triggers/requirements.txt
 
@@ -367,4 +367,3 @@ shotgunEvents in your terminal window for log messages.
     the **Shotgun Type** and **Shotgun ID** fields as well as a link to the
     entity in Shotgun in the **Shotgun URL** field. This is a good indicator
     that things are working correctly.
-

@@ -102,4 +102,3 @@ jobs:
       testResultsFiles: 'test-results/**.xml'
       testRunTitle: 'Windows Python $(python.version)'
     condition: succeededOrFailed()
-

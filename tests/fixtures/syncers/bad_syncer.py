@@ -13,6 +13,7 @@ class BadHandler(SyncHandler):
     """
     A syncer handler which causes problems which should be handled gracefully.
     """
+
     def __init__(self, syncer, fail_on_sg_sync):
         """
         :param bool fail_on_sg_sync: Whether this syncer should fail when processing
@@ -27,13 +28,16 @@ class BadHandler(SyncHandler):
         """
         if self._fail_on_sg_sync:
             raise RuntimeError("Sorry, I'm bad!")
-        return super(BadHandler, self).process_shotgun_event(entity_type, entity_id, event)
+        return super(BadHandler, self).process_shotgun_event(
+            entity_type, entity_id, event
+        )
 
 
 class BadSyncer(Syncer):
     """
     A syncer which causes problems which should be handled gracefully.
     """
+
     def __init__(
         self,
         fail_on_setup=False,
@@ -74,7 +78,9 @@ class BadSyncer(Syncer):
     def supported_shotgun_fields(self, shotgun_entity_type):
         return ["sg_status_list"]
 
-    def get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
+    def get_jira_issue_field_for_shotgun_field(
+        self, shotgun_entity_type, shotgun_field
+    ):
         return None
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
