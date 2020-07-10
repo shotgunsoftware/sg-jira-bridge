@@ -1632,9 +1632,11 @@ class MockedJira(object):
             # Mock Jira REST api bug
             return []
 
+        options = {"deployment_type": "Cloud" if self.is_jira_cloud else "Server"}
+
         # Create a list of users.
-        users = [User(None, None, JIRA_USER_2)] * maxResults + [
-            User(None, None, JIRA_USER)
+        users = [User(options, None, JIRA_USER_2)] * maxResults + [
+            User(options, None, JIRA_USER)
         ]
 
         # Return the requested slice.
@@ -1653,8 +1655,10 @@ class MockedJira(object):
         if payload == "username":
             payload = "name"
 
+        options = {"deployment_type": "Cloud" if self.is_jira_cloud else "Server"}
+
         if id == JIRA_USER[payload]:
-            return User(None, None, JIRA_USER)
+            return User(options, None, JIRA_USER)
         if id == JIRA_USER_2[payload]:
-            return User(None, None, JIRA_USER_2)
+            return User(options, None, JIRA_USER_2)
         return None

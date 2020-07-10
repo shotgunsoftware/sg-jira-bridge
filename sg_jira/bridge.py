@@ -33,12 +33,6 @@ class Bridge(object):
     sync events.
     """
 
-    # The bridge webserver is multithreaded, which means we need to
-    # track Shotgun connections via the API per thread. The SG Python
-    # API is not threadsafe, and using a single, global connection
-    # across all threads will lead to some weird behavior.
-    _SG_CACHED_CONNECTIONS = threading.local()
-
     def __init__(
         self,
         sg_site,
@@ -72,6 +66,12 @@ class Bridge(object):
                                   connection, or None.
         """
         super(Bridge, self).__init__()
+
+        # The bridge webserver is multithreaded, which means we need to
+        # track Shotgun connections via the API per thread. The SG Python
+        # API is not threadsafe, and using a single, global connection
+        # across all threads will lead to some weird behavior.
+        self._SG_CACHED_CONNECTIONS = threading.local()
 
         self._sg_site = sg_site
         self._sg_script = sg_script
