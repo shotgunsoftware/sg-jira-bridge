@@ -10,7 +10,7 @@ import imp
 import logging
 import logging.config
 import importlib
-import urllib
+from six.moves import urllib
 import threading
 
 from .shotgun_session import ShotgunSession
@@ -259,7 +259,7 @@ class Bridge(object):
 
         :returns: A string with the username.
         """
-        return urllib.unquote_plus(self.jira.current_user() or self._jira_user)
+        return urllib.parse.unquote_plus(self.jira.current_user() or self._jira_user)
 
     @property
     def jira(self):

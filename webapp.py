@@ -7,6 +7,7 @@
 
 from __future__ import print_function
 import re
+import six
 import argparse
 from six.moves.urllib import parse
 from six.moves import BaseHTTPServer
@@ -152,7 +153,7 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
     def admin_reset(self, *args, **kwargs):
         """
-        Just pass the given parameters to the SG Jira Brige method.
+        Just pass the given parameters to the SG Jira Bridge method.
         """
         return self._sg_jira.reset(*args, **kwargs)
 
@@ -165,6 +166,13 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    # On Python3, in socketserver.StreamRequestHandler, if this is
+    # set it will use makefile() to produce the output stream. Otherwise,
+    # it will use socketserver._SocketWriter, and we won't be able to get
+    # to the data.
+    # taken from https://stackoverflow.com/a/53163148/4223964
+    wbufsize = 1
+
     protocol_version = "HTTP/1.1"
     # Inject the version of sg-jira-bridge into server_version for the headers.
     server_version = "sg-jira-bridge/%s %s" % (
@@ -241,15 +249,18 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         settings_name = path_parts[1]
-        if settings_name not in self.server.sync_settings_names:
+        if six.ensure_text(settings_name) not in self.server.sync_settings_names:
             self.send_error(400, "Invalid settings name %s" % settings_name)
             return
 
         # Success, send a basic html page.
         self.post_response(
             200,
-            "Syncing with %s settings." % settings_name,
-            HMTL_TEMPLATE % (title, title, "Syncing with %s settings." % settings_name),
+            six.ensure_binary("Syncing with %s settings." % settings_name),
+            six.ensure_binary(
+                HMTL_TEMPLATE
+                % (title, title, "Syncing with %s settings." % settings_name)
+            ),
         )
 
     def do_POST(self):
@@ -360,7 +371,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             raise SgJiraBridgeBadRequestError("Invalid request path %s" % self.path)
 
-        if settings_name not in self.server.sync_settings_names:
+        if six.ensure_text(settings_name) not in self.server.sync_settings_names:
             raise SgJiraBridgeBadRequestError(
                 "Invalid settings name %s" % settings_name
             )
@@ -375,8 +386,8 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 entity_key = payload.get("entity_id")
             if not entity_type or not entity_key:
                 raise SgJiraBridgeBadRequestError(
-                    "Invalid request payload %s, unable to retrieve "
-                    "a Shotgun Entity type and its id." % payload
+                    "Invalid request payload %s, unable to retrieve a Shotgun Entity type and its id."
+                    % payload
                 )
             # We could have a str or int here depending on how it was sent.
             try:
