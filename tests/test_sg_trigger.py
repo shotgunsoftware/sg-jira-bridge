@@ -51,6 +51,7 @@ def mocked_requests_post(*args, **kwargs):
     response = requests.Response()
     response.url = args[0]
     response._contents = kwargs
+    response.status_code = 200
     return response
 
 
