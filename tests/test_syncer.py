@@ -1189,7 +1189,7 @@ class TestJiraSyncer(TestSyncBase):
             # All keys should be unicode
             self.assertTrue(isinstance(k, six.text_type))
             if six.PY2:
-                # We shouldn't have any string value, just unicode.
+                # We shouldn't have any string values, just unicode.
                 self.assertFalse(isinstance(v, str))
 
     def test_jira_comment(self, mocked_sg):
