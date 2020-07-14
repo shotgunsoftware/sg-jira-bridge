@@ -62,9 +62,6 @@ class MockRequest(object):
         self._path = path
         self._payload = payload
 
-    def sendall(self, data):
-        pass
-
     def makefile(self, mode, *args, **kwargs):
         """
         Use a file like object to mock the socket read/write.
