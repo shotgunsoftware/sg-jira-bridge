@@ -130,21 +130,18 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"400 Invalid request path /badaction" in raw_response)
-
         # GET request with an invalid action but valid settings name
         handler = webapp.RequestHandler(
             MockRequest("/badaction/valid", None), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"400 Invalid request path /badaction/valid" in raw_response)
-
         # POST request with an invalid action
         handler = webapp.RequestHandler(
             MockRequest("/badaction", {"foo": "blah"}), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"400 Invalid request path /badaction" in raw_response)
-
         # POST request with an invalid action but valid settings name
         handler = webapp.RequestHandler(
             MockRequest("/badaction/valid", {"foo": "blah"}), ("localhost", -1), server
@@ -166,7 +163,6 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"400 Invalid settings name badsettings" in raw_response)
-
         # GET request with a valid settings name
         handler = webapp.RequestHandler(
             MockRequest("/sg2jira/valid", None), ("localhost", -1), server
@@ -174,7 +170,6 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"HTTP/1.1 200" in raw_response)
         self.assertTrue(b"<p>Syncing with valid settings.</p>" in raw_response)
-
         # POST request with invalid payload missing entity information
         payload = {u"foo": u"blah"}
         handler = webapp.RequestHandler(
@@ -208,7 +203,6 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"Invalid request path /sg2jira/valid/Task" in raw_response)
-
         # POST request with invalid settings name - Task in path
         handler = webapp.RequestHandler(
             MockRequest("/sg2jira/badsettings/Task/123", {"foo": "blah"}),
@@ -271,7 +265,6 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"400 Invalid settings name badsettings" in raw_response)
-
         # GET request with a valid settings name
         handler = webapp.RequestHandler(
             MockRequest("/jira2sg/valid", None), ("localhost", -1), server
@@ -279,7 +272,6 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"HTTP/1.1 200" in raw_response)
         self.assertTrue(b"<p>Syncing with valid settings.</p>" in raw_response)
-
         # POST request with invalid path: missing resource type and key
         handler = webapp.RequestHandler(
             MockRequest("/jira2sg/valid", {"foo": "blah"}), ("localhost", -1), server
@@ -298,7 +290,6 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"Invalid request path /jira2sg/valid/issue" in raw_response)
-
         # POST request with invalid settings name
         handler = webapp.RequestHandler(
             MockRequest("/jira2sg/badsettings/issue/BLAH", {"foo": "blah"}),
@@ -334,7 +325,6 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"400 Invalid request path /admin/valid" in raw_response)
-
         # GET valid admin action path should fail with GET
         handler = webapp.RequestHandler(
             MockRequest("/admin/reset", None), ("localhost", -1), server
@@ -342,7 +332,6 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"HTTP/1.1 400" in raw_response)
         self.assertTrue(b"400 Invalid request path /admin/reset" in raw_response)
-
         # POST request with invalid admin action
         handler = webapp.RequestHandler(
             MockRequest("/admin/badaction", {"foo": "bar"}), ("localhost", -1), server
