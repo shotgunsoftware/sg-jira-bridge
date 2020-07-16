@@ -16,7 +16,7 @@ sys.path.append(os.path.abspath("./examples"))
 
 SYNC = {
     # Add the test syncer to the list of syncers, it will be available
-    # with the http://<your server>/jira2sg/test and http://<your server>/sg2jira/test 
+    # with the http://<your server>/jira2sg/test and http://<your server>/sg2jira/test
     # urls.
     "test": {
         # Example of a custom syncer with an additional parameter to define

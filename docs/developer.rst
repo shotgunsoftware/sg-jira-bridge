@@ -102,7 +102,7 @@ well, to pass on to Handlers::
 Sync Handlers
 =============
 A :class:`~handlers.SyncHandler` holds the logic for syncing values between a
-Shotgun Entity type and a Jira resource and is owned by a :class:`Syncer` 
+Shotgun Entity type and a Jira resource and is owned by a :class:`Syncer`
 instance. The base class defines the interface all handlers should support
 and provides a set of helper methods useful for implementations.
 
@@ -311,6 +311,3 @@ for the continuous integration and run the following validations:
 
 Azure Pipelines jobs are defined by the description files in the
 ``/azure-pipelines`` folder.
-
-
-

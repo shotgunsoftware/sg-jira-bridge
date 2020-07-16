@@ -7,4 +7,3 @@ This directory holds a [Shotgun Event Daemon](https://github.com/shotgunsoftware
 
 ### Documentation
 Instructions for setting this up are available on [the documentation site](https://developer.shotgunsoftware.com/sg-jira-bridge/quickstart.html#shotgunevents).
-

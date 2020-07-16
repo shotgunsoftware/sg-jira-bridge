@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
+from __future__ import print_function
 import re
 import argparse
 import urlparse
@@ -57,7 +58,9 @@ HMTL_TEMPLATE = """
         </div>
     </body>
 </html>
-""".format(style=CSS_TEMPLATE)
+""".format(
+    style=CSS_TEMPLATE
+)
 
 # We overriding the default html error template to render errors to the user.
 # This template *requires* the following format tokens:
@@ -79,7 +82,9 @@ HTML_ERROR_TEMPLATE = """
             <p><strong>Details: </strong> <pre>%(message)s</pre></p>
         </div>
     </body>
-""".format(style=CSS_TEMPLATE)
+""".format(
+    style=CSS_TEMPLATE
+)
 
 # Please note that we can't use __name__ here as it would be __main__
 logger = logging.getLogger("webapp")
@@ -99,13 +104,15 @@ def get_sg_jira_bridge_version():
     # (e.g. pip install ./tk-core), the version number
     # will be picked up from the most recently added tag.
     try:
-        version_git = subprocess.check_output(["git", "describe", "--abbrev=0"]).rstrip()
+        version_git = subprocess.check_output(
+            ["git", "describe", "--abbrev=0"]
+        ).rstrip()
         return version_git
     except Exception:
         # Blindly ignore problems. Git might be not available, or the user may
         # have installed via a zip archive, etc...
         pass
-        
+
     return "dev"
 
 
@@ -115,6 +122,7 @@ class SgJiraBridgeBadRequestError(Exception):
     should return 4xx error codes and errors in the application which should
     return 500 error codes.
     """
+
     pass
 
 
@@ -123,6 +131,7 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     Basic server with threading functionality mixed in. This will help the server
     keep up with a high volume of throughput from Shotgun and Jira.
     """
+
     def __init__(self, settings, *args, **kwargs):
         # Note: BaseHTTPServer.HTTPServer is not a new style class so we can't use
         # super here.
@@ -156,13 +165,13 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    protocol_version = "HTTP/1.1"  
+    protocol_version = "HTTP/1.1"
     # Inject the version of sg-jira-bridge into server_version for the headers.
     server_version = "sg-jira-bridge/%s %s" % (
-        get_sg_jira_bridge_version(), 
-        BaseHTTPServer.BaseHTTPRequestHandler.server_version
+        get_sg_jira_bridge_version(),
+        BaseHTTPServer.BaseHTTPRequestHandler.server_version,
     )
-    # BaseHTTPServer Class variable that stores the HTML template for error 
+    # BaseHTTPServer Class variable that stores the HTML template for error
     # pages. Override the default error page template with our own.
     error_message_format = HTML_ERROR_TEMPLATE
 
@@ -171,13 +180,13 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         Convenience method for handling the response
 
         Handles sending the response, setting headers, and writing any
-        content in the expected order. Sets appropriate headers including 
+        content in the expected order. Sets appropriate headers including
         content length which is required by HTTP/1.1.
-        
+
         :param int response_code: Standard HTTP response code sent in headers.
         :param str message: Message to accompany response code in headers.
-        :param str content: Optional content to return as content in the 
-            response. This is typically html displayed in a browser. 
+        :param str content: Optional content to return as content in the
+            response. This is typically html displayed in a browser.
         """
         # NOTE: All responses must:
         #   - send the response first.
@@ -191,11 +200,11 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", content_len)
         # TODO: Ideally we use the default functionality of HTTP/1.1 where
-        # keep-alive is True (no header needed). However, for some reason, 
-        # this currently blocks new connections for 60 seconds (likely the 
-        # default keep-alive timeout). So for now we explicitly close the 
+        # keep-alive is True (no header needed). However, for some reason,
+        # this currently blocks new connections for 60 seconds (likely the
+        # default keep-alive timeout). So for now we explicitly close the
         # connection with the header below to ensure things run smoothly.
-        # Once the issue has been resolved, we can remove this header. 
+        # Once the issue has been resolved, we can remove this header.
         self.send_header("Connection", "close")
         self.end_headers()
         if content:
@@ -211,18 +220,14 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         path_parts = [x for x in self.path[1:].split("/") if x]
         if not path_parts:
             self.post_response(
-                200, 
+                200,
                 "The server is alive",
-                HMTL_TEMPLATE % (
-                    "The server is alive",
-                    "The server is alive",
-                    ""
-                )
+                HMTL_TEMPLATE % ("The server is alive", "The server is alive", ""),
             )
             return
 
-        # Return a correct error for browser favicon requests in order to 
-        # reduce confusing log messages that look bad but aren't.  
+        # Return a correct error for browser favicon requests in order to
+        # reduce confusing log messages that look bad but aren't.
         if len(path_parts) == 1 and path_parts[0] == "favicon.ico":
             self.send_error(404)
             return
@@ -234,21 +239,17 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             self.send_error(400, "Invalid request path %s" % self.path)
             return
-        
+
         settings_name = path_parts[1]
         if settings_name not in self.server.sync_settings_names:
             self.send_error(400, "Invalid settings name %s" % settings_name)
             return
- 
+
         # Success, send a basic html page.
         self.post_response(
             200,
             "Syncing with %s settings." % settings_name,
-            HMTL_TEMPLATE % (
-                title,
-                title,
-                "Syncing with %s settings." % settings_name
-            )
+            HMTL_TEMPLATE % (title, title, "Syncing with %s settings." % settings_name),
         )
 
     def do_POST(self):
@@ -279,7 +280,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # discard empty values coming from '/' at the end or multiple
             # contiguous '/'.
             path_parts = [x for x in parsed.path[1:].split("/") if x]
-            
+
             if not path_parts:
                 self.send_error(400, "Invalid request path %s" % self.path)
             # Treat the command
@@ -290,15 +291,13 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:
                 self.send_error(
                     400,
-                    "Invalid request path %s: unknown command %s" % (
-                        self.path,
-                        path_parts[0]
-                    )
+                    "Invalid request path %s: unknown command %s"
+                    % (self.path, path_parts[0]),
                 )
                 return
 
             self.post_response(200, "POST request successful")
-        
+
         except SgJiraBridgeBadRequestError as e:
             self.send_error(400, e.message)
         except Exception as e:
@@ -308,7 +307,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def _read_payload(self):
         """
         Read the body of a request to get the payload.
-        
+
         :returns: payload as a dictionary or empty dict if there was no payload
         """
         content_type = self.headers.getheader("content-type")
@@ -332,19 +331,19 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         Handle a request to sync between Shotgun and Jira in either direction.
 
-        At this point, only the action (the first path_part) from the request 
-        path has been validated. The rest of the path_parts still need to be 
-        validated before we proceed. We expect the path to for this request to 
+        At this point, only the action (the first path_part) from the request
+        path has been validated. The rest of the path_parts still need to be
+        validated before we proceed. We expect the path to for this request to
         be one of the following:
 
             sg2jira/<settings_name>[/<sg_entity_type>/<sg_entity_id>]
             jira2sg/<settings_name>/<jira_resource_type>/<jira_resource_key>
-        
+
         If the SG Entity is not specified in the path, it must be present in
         the loaded payload.
 
-        :param list path_parts: List of strings representing each part of the 
-            URL path that this request accessed. For example,  
+        :param list path_parts: List of strings representing each part of the
+            URL path that this request accessed. For example,
             ``["sg2jira", "default", "Task", "123"]``.
         :param dict parameters: Optional additional parameters that were extracted
             from the url.
@@ -379,24 +378,18 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     "a Shotgun Entity type and its id." % payload
                 )
             # We could have a str or int here depending on how it was sent.
-            try: 
+            try:
                 entity_key = int(entity_key)
             except ValueError as e:
                 # log the original exception before we obfuscate it
                 logger.debug(e, exc_info=True)
                 raise SgJiraBridgeBadRequestError(
-                    "Invalid Shotgun %s id %s, it must be a number." % (
-                        entity_type,
-                        entity_key,
-                    )
+                    "Invalid Shotgun %s id %s, it must be a number."
+                    % (entity_type, entity_key,)
                 )
 
             self.server.sync_in_jira(
-                settings_name,
-                entity_type,
-                int(entity_key),
-                event=payload,
-                **parameters
+                settings_name, entity_type, int(entity_key), event=payload, **parameters
             )
 
         elif direction == "jira2sg":
@@ -410,11 +403,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 )
 
             self.server.sync_in_shotgun(
-                settings_name,
-                entity_type,
-                entity_key,
-                event=payload,
-                **parameters
+                settings_name, entity_type, entity_key, event=payload, **parameters
             )
 
     def _handle_admin_request(self, path_parts, parameters):
@@ -422,16 +411,16 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         Handle admin request to the server.
 
         Currently handles a single action, ``reset`` which resets the Bridge
-        in order to clear out the Shotgun schema cache. 
+        in order to clear out the Shotgun schema cache.
 
-        At this point, only the action (the first path_part) from the request 
-        path has been validated. The rest of the path_parts still need to be 
+        At this point, only the action (the first path_part) from the request
+        path has been validated. The rest of the path_parts still need to be
         validated before we proceed.
 
             admin/reset
 
-        :param list path_parts: List of strings representing each part of the 
-            URL path that this request accessed. For example,  
+        :param list path_parts: List of strings representing each part of the
+            URL path that this request accessed. For example,
             ``["admin", "reset"]``.
         :param dict parameters: Optional additional parameters that were extracted
             from the url.
@@ -443,7 +432,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             raise SgJiraBridgeBadRequestError(
                 "Invalid admin path '%s'. Action is not set or unsupported." % self.path
             )
-        
+
         self.server.admin_reset(**parameters)
 
     def log_message(self, format, *args):
@@ -481,17 +470,11 @@ def create_server(port, settings, keyfile=None, certfile=None):
     :returns: The HTTP Server
     :type: :class:`BaseHTTPServer.BaseHTTPRequestHandler`
     """
-    httpd = Server(
-        settings,
-        ("localhost", port), RequestHandler
-    )
+    httpd = Server(settings, ("localhost", port), RequestHandler)
     if keyfile and certfile:
         # Activate HTTPS.
         httpd.socket = ssl.wrap_socket(
-            httpd.socket,
-            keyfile=keyfile,
-            certfile=certfile,
-            server_side=True
+            httpd.socket, keyfile=keyfile, certfile=certfile, server_side=True
         )
     return httpd
 
@@ -512,20 +495,11 @@ def main():
     """
     Retrieve command line arguments and start the server.
     """
-    parser = argparse.ArgumentParser(
-        description=DESCRIPTION
-    )
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
-        "--port",
-        type=int,
-        default=9090,
-        help="The port number to listen to.",
+        "--port", type=int, default=9090, help="The port number to listen to.",
     )
-    parser.add_argument(
-        "--settings",
-        help="Full path to settings file.",
-        required=True
-    )
+    parser.add_argument("--settings", help="Full path to settings file.", required=True)
     parser.add_argument(
         "--ssl_context",
         help="A key and certificate file pair to run the server in HTTPS mode.",
@@ -540,10 +514,7 @@ def main():
         keyfile, certfile = args.ssl_context
 
     run_server(
-        port=args.port,
-        settings=args.settings,
-        keyfile=keyfile,
-        certfile=certfile,
+        port=args.port, settings=args.settings, keyfile=keyfile, certfile=certfile,
     )
 
 
@@ -551,4 +522,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print "Shutting down..."
+        print("Shutting down...")

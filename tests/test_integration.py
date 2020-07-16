@@ -7,6 +7,7 @@
 # this software in either electronic or hard copy form.
 #
 
+from __future__ import print_function
 import os
 import time
 import threading
@@ -181,7 +182,9 @@ class TestIntegration(TestCase):
 
         # Resolve first JIRA user key.
         cls._jira_user_1_id = cls._jira.myself()[cls._user_id_field]
-        cls._jira_user_2_id = cls._jira.user(os.environ["SGJIRA_JIRA_TEST_USER_2"]).user_id
+        cls._jira_user_2_id = cls._jira.user(
+            os.environ["SGJIRA_JIRA_TEST_USER_2"]
+        ).user_id
 
     def _expect(self, functor, description=None, max_time=20):
         """
@@ -412,7 +415,11 @@ class TestIntegration(TestCase):
             server_account = self._server._httpd._sg_jira.jira.myself()[uid_field]
             self.assertEqual(
                 # Skip the daemon
-                {getattr(w, uid_field) for w in self._jira.watchers(self._jira_key).watchers if getattr(w, uid_field) != server_account},
+                {
+                    getattr(w, uid_field)
+                    for w in self._jira.watchers(self._jira_key).watchers
+                    if getattr(w, uid_field) != server_account
+                },
                 set(expected_users),
             )
 
@@ -507,9 +514,15 @@ class TestIntegration(TestCase):
         """
 
         def wait_for_shotgun_description_updated():
-            self.assertEqual(self._issue.fields.description, "Description updated in Shotgun")
+            self.assertEqual(
+                self._issue.fields.description, "Description updated in Shotgun"
+            )
 
-        self._sg.update("Task", self._sg_task["id"], {"sg_description": "Description updated in Shotgun"})
+        self._sg.update(
+            "Task",
+            self._sg_task["id"],
+            {"sg_description": "Description updated in Shotgun"},
+        )
         self._expect(wait_for_shotgun_description_updated)
 
     def _test_update_description_from_jira(self):

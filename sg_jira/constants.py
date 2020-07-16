@@ -16,7 +16,7 @@ ALL_SETTINGS_KEYS = [
     LOGGING_SETTINGS_KEY,
     SHOTGUN_SETTINGS_KEY,
     JIRA_SETTINGS_KEY,
-    SYNC_SETTINGS_KEY
+    SYNC_SETTINGS_KEY,
 ]
 
 # Names of the Jira custom fields used to store a reference to a linked Shotgun
@@ -35,9 +35,7 @@ SHOTGUN_JIRA_URL_FIELD = "sg_jira_url"
 SHOTGUN_SYNC_IN_JIRA_FIELD = "sg_sync_in_jira"
 
 # Shotgun fields handling multiple values
-SHOTGUN_LIST_FIELDS = [
-    "multi_entity"
-]
+SHOTGUN_LIST_FIELDS = ["multi_entity"]
 
 # Note: this was taken from tk-core with the Tag and Ticket additions
 # A dictionary for Shotgun entities which do not store their name

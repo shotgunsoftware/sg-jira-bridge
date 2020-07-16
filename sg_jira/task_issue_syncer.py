@@ -13,6 +13,7 @@ class TaskIssueSyncer(Syncer):
     """
     Sync Shotgun Tasks as Jira Issues.
     """
+
     def __init__(self, issue_type="Task", **kwargs):
         """
         Instatiate a new Task/Issue syncer for the given bridge.
@@ -29,8 +30,7 @@ class TaskIssueSyncer(Syncer):
         # synced without having to manually select them. A full sync is performed
         # when the Task checkbox is turned on.
         self._enable_syncing_handler = EnableSyncingHandler(
-            self,
-            [self._task_issue_handler, self._note_comment_handler]
+            self, [self._task_issue_handler, self._note_comment_handler]
         )
 
     @property
@@ -41,5 +41,5 @@ class TaskIssueSyncer(Syncer):
         return [
             self._enable_syncing_handler,
             self._task_issue_handler,
-            self._note_comment_handler
+            self._note_comment_handler,
         ]

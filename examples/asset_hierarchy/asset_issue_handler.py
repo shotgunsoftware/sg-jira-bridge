@@ -6,7 +6,11 @@
 #
 
 from sg_jira.handlers import EntityIssueHandler
-from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_URL_FIELD
+from sg_jira.constants import (
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+)
 from sg_jira.errors import InvalidShotgunValue
 
 
@@ -77,9 +81,7 @@ class AssetIssueHandler(EntityIssueHandler):
         # meaning that we handle a specific Jira field but there is not a direct
         # mapping to a Shotgun field and a special logic must be implemented
         # and called to perform the update to Shotgun.
-        return [
-            field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field
-        ]
+        return [field for field in self.__ISSUE_FIELDS_MAPPING.itervalues() if field]
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
@@ -88,7 +90,9 @@ class AssetIssueHandler(EntityIssueHandler):
         """
         return self.__ASSET_FIELDS_MAPPING.keys()
 
-    def _get_jira_issue_field_for_shotgun_field(self, shotgun_entity_type, shotgun_field):
+    def _get_jira_issue_field_for_shotgun_field(
+        self, shotgun_entity_type, shotgun_field
+    ):
         """
         Returns the Jira Issue field id to use to sync the given Shotgun Entity
         type field.
@@ -122,19 +126,13 @@ class AssetIssueHandler(EntityIssueHandler):
         if not jira_issue_key:
             return False
 
-        jira_issue = self._get_jira_issue_and_validate(
-            jira_issue_key,
-            shotgun_asset
-        )
+        jira_issue = self._get_jira_issue_and_validate(jira_issue_key, shotgun_asset)
         if not jira_issue:
             return False
 
         # Process all supported fields if no event meta data was provided.
         if not event_meta:
-            return self._sync_shotgun_fields_to_jira(
-                shotgun_asset,
-                jira_issue
-            )
+            return self._sync_shotgun_fields_to_jira(shotgun_asset, jira_issue)
 
         sg_field = event_meta["attribute_name"]
         try:
@@ -149,22 +147,17 @@ class AssetIssueHandler(EntityIssueHandler):
             )
         except InvalidShotgunValue as e:
             self._logger.warning(
-                "Unable to update Jira %s %s for event %s: %s" % (
-                    jira_issue.fields.issuetype.name,
-                    jira_issue.key,
-                    event_meta,
-                    e,
-                )
+                "Unable to update Jira %s %s for event %s: %s"
+                % (jira_issue.fields.issuetype.name, jira_issue.key, event_meta, e,)
             )
             self._logger.debug("%s" % e, exc_info=True)
             return False
 
         if jira_field:
-            self._logger.debug("Updating Jira %s %s field with %s" % (
-                jira_issue,
-                jira_field,
-                jira_value
-            ))
+            self._logger.debug(
+                "Updating Jira %s %s field with %s"
+                % (jira_issue, jira_field, jira_value)
+            )
             jira_issue.update(fields={jira_field: jira_value})
             return True
 
@@ -174,11 +167,8 @@ class AssetIssueHandler(EntityIssueHandler):
             return self._sync_shotgun_status_to_jira(
                 jira_issue,
                 shotgun_status,
-                "Updated from Shotgun %s(%d) moving to %s" % (
-                    shotgun_asset["type"],
-                    shotgun_asset["id"],
-                    shotgun_status
-                )
+                "Updated from Shotgun %s(%d) moving to %s"
+                % (shotgun_asset["type"], shotgun_asset["id"], shotgun_status),
             )
 
         return False
@@ -222,10 +212,8 @@ class AssetIssueHandler(EntityIssueHandler):
             jira_issue = self.get_jira_issue(jira_issue_key)
             if not jira_issue:
                 self._logger.warning(
-                    "Unable to find Jira Issue %s for Shotgun Asset %s" % (
-                        jira_issue_key,
-                        shotgun_asset
-                    )
+                    "Unable to find Jira Issue %s for Shotgun Asset %s"
+                    % (jira_issue_key, shotgun_asset)
                 )
                 # Better to stop processing.
                 return False
@@ -235,48 +223,47 @@ class AssetIssueHandler(EntityIssueHandler):
             # Check if we should update dependencies because it was attached to
             # a synced Task which has been removed.
             sg_tasks = self._shotgun.find(
-                "Task", [
+                "Task",
+                [
                     ["id", "in", [x["id"] for x in removed]],
                     [SHOTGUN_JIRA_ID_FIELD, "is_not", None],
-                    [SHOTGUN_SYNC_IN_JIRA_FIELD, "is", True]
+                    [SHOTGUN_SYNC_IN_JIRA_FIELD, "is", True],
                 ],
-                ["content", SHOTGUN_JIRA_ID_FIELD]
+                ["content", SHOTGUN_JIRA_ID_FIELD],
             )
             to_delete = []
             for sg_task in sg_tasks:
                 issue_link = self._get_jira_issue_link(
-                    jira_issue,
-                    sg_task[SHOTGUN_JIRA_ID_FIELD]
+                    jira_issue, sg_task[SHOTGUN_JIRA_ID_FIELD]
                 )
                 if issue_link:
-                    self._logger.debug("Found a Jira link between %s and %s to delete" % (
-                        jira_issue.key,
-                        sg_task[SHOTGUN_JIRA_ID_FIELD]
-                    ))
+                    self._logger.debug(
+                        "Found a Jira link between %s and %s to delete"
+                        % (jira_issue.key, sg_task[SHOTGUN_JIRA_ID_FIELD])
+                    )
                     to_delete.append(issue_link)
                 else:
-                    self._logger.debug("Didn't find a Jira link between %s and %s to delete" % (
-                        jira_issue.key,
-                        sg_task[SHOTGUN_JIRA_ID_FIELD]
-                    ))
+                    self._logger.debug(
+                        "Didn't find a Jira link between %s and %s to delete"
+                        % (jira_issue.key, sg_task[SHOTGUN_JIRA_ID_FIELD])
+                    )
 
             # Delete the links, if any
             for issue_link in to_delete:
-                self._logger.info("Deleting Jira link %s" % (
-                    issue_link
-                ))
+                self._logger.info("Deleting Jira link %s" % (issue_link))
                 self._jira.delete_issue_link(issue_link.id)
                 updated = True
 
         if added:
             # Collect the list of Tasks which are linked to Jira Issues
             sg_tasks = self._shotgun.find(
-                "Task", [
+                "Task",
+                [
                     ["id", "in", [x["id"] for x in added]],
                     [SHOTGUN_JIRA_ID_FIELD, "is_not", None],
-                    [SHOTGUN_SYNC_IN_JIRA_FIELD, "is", True]
+                    [SHOTGUN_SYNC_IN_JIRA_FIELD, "is", True],
                 ],
-                ["content", SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD]
+                ["content", SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD],
             )
             if not sg_tasks:
                 # Nothing to do
@@ -284,11 +271,14 @@ class AssetIssueHandler(EntityIssueHandler):
 
             if not jira_issue:
                 # Check if the Project is linked to a Jira Project
-                jira_project_key = shotgun_asset["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
+                jira_project_key = shotgun_asset[
+                    "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD
+                ]
                 if not jira_project_key:
                     self._logger.debug(
                         "Skipping tasks change event for %s (%d) for Project %s "
-                        "not linked to a Jira Project" % (
+                        "not linked to a Jira Project"
+                        % (
                             shotgun_asset["type"],
                             shotgun_asset["id"],
                             shotgun_asset["project"],
@@ -299,10 +289,8 @@ class AssetIssueHandler(EntityIssueHandler):
                 jira_project = self.get_jira_project(jira_project_key)
                 if not jira_project:
                     self._logger.warning(
-                        "Unable to find Jira Project %s for Shotgun Project %s." % (
-                            jira_project_key,
-                            shotgun_asset["project"],
-                        )
+                        "Unable to find Jira Project %s for Shotgun Project %s."
+                        % (jira_project_key, shotgun_asset["project"],)
                     )
                     return False
 
@@ -314,7 +302,7 @@ class AssetIssueHandler(EntityIssueHandler):
                     summary=shotgun_asset["code"],
                     timetracking={
                         "originalEstimate": "0 m"  # Null estimate in the case it is mandatory
-                    }
+                    },
                 )
                 self._shotgun.update(
                     shotgun_asset["type"],
@@ -323,24 +311,21 @@ class AssetIssueHandler(EntityIssueHandler):
                         SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
                         SHOTGUN_JIRA_URL_FIELD: {
                             "url": jira_issue.permalink(),
-                            "name": "View in Jira"
-                        }
-                    }
+                            "name": "View in Jira",
+                        },
+                    },
                 )
                 updated = True
 
             for sg_task in sg_tasks:
                 issue_link = self._get_jira_issue_link(
-                    jira_issue,
-                    sg_task[SHOTGUN_JIRA_ID_FIELD]
+                    jira_issue, sg_task[SHOTGUN_JIRA_ID_FIELD]
                 )
 
                 if not issue_link:
                     self._logger.info(
-                        "Linking Jira Issue %s to %s" % (
-                            jira_issue.key,
-                            sg_task[SHOTGUN_JIRA_ID_FIELD]
-                        )
+                        "Linking Jira Issue %s to %s"
+                        % (jira_issue.key, sg_task[SHOTGUN_JIRA_ID_FIELD])
                     )
                     self._jira.create_issue_link(
                         type=self.__JIRA_PARENT_LINK_TYPE,
@@ -350,24 +335,22 @@ class AssetIssueHandler(EntityIssueHandler):
                         inwardIssue=sg_task[SHOTGUN_JIRA_ID_FIELD],
                         outwardIssue=jira_issue.key,
                         comment={
-                            "body": "Linking %s to %s" % (
-                                shotgun_asset["code"],
-                                sg_task["content"],
-                            ),
-                        }
+                            "body": "Linking %s to %s"
+                            % (shotgun_asset["code"], sg_task["content"],),
+                        },
                     )
                     updated = True
                 else:
                     self._logger.debug(
-                        "Jira Issue %s is already linked to %s" % (
-                            jira_issue.key,
-                            sg_task[SHOTGUN_JIRA_ID_FIELD]
-                        )
+                        "Jira Issue %s is already linked to %s"
+                        % (jira_issue.key, sg_task[SHOTGUN_JIRA_ID_FIELD])
                     )
 
         return updated
 
-    def _sync_shotgun_fields_to_jira(self, sg_entity, jira_issue, exclude_shotgun_fields=None):
+    def _sync_shotgun_fields_to_jira(
+        self, sg_entity, jira_issue, exclude_shotgun_fields=None
+    ):
         """
         Update the given Jira Issue with values from the given Shotgun Entity.
 
@@ -409,28 +392,32 @@ class AssetIssueHandler(EntityIssueHandler):
                     sg_field,
                     added,
                     removed,
-                    new_value
+                    new_value,
                 )
                 if jira_field:
                     issue_data[jira_field] = jira_value
             except InvalidShotgunValue as e:
                 self._logger.warning(
-                    "Unable to update Jira %s %s %s field from Shotgun value %s: %s" % (
+                    "Unable to update Jira %s %s %s field from Shotgun value %s: %s"
+                    % (
                         jira_issue.fields.issuetype.name,
                         jira_issue.key,
                         jira_field,
                         shotgun_value,
-                        e
+                        e,
                     )
                 )
                 self._logger.debug("%s" % e, exc_info=True)
         if issue_data:
-            self._logger.debug("Updating Jira %s %s with %s. Currently: %s" % (
-                jira_issue.fields.issuetype.name,
-                jira_issue.key,
-                issue_data,
-                jira_issue,
-            ))
+            self._logger.debug(
+                "Updating Jira %s %s with %s. Currently: %s"
+                % (
+                    jira_issue.fields.issuetype.name,
+                    jira_issue.key,
+                    issue_data,
+                    jira_issue,
+                )
+            )
             jira_issue.update(fields=issue_data)
 
         # Sync status
@@ -438,11 +425,8 @@ class AssetIssueHandler(EntityIssueHandler):
             self._sync_shotgun_status_to_jira(
                 jira_issue,
                 sg_entity["sg_status_list"],
-                "Updated from Shotgun %s(%d) moving to %s" % (
-                    sg_entity["type"],
-                    sg_entity["id"],
-                    sg_entity["sg_status_list"]
-                )
+                "Updated from Shotgun %s(%d) moving to %s"
+                % (sg_entity["type"], sg_entity["id"], sg_entity["sg_status_list"]),
             )
 
     def _sync_shotgun_task_asset_to_jira(self, shotgun_task):
@@ -454,14 +438,11 @@ class AssetIssueHandler(EntityIssueHandler):
         """
         # Retrieve the Asset linked to the Task, if any
         shotgun_asset = self._shotgun.find_one(
-            "Asset",
-            [["tasks", "is", shotgun_task]],
-            self._shotgun_asset_fields
+            "Asset", [["tasks", "is", shotgun_task]], self._shotgun_asset_fields
         )
         # make sure we have a full entity needed with the injected "name" key, etc.
         shotgun_asset = self._shotgun.consolidate_entity(
-            shotgun_asset,
-            fields=self._shotgun_asset_fields
+            shotgun_asset, fields=self._shotgun_asset_fields
         )
 
         self._logger.debug(
@@ -473,9 +454,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
         updated = False
         res = self._sync_asset_tasks_change_to_jira(
-            shotgun_asset,
-            added=[shotgun_task],
-            removed=[]
+            shotgun_asset, added=[shotgun_task], removed=[]
         )
         if res:
             updated = True
@@ -490,10 +469,7 @@ class AssetIssueHandler(EntityIssueHandler):
         This can be used as well to cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field(
-            "Asset", 
-            SHOTGUN_JIRA_ID_FIELD, 
-            "text",
-            check_unique=True
+            "Asset", SHOTGUN_JIRA_ID_FIELD, "text", check_unique=True
         )
         self._shotgun.assert_field("Asset", SHOTGUN_JIRA_URL_FIELD, "url")
 
@@ -512,9 +488,8 @@ class AssetIssueHandler(EntityIssueHandler):
 
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting Shotgun event with unsupported Shotgun field %s: %s" % (
-                    field, event
-                )
+                "Rejecting Shotgun event with unsupported Shotgun field %s: %s"
+                % (field, event)
             )
             return False
 
@@ -547,40 +522,33 @@ class AssetIssueHandler(EntityIssueHandler):
         ] + self._supported_shotgun_fields_for_shotgun_event()
 
         sg_entity = self._shotgun.consolidate_entity(
-            {"type": entity_type, "id": entity_id},
-            fields=asset_fields
+            {"type": entity_type, "id": entity_id}, fields=asset_fields
         )
         if not sg_entity:
             self._logger.warning(
-                "Unable to find Shotgun %s (%s)." % (
-                    entity_type,
-                    entity_id
-                )
+                "Unable to find Shotgun %s (%s)." % (entity_type, entity_id)
             )
             return False
 
-        # When an Entity is created in Shotgun, a unique event is generated for 
+        # When an Entity is created in Shotgun, a unique event is generated for
         # each field value set in the creation of the Entity. These events
         # have an additional "in_create" key in the metadata, identifying them
-        # as events from the initial create event.  
-        #       
-        # When the bridge processes the first event, it loads all of the Entity 
-        # field values from Shotgun and creates the Jira Issue with those 
+        # as events from the initial create event.
+        #
+        # When the bridge processes the first event, it loads all of the Entity
+        # field values from Shotgun and creates the Jira Issue with those
         # values. So the remaining Shotgun events with the "in_create"
         # metadata key can be ignored since we've already handled all of
         # those field updates.
 
-        # We use the Jira id field value to check if we're processing the first 
+        # We use the Jira id field value to check if we're processing the first
         # event. If it exists with in_create, we know the comment has already
         # been created.
         if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
             self._logger.debug(
                 "Rejecting Shotgun event for %s.%s field update during "
-                "create. Issue was already created in Jira: %s" % (
-                    sg_entity["type"],
-                    shotgun_field, 
-                    event
-                )
+                "create. Issue was already created in Jira: %s"
+                % (sg_entity["type"], shotgun_field, event)
             )
             return False
 
@@ -588,13 +556,8 @@ class AssetIssueHandler(EntityIssueHandler):
         # Note: deleting a Task does not seem to trigger an Asset.tasks change?
         if shotgun_field == "tasks":
             return self._sync_asset_tasks_change_to_jira(
-                sg_entity,
-                meta["added"],
-                meta["removed"],
+                sg_entity, meta["added"], meta["removed"],
             )
 
         # Update the Jira Issue itself
-        return self._sync_asset_to_jira(
-            sg_entity,
-            meta
-        )
+        return self._sync_asset_to_jira(sg_entity, meta)

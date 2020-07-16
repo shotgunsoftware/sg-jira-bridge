@@ -68,9 +68,7 @@ class ShotgunSession(object):
         # Retrieve our current login, this does not seem to be available from
         # the connection?
         self._shotgun_user = self.find_one(
-            "ApiUser",
-            [["firstname", "is", script_name]],
-            ["firstname"]
+            "ApiUser", [["firstname", "is", script_name]], ["firstname"]
         )
         logger.info("Connected to %s." % base_url)
 
@@ -90,12 +88,7 @@ class ShotgunSession(object):
         :raises RuntimeError: if the Shotgun site was not correctly configured to
                  be used with this bridge.
         """
-        self.assert_field(
-            "Project",
-            SHOTGUN_JIRA_ID_FIELD,
-            "text",
-            check_unique=True
-        )
+        self.assert_field("Project", SHOTGUN_JIRA_ID_FIELD, "text", check_unique=True)
 
     def assert_field(self, entity_type, field_name, field_type, check_unique=False):
         """
@@ -105,7 +98,7 @@ class ShotgunSession(object):
         :param str entity_type: A Shotgun Entity type.
         :param str field_name: A Shotgun field name, e.g. 'sg_my_precious'.
         :param str field_type: A Shotgun field type, e.g. 'text'.
-        :param bool check_unique: When ``True``, check the specified field 
+        :param bool check_unique: When ``True``, check the specified field
             is configured to only accept unique values. Default is ``False``.
         :raises RuntimeError: if the field does not exist or does not have the
                  expected type.
@@ -113,28 +106,20 @@ class ShotgunSession(object):
         field = self.get_field_schema(entity_type, field_name)
         if not field:
             raise RuntimeError(
-                "Missing required custom Shotgun %s field %s" % (
-                    entity_type, field_name,
-                )
+                "Missing required custom Shotgun %s field %s"
+                % (entity_type, field_name,)
             )
         if field["data_type"]["value"] != field_type:
             raise RuntimeError(
-                "Invalid type '%s' for Shotgun field %s.%s, it must be '%s'" % (
-                    field["data_type"]["value"],
-                    entity_type,
-                    field_name,
-                    field_type
-                )
+                "Invalid type '%s' for Shotgun field %s.%s, it must be '%s'"
+                % (field["data_type"]["value"], entity_type, field_name, field_type)
             )
         if check_unique is True:
             if field["unique"]["value"] is not True:
                 raise RuntimeError(
                     "Invalid 'unique' property '%s' for Shotgun field %s.%s, "
-                    "it must be 'True'" % (
-                        field["unique"]["value"],
-                        entity_type,
-                        field_name
-                    )
+                    "it must be 'True'"
+                    % (field["unique"]["value"], entity_type, field_name)
                 )
 
     def get_field_schema(self, entity_type, field_name):
@@ -242,10 +227,8 @@ class ShotgunSession(object):
             )
             if not consolidated:
                 logger.warning(
-                    "Unable to find %s (%d) in Shotgun" % (
-                        shotgun_entity["type"],
-                        shotgun_entity["id"],
-                    )
+                    "Unable to find %s (%d) in Shotgun"
+                    % (shotgun_entity["type"], shotgun_entity["id"],)
                 )
                 return None
             shotgun_entity = consolidated
@@ -268,21 +251,13 @@ class ShotgunSession(object):
         :return: A Shotgun Entity dictionary or `None`.
         """
         for entity_type in entity_types:
-            name_field = self.get_entity_name_field(
-                entity_type
-            )
+            name_field = self.get_entity_name_field(entity_type)
             filter = [[name_field, "is", name]]
             fields = [name_field]
             if self.is_project_entity(entity_type):
-                filter.append(
-                    ["project", "is", shotgun_project]
-                )
+                filter.append(["project", "is", shotgun_project])
                 fields.append("project")
-            sg_value = self.find_one(
-                entity_type,
-                filter,
-                fields,
-            )
+            sg_value = self.find_one(entity_type, filter, fields,)
             if sg_value:
                 return self.consolidate_entity(sg_value)
         return None
@@ -295,7 +270,9 @@ class ShotgunSession(object):
                                key and an 'id' key.
         """
         return "%s/detail/%s/%d" % (
-            self.base_url, shotgun_entity["type"], shotgun_entity["id"]
+            self.base_url,
+            shotgun_entity["type"],
+            shotgun_entity["id"],
         )
 
     def _get_wrapped_shotgun_method(self, method_name):
@@ -328,5 +305,3 @@ class ShotgunSession(object):
         if attribute_name in self._WRAP_SHOTGUN_METHODS:
             return self._get_wrapped_shotgun_method(attribute_name)
         return getattr(self._shotgun, attribute_name)
-
-

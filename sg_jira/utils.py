@@ -38,9 +38,7 @@ def utf8_to_unicode(value):
                 if decoded_key in [x for x in value.keys() if isinstance(x, unicode)]:
                     raise ValueError(
                         "UTF-8 decoded key %s is already present in dictionary "
-                        "being decoded" % (
-                            decoded_key,
-                        )
+                        "being decoded" % (decoded_key,)
                     )
             else:
                 decoded_key = k
@@ -90,9 +88,7 @@ def unicode_to_utf8(value):
                     # to UnicodeDecode errors.
                     raise ValueError(
                         "UTF-8 encoded key for %s is already present "
-                        "in dictionary being encoded" % (
-                            k,
-                        )
+                        "in dictionary being encoded" % (k,)
                     )
             else:
                 encoded_key = k

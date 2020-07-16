@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 
+from __future__ import print_function
 import os
 import sys
 import unittest2 as unittest
@@ -18,7 +19,6 @@ if not sys.platform.startswith("win"):
 
 @unittest.skipIf(sys.platform.startswith("win"), "Requires Linux/Osx")
 class TestService(unittest.TestCase):
-
     def setUp(self):
         super(TestService, self).setUp()
         self._fixtures_path = os.path.abspath(
@@ -45,7 +45,7 @@ class TestService(unittest.TestCase):
         and os.environ.get("SGJIRA_JIRA_USER")
         and os.environ.get("SGJIRA_JIRA_USER_SECRET"),
         "Requires SGJIRA_SG_SITE, SGJIRA_SG_SCRIPT_NAME, SGJIRA_SG_SCRIPT_KEY, "
-        "SGJIRA_JIRA_SITE, SGJIRA_JIRA_USER, SGJIRA_JIRA_USER_SECRET env vars."
+        "SGJIRA_JIRA_SITE, SGJIRA_JIRA_USER, SGJIRA_JIRA_USER_SECRET env vars.",
     )
     def test_service_start_stop(self):
         """
@@ -59,7 +59,7 @@ class TestService(unittest.TestCase):
                     pid_f.name,
                     9090,
                     os.path.join(self._fixtures_path, "settings.py"),
-                )
+                ),
             )
             process.start()
             self.assertIsNotNone(process.pid)

@@ -26,6 +26,3 @@ is configured  in Jira for your Project.
     developer
     services
     known_issues
-
-
-

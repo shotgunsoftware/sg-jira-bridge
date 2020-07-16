@@ -34,16 +34,12 @@ EVENT = {
         "field_data_type": "status_list",
         "new_value": "wtg",
         "old_value": "fin",
-        "type": "attribute_change"
+        "type": "attribute_change",
     },
     "project": PROJECT,
     "session_uuid": "e8b61250-f31b-11e8-bb75-0242ac110004",
     "type": "EventLogEntry",
-    "user": {
-        "id": 42,
-        "name": "Ford Escort",
-        "type": "HumanUser"
-    }
+    "user": {"id": 42, "name": "Ford Escort", "type": "HumanUser"},
 }
 
 
@@ -62,6 +58,7 @@ class TestSGTrigger(TestBase):
     """
     Tests related to the Shotgun Event trigger.
     """
+
     def setUp(self):
         logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 
@@ -70,31 +67,17 @@ class TestSGTrigger(TestBase):
         Check nothing bad happens if a Project can't be found or if some
         needed fields are missing in the schema
         """
-        self.set_sg_mock_schema(os.path.join(
-            os.path.dirname(__file__),
-            "fixtures", "schemas", "base",
-        ))
-        shotgun = mockgun.Shotgun(
-            "http://unit_test_mock_sg",
-            "mock_user", "mock_key"
+        self.set_sg_mock_schema(
+            os.path.join(os.path.dirname(__file__), "fixtures", "schemas", "base",)
         )
+        shotgun = mockgun.Shotgun("http://unit_test_mock_sg", "mock_user", "mock_key")
         # Check nothing bad happens if a Project can't be found or if some
         # needed fields are missing in the schema
         routing = {}
-        sg_jira_event_trigger.process_event(
-            shotgun,
-            logger,
-            EVENT,
-            routing
-        )
+        sg_jira_event_trigger.process_event(shotgun, logger, EVENT, routing)
         # Add missing project
         self.add_to_sg_mock_db(shotgun, PROJECT)
-        sg_jira_event_trigger.process_event(
-            shotgun,
-            logger,
-            EVENT,
-            routing
-        )
+        sg_jira_event_trigger.process_event(shotgun, logger, EVENT, routing)
         self.assertTrue(PROJECT["id"] in routing)
 
     @mock.patch("requests.post", side_effect=mocked_requests_post)
@@ -104,21 +87,12 @@ class TestSGTrigger(TestBase):
         """
         routing = {}
         # Switch to a schema with needed fields
-        self.set_sg_mock_schema(os.path.join(
-            os.path.dirname(__file__),
-            "fixtures", "schemas", "sg-jira",
-        ))
-        shotgun = mockgun.Shotgun(
-            "http://unit_test_mock_sg",
-            "mock_user", "mock_key"
+        self.set_sg_mock_schema(
+            os.path.join(os.path.dirname(__file__), "fixtures", "schemas", "sg-jira",)
         )
+        shotgun = mockgun.Shotgun("http://unit_test_mock_sg", "mock_user", "mock_key")
         self.add_to_sg_mock_db(shotgun, PROJECT)
-        sg_jira_event_trigger.process_event(
-            shotgun,
-            logger,
-            EVENT,
-            routing
-        )
+        sg_jira_event_trigger.process_event(shotgun, logger, EVENT, routing)
         self.assertTrue(PROJECT["id"] in routing)
         self.assertIsNone(routing[PROJECT["id"]])
         routing = {}
@@ -131,19 +105,14 @@ class TestSGTrigger(TestBase):
                     "content_type": "string",
                     "link_type": "web",
                     "name": "test",
-                    "url": "http://localhost/default/sg2jira"
+                    "url": "http://localhost/default/sg2jira",
                 }
-            }
+            },
         )
-        sg_jira_event_trigger.process_event(
-            shotgun,
-            logger,
-            EVENT,
-            routing
-        )
+        sg_jira_event_trigger.process_event(shotgun, logger, EVENT, routing)
         self.assertTrue(PROJECT["id"] in routing)
         self.assertTrue(routing[PROJECT["id"]].startswith(url))
-        # The first sync for a Project also resets the bridge so it 
+        # The first sync for a Project also resets the bridge so it
         # generates 2 calls.
         self.assertEqual(mocked.call_count, 2)
         self.assertTrue(mocked.call_args[0][0].startswith(url))
@@ -167,24 +136,14 @@ class TestSGTrigger(TestBase):
                     "icon_url": "/images/filetypes/filetype_icon_misc.png",
                     "icon_class": "icon_web",
                     "url": "http://localhost/default/sg2jira",
-                    "attachment_uuid": "abcdefg"
-                }
-            }
+                    "attachment_uuid": "abcdefg",
+                },
+            },
         }
-        sg_jira_event_trigger.process_event(
-            shotgun,
-            logger,
-            project_event,
-            routing
-        )
+        sg_jira_event_trigger.process_event(shotgun, logger, project_event, routing)
         self.assertFalse(PROJECT["id"] in routing)
         # Processing the Task event should cache the routing again
-        sg_jira_event_trigger.process_event(
-            shotgun,
-            logger,
-            EVENT,
-            routing
-        )
+        sg_jira_event_trigger.process_event(shotgun, logger, EVENT, routing)
         self.assertTrue(PROJECT["id"] in routing)
         self.assertTrue(routing[PROJECT["id"]].startswith(url))
         mocked.assert_called()

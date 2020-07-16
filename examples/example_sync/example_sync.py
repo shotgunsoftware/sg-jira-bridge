@@ -6,6 +6,7 @@
 #
 
 import logging
+
 # Import the syncer base class
 from sg_jira import Syncer
 
@@ -14,6 +15,7 @@ class ExampleSync(Syncer):
     """
     A custom syncer example
     """
+
     def __init__(self, log_level=logging.WARNING, **kwargs):
         """
         Instantiate a new syncer with an additional parameter from the base class
@@ -33,8 +35,6 @@ class ExampleSync(Syncer):
         :param int entity_id: The id of the Shotgun Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         """
-        self.logger.info("Syncing in Jira %s(%d) for event %s" % (
-            entity_type,
-            entity_id,
-            event
-        ))
+        self.logger.info(
+            "Syncing in Jira %s(%d) for event %s" % (entity_type, entity_id, event)
+        )

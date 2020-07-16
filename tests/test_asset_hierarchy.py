@@ -16,11 +16,21 @@ from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER
 
 # A list of Shotgun Projects
 SG_PROJECTS = [
-    {"id": 1, "name": "Sync", "type": "Project", SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY}
+    {
+        "id": 1,
+        "name": "Sync",
+        "type": "Project",
+        SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY,
+    }
 ]
 
 SG_USERS = [
-    {"id": 1, "type": "HumanUser", "login": "ford.prefect", "sg_jira_account_id": JIRA_USER["accountId"]},
+    {
+        "id": 1,
+        "type": "HumanUser",
+        "login": "ford.prefect",
+        "sg_jira_account_id": JIRA_USER["accountId"],
+    },
 ]
 
 
@@ -54,7 +64,7 @@ class TestHierarchySyncer(TestSyncBase):
             "id": 1,
             "code": "Foo",
             "description": "I'm Foo !",
-            "tasks": []
+            "tasks": [],
         }
         self.add_to_sg_mock_db(bridge.shotgun, sg_asset)
         self.add_to_sg_mock_db(bridge.shotgun, synced_task)
@@ -70,23 +80,20 @@ class TestHierarchySyncer(TestSyncBase):
                     "project": {"type": "Project", "id": 2},
                     "meta": {
                         "entity_id": 1,
-                        "removed": [
-                        ],
+                        "removed": [],
                         "attribute_name": "tasks",
                         "entity_type": "Asset",
                         "field_data_type": "multi_entity",
-                        "added": [
-                            synced_task
-                        ],
+                        "added": [synced_task],
                         "type": "attribute_change",
-                    }
-                }
+                    },
+                },
             )
         )
         updated_asset = bridge.shotgun.find_one(
             "Asset",
             [["id", "is", sg_asset["id"]]],
-            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD]
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD],
         )
         # An Issue should have been created for the Asset
         self.assertIsNotNone(updated_asset[SHOTGUN_JIRA_ID_FIELD])
@@ -96,10 +103,7 @@ class TestHierarchySyncer(TestSyncBase):
 
         # make sure we're setting the Jira URL and it's what we expect
         self.assertIsNotNone(updated_asset[SHOTGUN_JIRA_URL_FIELD])
-        expected_url = {
-            u"name": u"View in Jira",
-            u"url": issue.permalink()
-        }
+        expected_url = {u"name": u"View in Jira", u"url": issue.permalink()}
         self.assertEqual(updated_asset[SHOTGUN_JIRA_URL_FIELD], expected_url)
 
         # Should return False because the link is already there (no update)
@@ -113,17 +117,14 @@ class TestHierarchySyncer(TestSyncBase):
                     "project": {"type": "Project", "id": 2},
                     "meta": {
                         "entity_id": 1,
-                        "removed": [
-                        ],
+                        "removed": [],
                         "attribute_name": "tasks",
                         "entity_type": "Asset",
                         "field_data_type": "multi_entity",
-                        "added": [
-                            synced_task
-                        ],
+                        "added": [synced_task],
                         "type": "attribute_change",
-                    }
-                }
+                    },
+                },
             )
         )
 
@@ -138,17 +139,14 @@ class TestHierarchySyncer(TestSyncBase):
                     "project": {"type": "Project", "id": 2},
                     "meta": {
                         "entity_id": 1,
-                        "removed": [
-                            synced_task
-                        ],
+                        "removed": [synced_task],
                         "attribute_name": "tasks",
                         "entity_type": "Asset",
                         "field_data_type": "multi_entity",
-                        "added": [
-                        ],
+                        "added": [],
                         "type": "attribute_change",
-                    }
-                }
+                    },
+                },
             )
         )
         # Should return False because a link is already deleted (no update)
@@ -162,16 +160,13 @@ class TestHierarchySyncer(TestSyncBase):
                     "project": {"type": "Project", "id": 2},
                     "meta": {
                         "entity_id": 1,
-                        "removed": [
-                            synced_task
-                        ],
+                        "removed": [synced_task],
                         "attribute_name": "tasks",
                         "entity_type": "Asset",
                         "field_data_type": "multi_entity",
-                        "added": [
-                        ],
+                        "added": [],
                         "type": "attribute_change",
-                    }
-                }
+                    },
+                },
             )
         )

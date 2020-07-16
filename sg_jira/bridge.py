@@ -33,12 +33,6 @@ class Bridge(object):
     sync events.
     """
 
-    # The bridge webserver is multithreaded, which means we need to
-    # track Shotgun connections via the API per thread. The SG Python
-    # API is not threadsafe, and using a single, global connection
-    # across all threads will lead to some weird behavior.
-    _SG_CACHED_CONNECTIONS = threading.local()
-
     def __init__(
         self,
         sg_site,
@@ -73,6 +67,12 @@ class Bridge(object):
         """
         super(Bridge, self).__init__()
 
+        # The bridge webserver is multithreaded, which means we need to
+        # track Shotgun connections via the API per thread. The SG Python
+        # API is not threadsafe, and using a single, global connection
+        # across all threads will lead to some weird behavior.
+        self._SG_CACHED_CONNECTIONS = threading.local()
+
         self._sg_site = sg_site
         self._sg_script = sg_script
         self._sg_script_key = sg_script_key
@@ -95,13 +95,7 @@ class Bridge(object):
         shotgun.setup()
 
         self._jira_user = jira_user
-        self._jira = JiraSession(
-            jira_site,
-            basic_auth=(
-                jira_user,
-                jira_secret
-            ),
-        )
+        self._jira = JiraSession(jira_site, basic_auth=(jira_user, jira_secret),)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
         self._jira.setup()
@@ -118,9 +112,12 @@ class Bridge(object):
         settings_file_path = os.path.abspath(settings_file)
 
         # Read settings
-        logger_settings, shotgun_settings, jira_settings, sync_settings = cls.read_settings(
-            settings_file_path
-        )
+        (
+            logger_settings,
+            shotgun_settings,
+            jira_settings,
+            sync_settings,
+        ) = cls.read_settings(settings_file_path)
 
         if logger_settings:
             logging.config.dictConfig(logger_settings)
@@ -165,21 +162,21 @@ class Bridge(object):
         mfile, pathname, description = imp.find_module(
             # Strip the .py extension
             os.path.splitext(module_name)[0],
-            [folder]
+            [folder],
         )
         try:
             module = imp.load_module(
-                "%s.settings" % __name__,
-                mfile,
-                pathname,
-                description
+                "%s.settings" % __name__, mfile, pathname, description
             )
         finally:
             if mfile:
                 mfile.close()
         # Retrieve all properties we handle and provide empty values if missing
         settings = dict(
-            [(prop_name, getattr(module, prop_name, None)) for prop_name in ALL_SETTINGS_KEYS]
+            [
+                (prop_name, getattr(module, prop_name, None))
+                for prop_name in ALL_SETTINGS_KEYS
+            ]
         )
 
         # Set logging from settings
@@ -190,7 +187,9 @@ class Bridge(object):
         if not shotgun_settings:
             raise ValueError("Missing Shotgun settings in %s" % full_path)
         missing = [
-            name for name in ["site", "script_name", "script_key"] if not shotgun_settings.get(name)
+            name
+            for name in ["site", "script_name", "script_key"]
+            if not shotgun_settings.get(name)
         ]
         if missing:
             raise ValueError(
@@ -252,10 +251,10 @@ class Bridge(object):
         """
         Return the username of the current Jira user.
 
-        The jira API escapes special characters using %xx syntax when storing 
+        The jira API escapes special characters using %xx syntax when storing
         the username. For example, the username ``richard+hendricks`` is stored
         as ``richard%2bhendricks`` by the jira API. We decode the username here
-        before returning it to ensure we return the exact value (eg. 
+        before returning it to ensure we return the exact value (eg.
         ``richard+hendricks``)
 
         :returns: A string with the username.
@@ -308,10 +307,7 @@ class Bridge(object):
             if "." not in syncer_name:
                 raise ValueError(
                     "Invalid `syncer` setting %s for %s: "
-                    "it must be a <module path>.<class name>" % (
-                        syncer_name,
-                        name
-                    )
+                    "it must be a <module path>.<class name>" % (syncer_name, name)
                 )
             module_name, class_name = syncer_name.rsplit(".", 1)
             module = importlib.import_module(module_name)
@@ -320,20 +316,14 @@ class Bridge(object):
             except AttributeError as e:
                 logger.debug("%s" % e, exc_info=True)
                 raise ValueError(
-                    "Unable to retrieve a %s class from module %s" % (
-                        class_name,
-                        module,
-                    )
+                    "Unable to retrieve a %s class from module %s"
+                    % (class_name, module,)
                 )
             # Retrieve the settings for the syncer, if any
             settings = sync_settings.get("settings") or {}
             # Instantiate the syncer with our standard parameters and any
             # additional settings as parameters.
-            self._syncers[name] = syncer_class(
-                name=name,
-                bridge=self,
-                **settings
-            )
+            self._syncers[name] = syncer_class(name=name, bridge=self, **settings)
             self._syncers[name].setup()
         return self._syncers[name]
 
@@ -361,9 +351,7 @@ class Bridge(object):
             if handler:
                 self.shotgun.set_session_uuid(safe_event.get("session_uuid"))
                 synced = handler.process_shotgun_event(
-                    entity_type,
-                    entity_id,
-                    safe_event
+                    entity_type, entity_id, safe_event
                 )
         except Exception as e:
             # Catch the exception to log it and let it bubble up
@@ -371,7 +359,9 @@ class Bridge(object):
             raise
         return synced
 
-    def sync_in_shotgun(self, settings_name, resource_type, resource_id, event, **kwargs):
+    def sync_in_shotgun(
+        self, settings_name, resource_type, resource_id, event, **kwargs
+    ):
         """
         Sync the given Jira Resource to Shotgun.
 

@@ -81,14 +81,13 @@ def start(pid_file, port_number, settings, log_file=None):
     # set.
     def start_wep_app():
         import logging
+
         logger = logging.getLogger("service").getChild("sg_jira")
         logger.info("Starting wep app...")
         try:
             import webapp
-            webapp.run_server(
-                port=port_number,
-                settings=settings
-            )
+
+            webapp.run_server(port=port_number, settings=settings)
         except Exception as e:
             logger.exception(e)
         logger.warning("bye")
@@ -99,7 +98,7 @@ def start(pid_file, port_number, settings, log_file=None):
         pid=pid_file,
         action=start_wep_app,
         keep_fds=keep_fds,
-        logger=logger if log_file else None
+        logger=logger if log_file else None,
     )
     daemon.start()
 
@@ -137,29 +136,19 @@ def stop(pid_file):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description=DESCRIPTION
-    )
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
         "--pid_file",
         default="/tmp/sg_jira.pid",
         help="Full path to a file where to write the process pid.",
     )
     parser.add_argument(
-        "--log_file",
-        help="Full path to a file where to log output.",
+        "--log_file", help="Full path to a file where to log output.",
     )
     parser.add_argument(
-        "--port",
-        type=int,
-        default=9090,
-        help="The port number to listen on.",
+        "--port", type=int, default=9090, help="The port number to listen on.",
     )
-    parser.add_argument(
-        "--settings",
-        help="Full path to settings file.",
-        required=True
-    )
+    parser.add_argument("--settings", help="Full path to settings file.", required=True)
     parser.add_argument(
         "action",
         choices=["start", "stop", "restart", "status"],
@@ -169,10 +158,7 @@ def main():
 
     if args.action == "start":
         start(
-            args.pid_file,
-            args.port,
-            os.path.abspath(args.settings),
-            args.log_file,
+            args.pid_file, args.port, os.path.abspath(args.settings), args.log_file,
         )
     elif args.action == "stop":
         stop(args.pid_file)
@@ -185,10 +171,7 @@ def main():
     elif args.action == "restart":
         stop(args.pid_file)
         start(
-            args.pid_file,
-            args.port,
-            os.path.abspath(args.settings),
-            args.log_file,
+            args.pid_file, args.port, os.path.abspath(args.settings), args.log_file,
         )
 
 
