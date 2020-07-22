@@ -33,7 +33,7 @@ class TestService(unittest.TestCase):
             # Check that an empty pid file does not cause problems
             service.status(pid_f.name)
             # Check that bad values in the pid file do not cause problems
-            pid_f.write("badpid")
+            pid_f.write(b"badpid")
             pid_f.flush()
             service.status(pid_f.name)
 

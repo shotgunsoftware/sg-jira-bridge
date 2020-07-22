@@ -427,7 +427,7 @@ class JiraSession(jira.client.JIRA):
                 # NOTE: This only supports text fields right now.
                 fields = {}
                 if "fields" in tra:
-                    for field_name, details in tra["fields"].iteritems():
+                    for field_name, details in tra["fields"].items():
                         # If field is required, it doesn't currently have a value and
                         # there is no default value provided by Jira, use our hardcoded
                         # default value.
@@ -537,7 +537,7 @@ class JiraSession(jira.client.JIRA):
         # Check if we are missing any required data which does not have a default
         # value.
         missing = []
-        for k, jira_create_field in fields_createmeta.iteritems():
+        for k, jira_create_field in fields_createmeta.items():
             if k not in data:
                 if (
                     jira_create_field["required"]
@@ -552,7 +552,9 @@ class JiraSession(jira.client.JIRA):
         # Check if we're trying to set any value which can't be set and validate
         # empty values.
         invalid_fields = []
-        data_keys = data.keys()  # Retrieve all keys so we can delete them in the dict
+        data_keys = list(
+            data.keys()
+        )  # Retrieve all keys so we can delete them in the dict
         for k in data_keys:
             # Filter out anything which can't be used in creation.
             if k not in fields_createmeta:

@@ -7,6 +7,7 @@
 #
 
 import os
+import six
 import mock
 
 from test_sync_base import TestSyncBase
@@ -1093,7 +1094,7 @@ class TestJiraSyncer(TestSyncBase):
         Test unicode values are correclty handled.
         """
         unicode_string = u"No Sync unicode_îéö_😀"
-        encoded_string = unicode_string.encode("utf-8")
+        encoded_string = six.ensure_str(unicode_string)
         syncer, bridge = self._get_syncer(mocked_sg)
         # Faked Jira project
         bridge.jira.set_projects([JIRA_PROJECT])
@@ -1161,7 +1162,7 @@ class TestJiraSyncer(TestSyncBase):
                     "to": JIRA_USER["key"],
                     "fromString": JIRA_USER_2["displayName"],
                     "field": "assignee",
-                    "toString": sg_user["name"].decode("utf-8"),
+                    "toString": six.ensure_text(sg_user["name"]),
                     "fieldtype": "jira",
                     "fieldId": "assignee",
                 },
@@ -1182,13 +1183,14 @@ class TestJiraSyncer(TestSyncBase):
         )
         # Retrieve the updated Task and check it
         updated_task = bridge.shotgun.find_one(
-            sg_task["type"], [["id", "is", sg_task["id"]]], fields=sg_task.keys()
+            sg_task["type"], [["id", "is", sg_task["id"]]], fields=list(sg_task.keys())
         )
-        for k, v in updated_task.iteritems():
+        for k, v in updated_task.items():
             # All keys should be unicode
-            self.assertTrue(isinstance(k, unicode))
-            # We shouldn't have any string value, just unicode
-            self.assertFalse(isinstance(v, str))
+            self.assertTrue(isinstance(k, six.text_type))
+            if six.PY2:
+                # We shouldn't have any string values, just unicode.
+                self.assertFalse(isinstance(v, str))
 
     def test_jira_comment(self, mocked_sg):
         """
@@ -1492,7 +1494,7 @@ class TestJiraSyncer(TestSyncBase):
         updated_task = bridge.shotgun.find_one(
             sg_task["type"],
             [["id", "is", sg_task["id"]]],
-            fields=sg_task.keys() + [SHOTGUN_JIRA_ID_FIELD],
+            fields=list(sg_task.keys()) + [SHOTGUN_JIRA_ID_FIELD],
         )
         self.assertIsNone(updated_task[SHOTGUN_JIRA_ID_FIELD])
 
@@ -1522,7 +1524,8 @@ class TestJiraSyncer(TestSyncBase):
         updated_task = bridge.shotgun.find_one(
             sg_task["type"],
             [["id", "is", sg_task["id"]]],
-            fields=sg_task.keys() + [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD],
+            fields=list(sg_task.keys())
+            + [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD],
         )
         self.assertIsNotNone(updated_task[SHOTGUN_JIRA_ID_FIELD])
 

@@ -8,12 +8,13 @@
 #
 
 import re
+import six
 
 from test_base import TestBase
 import sg_jira
 
 UNICODE_STRING = u"unicode_îéö_😀"
-UTF8_ENCODED_STRING = UNICODE_STRING.encode("utf-8")
+UTF8_ENCODED_STRING = six.ensure_str(UNICODE_STRING)
 
 
 class TestUtils(TestBase):
@@ -57,26 +58,29 @@ class TestUtils(TestBase):
                 "%s_bis" % UNICODE_STRING: UNICODE_STRING,
             },
         )
-        # Check that conflicts between a decoded key and an existing one are
-        # correctly detected.
-        with self.assertRaises(ValueError) as cm:
-            # Note: we can't use self.assertRaisesRegexp which calls `str` on
-            # the error message to perform the match, and fails with UnicodeEncodeError.
-            sg_jira.utils.utf8_to_unicode(
-                {
-                    UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
-                    "foo": UNICODE_STRING,
-                    "blah": 1,
-                    UNICODE_STRING: UTF8_ENCODED_STRING,
-                }
+        if six.PY2:
+            # Check that conflicts between a decoded key and an existing one are
+            # correctly detected.
+            # We skip this in Python 3 since all values will be unicode, so there is no chance of
+            # overlapping keys.
+            with self.assertRaises(ValueError) as cm:
+                # Note: we can't use self.assertRaisesRegexp which calls `str` on
+                # the error message to perform the match, and fails with UnicodeEncodeError.
+                sg_jira.utils.utf8_to_unicode(
+                    {
+                        UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
+                        "foo": UNICODE_STRING,
+                        "blah": 1,
+                        UNICODE_STRING: UTF8_ENCODED_STRING,
+                    }
+                )
+            self.assertIsNotNone(
+                re.match(
+                    "UTF-8 decoded key %s is already present in dictionary being decoded"
+                    % UNICODE_STRING,
+                    cm.exception.message,
+                )
             )
-        self.assertIsNotNone(
-            re.match(
-                "UTF-8 decoded key %s is already present in dictionary being decoded"
-                % UNICODE_STRING,
-                cm.exception.message,
-            )
-        )
         # A dictionary with lists
         res = sg_jira.utils.utf8_to_unicode(
             {
@@ -203,26 +207,30 @@ class TestUtils(TestBase):
                 "%s_bis" % UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
             },
         )
-        # Check that conflicts between a decoded key and an existing one are
-        # correctly detected.
-        with self.assertRaises(ValueError) as cm:
-            # Note: we can't use self.assertRaisesRegexp which calls `str` on
-            # the error message to perform the match, and fails with UnicodeEncodeError.
-            sg_jira.utils.unicode_to_utf8(
-                {
-                    UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
-                    "foo": UNICODE_STRING,
-                    "blah": 1,
-                    UNICODE_STRING: UTF8_ENCODED_STRING,
-                }
+
+        if six.PY2:
+            # Check that conflicts between a decoded key and an existing one are
+            # correctly detected.
+            # We skip this in Python 3 since all values will be unicode, so there is no chance of
+            # overlapping keys.
+            with self.assertRaises(ValueError) as cm:
+                # Note: we can't use self.assertRaisesRegexp which calls `str` on
+                # the error message to perform the match, and fails with UnicodeEncodeError.
+                sg_jira.utils.unicode_to_utf8(
+                    {
+                        UTF8_ENCODED_STRING: UTF8_ENCODED_STRING,
+                        "foo": UNICODE_STRING,
+                        "blah": 1,
+                        UNICODE_STRING: UTF8_ENCODED_STRING,
+                    }
+                )
+            self.assertIsNotNone(
+                re.match(
+                    "UTF-8 encoded key for %s is already present in dictionary being encoded"
+                    % UNICODE_STRING,
+                    cm.exception.message,
+                )
             )
-        self.assertIsNotNone(
-            re.match(
-                "UTF-8 encoded key for %s is already present in dictionary being encoded"
-                % UNICODE_STRING,
-                cm.exception.message,
-            )
-        )
 
         # A dictionary with lists
         res = sg_jira.utils.unicode_to_utf8(

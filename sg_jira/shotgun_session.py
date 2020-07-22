@@ -223,7 +223,7 @@ class ShotgunSession(object):
             consolidated = self.find_one(
                 shotgun_entity["type"],
                 [["id", "is", shotgun_entity["id"]]],
-                missing + shotgun_entity.keys(),
+                missing + list(shotgun_entity.keys()),
             )
             if not consolidated:
                 logger.warning(
@@ -252,12 +252,12 @@ class ShotgunSession(object):
         """
         for entity_type in entity_types:
             name_field = self.get_entity_name_field(entity_type)
-            filter = [[name_field, "is", name]]
+            filters = [[name_field, "is", name]]
             fields = [name_field]
             if self.is_project_entity(entity_type):
-                filter.append(["project", "is", shotgun_project])
+                filters.append(["project", "is", shotgun_project])
                 fields.append("project")
-            sg_value = self.find_one(entity_type, filter, fields,)
+            sg_value = self.find_one(entity_type, filters, fields,)
             if sg_value:
                 return self.consolidate_entity(sg_value)
         return None

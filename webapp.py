@@ -7,15 +7,16 @@
 
 from __future__ import print_function
 import re
+import six
 import argparse
-import urlparse
-import BaseHTTPServer
+from six.moves.urllib import parse
+from six.moves import BaseHTTPServer
 import json
 import ssl
 import logging
 import subprocess
 
-from SocketServer import ThreadingMixIn
+from six.moves.socketserver import ThreadingMixIn
 
 import sg_jira
 
@@ -152,7 +153,7 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
     def admin_reset(self, *args, **kwargs):
         """
-        Just pass the given parameters to the SG Jira Brige method.
+        Just pass the given parameters to the SG Jira Bridge method.
         """
         return self._sg_jira.reset(*args, **kwargs)
 
@@ -165,6 +166,13 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    # On Python3, in socketserver.StreamRequestHandler, if this is
+    # set it will use makefile() to produce the output stream. Otherwise,
+    # it will use socketserver._SocketWriter, and we won't be able to get
+    # to the data.
+    # taken from https://stackoverflow.com/a/53163148/4223964
+    wbufsize = 1
+
     protocol_version = "HTTP/1.1"
     # Inject the version of sg-jira-bridge into server_version for the headers.
     server_version = "sg-jira-bridge/%s %s" % (
@@ -241,15 +249,18 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         settings_name = path_parts[1]
-        if settings_name not in self.server.sync_settings_names:
+        if six.ensure_text(settings_name) not in self.server.sync_settings_names:
             self.send_error(400, "Invalid settings name %s" % settings_name)
             return
 
         # Success, send a basic html page.
         self.post_response(
             200,
-            "Syncing with %s settings." % settings_name,
-            HMTL_TEMPLATE % (title, title, "Syncing with %s settings." % settings_name),
+            six.ensure_binary("Syncing with %s settings." % settings_name),
+            six.ensure_binary(
+                HMTL_TEMPLATE
+                % (title, title, "Syncing with %s settings." % settings_name)
+            ),
         )
 
     def do_POST(self):
@@ -269,12 +280,12 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # /jira2sg/default/Issue/KEY-123
         # /admin/reset
         try:
-            parsed = urlparse.urlparse(self.path)
+            parsed = parse.urlparse(self.path)
             # Extract additional query parameters.
             # What they could be is still TBD, may be things like `dry_run=1`?
             parameters = {}
             if parsed.query:
-                parameters = urlparse.parse_qs(parsed.query, True, True)
+                parameters = parse.parse_qs(parsed.query, True, True)
 
             # Extract path components from the path, ignore leading '/' and
             # discard empty values coming from '/' at the end or multiple
@@ -299,9 +310,9 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.post_response(200, "POST request successful")
 
         except SgJiraBridgeBadRequestError as e:
-            self.send_error(400, e.message)
+            self.send_error(400, str(e))
         except Exception as e:
-            self.send_error(500, e.message)
+            self.send_error(500, str(e))
             logger.debug(e, exc_info=True)
 
     def _read_payload(self):
@@ -310,16 +321,17 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         :returns: payload as a dictionary or empty dict if there was no payload
         """
-        content_type = self.headers.getheader("content-type")
+        content_type = self.headers.get("content-type")
         # Check the content type, if not set we assume json.
         # We can have a charset just after the content type, e.g.
         # application/json; charset=UTF-8.
+
         if content_type and not re.search(r"\s*application/json\s*;?", content_type):
             raise SgJiraBridgeBadRequestError(
                 "Invalid content-type %s, it must be 'application/json'" % content_type
             )
 
-        content_len = int(self.headers.getheader("content-length", 0))
+        content_len = int(self.headers.get("content-length", 0))
         body = self.rfile.read(content_len)
         payload = {}
         if body:
@@ -359,7 +371,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             raise SgJiraBridgeBadRequestError("Invalid request path %s" % self.path)
 
-        if settings_name not in self.server.sync_settings_names:
+        if six.ensure_text(settings_name) not in self.server.sync_settings_names:
             raise SgJiraBridgeBadRequestError(
                 "Invalid settings name %s" % settings_name
             )
@@ -374,8 +386,8 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 entity_key = payload.get("entity_id")
             if not entity_type or not entity_key:
                 raise SgJiraBridgeBadRequestError(
-                    "Invalid request payload %s, unable to retrieve "
-                    "a Shotgun Entity type and its id." % payload
+                    "Invalid request payload %s, unable to retrieve a Shotgun Entity type and its id."
+                    % payload
                 )
             # We could have a str or int here depending on how it was sent.
             try:

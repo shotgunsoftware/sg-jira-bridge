@@ -228,7 +228,7 @@ class SyncHandler(object):
             # Look up a matching Shotgun status from our mapping
             # Please note that if we have multiple matching values the first
             # one will be arbitrarily returned.
-            for sg_code, jira_name in self._sg_jira_status_mapping.iteritems():
+            for sg_code, jira_name in self._sg_jira_status_mapping.items():
                 if value.lower() == jira_name.lower():
                     return sg_code
             # No match.

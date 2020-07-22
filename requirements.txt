@@ -15,7 +15,9 @@ daemonize==2.4.7
 git+https://github.com/shotgunsoftware/jira.git@2.0.0.sg.3#egg=jira
 
 # Install Shotgun API 3 from archive
-https://github.com/shotgunsoftware/python-api/archive/v3.0.39.zip
+https://github.com/shotgunsoftware/python-api/archive/v3.2.4.zip
 
 # Allows defining env vars in a .env file that can be loaded at runtime
 python-dotenv==0.13.0
+
+six

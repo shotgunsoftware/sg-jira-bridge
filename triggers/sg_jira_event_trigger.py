@@ -8,7 +8,7 @@
 import os
 import logging
 import requests
-import urlparse
+from six.moves import urllib
 
 # Allow users to define their sensitive data in a .env file and
 # load it in environment variables with python-dotenv.
@@ -126,7 +126,7 @@ def process_event(sg, logger, event, dispatch_routes):
         return
 
     # Build the payload from the event metadata
-    # TODO: We should mimic the payload send by Shotgun webhooks
+    # TODO: We should mimic the payload sent by Shotgun webhooks
     #    {
     #      "id": 5,
     #      "meta": {
@@ -263,7 +263,7 @@ def _reset_bridge(server_url, logger):
     """
     # The url is for the sync and contains a direction and settings name.
     # We only need the server for our request.
-    parsed_url = urlparse.urlparse(server_url)
+    parsed_url = urllib.parse.urlparse(server_url)
     if not parsed_url.scheme or not parsed_url.netloc:
         logger.debug(
             "Failed to reset Jira Bridge. Unable to extract server address "
