@@ -17,41 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../../../genindex.html"/>
-        <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Shotgun Jira Bridge  documentation" href="../../../index.html"/>
-        <link rel="up" title="Module code" href="../../index.html"/> 
-
-  
-  <script src="../../../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -104,7 +97,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">Shotgun Jira Bridge</a>
@@ -112,9 +105,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -144,8 +138,6 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
-        
       </li>
     
   </ul>
@@ -166,9 +158,9 @@
 
 <span class="kn">import</span> <span class="nn">datetime</span>
 
-<span class="kn">from</span> <span class="nn">jira</span> <span class="k">import</span> <span class="n">JIRAError</span>
+<span class="kn">from</span> <span class="nn">jira</span> <span class="kn">import</span> <span class="n">JIRAError</span>
 
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">InvalidJiraValue</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">InvalidJiraValue</span>
 
 
 <div class="viewcode-block" id="SyncHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler">[docs]</a><span class="k">class</span> <span class="nc">SyncHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -182,7 +174,7 @@
 <span class="sd">    provides some helpers which can be useful to all handlers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SyncHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate a handler for the given syncer.</span>
 
@@ -324,12 +316,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
     <span class="k">def</span> <span class="nf">_get_shotgun_value_from_jira_change</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">shotgun_entity</span><span class="p">,</span>
-        <span class="n">shotgun_field</span><span class="p">,</span>
-        <span class="n">shotgun_field_schema</span><span class="p">,</span>
-        <span class="n">change</span><span class="p">,</span>
-        <span class="n">jira_value</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">shotgun_field_schema</span><span class="p">,</span> <span class="n">change</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a Shotgun value suitable to update the given Shotgun Entity field</span>
@@ -374,16 +361,11 @@
             <span class="c1"># would be to raise an InvalidJiraValue</span>
             <span class="n">all_allowed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Updating Shotgun </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> schema with valid values: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                    <span class="n">shotgun_field</span><span class="p">,</span>
-                    <span class="n">all_allowed</span>
-                <span class="p">)</span>
+                <span class="s2">&quot;Updating Shotgun </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> schema with valid values: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">all_allowed</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">schema_field_update</span><span class="p">(</span>
-                <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                <span class="n">shotgun_field</span><span class="p">,</span>
-                <span class="p">{</span><span class="s2">&quot;valid_values&quot;</span><span class="p">:</span> <span class="n">all_allowed</span><span class="p">}</span>
+                <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;valid_values&quot;</span><span class="p">:</span> <span class="n">all_allowed</span><span class="p">}</span>
             <span class="p">)</span>
             <span class="c1"># Clear the schema to take into account the change we just made.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">clear_cached_field_schema</span><span class="p">(</span><span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">])</span>
@@ -397,17 +379,15 @@
             <span class="c1"># Look up a matching Shotgun status from our mapping</span>
             <span class="c1"># Please note that if we have multiple matching values the first</span>
             <span class="c1"># one will be arbitrarily returned.</span>
-            <span class="k">for</span> <span class="n">sg_code</span><span class="p">,</span> <span class="n">jira_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_jira_status_mapping</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">sg_code</span><span class="p">,</span> <span class="n">jira_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_jira_status_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">jira_name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                     <span class="k">return</span> <span class="n">sg_code</span>
             <span class="c1"># No match.</span>
             <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
                 <span class="n">shotgun_field</span><span class="p">,</span>
                 <span class="n">value</span><span class="p">,</span>
-                <span class="s2">&quot;Unable to find a matching Shotgun status for </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">value</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_sg_jira_status_mapping</span>
-                <span class="p">)</span>
+                <span class="s2">&quot;Unable to find a matching Shotgun status for </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_jira_status_mapping</span><span class="p">),</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;multi_entity&quot;</span><span class="p">:</span>
@@ -416,7 +396,9 @@
             <span class="c1"># We&#39;re assuming here that if someone maps a Jira simple field to</span>
             <span class="c1"># a Shotgun multi entity field the same convention will be applied</span>
             <span class="c1"># and spaces will be used as separators.</span>
-            <span class="n">allowed_entities</span> <span class="o">=</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;valid_types&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+            <span class="n">allowed_entities</span> <span class="o">=</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;valid_types&quot;</span><span class="p">][</span>
+                <span class="s2">&quot;value&quot;</span>
+            <span class="p">]</span>
             <span class="n">old_list</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="n">new_list</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;fromString&quot;</span><span class="p">]:</span>
@@ -427,25 +409,21 @@
             <span class="n">added_list</span> <span class="o">=</span> <span class="n">new_list</span> <span class="o">-</span> <span class="n">old_list</span>
             <span class="c1"># Make sure we have the current value and the Shotgun project</span>
             <span class="n">consolidated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span>
-                <span class="n">shotgun_entity</span><span class="p">,</span>
-                <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="n">shotgun_field</span><span class="p">,</span> <span class="s2">&quot;project&quot;</span><span class="p">]</span>
+                <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="n">shotgun_field</span><span class="p">,</span> <span class="s2">&quot;project&quot;</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">consolidated</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;Unable to find </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) in Shotgun&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                        <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                        <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-                    <span class="p">)</span>
+                    <span class="s2">&quot;Unable to find </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) in Shotgun&quot;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
                 <span class="p">)</span>
             <span class="n">current_sg_value</span> <span class="o">=</span> <span class="n">consolidated</span><span class="p">[</span><span class="n">shotgun_field</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">removed</span> <span class="ow">in</span> <span class="n">removed_list</span><span class="p">:</span>
                 <span class="c1"># Try to remove the entries from the Shotgun value. We make a</span>
                 <span class="c1"># copy of the list so we can delete entries while iterating</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trying to remove </span><span class="si">%s</span><span class="s2"> from Shotgun </span><span class="si">%s</span><span class="s2"> value </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">removed</span><span class="p">,</span> 
-                    <span class="n">shotgun_field</span><span class="p">,</span>
-                    <span class="n">current_sg_value</span><span class="p">,</span>
-                <span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Trying to remove </span><span class="si">%s</span><span class="s2"> from Shotgun </span><span class="si">%s</span><span class="s2"> value </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">removed</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,)</span>
+                <span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sg_value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">current_sg_value</span><span class="p">)):</span>
                     <span class="c1"># Match the SG entity name, because this is retrieved</span>
                     <span class="c1"># from the entity holding the list, we do have a &quot;name&quot; key</span>
@@ -454,20 +432,15 @@
                     <span class="k">if</span> <span class="n">removed</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                             <span class="s2">&quot;Removing </span><span class="si">%s</span><span class="s2"> from Shotgun value </span><span class="si">%s</span><span class="s2"> since Jira &quot;</span>
-                            <span class="s2">&quot;removed </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span>
-                                <span class="n">sg_value</span><span class="p">,</span> 
-                                <span class="n">current_sg_value</span><span class="p">,</span>
-                                <span class="n">removed</span><span class="p">,</span>
-                            <span class="p">)</span>
+                            <span class="s2">&quot;removed </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sg_value</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,</span> <span class="n">removed</span><span class="p">,)</span>
                         <span class="p">)</span>
                         <span class="k">del</span> <span class="n">current_sg_value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">added</span> <span class="ow">in</span> <span class="n">added_list</span><span class="p">:</span>
                 <span class="c1"># Check if the value is already there</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trying to add </span><span class="si">%s</span><span class="s2"> to Shotgun </span><span class="si">%s</span><span class="s2"> value </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">added</span><span class="p">,</span> 
-                    <span class="n">shotgun_field</span><span class="p">,</span>
-                    <span class="n">current_sg_value</span><span class="p">,</span>
-                <span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Trying to add </span><span class="si">%s</span><span class="s2"> to Shotgun </span><span class="si">%s</span><span class="s2"> value </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">added</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,)</span>
+                <span class="p">)</span>
                 <span class="k">for</span> <span class="n">sg_value</span> <span class="ow">in</span> <span class="n">current_sg_value</span><span class="p">:</span>
                     <span class="c1"># Match the SG entity name, because this is retrieved</span>
                     <span class="c1"># from the entity holding the list, we do have a &quot;name&quot; key</span>
@@ -475,35 +448,26 @@
                     <span class="c1"># name e.g. &quot;code&quot;</span>
                     <span class="k">if</span> <span class="n">added</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is already in current Shotgun value: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                                <span class="n">added</span><span class="p">,</span> <span class="n">sg_value</span><span class="p">,</span>
-                            <span class="p">)</span>
+                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is already in current Shotgun value: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                            <span class="o">%</span> <span class="p">(</span><span class="n">added</span><span class="p">,</span> <span class="n">sg_value</span><span class="p">,)</span>
                         <span class="p">)</span>
                         <span class="k">break</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># We need to retrieve a matching Entity from Shotgun and</span>
                     <span class="c1"># add it to the list, if we found one.</span>
                     <span class="n">sg_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">match_entity_by_name</span><span class="p">(</span>
-                        <span class="n">added</span><span class="p">,</span>
-                        <span class="n">allowed_entities</span><span class="p">,</span>
-                        <span class="n">consolidated</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span>
+                        <span class="n">added</span><span class="p">,</span> <span class="n">allowed_entities</span><span class="p">,</span> <span class="n">consolidated</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">sg_value</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                             <span class="s2">&quot;Adding </span><span class="si">%s</span><span class="s2"> to Shotgun value </span><span class="si">%s</span><span class="s2"> since Jira &quot;</span>
-                            <span class="s2">&quot;added </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                                <span class="n">sg_value</span><span class="p">,</span> 
-                                <span class="n">current_sg_value</span><span class="p">,</span>
-                                <span class="n">added</span><span class="p">,</span>
-                            <span class="p">)</span>
+                            <span class="s2">&quot;added </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sg_value</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,</span> <span class="n">added</span><span class="p">,)</span>
                         <span class="p">)</span>
                         <span class="n">current_sg_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sg_value</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                            <span class="s2">&quot;Couldn&#39;t find a </span><span class="si">%s</span><span class="s2"> named &#39;</span><span class="si">%s</span><span class="s2">&#39; in Shotgun&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                                <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">allowed_entities</span><span class="p">),</span>
-                                <span class="n">added</span>
-                            <span class="p">)</span>
+                            <span class="s2">&quot;Couldn&#39;t find a </span><span class="si">%s</span><span class="s2"> named &#39;</span><span class="si">%s</span><span class="s2">&#39; in Shotgun&quot;</span>
+                            <span class="o">%</span> <span class="p">(</span><span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">allowed_entities</span><span class="p">),</span> <span class="n">added</span><span class="p">)</span>
                         <span class="p">)</span>
 
             <span class="k">return</span> <span class="n">current_sg_value</span>
@@ -518,20 +482,13 @@
                 <span class="c1"># Validate the date string</span>
                 <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Unable to parse Jira value </span><span class="si">%s</span><span class="s2"> as a date: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">value</span><span class="p">,</span> <span class="n">e</span>
-                <span class="p">)</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Unable to parse Jira value </span><span class="si">%s</span><span class="s2"> as a date: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
                 <span class="c1"># Log the original error with a traceback for debug purpose</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="n">message</span><span class="p">,</span>
-                    <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">message</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="c1"># Notify the caller that the value is not right</span>
-                <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
-                    <span class="n">shotgun_field</span><span class="p">,</span>
-                    <span class="n">value</span><span class="p">,</span>
-                    <span class="n">message</span>
-                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span><span class="n">shotgun_field</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">value</span>
 
         <span class="k">if</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">,</span> <span class="s2">&quot;number&quot;</span><span class="p">]:</span>
@@ -543,38 +500,25 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Jira value </span><span class="si">%s</span><span class="s2"> is not a valid integer: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">value</span><span class="p">,</span> <span class="n">e</span>
-                <span class="p">)</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Jira value </span><span class="si">%s</span><span class="s2"> is not a valid integer: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
                 <span class="c1"># Log the original error with a traceback for debug purpose</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="n">message</span><span class="p">,</span>
-                    <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">message</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="c1"># Notify the caller that the value is not right</span>
-                <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
-                    <span class="n">shotgun_field</span><span class="p">,</span>
-                    <span class="n">value</span><span class="p">,</span>
-                    <span class="n">message</span>
-                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span><span class="n">shotgun_field</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;checkbox&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s2">&quot;toString&quot;</span><span class="p">])</span>
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;Unsupported data type </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> change from Jira update: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="n">data_type</span><span class="p">,</span>
-                <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                <span class="n">shotgun_field</span><span class="p">,</span>
-                <span class="n">change</span>
-            <span class="p">)</span>
+            <span class="s2">&quot;Unsupported data type </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> change from Jira update: </span><span class="si">%s</span><span class="s2">&quot;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">data_type</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">change</span><span class="p">)</span>
         <span class="p">)</span></div>
 </pre></div>
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -583,11 +527,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc..
+        &copy; Copyright 2019, Autodesk Inc.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -600,36 +544,15 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../../',
-            VERSION:'',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

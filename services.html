@@ -17,42 +17,36 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Shotgun Jira Bridge  documentation" href="index.html"/>
-        <link rel="next" title="Known Issues &amp; Compatibility Notes" href="known_issues.html"/>
-        <link rel="prev" title="Developer Resources" href="developer.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Known Issues &amp; Compatibility Notes" href="known_issues.html" />
+    <link rel="prev" title="Developer Resources" href="developer.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -117,7 +111,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Shotgun Jira Bridge</a>
@@ -125,9 +119,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -172,9 +167,9 @@
 <p>Shotgun Jira Bridge can be run as a service on MacOS/Linux and Windows.</p>
 <div class="section" id="macos-and-linux">
 <h2>MacOS and Linux<a class="headerlink" href="#macos-and-linux" title="Permalink to this headline">¶</a></h2>
-<p>On MacOS and Linux, the <code class="docutils literal"><span class="pre">service.py</span></code> script can be used with systemd. It
+<p>On MacOS and Linux, the <code class="docutils literal notranslate"><span class="pre">service.py</span></code> script can be used with systemd. It
 accepts parameters from the command-line and responds to the standard commands:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">service</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pid_file</span> <span class="n">PID_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">log_file</span> <span class="n">LOG_FILE</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">service</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pid_file</span> <span class="n">PID_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">log_file</span> <span class="n">LOG_FILE</span><span class="p">]</span>
               <span class="p">[</span><span class="o">--</span><span class="n">port</span> <span class="n">PORT</span><span class="p">]</span> <span class="o">--</span><span class="n">settings</span> <span class="n">SETTINGS</span>
               <span class="p">{</span><span class="n">start</span><span class="p">,</span><span class="n">stop</span><span class="p">,</span><span class="n">restart</span><span class="p">,</span><span class="n">status</span><span class="p">}</span>
 </pre></div>
@@ -183,28 +178,28 @@ accepts parameters from the command-line and responds to the standard commands:<
 <h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><strong>-h</strong>: Display the usage help.</li>
-<li><strong>&#8211;pid_file</strong>: Full path to the pid file used by the service. Defaults to
-<code class="docutils literal"><span class="pre">/tmp/sg_jira.pid</span></code>.</li>
-<li><strong>&#8211;log_file</strong>: An optional log file to use for the daemon output. By
+<li><strong>–pid_file</strong>: Full path to the pid file used by the service. Defaults to
+<code class="docutils literal notranslate"><span class="pre">/tmp/sg_jira.pid</span></code>.</li>
+<li><strong>–log_file</strong>: An optional log file to use for the daemon output. By
 default the daemon uses a syslog handler.</li>
-<li><strong>&#8211;port</strong>: The port number for the web app to listen on. Defaults to <code class="docutils literal"><span class="pre">9090</span></code>.</li>
-<li><strong>&#8211;settings</strong>: (required) Full path to settings file for the web app.</li>
+<li><strong>–port</strong>: The port number for the web app to listen on. Defaults to <code class="docutils literal notranslate"><span class="pre">9090</span></code>.</li>
+<li><strong>–settings</strong>: (required) Full path to settings file for the web app.</li>
 </ul>
 </div>
 </div>
 <div class="section" id="windows">
 <h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">win_service.py</span></code> script can be installed to allow the Service Manager
+<p>The <code class="docutils literal notranslate"><span class="pre">win_service.py</span></code> script can be installed to allow the Service Manager
 to control Shotgun Jira Bridge.</p>
 <div class="section" id="environment-variables">
 <h3>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>Environment variables are used to specify the settings and port parameters.</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">SGJIRA_SETTINGS_FILE</span></code>: Full path to settings file for the web app. If not
-provided, the app will look for a <code class="docutils literal"><span class="pre">settings.py</span></code> file in the root of the
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SETTINGS_FILE</span></code>: Full path to settings file for the web app. If not
+provided, the app will look for a <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file in the root of the
 Shotgun Jira Bridge directory (where it exists in the default structure).</li>
-<li><code class="docutils literal"><span class="pre">SGJIRA_PORT_NUMBER</span></code>: The port number for the web app to listen on.
-Defaults to <code class="docutils literal"><span class="pre">9090</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_PORT_NUMBER</span></code>: The port number for the web app to listen on.
+Defaults to <code class="docutils literal notranslate"><span class="pre">9090</span></code>.</li>
 </ul>
 </div>
 <div class="section" id="installing-the-service">
@@ -213,19 +208,19 @@ Defaults to <code class="docutils literal"><span class="pre">9090</span></code>.
 <a class="reference external" href="https://pypi.org/project/pywin32/">Python for Win32 (pywin32) extensions</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>If installing pywin32 with <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pywin32</span></code>, the following must be
+<p>If installing pywin32 with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pywin32</span></code>, the following must be
 run after the installation in order to allow it to manage services:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">Scripts</span><span class="o">/</span><span class="n">pywin32_postinstall</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">install</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">Scripts</span><span class="o">/</span><span class="n">pywin32_postinstall</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">install</span>
 </pre></div>
 </div>
 <p class="last">See <a class="reference external" href="https://github.com/mhammond/pywin32#installing-via-pip">https://github.com/mhammond/pywin32#installing-via-pip</a> for more info.</p>
 </div>
 <p>Install the service from an elevanted command prompt with:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
 <p>Then you can control Shotgun Jira Bridge via the Service Manager app or using:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">start</span><span class="o">|</span><span class="n">stop</span><span class="o">|</span><span class="n">restart</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">start</span><span class="o">|</span><span class="n">stop</span><span class="o">|</span><span class="n">restart</span>
 </pre></div>
 </div>
 </div>
@@ -238,9 +233,7 @@ run after the installation in order to allow it to manage services:</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -249,7 +242,7 @@ run after the installation in order to allow it to manage services:</p>
         <a href="known_issues.html" class="btn btn-neutral float-right" title="Known Issues &amp; Compatibility Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="developer.html" class="btn btn-neutral" title="Developer Resources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="developer.html" class="btn btn-neutral float-left" title="Developer Resources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -258,11 +251,11 @@ run after the installation in order to allow it to manage services:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc..
+        &copy; Copyright 2019, Autodesk Inc.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -275,36 +268,15 @@ run after the installation in order to allow it to manage services:</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

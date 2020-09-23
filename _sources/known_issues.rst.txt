@@ -37,13 +37,13 @@ cases where certain features have not been implemented yet.
   being investigated.
 
 - Duplicating an Entity in Shotgun that is currently synced with Jira, will
-  also duplicate the **Jira Key** field, possibly causing data corruption. 
+  also duplicate the **Jira Key** field, possibly causing data corruption.
   We recommend not duplicating synced Entities in Shotgun. Alternatively, you
   may enable unique values on the **Jira Key** in Shotgun, however this will
   now generate an error in Shotgun if a synced Entity is duplicated. Perhaps
-  it's better than possibly corrupting the synced Jira Issue. 
+  it's better than possibly corrupting the synced Jira Issue.
 
-- Jira single-line `Text Field` fields are limited to 255 characters. When 
+- Jira single-line `Text Field` fields are limited to 255 characters. When
   syncing from Shotgun to Jira, if the Shotgun field is mapped to a Jira
   single-line Text Field, and the value is longer than 255 characters, a
   warning is logged, the synced value will be truncated and an addendum added

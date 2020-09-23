@@ -59,7 +59,10 @@ HumanUser     ``sg_jira_account_id``   Text        Jira Account Id              
 
 .. note::
     - All ``sg_jira_key`` fields must be configured with the "*Ensure unique
-      value per project*" setting **checked**.
+      value per project*" setting **checked**. This setting can be found by
+      showing the relevant field in an entity spreadsheet view and then
+      right clicking the header for that column. Select the ``Configure field...``
+      menu option.
     - The ``HumanUser.sg_jira_account_id`` field is only necessary if your
       Jira server is hosted by Atlassian.
 
@@ -122,18 +125,24 @@ Jira Webhook
 | Exclude Body | (`required`) **[ ] un-checked**                                                         |
 +--------------+-----------------------------------------------------------------------------------------+
 
+.. note::
+    If you are setting up a local development environment and need Jira to have access to localhost
+    in order for the Jira webhook to successfully delivery its payload to the bridge, be sure to
+    follow the instructions in the ``Testing on a Machine Not Accessible to Jira`` section of the
+    debugging guide.
+
 
 Setting Up Your Config and Env
 ******************************
 
 There are two different pieces to setting up the Shotgun Jira Bridge. There's the bridge itself
-(``sg-jira-bridge``), which handles all of the syncing of data between Shotgun and Jira. Then 
-there's the Shotgun Event Daemon (``shotgunEvents``), which handles dispatching supported Shotgun 
+(``sg-jira-bridge``), which handles all of the syncing of data between Shotgun and Jira. Then
+there's the Shotgun Event Daemon (``shotgunEvents``), which handles dispatching supported Shotgun
 events to the bridge.
 
-Since they are installed in different locations and each setup has different python module 
-requirements, the instructions below describe how to setup an environment for each of them 
-separately. 
+Since they are installed in different locations and each setup has different python module
+requirements, the instructions below describe how to setup an environment for each of them
+separately.
 
 SG Jira Bridge
 ==============
@@ -158,8 +167,12 @@ A ``requirements.txt`` file is provided to install all required packages.
     pip install -r /path/to/sg-jira-bridge/requirements.txt
 
 .. note::
-    If you are upgrading from a previous version of the bridge, we recommend you re-install dependencies
-    as we've had to fork the ``jira`` Python module to add a missing feature.
+    If you are upgrading from a previous version of the bridge, we recommend you upgrade the dependencies
+    as we've had to fork the ``jira`` Python module to add a missing feature:
+
+    .. code-block::
+
+        pip install --upgrade -r /path/to/sg-jira-bridge/requirements.txt
 
 
 Settings
@@ -170,7 +183,7 @@ the default settings are fine as-is.
 Authentication
 --------------
 Credentials are retrieved from environment variables. You may set these in your
-environment or use `python-dotenv <https://pypi.org/project/python-dotenv>`_ 
+environment or use `python-dotenv <https://pypi.org/project/python-dotenv>`_
 and define these in a ``.env`` file.
 
 ::
@@ -188,19 +201,24 @@ and define these in a ``.env`` file.
 .. note::
 
     **Jira Cloud** requires the use of an API token and will not work with
-    a user password. See https://confluence.atlassian.com/x/Vo71Nw for information 
+    a user password. See https://confluence.atlassian.com/x/Vo71Nw for information
     on how to generate a token.
-    
-    **Jira Server** will still work with a user password and does not support 
+
+    **Jira Server** will still work with a user password and does not support
     API tokens.
 
-    For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/ 
+    For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/
 
 .. note::
 
     Since Jira does not have a concept of a "script" user, ``SGJIRA_JIRA_USER``
     will need to be the designated user account, with appropriate
-    permissions, that will control the sync updates.
+    permissions, that will control the sync updates. Note that the user should
+    not be your personal user account, as the bridge will ignore and not sync
+    to Shotgun any events triggered in Jira by that user. This ensures that
+    the bridge will not end up in a "ping pong" state, where it bounces the
+    same event back-and-forth between Jira and Shotgun. As such, you will need
+    to create a dedicated user account in Jira for use with the bridge.
 
 
 shotgunEvents
@@ -224,8 +242,8 @@ Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed i
     # On Windows (using PowerShell)
     $ venv/Scripts/activate
 
-    # Install required packages for the trigger. 
-    # Note: This requirements.txt is in the "sg-jira-bridge/triggers" 
+    # Install required packages for the trigger.
+    # Note: This requirements.txt is in the "sg-jira-bridge/triggers"
     #       subdirectory, NOT in the root of the project.
     pip install -r /path/to/sg-jira-bridge/triggers/requirements.txt
 
@@ -259,7 +277,23 @@ credentials::
     We highly recommend you add an additional Script User in Shotgun solely
     for this trigger.
 
+.. note::
+    If you are using sg-jira-bridge v0.2.2 or later, these environment variables can also be defined in the ``.env``
+    file from the SG Jira Bridge section
 
+
+Define a Mapping Between Jira and Shotgun Status Names
+-------------------------------------------------------
+The bridge needs to know how to map a status in Shotgun to a status in Jira and vice versa. Your status names likely
+differ from the default ones. Make sure the values in
+`TaskIssueHandler._sg_jira_status_mapping <https://github.com/shotgunsoftware/sg-jira-bridge/blob/725f63c19b45529f2507c530c7923cb4d55459e1/sg_jira/handlers/task_issue_handler.py#L47/>`_
+match the names used in your workflow::
+
+    return {
+        "wtg": "Backlog",
+        "rdy": "Selected For Development",
+        "ip": "In Progress",
+    }
 
 Starting Everything Up
 **********************
@@ -333,4 +367,3 @@ shotgunEvents in your terminal window for log messages.
     the **Shotgun Type** and **Shotgun ID** fields as well as a link to the
     entity in Shotgun in the **Shotgun URL** field. This is a good indicator
     that things are working correctly.
-
