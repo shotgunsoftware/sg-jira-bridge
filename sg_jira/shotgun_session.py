@@ -106,18 +106,17 @@ class ShotgunSession(object):
         field = self.get_field_schema(entity_type, field_name)
         if not field:
             raise RuntimeError(
-                "Missing required custom Shotgun %s field %s"
-                % (entity_type, field_name,)
+                "Missing required custom SG %s field %s" % (entity_type, field_name,)
             )
         if field["data_type"]["value"] != field_type:
             raise RuntimeError(
-                "Invalid type '%s' for Shotgun field %s.%s, it must be '%s'"
+                "Invalid type '%s' for SG field %s.%s, it must be '%s'"
                 % (field["data_type"]["value"], entity_type, field_name, field_type)
             )
         if check_unique is True:
             if field["unique"]["value"] is not True:
                 raise RuntimeError(
-                    "Invalid 'unique' property '%s' for Shotgun field %s.%s, "
+                    "Invalid 'unique' property '%s' for SG field %s.%s, "
                     "it must be 'True'"
                     % (field["unique"]["value"], entity_type, field_name)
                 )
@@ -148,11 +147,11 @@ class ShotgunSession(object):
         :param str entity_type: A Shotgun Entity type or None.
         """
         if entity_type:
-            logger.debug("Clearing cached Shotgun schema for %s" % entity_type)
+            logger.debug("Clearing cached SG schema for %s" % entity_type)
             if entity_type in self._shotgun_schemas:
                 del self._shotgun_schemas[entity_type]
         else:
-            logger.debug("Clearing all cached Shotgun schemas")
+            logger.debug("Clearing all cached SG schemas")
             self._shotgun_schemas = {}
 
     @staticmethod

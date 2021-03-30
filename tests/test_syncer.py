@@ -179,7 +179,7 @@ JIRA_ISSUE_FIELDS = {
     "reporter": {
         "accountId": "557058:aecf5cfd-e13d-45a4-8db5-59da3ad254ce",
         "active": True,
-        "displayName": "Shotgun Synch",
+        "displayName": "SG Synch",
         "emailAddress": "stephane.deverly@shotgunsoftware.com",
         "key": "shotgun-synch",
         "name": "shotgun-synch",
@@ -267,7 +267,7 @@ JIRA_COMMENT = {
         "active": True,
         "timeZone": "America/New_York",
     },
-    "body": "[Shotgun Note|https://myshotgun.shotgunstudio.com/detail/Note/6460]\r\n{panel:title=Pied Piper Rocks!}\r\nNote content here\r\nand more here.\r\n{panel}",
+    "body": "[SG Note|https://myshotgun.shotgunstudio.com/detail/Note/6460]\r\n{panel:title=Pied Piper Rocks!}\r\nNote content here\r\nand more here.\r\n{panel}",
     "updateAuthor": {
         "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=0123456789abcdef01234567",
         "name": "richard.hendricks",

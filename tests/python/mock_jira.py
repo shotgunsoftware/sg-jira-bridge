@@ -87,7 +87,7 @@ ISSUE_FIELDS = {
     "customfield_11501": {
         "hasDefaultValue": False,
         "key": "customfield_11501",
-        "name": "Shotgun ID",
+        "name": "SG ID",
         "operations": ["set"],
         "required": False,
         "schema": {
@@ -99,7 +99,7 @@ ISSUE_FIELDS = {
     "customfield_11502": {
         "hasDefaultValue": False,
         "key": "customfield_11502",
-        "name": "Shotgun Type",
+        "name": "SG Type",
         "operations": ["set"],
         "required": False,
         "schema": {
@@ -812,12 +812,12 @@ class MockedJira(object):
                 },
             },
             {
-                u"name": u"Shotgun Status",
+                u"name": u"SG Status",
                 u"searchable": True,
                 u"navigable": True,
                 u"custom": True,
                 u"key": u"customfield_11511",
-                u"clauseNames": [u"cf[11511]", u"Shotgun Status"],
+                u"clauseNames": [u"cf[11511]", u"SG Status"],
                 u"orderable": True,
                 u"id": u"customfield_11511",
                 u"schema": {
@@ -872,12 +872,12 @@ class MockedJira(object):
                 },
             },
             {
-                u"name": u"Shotgun Type",
+                u"name": u"SG Type",
                 u"searchable": True,
                 u"navigable": True,
                 u"custom": True,
                 u"key": u"customfield_11502",
-                u"clauseNames": [u"cf[11502]", u"Shotgun Type"],
+                u"clauseNames": [u"cf[11502]", u"SG Type"],
                 u"orderable": True,
                 u"id": u"customfield_11502",
                 u"schema": {
@@ -887,12 +887,12 @@ class MockedJira(object):
                 },
             },
             {
-                u"name": u"Shotgun ID",
+                u"name": u"SG ID",
                 u"searchable": True,
                 u"navigable": True,
                 u"custom": True,
                 u"key": u"customfield_11501",
-                u"clauseNames": [u"cf[11501]", u"Shotgun ID"],
+                u"clauseNames": [u"cf[11501]", u"SG ID"],
                 u"orderable": True,
                 u"id": u"customfield_11501",
                 u"schema": {
@@ -917,12 +917,12 @@ class MockedJira(object):
                 },
             },
             {
-                u"name": u"Shotgun URL",
+                u"name": u"SG URL",
                 u"searchable": True,
                 u"navigable": True,
                 u"custom": True,
                 u"key": u"customfield_11503",
-                u"clauseNames": [u"cf[11503]", u"Shotgun URL"],
+                u"clauseNames": [u"cf[11503]", u"SG URL"],
                 u"orderable": True,
                 u"id": u"customfield_11503",
                 u"schema": {

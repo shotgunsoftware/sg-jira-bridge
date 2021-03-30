@@ -107,11 +107,11 @@ Common Issues
 RuntimeError: maximum recursion depth exceeded
 ----------------------------------------------
 If you are seeing this error in your logs when trying to start the web service,
-you may be using an old version the Shotgun Jira Bridge and need to update.
+you may be using an old version the SG Jira Bridge and need to update.
 
 Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
 Jira client library to generate this error. Updating to the latest version of
-Shotgun Jira Bridge transitions the authentication to use Basic Auth.
+SG Jira Bridge transitions the authentication to use Basic Auth.
 
 You will need to generate an API token and use this as your user secret (password).
 User passwords are no longer supported by Jira Cloud. See
@@ -125,7 +125,7 @@ For more information, see: https://developer.atlassian.com/cloud/jira/platform/j
 
 Not Seeing Changes Sync
 -----------------------
-When you make a change in Shotgun or Jira, the bridge evaluates whether the
+When you make a change in SG or Jira, the bridge evaluates whether the
 change should be synced to to the target site, tries to convert the value to an
 acceptable value in the target site, and then submits the change.
 
@@ -136,10 +136,10 @@ SG Jira Bridge Webapp Isn't Responding
 --------------------------------------
 You can check to see if the Bridge is running by issuing a GET request for the
 sync URL in your browser. Copy the URL you have entered in the
-**Jira Sync URL** field in your Shotgun Project and enter it in your browser.
+**Jira Sync URL** field in your SG Project and enter it in your browser.
 You should see a message that says something like::
 
-    Shotgun to Jira
+    SG to Jira
     Syncing with default settings.
 
 If there is no connection:
@@ -155,7 +155,7 @@ correct. The URL should look like::
 
 For example: ``http://localhost:9090/sg2jira/my_settings``
 
-Shotgun changes aren't syncing to Jira
+SG changes aren't syncing to Jira
 --------------------------------------
 The first place to check is in the shotgunEvents log files to see if the
 trigger was run and issued a successful call to the SG Jira Bridge.
@@ -168,7 +168,7 @@ accepting the event for processing.
 
 Other things to check:
 
-- Is your Shotgun Project configured to sync to Jira?
+- Is your SG Project configured to sync to Jira?
 - Is the Entity type configured to sync to Jira?
 - Does the Entity that generated the event enabled for syncing (the **Sync In
   Jira** checkbox field is checked)?
@@ -191,11 +191,11 @@ If SG Jira Bridge is not receiving the request:
 
 Value can't be translated to a Shotgun/Jira value
 -------------------------------------------------
-If you change a status in Shotgun or Jira and there's no matching status value
+If you change a status in SG or Jira and there's no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs::
 
-    2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for Shotgun status 'na'
+    2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for SG status 'na'
 
 In this case, there is no Jira status defined in the handlers to match with
 the ``na`` status in Shotgun. Your handler defines a

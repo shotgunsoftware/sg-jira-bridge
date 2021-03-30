@@ -185,7 +185,7 @@ class Bridge(object):
         # Retrieve Shotgun connection settings
         shotgun_settings = settings[SHOTGUN_SETTINGS_KEY]
         if not shotgun_settings:
-            raise ValueError("Missing Shotgun settings in %s" % full_path)
+            raise ValueError("Missing SG settings in %s" % full_path)
         missing = [
             name
             for name in ["site", "script_name", "script_key"]
@@ -193,7 +193,7 @@ class Bridge(object):
         ]
         if missing:
             raise ValueError(
-                "Missing Shotgun setting values %s in %s" % (missing, full_path)
+                "Missing SG setting values %s in %s" % (missing, full_path)
             )
 
         # Retrieve Jira connection settings
