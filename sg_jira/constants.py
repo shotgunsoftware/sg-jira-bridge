@@ -21,9 +21,9 @@ ALL_SETTINGS_KEYS = [
 
 # Names of the Jira custom fields used to store a reference to a linked Shotgun
 # Entity.
-JIRA_SHOTGUN_TYPE_FIELD = "SG Type"
-JIRA_SHOTGUN_ID_FIELD = "SG Id"
-JIRA_SHOTGUN_URL_FIELD = "SG Url"
+JIRA_SHOTGUN_TYPE_FIELD = "Shotgun Type"
+JIRA_SHOTGUN_ID_FIELD = "Shotgun Id"
+JIRA_SHOTGUN_URL_FIELD = "Shotgun Url"
 # Names of the Shotgun custom fields used to store a reference to a linked Jira
 # Entity.
 SHOTGUN_JIRA_ID_FIELD = "sg_jira_key"
