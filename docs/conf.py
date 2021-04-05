@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.abspath("..handlers"))
 
 # -- Project information -----------------------------------------------------
 
-project = u"Shotgun Jira Bridge"
+project = u"SG Jira Bridge"
 copyright = u"2019, Autodesk Inc."
 author = u"Autodesk Inc."
 
