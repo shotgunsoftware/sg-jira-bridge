@@ -185,20 +185,6 @@ class Syncer(object):
                 )
                 return None
 
-            # The email field is always present, even on GDPR versions of JIRA, but set to "?".
-            # Protect ourselves here by testing for it's presence since it wouldn't be surprising
-            # if it was completely removed at some point.
-            if (
-                "emailAddress" in user
-                and user["emailAddress"].lower()
-                == self.bridge.current_jira_username.lower()
-            ):
-                self._logger.debug(
-                    "Rejecting event %s triggered by us (%s)"
-                    % (event, user["emailAddress"],)
-                )
-                return None
-
         # Loop over all handlers and return the first one which accepts the
         # event for the given entity
         # Note: it seems safer to return a single handler than a list of all
