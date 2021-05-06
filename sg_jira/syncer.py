@@ -169,15 +169,9 @@ class Syncer(object):
                 )
                 return None
 
-            # TODO: It's hard to tell if these next to ifs are actually needed anymore.
-            # From testing it seems that accountId is always set, so testing for name
-            # and emailAddress is probably not needed anymore. We've left these tests
-            # for now as we don't have access to a JIRA local instance to test on, which
-            # may (but unlikely) behave differently.
-
-            # On GDPR compliant versions of JIRA, the name field is not returned.
             if (
-                "name" in user
+                not self.bridge.jira.is_jira_cloud
+                and "name" in user 
                 and user["name"].lower() == self.bridge.current_jira_username.lower()
             ):
                 self._logger.debug(
