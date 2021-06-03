@@ -126,31 +126,31 @@ class JiraSession(jira.client.JIRA):
     @property
     def jira_shotgun_type_field(self):
         """
-        Return the id of the Jira field used to store the type of a linked Shotgun
+        Return the id of the Jira field used to store the type of a linked ShotGrid
         Entity.
 
-        Two custom fields are used in Jira to store a reference to a Shotgun
-        Entity: its Shotgun Entity type and id. This method returns the id of
-        the Jira field used to store the Shotgun type.
+        Two custom fields are used in Jira to store a reference to a ShotGrid
+        Entity: its ShotGrid Entity type and id. This method returns the id of
+        the Jira field used to store the ShotGrid type.
         """
         return self._jira_shotgun_type_field
 
     @property
     def jira_shotgun_id_field(self):
         """
-        Return the id of the Jira field used to store the id of a linked Shotgun
+        Return the id of the Jira field used to store the id of a linked ShotGrid
         Entity.
 
-        Two custom fields are used in Jira to store a reference to a Shotgun
-        Entity: its Shotgun Entity type and id. This method returns the id of
-        the Jira field used to store the Shotgun id.
+        Two custom fields are used in Jira to store a reference to a ShotGrid
+        Entity: its ShotGrid Entity type and id. This method returns the id of
+        the Jira field used to store the ShotGrid id.
         """
         return self._jira_shotgun_id_field
 
     @property
     def jira_shotgun_url_field(self):
         """
-        Return the id of the Jira field used to store the url of a linked Shotgun
+        Return the id of the Jira field used to store the url of a linked ShotGrid
         Entity.
         """
         return self._jira_shotgun_url_field

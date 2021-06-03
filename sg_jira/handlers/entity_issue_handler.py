@@ -15,7 +15,7 @@ from .sync_handler import SyncHandler
 
 class EntityIssueHandler(SyncHandler):
     """
-    Base class for handlers syncing a Shotgun Entity to a Jira Issue.
+    Base class for handlers syncing a ShotGrid Entity to a Jira Issue.
     """
 
     # This will match JIRA accounts in the following format

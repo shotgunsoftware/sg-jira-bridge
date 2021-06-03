@@ -14,9 +14,9 @@ from ..errors import InvalidJiraValue
 
 class SyncHandler(object):
     """
-    Base class to handle a particular sync between Shotgun and Jira.
+    Base class to handle a particular sync between ShotGrid and Jira.
 
-    Handlers typically handle syncing values between a Shotgun Entity type and
+    Handlers typically handle syncing values between a ShotGrid Entity type and
     a Jira resource and are owned by a :class:`~sg_jira.Syncer` instance.
 
     This base class defines the interface all handlers should support and
@@ -63,8 +63,8 @@ class SyncHandler(object):
     def _sg_jira_status_mapping(self):
         """
         Needs to be re-implemented in deriving classes and return a dictionary
-        where keys are Shotgun status short codes and values are Jira status
-        names, or any string value which should be mapped to Shotgun status.
+        where keys are ShotGrid status short codes and values are Jira status
+        names, or any string value which should be mapped to ShotGrid status.
         """
         raise NotImplementedError
 
@@ -106,7 +106,7 @@ class SyncHandler(object):
     def setup(self):
         """
         This method can be re-implemented in deriving classes to Check the Jira
-        and Shotgun site, ensure that the sync can safely happen and cache any
+        and ShotGrid site, ensure that the sync can safely happen and cache any
         value which is slow to retrieve.
 
         This base implementation does nothing.
@@ -115,7 +115,7 @@ class SyncHandler(object):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given Shotgun Entity.
+        Accept or reject the given event for the given ShotGrid Entity.
 
         Must be re-implemented in deriving classes.
 
@@ -125,12 +125,12 @@ class SyncHandler(object):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given Shotgun event for the given Shotgun Entity
+        Process the given ShotGrid event for the given ShotGrid Entity
 
         Must be re-implemented in deriving classes.
 
-        :param str entity_type: The Shotgun Entity type to sync.
-        :param int entity_id: The id of the Shotgun Entity to sync.
+        :param str entity_type: The ShotGrid Entity type to sync.
+        :param int entity_id: The id of the ShotGrid Entity to sync.
         :param event: A dictionary with the event for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.

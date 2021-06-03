@@ -22,10 +22,10 @@ COMMENT_BODY_TEMPLATE = """
 
 class NoteCommentHandler(SyncHandler):
     """
-    Sync a Shotgun Task Note with a comment attached to the associated Jira Issue for
+    Sync a ShotGrid Task Note with a comment attached to the associated Jira Issue for
     this Task.
 
-    .. note:: The same Shotgun Note can be attached to multiple Tasks, but it is
+    .. note:: The same ShotGrid Note can be attached to multiple Tasks, but it is
               not possible to share the same comment across multiple Issues in
               Jira. If a Note is attached to multiple Tasks, only one Issue comment
               will be updated.
@@ -43,7 +43,7 @@ class NoteCommentHandler(SyncHandler):
 
     def setup(self):
         """
-        Check the Jira and Shotgun site, ensure that the sync can safely happen
+        Check the Jira and ShotGrid site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field(
@@ -52,16 +52,16 @@ class NoteCommentHandler(SyncHandler):
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
-        Return the list of Shotgun fields that this handler can process for a
-        Shotgun to Jira event.
+        Return the list of ShotGrid fields that this handler can process for a
+        ShotGrid to Jira event.
         """
         return list(self.__NOTE_FIELDS_MAPPING.keys())
 
     def _compose_jira_comment_body(self, shotgun_note):
         """
-        Return a body value to update a Jira comment from the given Shotgun Note.
+        Return a body value to update a Jira comment from the given ShotGrid Note.
 
-        :param shotgun_note: A Shotgun Note dictionary.
+        :param shotgun_note: A ShotGrid Note dictionary.
         :returns: A string.
         """
         return COMMENT_BODY_TEMPLATE % (
@@ -71,7 +71,7 @@ class NoteCommentHandler(SyncHandler):
 
     def _compose_shotgun_note(self, jira_comment):
         """
-        Return a subject and content value to update a Shotgun Note from the
+        Return a subject and content value to update a ShotGrid Note from the
         given Jira comment.
 
         Notes created in SG are stored in Jira with some fanciness markup (see

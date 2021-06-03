@@ -16,7 +16,7 @@ from .entity_issue_handler import EntityIssueHandler
 
 class TaskIssueHandler(EntityIssueHandler):
     """
-    Sync a Shotgun Task as a Jira Issue.
+    Sync a ShotGrid Task as a Jira Issue.
     """
 
     # Define the mapping between Shotgun Task fields and Jira Issue fields
@@ -51,7 +51,7 @@ class TaskIssueHandler(EntityIssueHandler):
     @property
     def _sg_jira_status_mapping(self):
         """
-        Return a dictionary where keys are Shotgun status short codes and values
+        Return a dictionary where keys are ShotGrid status short codes and values
         Jira Issue status names.
         """
         return {
@@ -78,7 +78,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def setup(self):
         """
-        Check the Jira and Shotgun site, ensure that the sync can safely happen.
+        Check the Jira and ShotGrid site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field(

@@ -38,7 +38,7 @@ class InvalidSyncValue(ValueError):
 
 class InvalidShotgunValue(InvalidSyncValue):
     """
-    An exception raised when a Shotgun value can't be translated to a valid
+    An exception raised when a ShotGrid value can't be translated to a valid
     Jira value for a given field.
     """
 
@@ -48,7 +48,7 @@ class InvalidShotgunValue(InvalidSyncValue):
 class InvalidJiraValue(InvalidSyncValue):
     """
     An exception raised when a Jira value can't be translated to a valid
-    Shotgun value for a given field.
+    ShotGrid value for a given field.
     """
 
     pass

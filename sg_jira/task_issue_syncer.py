@@ -11,7 +11,7 @@ from .handlers import TaskIssueHandler, NoteCommentHandler, EnableSyncingHandler
 
 class TaskIssueSyncer(Syncer):
     """
-    Sync Shotgun Tasks as Jira Issues.
+    Sync ShotGrid Tasks as Jira Issues.
     """
 
     def __init__(self, issue_type="Task", **kwargs):
