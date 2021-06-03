@@ -63,7 +63,7 @@ extensions = [
 intersphinx_mapping = {
     "python": ("https://docs.python.org/2", None),
     "jira": ("https://jira.readthedocs.io/en/master", None),
-    "shotgun_api3": ("https://developer.shotgunsoftware.com/python-api", None),
+    "shotgun_api3": ("https://developer.shotgridsoftware.com/python-api", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.

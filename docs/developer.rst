@@ -120,7 +120,7 @@ The following methods must be overridden from the :class:`Syncer` base class::
 Setup
 -----
 When a syncer is first loaded, it calls ``setup()`` on each
-:class:`~handlers.SyncHandler`. This can be used to check the Jira and Shotgun
+:class:`~handlers.SyncHandler`. This can be used to check the Jira and ShotGrid
 sites for specific conditions or setup requirements, ensuring that the sync can
 safely happen.
 
@@ -154,7 +154,7 @@ Processing the Event
 :meth:`~handlers.SyncHandler.process_shotgun_event` and
 :meth:`~handlers.SyncHandler.process_jira_event` process the event data,
 perform any additional validation required to determine whether to continue
-with the sync (which may include additional queries to Jira and/or Shotgun),
+with the sync (which may include additional queries to Jira and/or ShotGrid),
 and then do the actual update.
 
 Once the event itself has been validated fully, the actual data that has
@@ -265,7 +265,7 @@ Base class for syncing SG Entities and Jira Issues. This inherits from
 EnableSyncingHandler
 --------------------
 A handler that controls the initial sync for a SG Task and Jira Issue when
-the "Sync In Jira" checkbox is toggled in Shotgun. It combines multiple
+the "Sync In Jira" checkbox is toggled in ShotGrid. It combines multiple
 handlers to begin the syncing process by performing a full sync each time the
 checkbox is toggled on. This allows one to manually force a re-sync if needed
 by just toggling the checkbox off and then on again.

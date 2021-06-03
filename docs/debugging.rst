@@ -173,8 +173,8 @@ Other things to check:
 - Does the Entity that generated the event enabled for syncing (the **Sync In
   Jira** checkbox field is checked)?
 
-Jira changes aren't syncing to Shotgun
---------------------------------------
+Jira changes aren't syncing to ShotGrid
+---------------------------------------
 Check the logs for the SG Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.
 
@@ -189,8 +189,8 @@ If SG Jira Bridge is not receiving the request:
   or move SG Jira Bridge into some sort of DMZ setup.
 
 
-Value can't be translated to a Shotgun/Jira value
--------------------------------------------------
+Value can't be translated to a ShotGrid/Jira value
+--------------------------------------------------
 If you change a status in SG or Jira and there's no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs::
@@ -198,7 +198,7 @@ something like this in the logs::
     2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for SG status 'na'
 
 In this case, there is no Jira status defined in the handlers to match with
-the ``na`` status in Shotgun. Your handler defines a
+the ``na`` status in ShotGrid. Your handler defines a
 ``_sg_jira_status_mapping()`` property that returns the status mapping.
 You can see there's no ``na`` status here::
 
