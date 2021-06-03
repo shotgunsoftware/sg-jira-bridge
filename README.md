@@ -8,7 +8,7 @@ SG Jira Bridge is a simple synchronization setup between SG and Jira. It's desig
 
 By extending the base syncer and sync handlers you can quickly build custom workflows to connect your SG and Jira sites. Details like entity types, hierarchy, issue types, fields, statuses, and logic can all be custom defined to match your studio's workflow.
 
-![alt text](https://developer.shotgunsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
+![alt text](https://developer.shotgridsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
 
 # Components
 
@@ -20,7 +20,7 @@ By extending the base syncer and sync handlers you can quickly build custom work
 
 # Documentation
 
-Full documentation is available at https://developer.shotgunsoftware.com/sg-jira-bridge
+Full documentation is available at https://developer.shotgridsoftware.com/sg-jira-bridge
 
 # Requirements
 
