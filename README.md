@@ -25,7 +25,7 @@ Full documentation is available at https://developer.shotgunsoftware.com/sg-jira
 # Requirements
 
 - Python 2.7
-- A [Shotgun](https://shotgunsoftware.com) site
+- A [ShotgGrid](https://shotgridsoftware.com) site
 - A [Jira](https://www.atlassian.com/software/jira) site
 
 # Building the Docs
