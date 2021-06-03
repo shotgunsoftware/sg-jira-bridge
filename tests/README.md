@@ -5,7 +5,7 @@ Out of the box that will run a bunch of the tests, but the `test_integration.py`
 
 ## Running test_service.py
 
-You just need to have the [standard setup env variables](https://developer.shotgunsoftware.com/sg-jira-bridge/quickstart.html#authentication).
+You just need to have the [standard setup env variables](https://developer.shotgridsoftware.com/sg-jira-bridge/quickstart.html#authentication).
 
 ## Running the integration test for the bridge.
 This test uses actual JIRA and Shotgun servers.

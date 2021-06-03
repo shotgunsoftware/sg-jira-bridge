@@ -6,4 +6,4 @@ This directory holds a [Shotgun Event Daemon](https://github.com/shotgunsoftware
 - **`requirements.txt`**: Defines the required Python modules for the trigger
 
 ### Documentation
-Instructions for setting this up are available on [the documentation site](https://developer.shotgunsoftware.com/sg-jira-bridge/quickstart.html#shotgunevents).
+Instructions for setting this up are available on [the documentation site](https://developer.shotgridsoftware.com/sg-jira-bridge/quickstart.html#shotgunevents).
