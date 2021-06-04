@@ -65,7 +65,7 @@ class Syncer(object):
         and cache any value which is slow to retrieve.
         """
         self._logger.debug(
-            "Checking if the SG and Jira sites are correctly configured."
+            "Checking if the Shotgun and Jira sites are correctly configured."
         )
         for handler in self.handlers:
             handler.setup()

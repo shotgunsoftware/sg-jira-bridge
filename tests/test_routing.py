@@ -178,7 +178,7 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
             six.ensure_binary(
-                "Invalid request payload %s, unable to retrieve a SG Entity type and its id"
+                "Invalid request payload %s, unable to retrieve a Shotgun Entity type and its id"
                 % payload
             )
             in raw_response
@@ -192,7 +192,7 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
-            b"Invalid SG Task id notanumber, it must be a number." in raw_response
+            b"Invalid Shotgun Task id notanumber, it must be a number." in raw_response
         )
 
         # POST request with invalid path: missing entity_id

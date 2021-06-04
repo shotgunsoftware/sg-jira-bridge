@@ -241,7 +241,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         if path_parts[0] == "sg2jira":
-            title = "SG to Jira"
+            title = "Shotgun to Jira"
         elif path_parts[0] == "jira2sg":
             title = "Jira to Shotgun"
         else:
@@ -386,7 +386,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 entity_key = payload.get("entity_id")
             if not entity_type or not entity_key:
                 raise SgJiraBridgeBadRequestError(
-                    "Invalid request payload %s, unable to retrieve a SG Entity type and its id."
+                    "Invalid request payload %s, unable to retrieve a Shotgun Entity type and its id."
                     % payload
                 )
             # We could have a str or int here depending on how it was sent.
@@ -396,7 +396,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 # log the original exception before we obfuscate it
                 logger.debug(e, exc_info=True)
                 raise SgJiraBridgeBadRequestError(
-                    "Invalid SG %s id %s, it must be a number."
+                    "Invalid Shotgun %s id %s, it must be a number."
                     % (entity_type, entity_key,)
                 )
 

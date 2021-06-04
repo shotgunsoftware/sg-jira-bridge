@@ -196,7 +196,7 @@ def _get_dispatch_route(sg, logger, project, dispatch_routes):
         if not sg_project:
             # This shouldn't happen, but better to be safe here.
             logger.warning(
-                "Unable to find a SG Project "
+                "Unable to find a Shotgun Project "
                 "with id %d, skipping event..." % (project["id"])
             )
             dispatch_routes[project["id"]] = None

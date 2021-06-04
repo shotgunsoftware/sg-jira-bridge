@@ -1,7 +1,7 @@
 Installing as a Service
 #######################
 
-SG Jira Bridge can be run as a service on MacOS/Linux and Windows.
+Shotgun Jira Bridge can be run as a service on MacOS/Linux and Windows.
 
 MacOS and Linux
 ***************
@@ -25,7 +25,7 @@ Parameters
 Windows
 *******
 The ``win_service.py`` script can be installed to allow the Service Manager
-to control SG Jira Bridge.
+to control Shotgun Jira Bridge.
 
 Environment Variables
 =====================
@@ -33,7 +33,7 @@ Environment variables are used to specify the settings and port parameters.
 
 - ``SGJIRA_SETTINGS_FILE``: Full path to settings file for the web app. If not
   provided, the app will look for a ``settings.py`` file in the root of the
-  SG Jira Bridge directory (where it exists in the default structure).
+  Shotgun Jira Bridge directory (where it exists in the default structure).
 - ``SGJIRA_PORT_NUMBER``: The port number for the web app to listen on.
   Defaults to ``9090``.
 
@@ -54,7 +54,7 @@ Install the service from an elevanted command prompt with::
 
     python win_service.py install
 
-Then you can control SG Jira Bridge via the Service Manager app or using::
+Then you can control Shotgun Jira Bridge via the Service Manager app or using::
 
     python win_service.py start|stop|restart
 

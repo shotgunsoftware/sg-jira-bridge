@@ -37,7 +37,7 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
     logger.info("Locating JIRA project %s" % project_key)
     project = jira.project(project_key)
 
-    logger.info("Retrieving all SG users")
+    logger.info("Retrieving all Shotgun users")
     users = sg.find(
         "HumanUser",
         # User's without email or with TBD (test users) should not be considered.
@@ -78,10 +78,10 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
         if jira_user is None:
             continue
 
-        # A JIRA user was found, so let's update SG with it's accountId!
+        # A JIRA user was found, so let's update Shotgun with it's accountId!
         sg.update("HumanUser", user["id"], {"sg_jira_account_id": jira_user.accountId})
         logger.info(
-            "SG user '{}' ('{}') has been matched to a JIRA user with the same email.".format(
+            "Shotgun user '{}' ('{}') has been matched to a JIRA user with the same email.".format(
                 user["login"], user["email"]
             )
         )
@@ -99,12 +99,12 @@ def _get_settings():
     """
     # Parse the commend line
     parser = argparse.ArgumentParser(
-        description="Matches SG users with JIRA users for JIRA Cloud.",
+        description="Matches Shotgun users with JIRA users for JIRA Cloud.",
         epilog=(
-            "This script will match the first SG user with a given email with the "
-            "associated JIRA user. If for some reason there are multiple SG users "
-            "with the same email, you can go back in SG and reassign the "
-            "sg_jira_account_id value to the right SG user."
+            "This script will match the first Shotgun user with a given email with the "
+            "associated JIRA user. If for some reason there are multiple Shotgun users "
+            "with the same email, you can go back in Shotgun and reassign the "
+            "sg_jira_account_id value to the right Shotgun user."
         ),
     )
     parser.add_argument("--settings", help="Full path to settings file.", required=True)

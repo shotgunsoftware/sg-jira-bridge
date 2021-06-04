@@ -167,7 +167,7 @@ class AssetIssueHandler(EntityIssueHandler):
             return self._sync_shotgun_status_to_jira(
                 jira_issue,
                 shotgun_status,
-                "Updated from SG %s(%d) moving to %s"
+                "Updated from Shotgun %s(%d) moving to %s"
                 % (shotgun_asset["type"], shotgun_asset["id"], shotgun_status),
             )
 
@@ -212,7 +212,7 @@ class AssetIssueHandler(EntityIssueHandler):
             jira_issue = self.get_jira_issue(jira_issue_key)
             if not jira_issue:
                 self._logger.warning(
-                    "Unable to find Jira Issue %s for SG Asset %s"
+                    "Unable to find Jira Issue %s for Shotgun Asset %s"
                     % (jira_issue_key, shotgun_asset)
                 )
                 # Better to stop processing.
@@ -289,7 +289,7 @@ class AssetIssueHandler(EntityIssueHandler):
                 jira_project = self.get_jira_project(jira_project_key)
                 if not jira_project:
                     self._logger.warning(
-                        "Unable to find Jira Project %s for SG Project %s."
+                        "Unable to find Jira Project %s for Shotgun Project %s."
                         % (jira_project_key, shotgun_asset["project"],)
                     )
                     return False
@@ -398,7 +398,7 @@ class AssetIssueHandler(EntityIssueHandler):
                     issue_data[jira_field] = jira_value
             except InvalidShotgunValue as e:
                 self._logger.warning(
-                    "Unable to update Jira %s %s %s field from SG value %s: %s"
+                    "Unable to update Jira %s %s %s field from Shotgun value %s: %s"
                     % (
                         jira_issue.fields.issuetype.name,
                         jira_issue.key,
@@ -425,7 +425,7 @@ class AssetIssueHandler(EntityIssueHandler):
             self._sync_shotgun_status_to_jira(
                 jira_issue,
                 sg_entity["sg_status_list"],
-                "Updated from SG %s(%d) moving to %s"
+                "Updated from Shotgun %s(%d) moving to %s"
                 % (sg_entity["type"], sg_entity["id"], sg_entity["sg_status_list"]),
             )
 
@@ -488,7 +488,8 @@ class AssetIssueHandler(EntityIssueHandler):
 
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting SG event with unsupported SG field %s: %s" % (field, event)
+                "Rejecting Shotgun event with unsupported Shotgun field %s: %s"
+                % (field, event)
             )
             return False
 
@@ -525,7 +526,7 @@ class AssetIssueHandler(EntityIssueHandler):
         )
         if not sg_entity:
             self._logger.warning(
-                "Unable to find SG %s (%s)." % (entity_type, entity_id)
+                "Unable to find Shotgun %s (%s)." % (entity_type, entity_id)
             )
             return False
 
@@ -545,7 +546,7 @@ class AssetIssueHandler(EntityIssueHandler):
         # been created.
         if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
             self._logger.debug(
-                "Rejecting SG event for %s.%s field update during "
+                "Rejecting Shotgun event for %s.%s field update during "
                 "create. Issue was already created in Jira: %s"
                 % (sg_entity["type"], shotgun_field, event)
             )

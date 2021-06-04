@@ -210,7 +210,7 @@ class SyncHandler(object):
             # would be to raise an InvalidJiraValue
             all_allowed.append(value)
             self._logger.info(
-                "Updating SG %s.%s schema with valid values: %s"
+                "Updating Shotgun %s.%s schema with valid values: %s"
                 % (shotgun_entity["type"], shotgun_field, all_allowed)
             )
             self._shotgun.schema_field_update(
@@ -235,7 +235,7 @@ class SyncHandler(object):
             raise InvalidJiraValue(
                 shotgun_field,
                 value,
-                "Unable to find a matching SG status for %s from %s"
+                "Unable to find a matching Shotgun status for %s from %s"
                 % (value, self._sg_jira_status_mapping),
             )
 
@@ -270,7 +270,7 @@ class SyncHandler(object):
                 # Try to remove the entries from the Shotgun value. We make a
                 # copy of the list so we can delete entries while iterating
                 self._logger.debug(
-                    "Trying to remove %s from SG %s value %s"
+                    "Trying to remove %s from Shotgun %s value %s"
                     % (removed, shotgun_field, current_sg_value,)
                 )
                 for i, sg_value in enumerate(list(current_sg_value)):
@@ -280,14 +280,14 @@ class SyncHandler(object):
                     # name e.g. "code"
                     if removed.lower() == sg_value["name"].lower():
                         self._logger.debug(
-                            "Removing %s from SG value %s since Jira "
+                            "Removing %s from Shotgun value %s since Jira "
                             "removed %s " % (sg_value, current_sg_value, removed,)
                         )
                         del current_sg_value[i]
             for added in added_list:
                 # Check if the value is already there
                 self._logger.debug(
-                    "Trying to add %s to SG %s value %s"
+                    "Trying to add %s to Shotgun %s value %s"
                     % (added, shotgun_field, current_sg_value,)
                 )
                 for sg_value in current_sg_value:
@@ -297,7 +297,8 @@ class SyncHandler(object):
                     # name e.g. "code"
                     if added.lower() == sg_value["name"].lower():
                         self._logger.debug(
-                            "%s is already in current SG value: %s" % (added, sg_value,)
+                            "%s is already in current Shotgun value: %s"
+                            % (added, sg_value,)
                         )
                         break
                 else:
@@ -308,7 +309,7 @@ class SyncHandler(object):
                     )
                     if sg_value:
                         self._logger.debug(
-                            "Adding %s to SG value %s since Jira "
+                            "Adding %s to Shotgun value %s since Jira "
                             "added %s" % (sg_value, current_sg_value, added,)
                         )
                         current_sg_value.append(sg_value)

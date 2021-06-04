@@ -267,7 +267,7 @@ JIRA_COMMENT = {
         "active": True,
         "timeZone": "America/New_York",
     },
-    "body": "[SG Note|https://myshotgun.shotgunstudio.com/detail/Note/6460]\r\n{panel:title=Pied Piper Rocks!}\r\nNote content here\r\nand more here.\r\n{panel}",
+    "body": "[Shotgun Note|https://myshotgun.shotgunstudio.com/detail/Note/6460]\r\n{panel:title=Pied Piper Rocks!}\r\nNote content here\r\nand more here.\r\n{panel}",
     "updateAuthor": {
         "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=0123456789abcdef01234567",
         "name": "richard.hendricks",
