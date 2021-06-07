@@ -186,7 +186,7 @@ API
 ***
 
 Connections to ShotGrid and Jira
-===============================
+================================
 These classes manage the specific connections to ShotGrid and Jira.
 
 ShotgunSession
