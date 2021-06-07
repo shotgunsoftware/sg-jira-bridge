@@ -1,5 +1,7 @@
 
 
+
+
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -8,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Known Issues &amp; Compatibility Notes &mdash; Shotgun Jira Bridge  documentation</title>
+  <title>Known Issues &amp; Compatibility Notes &mdash; sg-jira-bridge v0.3.1 documentation</title>
   
 
   
@@ -21,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -33,6 +35,7 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Installing as a Service" href="services.html" /> 
@@ -47,17 +50,25 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
+    <a href='http://developer.shotgunsoftware.com'>
+    
+        <img style='width: 191px;
+                height: 60px;
+                margin: 2px;
+                border-radius: 0px;
+                padding: 0px;'
+            src='_static/logo_sg@2x.png'/>
+    
+    </a>
+    
 
           
-            <a href="index.html" class="icon icon-home"> Shotgun Jira Bridge
+            <a href="index.html" class="icon icon-home"> sg-jira-bridge
           
 
           
           </a>
 
-          
-            
-            
           
 
           
@@ -70,10 +81,12 @@
 </div>
 
           
+
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
+    
             
             
               
@@ -91,6 +104,36 @@
 
             
           
+
+    <a href='genindex.html'>Alphabetic Index</a>
+
+    <div style='margin-top: 50px;
+                margin-left: 10px;
+                margin-right: 10px;
+                padding: 10px;
+                color: #b3b3b3;
+                font-size: 70%;
+                border-radius: 3px;
+                background-color: #444;
+                line-height: 18px;
+                '>
+    <style>
+        a.custom_post_menu { display: inline;
+                             padding: 0px;
+                             text-decoration: underline; }
+    </style>
+
+    <b>sg-jira-bridge</b> v0.3.1.<br>
+    
+    For more information, please visit
+    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    The code associated with this documentation can be found
+    <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
+
+    </div>
+
+
+
         </div>
       </div>
     </nav>
@@ -101,7 +144,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Shotgun Jira Bridge</a>
+          <a href="index.html">sg-jira-bridge</a>
         
       </nav>
 
@@ -151,46 +194,46 @@
             
   <div class="section" id="known-issues-compatibility-notes">
 <span id="known-issues"></span><h1>Known Issues &amp; Compatibility Notes<a class="headerlink" href="#known-issues-compatibility-notes" title="Permalink to this headline">¶</a></h1>
-<p>Because Shotgun and Jira are both highly customizable and have different APIs,
+<p>Because ShotGrid and Jira are both highly customizable and have different APIs,
 there are some cases where things may not match up as expected. There are also
 cases where certain features have not been implemented yet.</p>
 <ul class="simple">
-<li>Deletion events are not handled yet.</li>
-<li>SG Jira Bridge does not create entities in Shotgun, it will only update
-existing ones. This means syncing can only <em>initiate</em> from Shotgun and not
-from Jira. If an entity in Shotgun that was synced with an issue in Jira is
-deleted, it will not currently be re-created in Shotgun.</li>
-<li>In most cases only one <a class="reference internal" href="developer.html#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> can handle a
+<li><p>Deletion events are not handled yet.</p></li>
+<li><p>SG Jira Bridge does not create entities in ShotGrid, it will only update
+existing ones. This means syncing can only <em>initiate</em> from ShotGrid and not
+from Jira. If an entity in ShotGrid that was synced with an issue in Jira is
+deleted, it will not currently be re-created in ShotGrid.</p></li>
+<li><p>In most cases only one <a class="reference internal" href="developer.html#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> can handle a
 given event. The exception is with the <strong>Sync In Jira</strong> event which is a
 special case that is handled by the
 <a class="reference internal" href="developer.html#sg_jira.handlers.EnableSyncingHandler" title="sg_jira.handlers.EnableSyncingHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnableSyncingHandler</span></code></a> which is a container
-for multiple handlers.</li>
-<li>Notes in Shotgun can be linked to multiple entities, but Comments in Jira
+for multiple handlers.</p></li>
+<li><p>Notes in ShotGrid can be linked to multiple entities, but Comments in Jira
 can only be linked to a single Issue. Notes linked to multiple entities in
-Shotgun will be synced in Jira but only linked to a single Issue. There is
+ShotGrid will be synced in Jira but only linked to a single Issue. There is
 no logic to choosing which Issue the Note is linked to other than the first
-one that the Bridge encounters.</li>
-<li>Shotgun Notes contain a subject and content, while Jira Comments have only
-a body. When syncing Notes from Shotgun to Jira, a special formatting is
-used to mimic the structure that Shotgun uses. Updates to a Comment in Jira
+one that the Bridge encounters.</p></li>
+<li><p>ShotGrid Notes contain a subject and content, while Jira Comments have only
+a body. When syncing Notes from ShotGrid to Jira, a special formatting is
+used to mimic the structure that ShotGrid uses. Updates to a Comment in Jira
 must retain this formatting otherwise the Comment will not sync back to
-Shotgun.</li>
-<li>Note Replies in Shotgun are not currently handled by SG Jira Bridge. Jira
+ShotGrid.</p></li>
+<li><p>Note Replies in ShotGrid are not currently handled by SG Jira Bridge. Jira
 has no concept of replies, or threading in Comments. This workflow is
-being investigated.</li>
-<li>Duplicating an Entity in Shotgun that is currently synced with Jira, will
+being investigated.</p></li>
+<li><p>Duplicating an Entity in ShotGrid that is currently synced with Jira, will
 also duplicate the <strong>Jira Key</strong> field, possibly causing data corruption.
-We recommend not duplicating synced Entities in Shotgun. Alternatively, you
-may enable unique values on the <strong>Jira Key</strong> in Shotgun, however this will
-now generate an error in Shotgun if a synced Entity is duplicated. Perhaps
-it’s better than possibly corrupting the synced Jira Issue.</li>
-<li>Jira single-line <cite>Text Field</cite> fields are limited to 255 characters. When
-syncing from Shotgun to Jira, if the Shotgun field is mapped to a Jira
+We recommend not duplicating synced Entities in ShotGrid. Alternatively, you
+may enable unique values on the <strong>Jira Key</strong> in ShotGrid, however this will
+now generate an error in ShotGrid if a synced Entity is duplicated. Perhaps
+it’s better than possibly corrupting the synced Jira Issue.</p></li>
+<li><p>Jira single-line <cite>Text Field</cite> fields are limited to 255 characters. When
+syncing from ShotGrid to Jira, if the ShotGrid field is mapped to a Jira
 single-line Text Field, and the value is longer than 255 characters, a
 warning is logged, the synced value will be truncated and an addendum added
-that says to look in Shotgun for the full value. This could cause data loss
+that says to look in ShotGrid for the full value. This could cause data loss
 if the field is then updated in Jira which will overwrite the original value
-in Shotgun.</li>
+in ShotGrid.</p></li>
 </ul>
 </div>
 
@@ -212,11 +255,10 @@ in Shotgun.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2021, Autodesk
 
     </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  </div> 
 
 </footer>
 
@@ -238,7 +280,19 @@ in Shotgun.</li>
   
   
     
-   
+  
+ 
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-2114792-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
 
 </body>
 </html>

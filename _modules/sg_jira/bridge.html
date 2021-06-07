@@ -1,5 +1,7 @@
 
 
+
+
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -8,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sg_jira.bridge &mdash; Shotgun Jira Bridge  documentation</title>
+  <title>sg_jira.bridge &mdash; sg-jira-bridge v0.3.1 documentation</title>
   
 
   
@@ -21,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -33,6 +35,7 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -46,17 +49,25 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
+    <a href='http://developer.shotgunsoftware.com'>
+    
+        <img style='width: 191px;
+                height: 60px;
+                margin: 2px;
+                border-radius: 0px;
+                padding: 0px;'
+            src='../../_static/logo_sg@2x.png'/>
+    
+    </a>
+    
 
           
-            <a href="../../index.html" class="icon icon-home"> Shotgun Jira Bridge
+            <a href="../../index.html" class="icon icon-home"> sg-jira-bridge
           
 
           
           </a>
 
-          
-            
-            
           
 
           
@@ -69,10 +80,12 @@
 </div>
 
           
+
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
+    
             
             
               
@@ -90,6 +103,36 @@
 
             
           
+
+    <a href='genindex.html'>Alphabetic Index</a>
+
+    <div style='margin-top: 50px;
+                margin-left: 10px;
+                margin-right: 10px;
+                padding: 10px;
+                color: #b3b3b3;
+                font-size: 70%;
+                border-radius: 3px;
+                background-color: #444;
+                line-height: 18px;
+                '>
+    <style>
+        a.custom_post_menu { display: inline;
+                             padding: 0px;
+                             text-decoration: underline; }
+    </style>
+
+    <b>sg-jira-bridge</b> v0.3.1.<br>
+    
+    For more information, please visit
+    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    The code associated with this documentation can be found
+    <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
+
+    </div>
+
+
+
         </div>
       </div>
     </nav>
@@ -100,7 +143,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">Shotgun Jira Bridge</a>
+          <a href="../../index.html">sg-jira-bridge</a>
         
       </nav>
 
@@ -178,9 +221,9 @@
 
 <div class="viewcode-block" id="Bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge">[docs]</a><span class="k">class</span> <span class="nc">Bridge</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A bridge between Shotgun and Jira.</span>
+<span class="sd">    A bridge between ShotGrid and Jira.</span>
 
-<span class="sd">    The bridge handles connections to the Shotgun and Jira servers and dispatches</span>
+<span class="sd">    The bridge handles connections to the ShotGrid and Jira servers and dispatches</span>
 <span class="sd">    sync events.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -205,15 +248,15 @@
 <span class="sd">            Jira Server will still work with a users&#39;s password and does not</span>
 <span class="sd">            support API tokens.</span>
 
-<span class="sd">        :param str sg_site: A Shotgun site url.</span>
-<span class="sd">        :param str sg_script: A Shotgun script user name.</span>
-<span class="sd">        :param str sg_script_key: The script user key for the Shotgun script.</span>
+<span class="sd">        :param str sg_site: A ShotGrid site url.</span>
+<span class="sd">        :param str sg_script: A ShotGrid script user name.</span>
+<span class="sd">        :param str sg_script_key: The script user key for the ShotGrid script.</span>
 <span class="sd">        :param str jira_site: A Jira site url.</span>
 <span class="sd">        :param str jira_user: A Jira user name, either his email address or short</span>
 <span class="sd">                              name.</span>
 <span class="sd">        :param str jira_secret: The Jira user password or API key.</span>
 <span class="sd">        :param sync_settings: A dictionary where keys are settings names.</span>
-<span class="sd">        :param str sg_http_proxy: Optional, a http proxy to use for the Shotgun</span>
+<span class="sd">        :param str sg_http_proxy: Optional, a http proxy to use for the ShotGrid</span>
 <span class="sd">                                  connection, or None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Bridge</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -391,9 +434,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current_shotgun_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the Shotgun user used for the connection.</span>
+<span class="sd">        Return the ShotGrid user used for the connection.</span>
 
-<span class="sd">        :returns: A Shotgun record dictionary with an `id` key and a `type` key.</span>
+<span class="sd">        :returns: A ShotGrid record dictionary with an `id` key and a `type` key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">current_user</span>
 
@@ -480,11 +523,11 @@
 
 <div class="viewcode-block" id="Bridge.sync_in_jira"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.sync_in_jira">[docs]</a>    <span class="k">def</span> <span class="nf">sync_in_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sync the given Shotgun Entity to Jira.</span>
+<span class="sd">        Sync the given ShotGrid Entity to Jira.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
-<span class="sd">        :param str entity_type: The Shotgun Entity type to sync.</span>
-<span class="sd">        :param int entity_id: The id of the Shotgun Entity to sync.</span>
+<span class="sd">        :param str entity_type: The ShotGrid Entity type to sync.</span>
+<span class="sd">        :param int entity_id: The id of the ShotGrid Entity to sync.</span>
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
 <span class="sd">        :returns: True if the Entity was actually synced in Jira, False if</span>
 <span class="sd">                  syncing was skipped for any reason.</span>
@@ -514,13 +557,13 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sync the given Jira Resource to Shotgun.</span>
+<span class="sd">        Sync the given Jira Resource to ShotGrid.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
 <span class="sd">        :param str resource_type: The type of Jira resource sync, e.g. Issue.</span>
 <span class="sd">        :param str resource_id: The id of the Jira resource to sync.</span>
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
-<span class="sd">        :returns: True if the resource was actually synced in Shotgun, False if</span>
+<span class="sd">        :returns: True if the resource was actually synced in ShotGrid, False if</span>
 <span class="sd">                  syncing was skipped for any reason.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">synced</span> <span class="o">=</span> <span class="kc">False</span>
@@ -549,11 +592,10 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2021, Autodesk
 
     </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  </div> 
 
 </footer>
 
@@ -575,7 +617,19 @@
   
   
     
-   
+  
+ 
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-2114792-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
 
 </body>
 </html>

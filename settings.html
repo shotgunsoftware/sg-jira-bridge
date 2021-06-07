@@ -1,5 +1,7 @@
 
 
+
+
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -8,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Settings &mdash; Shotgun Jira Bridge  documentation</title>
+  <title>Settings &mdash; sg-jira-bridge v0.3.1 documentation</title>
   
 
   
@@ -21,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -33,6 +35,7 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Debugging" href="debugging.html" />
@@ -48,17 +51,25 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
+    <a href='http://developer.shotgunsoftware.com'>
+    
+        <img style='width: 191px;
+                height: 60px;
+                margin: 2px;
+                border-radius: 0px;
+                padding: 0px;'
+            src='_static/logo_sg@2x.png'/>
+    
+    </a>
+    
 
           
-            <a href="index.html" class="icon icon-home"> Shotgun Jira Bridge
+            <a href="index.html" class="icon icon-home"> sg-jira-bridge
           
 
           
           </a>
 
-          
-            
-            
           
 
           
@@ -71,10 +82,12 @@
 </div>
 
           
+
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
+    
             
             
               
@@ -100,6 +113,36 @@
 
             
           
+
+    <a href='genindex.html'>Alphabetic Index</a>
+
+    <div style='margin-top: 50px;
+                margin-left: 10px;
+                margin-right: 10px;
+                padding: 10px;
+                color: #b3b3b3;
+                font-size: 70%;
+                border-radius: 3px;
+                background-color: #444;
+                line-height: 18px;
+                '>
+    <style>
+        a.custom_post_menu { display: inline;
+                             padding: 0px;
+                             text-decoration: underline; }
+    </style>
+
+    <b>sg-jira-bridge</b> v0.3.1.<br>
+    
+    For more information, please visit
+    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    The code associated with this documentation can be found
+    <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
+
+    </div>
+
+
+
         </div>
       </div>
     </nav>
@@ -110,7 +153,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Shotgun Jira Bridge</a>
+          <a href="index.html">sg-jira-bridge</a>
         
       </nav>
 
@@ -168,32 +211,32 @@ The settings file contains three main sections:</p>
 <h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
 <p>Credentials are retrieved by default from environment variables:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SITE</span></code>: the Shotgun site url</li>
-<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_NAME</span></code>: a Shotgun script user name</li>
-<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_KEY</span></code>: the Shotgun script user Application Key</li>
-<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_SITE</span></code>: the Jira server url</li>
-<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER</span></code>: the system name of the Jira user used to
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SITE</span></code>: the ShotGrid site url</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_NAME</span></code>: a ShotGrid script user name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_KEY</span></code>: the ShotGrid script user Application Key</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_SITE</span></code>: the Jira server url</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER</span></code>: the system name of the Jira user used to
 connect for the sync.  This is usually your email address you
 sign in to Jira with. Jira does not have a concept of a “script”
 user so this will need to be the designated user account that
 will control the sync updates. It will need appropriate
-permissions to make any changes required.</li>
-<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER_SECRET</span></code>: the Jira user password or API Key.</li>
+permissions to make any changes required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER_SECRET</span></code>: the Jira user password or API Key.</p></li>
 </ul>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
+<p class="admonition-title">Note</p>
 <p><strong>Jira Cloud</strong> requires the use of an API token and will not work with
 a user password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a> for information
 on how to generate a token.</p>
 <p><strong>Jira Server</strong> will still work with a user password and does not support
 API tokens.</p>
-<p class="last">For more information, see: <a class="reference external" href="https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/">https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/</a></p>
+<p>For more information, see: <a class="reference external" href="https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/">https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/</a></p>
 </div>
 <p>You may set these in your environment or by installing
 <a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a> and defining these
 in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Shotgun credentials</span>
-<span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgunstudio.com&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># ShotGrid credentials</span>
+<span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgrid.autodesk.com&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">&#39;sg-jira-bridge&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>
 
@@ -230,10 +273,10 @@ URL for SG Jira Bridge. For example,
 <code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code> uses the settings named
 <code class="docutils literal notranslate"><span class="pre">my_settings</span></code>.</p>
 <ul class="simple">
-<li><strong>syncer</strong>: The syncer class to use in the format <code class="docutils literal notranslate"><span class="pre">module_name.class_name</span></code>.</li>
-<li><strong>settings</strong>: A dictionary containing the settings for the syncer where the
+<li><p><strong>syncer</strong>: The syncer class to use in the format <code class="docutils literal notranslate"><span class="pre">module_name.class_name</span></code>.</p></li>
+<li><p><strong>settings</strong>: A dictionary containing the settings for the syncer where the
 key is the setting name and value is it’s value. These settings will be used
-as parameters when instantiating the syncer class.</li>
+as parameters when instantiating the syncer class.</p></li>
 </ul>
 <p>Each set of <code class="docutils literal notranslate"><span class="pre">SYNC</span></code> settings defined in your <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file must
 define a single <a class="reference internal" href="developer.html#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a>.</p>
@@ -325,11 +368,10 @@ overly simplified example might look something like this:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2021, Autodesk
 
     </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  </div> 
 
 </footer>
 
@@ -351,7 +393,19 @@ overly simplified example might look something like this:</p>
   
   
     
-   
+  
+ 
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-2114792-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
 
 </body>
 </html>

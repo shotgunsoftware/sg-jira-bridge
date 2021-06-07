@@ -1,5 +1,7 @@
 
 
+
+
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -8,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sg_jira.shotgun_session &mdash; Shotgun Jira Bridge  documentation</title>
+  <title>sg_jira.shotgun_session &mdash; sg-jira-bridge v0.3.1 documentation</title>
   
 
   
@@ -21,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -33,6 +35,7 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -46,17 +49,25 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
+    <a href='http://developer.shotgunsoftware.com'>
+    
+        <img style='width: 191px;
+                height: 60px;
+                margin: 2px;
+                border-radius: 0px;
+                padding: 0px;'
+            src='../../_static/logo_sg@2x.png'/>
+    
+    </a>
+    
 
           
-            <a href="../../index.html" class="icon icon-home"> Shotgun Jira Bridge
+            <a href="../../index.html" class="icon icon-home"> sg-jira-bridge
           
 
           
           </a>
 
-          
-            
-            
           
 
           
@@ -69,10 +80,12 @@
 </div>
 
           
+
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
+    
             
             
               
@@ -90,6 +103,36 @@
 
             
           
+
+    <a href='genindex.html'>Alphabetic Index</a>
+
+    <div style='margin-top: 50px;
+                margin-left: 10px;
+                margin-right: 10px;
+                padding: 10px;
+                color: #b3b3b3;
+                font-size: 70%;
+                border-radius: 3px;
+                background-color: #444;
+                line-height: 18px;
+                '>
+    <style>
+        a.custom_post_menu { display: inline;
+                             padding: 0px;
+                             text-decoration: underline; }
+    </style>
+
+    <b>sg-jira-bridge</b> v0.3.1.<br>
+    
+    For more information, please visit
+    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    The code associated with this documentation can be found
+    <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
+
+    </div>
+
+
+
         </div>
       </div>
     </nav>
@@ -100,7 +143,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">Shotgun Jira Bridge</a>
+          <a href="../../index.html">sg-jira-bridge</a>
         
       </nav>
 
@@ -171,8 +214,8 @@
 <span class="sd">    Wraps a :class:`shotgun_api3.shotgun.Shotgun` instance and provide some helpers and</span>
 <span class="sd">    session caches.</span>
 
-<span class="sd">    Ensures all the values we get from Shotgun are unicode and not utf-8 encoded</span>
-<span class="sd">    strings. Utf-8 encodes unicode values before sending them to Shotgun.</span>
+<span class="sd">    Ensures all the values we get from ShotGrid are unicode and not utf-8 encoded</span>
+<span class="sd">    strings. Utf-8 encodes unicode values before sending them to ShotGrid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># The list of Shotgun methods we need to wrap.</span>
@@ -226,29 +269,29 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the Shotgun user used for the connection.</span>
+<span class="sd">        Return the ShotGrid user used for the connection.</span>
 
-<span class="sd">        :returns: A Shotgun record dictionary with an `id` key and a `type` key.</span>
+<span class="sd">        :returns: A ShotGrid record dictionary with an `id` key and a `type` key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_user</span>
 
 <div class="viewcode-block" id="ShotgunSession.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check the Shotgun site and cache site level values.</span>
+<span class="sd">        Check the ShotGrid site and cache site level values.</span>
 
-<span class="sd">        :raises RuntimeError: if the Shotgun site was not correctly configured to</span>
+<span class="sd">        :raises RuntimeError: if the ShotGrid site was not correctly configured to</span>
 <span class="sd">                 be used with this bridge.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_field</span><span class="p">(</span><span class="s2">&quot;Project&quot;</span><span class="p">,</span> <span class="n">SHOTGUN_JIRA_ID_FIELD</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ShotgunSession.assert_field"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.assert_field">[docs]</a>    <span class="k">def</span> <span class="nf">assert_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_type</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if the given field with the given type exists for the given Shotgun</span>
+<span class="sd">        Check if the given field with the given type exists for the given ShotGrid</span>
 <span class="sd">        Entity type.</span>
 
-<span class="sd">        :param str entity_type: A Shotgun Entity type.</span>
-<span class="sd">        :param str field_name: A Shotgun field name, e.g. &#39;sg_my_precious&#39;.</span>
-<span class="sd">        :param str field_type: A Shotgun field type, e.g. &#39;text&#39;.</span>
+<span class="sd">        :param str entity_type: A ShotGrid Entity type.</span>
+<span class="sd">        :param str field_name: A ShotGrid field name, e.g. &#39;sg_my_precious&#39;.</span>
+<span class="sd">        :param str field_type: A ShotGrid field type, e.g. &#39;text&#39;.</span>
 <span class="sd">        :param bool check_unique: When ``True``, check the specified field</span>
 <span class="sd">            is configured to only accept unique values. Default is ``False``.</span>
 <span class="sd">        :raises RuntimeError: if the field does not exist or does not have the</span>
@@ -275,14 +318,14 @@
 
 <div class="viewcode-block" id="ShotgunSession.get_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_field_schema">[docs]</a>    <span class="k">def</span> <span class="nf">get_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the Shotgun schema for the given Entity field.</span>
+<span class="sd">        Return the ShotGrid schema for the given Entity field.</span>
 
-<span class="sd">        .. note:: Shotgun schemas are cached and the bridge needs to be restarted</span>
-<span class="sd">                  if schemas are changed in Shotgun.</span>
+<span class="sd">        .. note:: ShotGrid schemas are cached and the bridge needs to be restarted</span>
+<span class="sd">                  if schemas are changed in ShotGrid.</span>
 
-<span class="sd">        :param str entity_type: A Shotgun Entity type.</span>
-<span class="sd">        :param str field_name: A Shotgun field name, e.g. &#39;sg_my_precious&#39;.</span>
-<span class="sd">        :returns: The Shotgun schema for the given field as a dictionary or `None`.</span>
+<span class="sd">        :param str entity_type: A ShotGrid Entity type.</span>
+<span class="sd">        :param str field_name: A ShotGrid field name, e.g. &#39;sg_my_precious&#39;.</span>
+<span class="sd">        :returns: The ShotGrid schema for the given field as a dictionary or `None`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">entity_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">schema_field_read</span><span class="p">(</span>
@@ -293,10 +336,10 @@
 
 <div class="viewcode-block" id="ShotgunSession.clear_cached_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema">[docs]</a>    <span class="k">def</span> <span class="nf">clear_cached_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Clear all cached Shotgun schema or just the cached schema for the given</span>
-<span class="sd">        Shotgun Entity type.</span>
+<span class="sd">        Clear all cached ShotGrid schema or just the cached schema for the given</span>
+<span class="sd">        ShotGrid Entity type.</span>
 
-<span class="sd">        :param str entity_type: A Shotgun Entity type or None.</span>
+<span class="sd">        :param str entity_type: A ShotGrid Entity type or None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">entity_type</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Clearing cached Shotgun schema for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">entity_type</span><span class="p">)</span>
@@ -309,7 +352,7 @@
 <div class="viewcode-block" id="ShotgunSession.get_entity_name_field"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_entity_name_field">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_entity_name_field</span><span class="p">(</span><span class="n">entity_type</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the Shotgun name field to use for the specified entity type.</span>
+<span class="sd">        Return the ShotGrid name field to use for the specified entity type.</span>
 
 <span class="sd">        :param str entity_type: The entity type to get the name field for.</span>
 <span class="sd">        :returns: The name field for the specified entity type.</span>
@@ -319,11 +362,11 @@
 
 <div class="viewcode-block" id="ShotgunSession.is_project_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.is_project_entity">[docs]</a>    <span class="k">def</span> <span class="nf">is_project_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return `True` if the given Shotgun Entity type is a project Entity,</span>
+<span class="sd">        Return `True` if the given ShotGrid Entity type is a project Entity,</span>
 <span class="sd">        that is an Entity linked to a Project, `False` if it is a non-project</span>
 <span class="sd">        Entity.</span>
 
-<span class="sd">        :param str entity_type: A Shotgun Entity type.</span>
+<span class="sd">        :param str entity_type: A ShotGrid Entity type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">entity_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">schema_field_read</span><span class="p">(</span>
@@ -341,13 +384,13 @@
 
 <div class="viewcode-block" id="ShotgunSession.consolidate_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.consolidate_entity">[docs]</a>    <span class="k">def</span> <span class="nf">consolidate_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Consolidate the given Shotgun Entity: collect additional field values,</span>
+<span class="sd">        Consolidate the given ShotGrid Entity: collect additional field values,</span>
 <span class="sd">        ensure the Entity name is available under a &quot;name&quot; key.</span>
 
-<span class="sd">        :param shotgun_entity: A Shotgun Entity dictionary with at least its id</span>
+<span class="sd">        :param shotgun_entity: A ShotGrid Entity dictionary with at least its id</span>
 <span class="sd">                               and its type.</span>
 <span class="sd">        :param fields: An optional list of fields to add to the query.</span>
-<span class="sd">        :returns: The consolidated Shotgun Entity or `None` if it can&#39;t be retrieved.</span>
+<span class="sd">        :returns: The consolidated ShotGrid Entity or `None` if it can&#39;t be retrieved.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Define the fields we need to handle the Entity type.</span>
@@ -391,15 +434,15 @@
 
 <div class="viewcode-block" id="ShotgunSession.match_entity_by_name"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.match_entity_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">match_entity_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">entity_types</span><span class="p">,</span> <span class="n">shotgun_project</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve a Shotgun Entity with the given name from the given list of</span>
+<span class="sd">        Retrieve a ShotGrid Entity with the given name from the given list of</span>
 <span class="sd">        Entity types.</span>
 
-<span class="sd">        Project Shotgun Entities are restricted to the given Shotgun Project.</span>
+<span class="sd">        Project ShotGrid Entities are restricted to the given ShotGrid Project.</span>
 
 <span class="sd">        :param str name: A name to match.</span>
-<span class="sd">        :param entity_types: A list of Shotgun Entity types to consider.</span>
-<span class="sd">        :param shotgun_project: A Shotgun Project dictionary.</span>
-<span class="sd">        :return: A Shotgun Entity dictionary or `None`.</span>
+<span class="sd">        :param entity_types: A list of ShotGrid Entity types to consider.</span>
+<span class="sd">        :param shotgun_project: A ShotGrid Project dictionary.</span>
+<span class="sd">        :return: A ShotGrid Entity dictionary or `None`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">entity_type</span> <span class="ow">in</span> <span class="n">entity_types</span><span class="p">:</span>
             <span class="n">name_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entity_name_field</span><span class="p">(</span><span class="n">entity_type</span><span class="p">)</span>
@@ -415,9 +458,9 @@
 
 <div class="viewcode-block" id="ShotgunSession.get_entity_page_url"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_entity_page_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_entity_page_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the Shotgun page url for the given Entity.</span>
+<span class="sd">        Return the ShotGrid page url for the given Entity.</span>
 
-<span class="sd">        :param shotgun_entity: A Shotgun Entity dictionary with at least a &#39;type&#39;</span>
+<span class="sd">        :param shotgun_entity: A ShotGrid Entity dictionary with at least a &#39;type&#39;</span>
 <span class="sd">                               key and an &#39;id&#39; key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/detail/</span><span class="si">%s</span><span class="s2">/</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
@@ -428,7 +471,7 @@
 
     <span class="k">def</span> <span class="nf">_get_wrapped_shotgun_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a wrapped Shotgun method which encodes all parameters and decodes</span>
+<span class="sd">        Return a wrapped ShotGrid method which encodes all parameters and decodes</span>
 <span class="sd">        the result before returning it.</span>
 
 <span class="sd">        :param str method_name: A :class:`~shotgun_api3.shotgun.Shotgun` method name.</span>
@@ -447,7 +490,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Called when an attribute can&#39;t be found on this class instance.</span>
 
-<span class="sd">        Check if the name is one of the Shotgun method names we need to wrap,</span>
+<span class="sd">        Check if the name is one of the ShotGrid method names we need to wrap,</span>
 <span class="sd">        return a wrapped method if it is the case.</span>
 <span class="sd">        Return the :class:`shotgun_api3.shotgun.Shotgun` attribute otherwise.</span>
 
@@ -468,11 +511,10 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Autodesk Inc.
+        &copy; Copyright 2021, Autodesk
 
     </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  </div> 
 
 </footer>
 
@@ -494,7 +536,19 @@
   
   
     
-   
+  
+ 
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-2114792-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
 
 </body>
 </html>
