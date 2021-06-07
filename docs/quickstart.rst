@@ -365,5 +365,5 @@ shotgunEvents in your terminal window for log messages.
     ``sg_jira_key`` field which will update automatically when you initially
     sync the Task. Jira stores the associated ShotGrid Entity type and ID in
     the **Shotgun Type** and **Shotgun ID** fields as well as a link to the
-    entity in Shotgun in the **Shotgun URL** field. This is a good indicator
+    entity in ShotGrid in the **Shotgun URL** field. This is a good indicator
     that things are working correctly.
