@@ -45,20 +45,20 @@ Required Fields
 The following fields must be created in ShotGrid for each of the
 following entity types:
 
-===========   ======================   =========   ==========================   ==========================
-Entity Type   Field Name               Data Type   Display Name (recommended)   Description
-===========   ======================   =========   ==========================   ==========================
-Project       ``sg_jira_sync_url``     File/Link   Jira Sync URL                URL of SG Jira Bridge (see below)
-Project       ``sg_jira_key``          Text        Jira Key*                    Synced Project Key value in Jira
-Task          ``sg_jira_key``          Text        Jira Key*                    Synced Issue Key value in Jira
-Task          ``sg_sync_in_jira``      Checkbox    Sync In Jira                 Enable/Disable syncing for this Task
-Task          ``sg_jira_url``          File/Link   Jira URL                     Link to synced Issue in Jira
-Note          ``sg_jira_key``          Text        Jira Key*                    Synced Issue Key/Comment ID in Jira
-HumanUser     ``sg_jira_account_id``   Text        Jira Account Id              Synced Account Id in Jira.
-===========   ======================   =========   ==========================   ==========================
+===========  =========  ================  ====================================  ======================
+Entity Type  Data Type  Display Name      Description                           Field Name (auto-generated)
+===========  =========  ================  ====================================  ======================
+Project      File/Link  Jira Sync URL     URL of SG Jira Bridge (see below)     ``sg_jira_sync_url``
+Project      Text       Jira Key*         Synced Project Key value in Jira      ``sg_jira_key``
+Task         Text       Jira Key*         Synced Issue Key value in Jira        ``sg_jira_key``
+Task         Checkbox   Sync In Jira      Enable/Disable syncing for this Task  ``sg_sync_in_jira``
+Task         File/Link  Jira URL          Link to synced Issue in Jira          ``sg_jira_url``
+Note         Text       Jira Key*         Synced Issue Key/Comment ID in Jira   ``sg_jira_key``
+HumanUser    Text       Jira Account Id   Synced Account Id in Jira.            ``sg_jira_account_id``
+===========  =========  ================  ====================================  ======================
 
 .. note::
-    - All ``sg_jira_key`` fields must be configured with the "*Ensure unique
+    - All ``Jira Key`` fields must be configured with the "*Ensure unique
       value per project*" setting **checked**. This setting can be found by
       showing the relevant field in an entity spreadsheet view and then
       right clicking the header for that column. Select the ``Configure field...``
@@ -131,6 +131,23 @@ Jira Webhook
     follow the instructions in the ``Testing on a Machine Not Accessible to Jira`` section of the
     debugging guide.
 
+Jira Permissions
+================
+In order for the Jira Bridge to be able to create and update issues in Jira, the Jira user associated with the Bridge
+will need to have certain permissions. Depending on your current Jira permission rules, you may not need to make
+any changes here. But if you would like to restrict the user to only the required permissions, you will need to add
+the following:
+
+* Browse Projects (to access custom fields)
+* Assignable User (to get the list of users that can be assigned to an issue)
+* Assign Issues
+* Close Issues
+* Create Issues
+* Edit Issues
+* Modify Reporter
+* Transition Issues
+* Add Comments
+* Edit All Comments
 
 Setting Up Your Config and Env
 ******************************
