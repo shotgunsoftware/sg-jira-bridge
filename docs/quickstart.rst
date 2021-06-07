@@ -8,7 +8,7 @@ The instructions below will help you get up and running quickly.
 Requirements
 ************
 - Python 2.7
-- A Shotgun site
+- A ShotGrid site
 - A Jira site
 
 
@@ -33,16 +33,16 @@ In April 2019, Atlassian put a new set of rules around accessing user data
 due to the the European GDPR regulation. Since then, email addresses of Jira
 users are no longer accessible.
 
-As the Shotgun Jira bridge relies on this information to pair Shotgun users
+As the ShotGrid Jira bridge relies on this information to pair ShotGrid users
 with Jira users, some extra steps will be required to configure the Jira
 bridge. This quickstart page will alert you when these extra steps are needed.
 
 
-Setting up Shotgun
-******************
+Setting up ShotGrid
+*******************
 Required Fields
 ===============
-The following fields must be created in Shotgun for each of the
+The following fields must be created in ShotGrid for each of the
 following entity types:
 
 ===========   ======================   =========   ==========================   ==========================
@@ -67,9 +67,9 @@ HumanUser     ``sg_jira_account_id``   Text        Jira Account Id              
       Jira server is hosted by Atlassian.
 
 
-Configure your Shotgun Project
-==============================
-Configure your Shotgun Project entity with your Jira Sync Settings:
+Configure your ShotGrid Project
+===============================
+Configure your ShotGrid Project entity with your Jira Sync Settings:
 
 +--------------+------------------------------------------+-----------------------------------------+
 | Field        | Value                                    | Description                             |
@@ -92,11 +92,11 @@ The following fields must be created in Jira and made available in Boards:
 +--------------+------+-----------------------------------------------------------------------+
 | Field Name   | Type | Description                                                           |
 +==============+======+=======================================================================+
-| Shotgun Type | Text | Stores the associated Shotgun Entity type                             |
+| Shotgun Type | Text | Stores the associated ShotGrid Entity type                            |
 +--------------+------+-----------------------------------------------------------------------+
-| Shotgun ID   | Text | Stores the associated Shotgun Entity ID                               |
+| Shotgun ID   | Text | Stores the associated ShotGrid Entity ID                              |
 +--------------+------+-----------------------------------------------------------------------+
-| Shotgun URL  | Text | Stores a link to the detail page for the associated entity in Shotgun |
+| Shotgun URL  | Text | Stores a link to the detail page for the associated entity in ShotGrid|
 +--------------+------+-----------------------------------------------------------------------+
 
 Jira Webhook
@@ -115,7 +115,7 @@ Jira Webhook
 |              | | The ``<url_for_sg_jira_bridge>`` is the host name or IP address of the computer you   |
 |              | | will be launching ``webapp.py`` or ``service.py`` from.                               |
 +--------------+-----------------------------------------------------------------------------------------+
-| Description  | "Webhook that syncs Jira data with Shotgun using the SG Jira Bridge"                    |
+| Description  | "Webhook that syncs Jira data with ShotGrid using the SG Jira Bridge"                   |
 +--------------+-----------------------------------------------------------------------------------------+
 | JQL          | ``project = "Your Project Name"``                                                       |
 +--------------+-----------------------------------------------------------------------------------------+
@@ -135,9 +135,9 @@ Jira Webhook
 Setting Up Your Config and Env
 ******************************
 
-There are two different pieces to setting up the Shotgun Jira Bridge. There's the bridge itself
-(``sg-jira-bridge``), which handles all of the syncing of data between Shotgun and Jira. Then
-there's the Shotgun Event Daemon (``shotgunEvents``), which handles dispatching supported Shotgun
+There are two different pieces to setting up the ShotGrid Jira Bridge. There's the bridge itself
+(``sg-jira-bridge``), which handles all of the syncing of data between ShotGrid and Jira. Then
+there's the ShotGrid Event Daemon (``shotgunEvents``), which handles dispatching supported ShotGrid
 events to the bridge.
 
 Since they are installed in different locations and each setup has different python module
@@ -188,8 +188,8 @@ and define these in a ``.env`` file.
 
 ::
 
-    # Shotgun credentials
-    SGJIRA_SG_SITE='https://mysite.shotgunstudio.com'
+    # ShotGrid credentials
+    SGJIRA_SG_SITE='https://mysite.shotgrid.autodesk.com'
     SGJIRA_SG_SCRIPT_NAME='sg-jira-bridge'
     SGJIRA_SG_SCRIPT_KEY='01234567@abcdef0123456789'  # replace with your api key
 
@@ -215,15 +215,15 @@ and define these in a ``.env`` file.
     will need to be the designated user account, with appropriate
     permissions, that will control the sync updates. Note that the user should
     not be your personal user account, as the bridge will ignore and not sync
-    to Shotgun any events triggered in Jira by that user. This ensures that
+    to ShotGrid any events triggered in Jira by that user. This ensures that
     the bridge will not end up in a "ping pong" state, where it bounces the
-    same event back-and-forth between Jira and Shotgun. As such, you will need
+    same event back-and-forth between Jira and ShotGrid. As such, you will need
     to create a dedicated user account in Jira for use with the bridge.
 
 
 shotgunEvents
 =============
-Details for configuring the Shotgun Event Daemon are available on the
+Details for configuring the ShotGrid Event Daemon are available on the
 `shotgunEvents wiki <https://github.com/shotgunsoftware/shotgunEvents/wiki>`_
 
 Installing Required Modules
@@ -258,12 +258,12 @@ shotgunEvents conf file::
 
     # A comma delimited list of paths where the framework should look for plugins to
     # load.
-    paths: /path/to/sg_jira_bridge/triggers, /path/to/any/other/shotgun/plugins
+    paths: /path/to/sg_jira_bridge/triggers, /path/to/any/other/shotgunEvents/plugins
     ...
 
 Authentication
 --------------
-The trigger uses the following environment variables to retrieve Shotgun
+The trigger uses the following environment variables to retrieve ShotGrid
 credentials::
 
     # sg_jira_event_trigger.py credentials
@@ -272,9 +272,9 @@ credentials::
 
 .. note::
 
-    The trigger uses it's own authentication to Shotgun, independent of the
+    The trigger uses it's own authentication to ShotGrid, independent of the
     auth used in the SG Jira Bridge Server and the main shotgunEvents settings.
-    We highly recommend you add an additional Script User in Shotgun solely
+    We highly recommend you add an additional Script User in ShotGrid solely
     for this trigger.
 
 .. note::
@@ -282,9 +282,9 @@ credentials::
     file from the SG Jira Bridge section
 
 
-Define a Mapping Between Jira and Shotgun Status Names
+Define a Mapping Between Jira and ShotGrid Status Names
 -------------------------------------------------------
-The bridge needs to know how to map a status in Shotgun to a status in Jira and vice versa. Your status names likely
+The bridge needs to know how to map a status in ShotGrid to a status in Jira and vice versa. Your status names likely
 differ from the default ones. Make sure the values in
 `TaskIssueHandler._sg_jira_status_mapping <https://github.com/shotgunsoftware/sg-jira-bridge/blob/725f63c19b45529f2507c530c7923cb4d55459e1/sg_jira/handlers/task_issue_handler.py#L47/>`_
 match the names used in your workflow::
@@ -298,26 +298,26 @@ match the names used in your workflow::
 Starting Everything Up
 **********************
 
-Match Shotgun users with Jira users (for Jira servers hosted by Atlassian only)
-===============================================================================
+Match ShotGrid users with Jira users (for Jira servers hosted by Atlassian only)
+================================================================================
 
 .. code-block:: bash
 
     $ python update_shotgun_users.py --settings <path to your settings.py> --project <id of your project>
 
 .. note::
-    For every user found in Shotgun, the script will search for a Jira user with
-    the same email address. If you have multiple users in Shotgun with
+    For every user found in ShotGrid, the script will search for a Jira user with
+    the same email address. If you have multiple users in ShotGrid with
     the same email address, only the first one, i.e. the one with the lowest id,
     will be associated with a Jira account.
 
-    If you wish to change the Shotgun user associated with a Jira account, e.g. the
-    script associated the first Shotgun user with an account when you actually wanted
+    If you wish to change the ShotGrid user associated with a Jira account, e.g. the
+    script associated the first ShotGrid user with an account when you actually wanted
     the second one, you can take the account id from the ``HumanUser.sg_jira_account_id``
     field from one user and copy it to another user and then clear the original user's
     account id.
 
-    If new users are added to Jira and Shotgun, run this script again and the new user
+    If new users are added to Jira and ShotGrid, run this script again and the new user
     accounts will be paired. Existing pairings will be left as they were.
 
 .. note::
@@ -326,7 +326,7 @@ Match Shotgun users with Jira users (for Jira servers hosted by Atlassian only)
     your Jira users can access any Jira project, the value for the ``--project``
     argument can be any project id. If you have restrictions, you will need to
     run this script once per project so that all your Jira users can be discovered
-    and paired with a Shotgun user.
+    and paired with a ShotGrid user.
 
 Start SG Jira Bridge
 ====================
@@ -352,18 +352,18 @@ Testing It Out
 **************
 Once everything is running you're ready to test it!
 
-- Create an Asset in Shotgun with a TaskTemplate appied.
+- Create an Asset in ShotGrid with a TaskTemplate appied.
 - Toggle the **Sync In Jira** checkbox ``on`` for one of the Tasks.
 - Navigate to your Jira site to see the Issue created for that Task.
-- Change the status in Jira to see the status change in Shotgun.
+- Change the status in Jira to see the status change in ShotGrid.
 
 If things don't seem to be working, check the output from SG Jira Bridge and
 shotgunEvents in your terminal window for log messages.
 
 .. note::
-    For any synced entity, Shotgun stores the associated Jira key in the
+    For any synced entity, ShotGrid stores the associated Jira key in the
     ``sg_jira_key`` field which will update automatically when you initially
-    sync the Task. Jira stores the associated Shotgun Entity type and ID in
+    sync the Task. Jira stores the associated ShotGrid Entity type and ID in
     the **Shotgun Type** and **Shotgun ID** fields as well as a link to the
-    entity in Shotgun in the **Shotgun URL** field. This is a good indicator
+    entity in ShotGrid in the **Shotgun URL** field. This is a good indicator
     that things are working correctly.

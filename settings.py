@@ -5,14 +5,14 @@
 # this software in either electronic or hard copy form.
 #
 """
-Shotgun Jira sync settings
+ShotGrid Jira sync settings
 """
 import os
 import sys
 import logging
 
 # Documentation for these settings are available at
-# https://developer.shotgunsoftware.com/sg-jira-bridge/settings.html
+# https://developer.shotgridsoftware.com/sg-jira-bridge/settings.html
 
 # Allow users to define their sensitive data in a .env file and
 # load it in environment variables with python-dotenv.

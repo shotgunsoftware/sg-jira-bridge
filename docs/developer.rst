@@ -6,7 +6,7 @@ Developer Resources
 Customizing the Workflow
 ************************
 SG Jira Bridge is structured so that studios can tailor the workflow to
-meet their specific needs. Because both Shotgun and Jira are highly
+meet their specific needs. Because both ShotGrid and Jira are highly
 customizable, exposing a handful of settings would not be sufficient.
 Therefore, the bridge has been structured to allow subclassing the
 various components that control syncing and handling events in order
@@ -20,9 +20,9 @@ Structure Overview
 Bridge
 ======
 The :class:`Bridge` is the main class for the sync. It handles the
-connections to both Shotgun and Jira, manages sync settings
+connections to both ShotGrid and Jira, manages sync settings
 from the ``settings.py`` file, and initiates the calls to sync
-in Shotgun and Jira.
+in ShotGrid and Jira.
 
 This class is intended to be used as-is without requiring customization
 since the details of the workflow logic are defined in the :class:`Syncer`
@@ -34,12 +34,12 @@ factory method and pass in the full path to the settings file.
 Syncers
 =======
 The :class:`Syncer` is in charge of initially determining whether to accept or
-reject events from Shotgun and Jira for syncing. This is done with the
+reject events from ShotGrid and Jira for syncing. This is done with the
 :meth:`~Syncer.accept_shotgun_event` and :meth:`~Syncer.accept_jira_event`
 methods. It performs initial basic checks on
 the event to determine if it should immediately be rejected without needing
 to ask the handlers. These checks should be completely independent of the
-implementation details of the handlers. For example, a Shotgun event can
+implementation details of the handlers. For example, a ShotGrid event can
 be inspected to ensure it has the basic required fields in an event like the
 ``meta`` and ``project`` keys. Without either of these keys in the event,
 no handlers could process the event anyway.
@@ -65,7 +65,7 @@ well, to pass on to Handlers::
 
     class TaskIssueSyncer(Syncer):
         """
-        Sync Shotgun Tasks as Jira Issues.
+        Sync ShotGrid Tasks as Jira Issues.
         """
         def __init__(self, issue_type="Task", **kwargs):
             """
@@ -102,7 +102,7 @@ well, to pass on to Handlers::
 Sync Handlers
 =============
 A :class:`~handlers.SyncHandler` holds the logic for syncing values between a
-Shotgun Entity type and a Jira resource and is owned by a :class:`Syncer`
+ShotGrid Entity type and a Jira resource and is owned by a :class:`Syncer`
 instance. The base class defines the interface all handlers should support
 and provides a set of helper methods useful for implementations.
 
@@ -120,7 +120,7 @@ The following methods must be overridden from the :class:`Syncer` base class::
 Setup
 -----
 When a syncer is first loaded, it calls ``setup()`` on each
-:class:`~handlers.SyncHandler`. This can be used to check the Jira and Shotgun
+:class:`~handlers.SyncHandler`. This can be used to check the Jira and ShotGrid
 sites for specific conditions or setup requirements, ensuring that the sync can
 safely happen.
 
@@ -137,14 +137,14 @@ themselves. Each :class:`~handlers.SyncHandler` must define a
 :meth:`~handlers.SyncHandler.accept_jira_event` which overrides the
 :class:`Syncer` base class. This is where the more specific logic for accepting
 or rejecting an event can occur. Checks for things like whether the event is
-for a Shotgun Entity type or Jira resource type that the handler cares about
-are appropriate. Or for example, you may wish to check a Shotgun event to see
+for a ShotGrid Entity type or Jira resource type that the handler cares about
+are appropriate. Or for example, you may wish to check a ShotGrid event to see
 if the Task field that was changed, is one that is supported by your handler.
 
 The goal of these methods is to quickly determine whether to process the event
 *given the information provided*. **Queries are expensive**. If after checking
 all of the given event info, there are still more questions to answer that
-require making additional queries to Shotgun or Jira, it is perfectly
+require making additional queries to ShotGrid or Jira, it is perfectly
 fine for these to be done in the
 :meth:`~handlers.SyncHandler.process_shotgun_event` or
 :meth:`~handlers.SyncHandler.process_jira_event` methods later.
@@ -154,7 +154,7 @@ Processing the Event
 :meth:`~handlers.SyncHandler.process_shotgun_event` and
 :meth:`~handlers.SyncHandler.process_jira_event` process the event data,
 perform any additional validation required to determine whether to continue
-with the sync (which may include additional queries to Jira and/or Shotgun),
+with the sync (which may include additional queries to Jira and/or ShotGrid),
 and then do the actual update.
 
 Once the event itself has been validated fully, the actual data that has
@@ -169,7 +169,7 @@ EntityIssueHandler
 ------------------
 In addition to the base :class:`~handlers.SyncHandler`, there is also a
 :class:`~handlers.EntityIssueHandler` which serves as a base class for handlers
-that sync between a Shotgun Entity type and a Jira Issue resource. Since this
+that sync between a ShotGrid Entity type and a Jira Issue resource. Since this
 is probably how a majority of workflows will work, it is provided to add an
 additional level of convenience.
 
@@ -185,9 +185,9 @@ must be overridden *in addition to the ones required by*
 API
 ***
 
-Connections to Shotgun and Jira
+Connections to ShotGrid and Jira
 ===============================
-These classes manage the specific connections to Shotgun and Jira.
+These classes manage the specific connections to ShotGrid and Jira.
 
 ShotgunSession
 --------------
@@ -203,7 +203,7 @@ JiraSession
 
 Bridge
 ======
-This is the main class that holds handles to both Shotgun and Jira
+This is the main class that holds handles to both ShotGrid and Jira
 and handles dispatching events to both sites.
 
 .. autoclass:: Bridge
@@ -214,7 +214,7 @@ and handles dispatching events to both sites.
 Syncers
 =======
 Base class in charge of initially determining whether to accept events
-from Shotgun and Jira for syncing. If accepted, it then passes on
+from ShotGrid and Jira for syncing. If accepted, it then passes on
 the event to a Handler to process the event.
 
 This must be subclassed to implement a list of Handlers to dispatch
@@ -237,9 +237,9 @@ SyncHandlers
 ============
 .. currentmodule:: sg_jira.handlers
 
-Base class that handles a particular sync instance between Shotgun and Jira.
+Base class that handles a particular sync instance between ShotGrid and Jira.
 
-Handlers hold the main logic for syncing values between a Shotgun Entity type
+Handlers hold the main logic for syncing values between a ShotGrid Entity type
 and a Jira resource. They are owned by a :class:`~sg_jira.Syncer` instance.
 This base class defines the interface all handlers should support and
 provides helpers methods useful to all implementations.
@@ -253,7 +253,7 @@ SyncHandler
 
 EntityIssueHandler
 ------------------
-Base class for syncing Shotgun Entities and Jira Issues. This inherits from
+Base class for syncing ShotGrid Entities and Jira Issues. This inherits from
 :class:`SyncHandler`.
 
 .. autoclass:: EntityIssueHandler
@@ -264,8 +264,8 @@ Base class for syncing Shotgun Entities and Jira Issues. This inherits from
 
 EnableSyncingHandler
 --------------------
-A handler that controls the initial sync for a Shotgun Task and Jira Issue when
-the "Sync In Jira" checkbox is toggled in Shotgun. It combines multiple
+A handler that controls the initial sync for a ShotGrid Task and Jira Issue when
+the "Sync In Jira" checkbox is toggled in ShotGrid. It combines multiple
 handlers to begin the syncing process by performing a full sync each time the
 checkbox is toggled on. This allows one to manually force a re-sync if needed
 by just toggling the checkbox off and then on again.

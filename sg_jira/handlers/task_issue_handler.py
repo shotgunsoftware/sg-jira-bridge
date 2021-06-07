@@ -16,7 +16,7 @@ from .entity_issue_handler import EntityIssueHandler
 
 class TaskIssueHandler(EntityIssueHandler):
     """
-    Sync a Shotgun Task as a Jira Issue.
+    Sync a ShotGrid Task as a Jira Issue.
     """
 
     # Define the mapping between Shotgun Task fields and Jira Issue fields
@@ -51,7 +51,7 @@ class TaskIssueHandler(EntityIssueHandler):
     @property
     def _sg_jira_status_mapping(self):
         """
-        Return a dictionary where keys are Shotgun status short codes and values
+        Return a dictionary where keys are ShotGrid status short codes and values
         Jira Issue status names.
         """
         return {
@@ -78,7 +78,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def setup(self):
         """
-        Check the Jira and Shotgun site, ensure that the sync can safely happen.
+        Check the Jira and ShotGrid site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field(
@@ -89,14 +89,14 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
-        Return the list of Shotgun fields that this handler can process for a
-        Shotgun to Jira event.
+        Return the list of ShotGrid fields that this handler can process for a
+        ShotGrid to Jira event.
         """
         return list(self.__TASK_FIELDS_MAPPING.keys())
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given Shotgun Entity.
+        Accept or reject the given event for the given ShotGrid Entity.
 
         :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
@@ -131,10 +131,10 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given Shotgun event for the given Shotgun Entity
+        Process the given ShotGrid event for the given ShotGrid Entity
 
-        :param str entity_type: The Shotgun Entity type to sync.
-        :param int entity_id: The id of the Shotgun Entity to sync.
+        :param str entity_type: The ShotGrid Entity type to sync.
+        :param int entity_id: The id of the ShotGrid Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
@@ -318,11 +318,11 @@ class TaskIssueHandler(EntityIssueHandler):
         self, shotgun_entity_type, shotgun_field
     ):
         """
-        Returns the Jira Issue field id to use to sync the given Shotgun Entity
+        Returns the Jira Issue field id to use to sync the given ShotGrid Entity
         type field.
 
-        :param str shotgun_entity_type: A Shotgun Entity type, e.g. 'Task'.
-        :param str shotgun_field: A Shotgun Entity field name, e.g. 'sg_status_list'.
+        :param str shotgun_entity_type: A ShotGrid Entity type, e.g. 'Task'.
+        :param str shotgun_field: A ShotGrid Entity field name, e.g. 'sg_status_list'.
         :returns: A string or `None`.
         """
         if shotgun_entity_type != "Task":
@@ -331,7 +331,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
         """
-        Returns the Shotgun field name to use to sync the given Jira Issue field.
+        Returns the ShotGrid field name to use to sync the given Jira Issue field.
 
         :param str jira_field_id: A Jira Issue field id, e.g. 'summary'.
         :returns: A string or `None`.
@@ -342,14 +342,14 @@ class TaskIssueHandler(EntityIssueHandler):
         self, sg_entity, jira_issue, exclude_shotgun_fields=None
     ):
         """
-        Update the given Jira Issue with values from the given Shotgun Entity.
+        Update the given Jira Issue with values from the given ShotGrid Entity.
 
-        An optional list of Shotgun fields can be provided to exclude them from
+        An optional list of ShotGrid fields can be provided to exclude them from
         the sync.
 
-        :param sg_entity: A Shotgun Entity dictionary.
+        :param sg_entity: A ShotGrid Entity dictionary.
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param exclude_shotgun_fields: An optional list of Shotgun field names which
+        :param exclude_shotgun_fields: An optional list of ShotGrid field names which
                                        shouldn't be synced.
         """
 

@@ -19,9 +19,9 @@ logger = logging.getLogger("update_shotgun_users")
 
 def sync_jira_users_into_shotgun(sg, jira, project_key):
     """
-    Associates JIRA users with Shotgun users.
+    Associates JIRA users with ShotGrid users.
 
-    :param sg: Connection to Shotgun
+    :param sg: Connection to ShotGrid
     :param jira: Connection to JIRA
     :param dict project_key: Project to use to match users.
     """
@@ -93,7 +93,7 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
 def _get_settings():
     """
     Retrieves the parameters necessary to run the app, i.e. logging settings and credentials for
-    both JIRA and Shotgun.
+    both JIRA and ShotGrid.
 
     :returns: Tuple of (log settings, )
     """
@@ -124,7 +124,7 @@ def _get_settings():
 
 def main():
     """
-    Map Shotgun users to JIRA users using their respective emails.
+    Map ShotGrid users to JIRA users using their respective emails.
     """
     logger_settings, shotgun_settings, jira_settings, project = _get_settings()
 

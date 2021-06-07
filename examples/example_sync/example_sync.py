@@ -29,10 +29,10 @@ class ExampleSync(Syncer):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given Shotgun event for the given Shotgun Entity
+        Process the given ShotGrid event for the given ShotGrid Entity
 
-        :param str entity_type: The Shotgun Entity type to sync.
-        :param int entity_id: The id of the Shotgun Entity to sync.
+        :param str entity_type: The ShotGrid Entity type to sync.
+        :param int entity_id: The id of the ShotGrid Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         """
         self.logger.info(
