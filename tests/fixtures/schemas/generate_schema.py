@@ -6,7 +6,7 @@
 #
 
 DESCRIPTION = """
-A script to generate Shotgun schema for Mockgun.
+A script to generate ShotGrid schema for Mockgun.
 """
 import argparse
 import os

@@ -57,7 +57,7 @@ def mocked_requests_post(*args, **kwargs):
 
 class TestSGTrigger(TestBase):
     """
-    Tests related to the Shotgun Event trigger.
+    Tests related to the ShotGrid Event trigger.
     """
 
     def setUp(self):

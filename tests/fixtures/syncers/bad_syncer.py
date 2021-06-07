@@ -17,7 +17,7 @@ class BadHandler(SyncHandler):
     def __init__(self, syncer, fail_on_sg_sync):
         """
         :param bool fail_on_sg_sync: Whether this syncer should fail when processing
-                                     Shotgun events.
+                                     ShotGrid events.
         """
         self._fail_on_sg_sync = fail_on_sg_sync
         return super(BadHandler, self).__init__(syncer)
@@ -50,9 +50,9 @@ class BadSyncer(Syncer):
 
         :param bool fail_on_setup: Whether this syncer should fail during setup.
         :param bool fail_on_sg_accept: Whether this syncer should fail when accepting
-                                       Shotgun events.
+                                       ShotGrid events.
         :param bool fail_on_sg_sync: Whether this syncer should fail when processing
-                                     Shotgun events.
+                                     ShotGrid events.
         """
         super(BadSyncer, self).__init__(**kwargs)
         self._fail_on_setup = fail_on_setup

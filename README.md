@@ -2,30 +2,30 @@
 [![Linting](https://img.shields.io/badge/PEP8%20by-Hound%20CI-a873d1.svg)](https://houndci.com)
 [![Python 2.7 3.7](https://img.shields.io/badge/python-2.7%20%7C%203.7-blue.svg)](https://www.python.org/)
 
-# Shotgun Jira Bridge
+# ShotGrid Jira Bridge
 
-Shotgun Jira Bridge is a simple synchronization setup between Shotgun and Jira. It's designed to get you up and running quickly with basic sync functionality for Tasks, Issues, and Notes.
+ShotGrid Jira Bridge is a simple synchronization setup between ShotGrid and Jira. It's designed to get you up and running quickly with basic sync functionality for Tasks, Issues, and Notes.
 
-By extending the base syncer and sync handlers you can quickly build custom workflows to connect your Shotgun and Jira sites. Details like entity types, hierarchy, issue types, fields, statuses, and logic can all be custom defined to match your studio's workflow.
+By extending the base syncer and sync handlers you can quickly build custom workflows to connect your ShotGrid and Jira sites. Details like entity types, hierarchy, issue types, fields, statuses, and logic can all be custom defined to match your studio's workflow.
 
-![alt text](https://developer.shotgunsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
+![alt text](https://developer.shotgridsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
 
 # Components
 
-- **`triggers/sg_jira_event_trigger.py`**: A Shotgun event trigger which can be used with the [Shotgun Event Daemon](https://github.com/shotgunsoftware/shotgunEvents)
+- **`triggers/sg_jira_event_trigger.py`**: A ShotGrid event trigger which can be used with the [ShotGrid Event Daemon](https://github.com/shotgunsoftware/shotgunEvents)
 - **`webapp.py`**: A simple web app used as a frontend for the synchronization.
 - **`service.py`**: A script to run the web app as a service on Linux and MacOS platforms.
 - **`win_service.py`**:  (TODO) A script to run the web app as a service on Windows.
-- **`sg_jira`**: Python package for handling the synchronization between Shotgun and Jira.
+- **`sg_jira`**: Python package for handling the synchronization between ShotGrid and Jira.
 
 # Documentation
 
-Full documentation is available at https://developer.shotgunsoftware.com/sg-jira-bridge
+Full documentation is available at https://developer.shotgridsoftware.com/sg-jira-bridge
 
 # Requirements
 
 - Python 2.7
-- A [Shotgun](https://shotgunsoftware.com) site
+- A [ShotGrid](https://shotgunsoftware.com) site
 - A [Jira](https://www.atlassian.com/software/jira) site
 
 # Building the Docs

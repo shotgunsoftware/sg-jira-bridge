@@ -130,7 +130,7 @@ class SgJiraBridgeBadRequestError(Exception):
 class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """
     Basic server with threading functionality mixed in. This will help the server
-    keep up with a high volume of throughput from Shotgun and Jira.
+    keep up with a high volume of throughput from ShotGrid and Jira.
     """
 
     def __init__(self, settings, *args, **kwargs):
@@ -341,7 +341,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def _handle_sync_request(self, path_parts, parameters):
         """
-        Handle a request to sync between Shotgun and Jira in either direction.
+        Handle a request to sync between ShotGrid and Jira in either direction.
 
         At this point, only the action (the first path_part) from the request
         path has been validated. The rest of the path_parts still need to be
@@ -423,7 +423,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         Handle admin request to the server.
 
         Currently handles a single action, ``reset`` which resets the Bridge
-        in order to clear out the Shotgun schema cache.
+        in order to clear out the ShotGrid schema cache.
 
         At this point, only the action (the first path_part) from the request
         path has been validated. The rest of the path_parts still need to be

@@ -15,7 +15,7 @@ from .sync_handler import SyncHandler
 
 class EntityIssueHandler(SyncHandler):
     """
-    Base class for handlers syncing a Shotgun Entity to a Jira Issue.
+    Base class for handlers syncing a ShotGrid Entity to a Jira Issue.
     """
 
     # This will match JIRA accounts in the following format
@@ -114,10 +114,10 @@ class EntityIssueHandler(SyncHandler):
     def _get_jira_issue_and_validate(self, jira_issue_key, shotgun_entity):
         """
         Load Jira Issue with the given Jira key, validate it exists and is
-        syncing to the given Shotgun Entity.
+        syncing to the given ShotGrid Entity.
 
         :param str jira_issue_key: Jira key for the Issue to load
-        :param dict shotgun_entity: Shotgun Entity dictionary
+        :param dict shotgun_entity: ShotGrid Entity dictionary
         :returns: A :class:`jira.Issue` instance if it exists and is valid.
             Otherwise ``None``
         """
@@ -171,7 +171,7 @@ class EntityIssueHandler(SyncHandler):
         """
         Create a Jira issue linked to the given Shothgun Entity with the given properties
 
-        :param sg_entity: A Shotgun Entity dictionary.
+        :param sg_entity: A ShotGrid Entity dictionary.
         :param jira_project: A :class:`jira.resources.Project` instance.
         :param str issue_type: The target Issue type name.
         :param str summary: The Issue summary.
@@ -242,8 +242,8 @@ class EntityIssueHandler(SyncHandler):
         new_value=None,
     ):
         """
-        Retrieve the Jira Issue field and the value to set from the given Shotgun
-        field name and the given changes for the given Shotgun Entity type.
+        Retrieve the Jira Issue field and the value to set from the given ShotGrid
+        field name and the given changes for the given ShotGrid Entity type.
 
         This methods supports list fields changes with the `added` and `removed`
         parameters, or a value being set directly with the `new_value` parameter.
@@ -252,16 +252,16 @@ class EntityIssueHandler(SyncHandler):
 
         :param jira_project: A :class:`jira.resources.Project` instance.
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param shotgun_entity_type: A Shotgun Entity type as a string.
-        :param shotgun_field: A Shotgun Entity field name as a string.
-        :param added: A list of Shotgun values added to the given field.
-        :param removed: A list of Shotgun values removed from the given field.
-        :param new_value: A Shotgun value the given field was set to.
+        :param shotgun_entity_type: A ShotGrid Entity type as a string.
+        :param shotgun_field: A ShotGrid Entity field name as a string.
+        :param added: A list of ShotGrid values added to the given field.
+        :param removed: A list of ShotGrid values removed from the given field.
+        :param new_value: A ShotGrid value the given field was set to.
 
         :returns: A tuple with a Jira field id and a Jira value usable for an
                   update. The returned field id is `None` if no valid field or
                   value could be retrieved.
-        :raises InvalidShotgunValue: if the Shotgun value can't be translated
+        :raises InvalidShotgunValue: if the ShotGrid value can't be translated
                  into a valid Jira value.
         """
         # Retrieve the matching Jira field
@@ -365,7 +365,7 @@ class EntityIssueHandler(SyncHandler):
     ):
         """
         Needs to be re-implemented in deriving classes and return the Jira Issue
-        field id to use to sync the given Shotgun Entity type field.
+        field id to use to sync the given ShotGrid Entity type field.
 
         :returns: A string or `None`.
         """
@@ -381,7 +381,7 @@ class EntityIssueHandler(SyncHandler):
         shotgun_removed,
     ):
         """
-        Handle a Shotgun list value modification and return a Jira value
+        Handle a ShotGrid list value modification and return a Jira value
         corresponding to changes for the given Issue field.
 
         :param jira_project: A :class:`jira.resources.Project` instance.
@@ -389,8 +389,8 @@ class EntityIssueHandler(SyncHandler):
         :param jira_field: A Jira field id, as a string.
         :param jira_field_schema: The jira create or edit meta data for the given
                                   field.
-        :param shotgun_added: A list of Shotgun added values.
-        :param shotgun_removed: A list of Shotgun removed values.
+        :param shotgun_added: A list of ShotGrid added values.
+        :param shotgun_removed: A list of ShotGrid removed values.
         """
         current_value = getattr(jira_issue.fields, jira_field)
         is_array = jira_field_schema["schema"]["type"] == "array"
@@ -475,10 +475,10 @@ class EntityIssueHandler(SyncHandler):
         self, jira_project, jira_issue, jira_field, jira_field_schema, shotgun_value,
     ):
         """
-        Return a Jira value corresponding to the given Shotgun value for the
+        Return a Jira value corresponding to the given ShotGrid value for the
         given Issue field.
 
-        .. note:: This method only handles single values. Shotgun list values
+        .. note:: This method only handles single values. ShotGrid list values
                   must be handled by calling this method for each of the individual
                   values.
 
@@ -487,7 +487,7 @@ class EntityIssueHandler(SyncHandler):
         :param jira_field: A Jira field id, as a string.
         :param jira_field_schema: The jira create or edit meta data for the given
                                   field.
-        :param shotgun_value: A single value retrieved from Shotgun.
+        :param shotgun_value: A single value retrieved from ShotGrid.
         :returns: A :class:`jira.resources.Resource` instance, or a dictionary,
                   or a string, depending on the field type.
         """
@@ -598,10 +598,10 @@ class EntityIssueHandler(SyncHandler):
 
     def _sync_shotgun_status_to_jira(self, jira_issue, shotgun_status, comment):
         """
-        Set the status of the Jira Issue based on the given Shotgun status.
+        Set the status of the Jira Issue based on the given ShotGrid status.
 
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param shotgun_status: A Shotgun status short code as a string.
+        :param shotgun_status: A ShotGrid status short code as a string.
         :param comment: A string, a comment to apply to the Jira transition.
         :returns: `True` if the status was successfully set, `False` otherwise.
         """
@@ -617,11 +617,11 @@ class EntityIssueHandler(SyncHandler):
 
     def _sync_shotgun_cced_changes_to_jira(self, jira_issue, added, removed):
         """
-        Update the given Jira Issue watchers from the given Shotgun changes.
+        Update the given Jira Issue watchers from the given ShotGrid changes.
 
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param added: A list of Shotgun user dictionaries.
-        :param removed: A list of Shotgun user dictionaries.
+        :param added: A list of ShotGrid user dictionaries.
+        :param removed: A list of ShotGrid user dictionaries.
         """
 
         for user in removed:
@@ -777,7 +777,7 @@ class EntityIssueHandler(SyncHandler):
         self, shotgun_entity, jira_issue, jira_field_id, change
     ):
         """
-        Retrieve the Shotgun Entity field and the value to set from the given Jira
+        Retrieve the ShotGrid Entity field and the value to set from the given Jira
         Issue field value.
 
         Jira changes are expressed with a dictionary which has `toString`, `to`,
@@ -790,18 +790,18 @@ class EntityIssueHandler(SyncHandler):
         or the actual values on a case by cases basis, depending on the target
         data type.
 
-        :param shotgun_entity: A Shotgun Entity dictionary with at least a type
+        :param shotgun_entity: A ShotGrid Entity dictionary with at least a type
                                and an id.
         :param jira_issue: A Jira Issue raw dictionary.
         :param jira_field_id: A Jira field id as a string.
         :param change: A dictionary with the field change retrieved from the
                        event change log.
-        :returns: A tuple with a Shotgun field name and a Shotgun value usable
+        :returns: A tuple with a ShotGrid field name and a ShotGrid value usable
                   for an update. The returned field id is `None` if no valid
                   field or value could be retrieved.
         :raises InvalidJiraValue: if the Jira value can't be translated
-                 into a valid Shotgun value.
-        :raises ValueError: if the target Shotgun field is not valid.
+                 into a valid ShotGrid value.
+        :raises ValueError: if the target ShotGrid field is not valid.
         """
 
         # Retrieve the Shotgun field to update
@@ -850,7 +850,7 @@ class EntityIssueHandler(SyncHandler):
 
     def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
         """
-        Returns the Shotgun field name to use to sync the given Jira Issue field.
+        Returns the ShotGrid field name to use to sync the given Jira Issue field.
 
         Must be re-implemented in deriving classes.
 
@@ -863,23 +863,23 @@ class EntityIssueHandler(SyncHandler):
         self, shotgun_entity, shotgun_field, shotgun_field_schema, jira_issue, change,
     ):
         """
-        Retrieve a Shotgun assignment value from the given Jira change.
+        Retrieve a ShotGrid assignment value from the given Jira change.
 
-        This method supports single entity and multi entity Shotgun fields.
+        This method supports single entity and multi entity ShotGrid fields.
 
         Jira users keys are retrieved from the `from` and `to` values in the
         change dictionary.
 
-        :param str shotgun_entity: A Shotgun Entity dictionary as retrieved from
-                                   Shotgun.
-        :param str shotgun_field: The Shotgun Entity field to get a value for.
-        :param shotgun_field_schema: The Shotgun Entity field schema.
+        :param str shotgun_entity: A ShotGrid Entity dictionary as retrieved from
+                                   ShotGrid.
+        :param str shotgun_field: The ShotGrid Entity field to get a value for.
+        :param shotgun_field_schema: The ShotGrid Entity field schema.
         :param jira_issue: A Jira Issue raw dictionary.
         :param change: A Jira event changelog dictionary with 'from' and
                        'to' keys.
 
-        :returns: The updated value to set in Shotgun for the given field.
-        :raises ValueError: if the target Shotgun field is not suitable
+        :returns: The updated value to set in ShotGrid for the given field.
+        :raises ValueError: if the target ShotGrid field is not suitable
         """
         # Change log example
         # {
@@ -980,16 +980,16 @@ class EntityIssueHandler(SyncHandler):
         self, shotgun_field, user_id, jira_user=None, raise_on_missing_user=True
     ):
         """
-        Resolve the Shotgun user associated to the JIRA user passed in.
+        Resolve the ShotGrid user associated to the JIRA user passed in.
 
         This method should be called against a JIRA local server.
 
-        :param str shotgun_field: Field to sync the value to in Shotgun.
+        :param str shotgun_field: Field to sync the value to in ShotGrid.
         :param str user_id: Value of the to or from of a JIRA changelog.
         :param dict jira_user: Value of the user section of the webhook payload.
         :param bool raise_on_missing_user: Indicate how to handle unknown users.
 
-        :returns: A Shotgun user entity dictionary.
+        :returns: A ShotGrid user entity dictionary.
         :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.
         """
         if jira_user is not None:
@@ -1024,16 +1024,16 @@ class EntityIssueHandler(SyncHandler):
         self, shotgun_field, user_id, jira_user=None, raise_on_missing_user=True
     ):
         """
-        Resolve the Shotgun user associated to the JIRA user passed in.
+        Resolve the ShotGrid user associated to the JIRA user passed in.
 
         This method should be called against a JIRA Cloud server.
 
-        :param str shotgun_field: Field to sync the value to in Shotgun.
+        :param str shotgun_field: Field to sync the value to in ShotGrid.
         :param str user_id: Value of the to or from of a JIRA changelog.
         :param dict jira_user: User resource, typically the assignee field on an issue. Can be None
         :param bool raise_on_missing_user: Indicate how to handle unknown users.
 
-        :returns: A Shotgun user entity dictionary.
+        :returns: A ShotGrid user entity dictionary.
         :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.
         """
         # If the jira_user has been passed in, just use the accountId!

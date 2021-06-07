@@ -7,7 +7,7 @@
 # this software in either electronic or hard copy form.
 #
 """
-Shotgun Jira sync settings
+ShotGrid Jira sync settings
 """
 import os
 import sys
