@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Debugging &mdash; sg-jira-bridge v0.3.1 documentation</title>
+  <title>Debugging &mdash; sg-jira-bridge v0.3.2 documentation</title>
   
 
   
@@ -23,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -51,7 +51,7 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
-    <a href='http://developer.shotgunsoftware.com'>
+    <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -142,10 +142,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.3.1.<br>
+    <b>sg-jira-bridge</b> v0.3.2.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -221,8 +221,8 @@ standard <a class="reference external" href="https://docs.python.org/2/library/l
 <p>By default the SG Jira Bridge logs <code class="docutils literal notranslate"><span class="pre">INFO</span></code> messages and above which provide
 a good amount of detail to audit what is happening with each request.</p>
 <div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>If you are troubleshooting or doing development, setting the logging level
+<p class="first admonition-title">Warning</p>
+<p class="last">If you are troubleshooting or doing development, setting the logging level
 to <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> can be useful. However, this log level is extremely verbose.
 Under normal operation, it is recommended to use <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
 </div>
@@ -301,8 +301,8 @@ get the token from <a class="reference external" href="https://dashboard.ngrok.c
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Each time you start ngrok, it assigns a random hostname to your connection.
+<p class="first admonition-title">Note</p>
+<p class="last">Each time you start ngrok, it assigns a random hostname to your connection.
 This means you’ll need to update the Jira Webhook you setup to point to the
 correct hostname each time. ngrok does have a paid plan that allows
 you to specify the hostname you wish to use.</p>
@@ -346,9 +346,9 @@ You should see a message that says something like:</p>
 </div>
 <p>If there is no connection:</p>
 <ul class="simple">
-<li><p>Make sure you’ve started the Sg Jira Bridge</p></li>
-<li><p>Verify the URL you entered is in the correct format.</p></li>
-<li><p>Ensure you’re connecting to the correct port number.</p></li>
+<li>Make sure you’ve started the Sg Jira Bridge</li>
+<li>Verify the URL you entered is in the correct format.</li>
+<li>Ensure you’re connecting to the correct port number.</li>
 </ul>
 <p>If you see an Error Response, the server is running but your URL may not be
 correct. The URL should look like:</p>
@@ -367,10 +367,10 @@ received and processed successfully. The logs should make this very apparent.</p
 accepting the event for processing.</p>
 <p>Other things to check:</p>
 <ul class="simple">
-<li><p>Is your ShotGrid Project configured to sync to Jira?</p></li>
-<li><p>Is the Entity type configured to sync to Jira?</p></li>
-<li><p>Does the Entity that generated the event enabled for syncing (the <strong>Sync In
-Jira</strong> checkbox field is checked)?</p></li>
+<li>Is your ShotGrid Project configured to sync to Jira?</li>
+<li>Is the Entity type configured to sync to Jira?</li>
+<li>Does the Entity that generated the event enabled for syncing (the <strong>Sync In
+Jira</strong> checkbox field is checked)?</li>
 </ul>
 </div>
 <div class="section" id="jira-changes-aren-t-syncing-to-shotgrid">
@@ -379,13 +379,13 @@ Jira</strong> checkbox field is checked)?</p></li>
 received and processed successfully. The logs should make this very apparent.</p>
 <p>If SG Jira Bridge is not receiving the request:</p>
 <ul class="simple">
-<li><p>Check that your Jira Webhook is setup and configured correctly. If you’re
+<li>Check that your Jira Webhook is setup and configured correctly. If you’re
 using a local Jira instance, you can also check the logs to see if the
-webhook fired.</p></li>
-<li><p>Make sure your SG Jira Bridge is accessible from your Jira server. If you
+webhook fired.</li>
+<li>Make sure your SG Jira Bridge is accessible from your Jira server. If you
 are using a Jira Cloud instance and SG Jira Bridge is running inside a
 firewalled environment, you’ll need to open up access to the application
-or move SG Jira Bridge into some sort of DMZ setup.</p></li>
+or move SG Jira Bridge into some sort of DMZ setup.</li>
 </ul>
 </div>
 <div class="section" id="value-can-t-be-translated-to-a-shotgrid-jira-value">

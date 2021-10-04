@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Settings &mdash; sg-jira-bridge v0.3.1 documentation</title>
+  <title>Settings &mdash; sg-jira-bridge v0.3.2 documentation</title>
   
 
   
@@ -23,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -51,7 +51,7 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
-    <a href='http://developer.shotgunsoftware.com'>
+    <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -132,10 +132,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.3.1.<br>
+    <b>sg-jira-bridge</b> v0.3.2.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -211,26 +211,26 @@ The settings file contains three main sections:</p>
 <h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
 <p>Credentials are retrieved by default from environment variables:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SITE</span></code>: the ShotGrid site url</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_NAME</span></code>: a ShotGrid script user name</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_KEY</span></code>: the ShotGrid script user Application Key</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_SITE</span></code>: the Jira server url</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER</span></code>: the system name of the Jira user used to
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SITE</span></code>: the ShotGrid site url</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_NAME</span></code>: a ShotGrid script user name</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_KEY</span></code>: the ShotGrid script user Application Key</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_SITE</span></code>: the Jira server url</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER</span></code>: the system name of the Jira user used to
 connect for the sync.  This is usually your email address you
 sign in to Jira with. Jira does not have a concept of a “script”
 user so this will need to be the designated user account that
 will control the sync updates. It will need appropriate
-permissions to make any changes required.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER_SECRET</span></code>: the Jira user password or API Key.</p></li>
+permissions to make any changes required.</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER_SECRET</span></code>: the Jira user password or API Key.</li>
 </ul>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
+<p class="first admonition-title">Note</p>
 <p><strong>Jira Cloud</strong> requires the use of an API token and will not work with
 a user password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a> for information
 on how to generate a token.</p>
 <p><strong>Jira Server</strong> will still work with a user password and does not support
 API tokens.</p>
-<p>For more information, see: <a class="reference external" href="https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/">https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/</a></p>
+<p class="last">For more information, see: <a class="reference external" href="https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/">https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/</a></p>
 </div>
 <p>You may set these in your environment or by installing
 <a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a> and defining these
@@ -273,10 +273,10 @@ URL for SG Jira Bridge. For example,
 <code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code> uses the settings named
 <code class="docutils literal notranslate"><span class="pre">my_settings</span></code>.</p>
 <ul class="simple">
-<li><p><strong>syncer</strong>: The syncer class to use in the format <code class="docutils literal notranslate"><span class="pre">module_name.class_name</span></code>.</p></li>
-<li><p><strong>settings</strong>: A dictionary containing the settings for the syncer where the
+<li><strong>syncer</strong>: The syncer class to use in the format <code class="docutils literal notranslate"><span class="pre">module_name.class_name</span></code>.</li>
+<li><strong>settings</strong>: A dictionary containing the settings for the syncer where the
 key is the setting name and value is it’s value. These settings will be used
-as parameters when instantiating the syncer class.</p></li>
+as parameters when instantiating the syncer class.</li>
 </ul>
 <p>Each set of <code class="docutils literal notranslate"><span class="pre">SYNC</span></code> settings defined in your <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file must
 define a single <a class="reference internal" href="developer.html#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a>.</p>

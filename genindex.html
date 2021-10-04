@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; sg-jira-bridge v0.3.1 documentation</title>
+  <title>Index &mdash; sg-jira-bridge v0.3.2 documentation</title>
   
 
   
@@ -24,10 +24,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,7 +50,7 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
-    <a href='http://developer.shotgunsoftware.com'>
+    <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -123,10 +123,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.3.1.<br>
+    <b>sg-jira-bridge</b> v0.3.2.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -221,6 +221,8 @@
       <li><a href="developer.html#sg_jira.Bridge.__init__">__init__() (sg_jira.Bridge method)</a>
 
       <ul>
+        <li><a href="developer.html#sg_jira.Syncer.__init__">(sg_jira.Syncer method)</a>
+</li>
         <li><a href="developer.html#sg_jira.handlers.EnableSyncingHandler.__init__">(sg_jira.handlers.EnableSyncingHandler method)</a>
 </li>
         <li><a href="developer.html#sg_jira.handlers.EntityIssueHandler.__init__">(sg_jira.handlers.EntityIssueHandler method)</a>
@@ -228,8 +230,6 @@
         <li><a href="developer.html#sg_jira.handlers.SyncHandler.__init__">(sg_jira.handlers.SyncHandler method)</a>
 </li>
         <li><a href="developer.html#sg_jira.jira_session.JiraSession.__init__">(sg_jira.jira_session.JiraSession method)</a>
-</li>
-        <li><a href="developer.html#sg_jira.Syncer.__init__">(sg_jira.Syncer method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -241,11 +241,11 @@
       <li><a href="developer.html#sg_jira.handlers.EnableSyncingHandler.accept_jira_event">accept_jira_event() (sg_jira.handlers.EnableSyncingHandler method)</a>
 
       <ul>
+        <li><a href="developer.html#sg_jira.Syncer.accept_jira_event">(sg_jira.Syncer method)</a>
+</li>
         <li><a href="developer.html#sg_jira.handlers.EntityIssueHandler.accept_jira_event">(sg_jira.handlers.EntityIssueHandler method)</a>
 </li>
         <li><a href="developer.html#sg_jira.handlers.SyncHandler.accept_jira_event">(sg_jira.handlers.SyncHandler method)</a>
-</li>
-        <li><a href="developer.html#sg_jira.Syncer.accept_jira_event">(sg_jira.Syncer method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -253,11 +253,11 @@
       <li><a href="developer.html#sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event">accept_shotgun_event() (sg_jira.handlers.EnableSyncingHandler method)</a>
 
       <ul>
+        <li><a href="developer.html#sg_jira.Syncer.accept_shotgun_event">(sg_jira.Syncer method)</a>
+</li>
         <li><a href="developer.html#sg_jira.handlers.EntityIssueHandler.accept_shotgun_event">(sg_jira.handlers.EntityIssueHandler method)</a>
 </li>
         <li><a href="developer.html#sg_jira.handlers.SyncHandler.accept_shotgun_event">(sg_jira.handlers.SyncHandler method)</a>
-</li>
-        <li><a href="developer.html#sg_jira.Syncer.accept_shotgun_event">(sg_jira.Syncer method)</a>
 </li>
       </ul></li>
       <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.assert_field">assert_field() (sg_jira.shotgun_session.ShotgunSession method)</a>
@@ -272,7 +272,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="developer.html#sg_jira.Syncer.bridge">bridge() (sg_jira.Syncer property)</a>
+      <li><a href="developer.html#sg_jira.Syncer.bridge">bridge (sg_jira.Syncer attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -288,11 +288,11 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="developer.html#sg_jira.Bridge.current_jira_username">current_jira_username() (sg_jira.Bridge property)</a>
+      <li><a href="developer.html#sg_jira.Bridge.current_jira_username">current_jira_username (sg_jira.Bridge attribute)</a>
 </li>
-      <li><a href="developer.html#sg_jira.Bridge.current_shotgun_user">current_shotgun_user() (sg_jira.Bridge property)</a>
+      <li><a href="developer.html#sg_jira.Bridge.current_shotgun_user">current_shotgun_user (sg_jira.Bridge attribute)</a>
 </li>
-      <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.current_user">current_user() (sg_jira.shotgun_session.ShotgunSession property)</a>
+      <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.current_user">current_user (sg_jira.shotgun_session.ShotgunSession attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -312,12 +312,12 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="developer.html#sg_jira.errors.InvalidJiraValue.field">field() (sg_jira.errors.InvalidJiraValue property)</a>
+      <li><a href="developer.html#sg_jira.errors.InvalidJiraValue.field">field (sg_jira.errors.InvalidJiraValue attribute)</a>
 
       <ul>
-        <li><a href="developer.html#sg_jira.errors.InvalidShotgunValue.field">(sg_jira.errors.InvalidShotgunValue property)</a>
+        <li><a href="developer.html#sg_jira.errors.InvalidShotgunValue.field">(sg_jira.errors.InvalidShotgunValue attribute)</a>
 </li>
-        <li><a href="developer.html#sg_jira.errors.InvalidSyncValue.field">(sg_jira.errors.InvalidSyncValue property)</a>
+        <li><a href="developer.html#sg_jira.errors.InvalidSyncValue.field">(sg_jira.errors.InvalidSyncValue attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -357,11 +357,11 @@
       <li><a href="developer.html#sg_jira.handlers.EnableSyncingHandler.get_jira_project">get_jira_project() (sg_jira.handlers.EnableSyncingHandler method)</a>
 
       <ul>
+        <li><a href="developer.html#sg_jira.Syncer.get_jira_project">(sg_jira.Syncer method)</a>
+</li>
         <li><a href="developer.html#sg_jira.handlers.EntityIssueHandler.get_jira_project">(sg_jira.handlers.EntityIssueHandler method)</a>
 </li>
         <li><a href="developer.html#sg_jira.handlers.SyncHandler.get_jira_project">(sg_jira.handlers.SyncHandler method)</a>
-</li>
-        <li><a href="developer.html#sg_jira.Syncer.get_jira_project">(sg_jira.Syncer method)</a>
 </li>
       </ul></li>
       <li><a href="developer.html#sg_jira.Bridge.get_syncer">get_syncer() (sg_jira.Bridge method)</a>
@@ -372,7 +372,7 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="developer.html#sg_jira.Syncer.handlers">handlers() (sg_jira.Syncer property)</a>
+      <li><a href="developer.html#sg_jira.Syncer.handlers">handlers (sg_jira.Syncer attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -388,7 +388,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer.html#sg_jira.errors.InvalidSyncValue">InvalidSyncValue</a>
 </li>
-      <li><a href="developer.html#sg_jira.jira_session.JiraSession.is_jira_cloud">is_jira_cloud() (sg_jira.jira_session.JiraSession property)</a>
+      <li><a href="developer.html#sg_jira.jira_session.JiraSession.is_jira_cloud">is_jira_cloud (sg_jira.jira_session.JiraSession attribute)</a>
 </li>
       <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.is_project_entity">is_project_entity() (sg_jira.shotgun_session.ShotgunSession method)</a>
 </li>
@@ -398,19 +398,19 @@
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="developer.html#sg_jira.Bridge.jira">jira() (sg_jira.Bridge property)</a>
+      <li><a href="developer.html#sg_jira.Bridge.jira">jira (sg_jira.Bridge attribute)</a>
 
       <ul>
-        <li><a href="developer.html#sg_jira.Syncer.jira">(sg_jira.Syncer property)</a>
+        <li><a href="developer.html#sg_jira.Syncer.jira">(sg_jira.Syncer attribute)</a>
 </li>
       </ul></li>
-      <li><a href="developer.html#sg_jira.jira_session.JiraSession.jira_shotgun_id_field">jira_shotgun_id_field() (sg_jira.jira_session.JiraSession property)</a>
+      <li><a href="developer.html#sg_jira.jira_session.JiraSession.jira_shotgun_id_field">jira_shotgun_id_field (sg_jira.jira_session.JiraSession attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="developer.html#sg_jira.jira_session.JiraSession.jira_shotgun_type_field">jira_shotgun_type_field() (sg_jira.jira_session.JiraSession property)</a>
+      <li><a href="developer.html#sg_jira.jira_session.JiraSession.jira_shotgun_type_field">jira_shotgun_type_field (sg_jira.jira_session.JiraSession attribute)</a>
 </li>
-      <li><a href="developer.html#sg_jira.jira_session.JiraSession.jira_shotgun_url_field">jira_shotgun_url_field() (sg_jira.jira_session.JiraSession property)</a>
+      <li><a href="developer.html#sg_jira.jira_session.JiraSession.jira_shotgun_url_field">jira_shotgun_url_field (sg_jira.jira_session.JiraSession attribute)</a>
 </li>
       <li><a href="developer.html#sg_jira.jira_session.JiraSession">JiraSession (class in sg_jira.jira_session)</a>
 </li>
@@ -471,6 +471,8 @@
       <li><a href="developer.html#sg_jira.handlers.EnableSyncingHandler.setup">setup() (sg_jira.handlers.EnableSyncingHandler method)</a>
 
       <ul>
+        <li><a href="developer.html#sg_jira.Syncer.setup">(sg_jira.Syncer method)</a>
+</li>
         <li><a href="developer.html#sg_jira.handlers.EntityIssueHandler.setup">(sg_jira.handlers.EntityIssueHandler method)</a>
 </li>
         <li><a href="developer.html#sg_jira.handlers.SyncHandler.setup">(sg_jira.handlers.SyncHandler method)</a>
@@ -479,8 +481,6 @@
 </li>
         <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.setup">(sg_jira.shotgun_session.ShotgunSession method)</a>
 </li>
-        <li><a href="developer.html#sg_jira.Syncer.setup">(sg_jira.Syncer method)</a>
-</li>
       </ul></li>
       <li><a href="developer.html#module-sg_jira.errors">sg_jira.errors (module)</a>
 </li>
@@ -488,10 +488,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer.html#module-sg_jira.utils">sg_jira.utils (module)</a>
 </li>
-      <li><a href="developer.html#sg_jira.Bridge.shotgun">shotgun() (sg_jira.Bridge property)</a>
+      <li><a href="developer.html#sg_jira.Bridge.shotgun">shotgun (sg_jira.Bridge attribute)</a>
 
       <ul>
-        <li><a href="developer.html#sg_jira.Syncer.shotgun">(sg_jira.Syncer property)</a>
+        <li><a href="developer.html#sg_jira.Syncer.shotgun">(sg_jira.Syncer attribute)</a>
 </li>
       </ul></li>
       <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession">ShotgunSession (class in sg_jira.shotgun_session)</a>
@@ -500,7 +500,7 @@
 </li>
       <li><a href="developer.html#sg_jira.Bridge.sync_in_shotgun">sync_in_shotgun() (sg_jira.Bridge method)</a>
 </li>
-      <li><a href="developer.html#sg_jira.Bridge.sync_settings_names">sync_settings_names() (sg_jira.Bridge property)</a>
+      <li><a href="developer.html#sg_jira.Bridge.sync_settings_names">sync_settings_names (sg_jira.Bridge attribute)</a>
 </li>
       <li><a href="developer.html#sg_jira.Syncer">Syncer (class in sg_jira)</a>
 </li>
@@ -524,12 +524,12 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="developer.html#sg_jira.errors.InvalidJiraValue.value">value() (sg_jira.errors.InvalidJiraValue property)</a>
+      <li><a href="developer.html#sg_jira.errors.InvalidJiraValue.value">value (sg_jira.errors.InvalidJiraValue attribute)</a>
 
       <ul>
-        <li><a href="developer.html#sg_jira.errors.InvalidShotgunValue.value">(sg_jira.errors.InvalidShotgunValue property)</a>
+        <li><a href="developer.html#sg_jira.errors.InvalidShotgunValue.value">(sg_jira.errors.InvalidShotgunValue attribute)</a>
 </li>
-        <li><a href="developer.html#sg_jira.errors.InvalidSyncValue.value">(sg_jira.errors.InvalidSyncValue property)</a>
+        <li><a href="developer.html#sg_jira.errors.InvalidSyncValue.value">(sg_jira.errors.InvalidSyncValue attribute)</a>
 </li>
       </ul></li>
   </ul></td>
