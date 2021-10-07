@@ -24,7 +24,7 @@ Full documentation is available at https://developer.shotgridsoftware.com/sg-jir
 
 # Requirements
 
-- Python 2.7
+- Python 2.7/3.7
 - A [ShotGrid](https://shotgridsoftware.com) site
 - A [Jira](https://www.atlassian.com/software/jira) site
 
