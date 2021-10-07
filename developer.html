@@ -7,10 +7,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Developer Resources &mdash; sg-jira-bridge v0.3.2 documentation</title>
+  <title>Developer Resources &mdash; sg-jira-bridge master documentation</title>
   
 
   
@@ -23,10 +24,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -130,7 +131,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#utils">Utils</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-sg_jira.errors">Errors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#errors">Errors</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#tests-ci">Tests &amp; CI</a><ul>
@@ -164,7 +165,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.3.2.<br>
+    <b>sg-jira-bridge</b> master.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
@@ -233,9 +234,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="developer-resources">
+  <section id="developer-resources">
 <h1>Developer Resources<a class="headerlink" href="#developer-resources" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="customizing-the-workflow">
+<section id="customizing-the-workflow">
 <h2>Customizing the Workflow<a class="headerlink" href="#customizing-the-workflow" title="Permalink to this headline">¶</a></h2>
 <p>SG Jira Bridge is structured so that studios can tailor the workflow to
 meet their specific needs. Because both ShotGrid and Jira are highly
@@ -243,27 +244,27 @@ customizable, exposing a handful of settings would not be sufficient.
 Therefore, the bridge has been structured to allow subclassing the
 various components that control syncing and handling events in order
 to give full control over the logic of what is being done.</p>
-<div class="section" id="structure-overview">
+<section id="structure-overview">
 <h3>Structure Overview<a class="headerlink" href="#structure-overview" title="Permalink to this headline">¶</a></h3>
 <img alt="_images/sg_jira_bridge_classes.png" src="_images/sg_jira_bridge_classes.png" />
-</div>
-<div class="section" id="bridge">
+</section>
+<section id="bridge">
 <h3>Bridge<a class="headerlink" href="#bridge" title="Permalink to this headline">¶</a></h3>
-<p>The <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> is the main class for the sync. It handles the
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code> is the main class for the sync. It handles the
 connections to both ShotGrid and Jira, manages sync settings
 from the <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file, and initiates the calls to sync
 in ShotGrid and Jira.</p>
 <p>This class is intended to be used as-is without requiring customization
-since the details of the workflow logic are defined in the <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a>
-and <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>. When creating a new instance
-of <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a>, typically you’ll use the <a class="reference internal" href="#sg_jira.Bridge.get_bridge" title="sg_jira.Bridge.get_bridge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Bridge.get_bridge()</span></code></a>
+since the details of the workflow logic are defined in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code>
+and <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code>. When creating a new instance
+of <code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code>, typically you’ll use the <code class="xref py py-meth docutils literal notranslate"><span class="pre">Bridge.get_bridge()</span></code>
 factory method and pass in the full path to the settings file.</p>
-</div>
-<div class="section" id="syncers">
+</section>
+<section id="syncers">
 <h3>Syncers<a class="headerlink" href="#syncers" title="Permalink to this headline">¶</a></h3>
-<p>The <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> is in charge of initially determining whether to accept or
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code> is in charge of initially determining whether to accept or
 reject events from ShotGrid and Jira for syncing. This is done with the
-<a class="reference internal" href="#sg_jira.Syncer.accept_shotgun_event" title="sg_jira.Syncer.accept_shotgun_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_shotgun_event()</span></code></a> and <a class="reference internal" href="#sg_jira.Syncer.accept_jira_event" title="sg_jira.Syncer.accept_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_jira_event()</span></code></a>
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_shotgun_event()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_jira_event()</span></code>
 methods. It performs initial basic checks on
 the event to determine if it should immediately be rejected without needing
 to ask the handlers. These checks should be completely independent of the
@@ -272,16 +273,16 @@ be inspected to ensure it has the basic required fields in an event like the
 <code class="docutils literal notranslate"><span class="pre">meta</span></code> and <code class="docutils literal notranslate"><span class="pre">project</span></code> keys. Without either of these keys in the event,
 no handlers could process the event anyway.</p>
 <p>If nothing in the event immediately disqualifies itself from consideration,
-the <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> then hands the event off to each
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> to accept the event or not. The first handler
+the <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code> then hands the event off to each
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code> to accept the event or not. The first handler
 that accepts the event is then returned to process the event.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Only one handler may process an event since having multiple handlers process
+<p class="admonition-title">Note</p>
+<p>Only one handler may process an event since having multiple handlers process
 a single event could cause issues where one handler undoes what a previous
 one did for the same event.</p>
 </div>
-<p>Syncers must be sub-classed from the base <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> class in order to
+<p>Syncers must be sub-classed from the base <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code> class in order to
 implement a list of Handlers to dispatch events to. The <code class="docutils literal notranslate"><span class="pre">handlers()</span></code> property
 must be overridden but additional parameters can be accepted by the class as
 well, to pass on to Handlers:</p>
@@ -325,14 +326,14 @@ well, to pass on to Handlers:</p>
         <span class="p">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="sync-handlers">
+</section>
+<section id="sync-handlers">
 <h3>Sync Handlers<a class="headerlink" href="#sync-handlers" title="Permalink to this headline">¶</a></h3>
-<p>A <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> holds the logic for syncing values between a
-ShotGrid Entity type and a Jira resource and is owned by a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code> holds the logic for syncing values between a
+ShotGrid Entity type and a Jira resource and is owned by a <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code>
 instance. The base class defines the interface all handlers should support
 and provides a set of helper methods useful for implementations.</p>
-<p>The following methods must be overridden from the <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> base class:</p>
+<p>The following methods must be overridden from the <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code> base class:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># public methods</span>
 <span class="n">accept_shotgun_event</span><span class="p">()</span>
 <span class="n">accept_jira_event</span><span class="p">()</span>
@@ -343,24 +344,24 @@ and provides a set of helper methods useful for implementations.</p>
 <span class="n">_sg_jira_status_mapping</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="section" id="setup">
+<section id="setup">
 <h4>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h4>
 <p>When a syncer is first loaded, it calls <code class="docutils literal notranslate"><span class="pre">setup()</span></code> on each
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>. This can be used to check the Jira and ShotGrid
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code>. This can be used to check the Jira and ShotGrid
 sites for specific conditions or setup requirements, ensuring that the sync can
 safely happen.</p>
 <p>Additionally, this can be used to cache value(s) from either site if there are
 queries that might be done repeatedly that slow things down during the sync
 process.</p>
-</div>
-<div class="section" id="accepting-the-event">
+</section>
+<section id="accepting-the-event">
 <h4>Accepting the Event<a class="headerlink" href="#accepting-the-event" title="Permalink to this headline">¶</a></h4>
-<p>After the <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> has done its initial checks to decide whether to
+<p>After the <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code> has done its initial checks to decide whether to
 accept an event, it then passes the event off to its handlers to check for
-themselves. Each <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> must define a
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler.accept_shotgun_event" title="sg_jira.handlers.SyncHandler.accept_shotgun_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_shotgun_event()</span></code></a> and
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler.accept_jira_event" title="sg_jira.handlers.SyncHandler.accept_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_jira_event()</span></code></a> which overrides the
-<a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> base class. This is where the more specific logic for accepting
+themselves. Each <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code> must define a
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_shotgun_event()</span></code> and
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_jira_event()</span></code> which overrides the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code> base class. This is where the more specific logic for accepting
 or rejecting an event can occur. Checks for things like whether the event is
 for a ShotGrid Entity type or Jira resource type that the handler cares about
 are appropriate. Or for example, you may wish to check a ShotGrid event to see
@@ -370,13 +371,13 @@ if the Task field that was changed, is one that is supported by your handler.</p
 all of the given event info, there are still more questions to answer that
 require making additional queries to ShotGrid or Jira, it is perfectly
 fine for these to be done in the
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_shotgun_event" title="sg_jira.handlers.SyncHandler.process_shotgun_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_shotgun_event()</span></code></a> or
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_jira_event" title="sg_jira.handlers.SyncHandler.process_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_jira_event()</span></code></a> methods later.</p>
-</div>
-<div class="section" id="processing-the-event">
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">process_shotgun_event()</span></code> or
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">process_jira_event()</span></code> methods later.</p>
+</section>
+<section id="processing-the-event">
 <h4>Processing the Event<a class="headerlink" href="#processing-the-event" title="Permalink to this headline">¶</a></h4>
-<p><a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_shotgun_event" title="sg_jira.handlers.SyncHandler.process_shotgun_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_shotgun_event()</span></code></a> and
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_jira_event" title="sg_jira.handlers.SyncHandler.process_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_jira_event()</span></code></a> process the event data,
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_shotgun_event()</span></code> and
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">process_jira_event()</span></code> process the event data,
 perform any additional validation required to determine whether to continue
 with the sync (which may include additional queries to Jira and/or ShotGrid),
 and then do the actual update.</p>
@@ -386,733 +387,44 @@ of the sync. There are private methods in the base classes that perform some
 of the heavy lifting for this.</p>
 <p>If the event was processed successfully, it returns <code class="docutils literal notranslate"><span class="pre">True</span></code>. If the event was
 not processed for any reason it returns <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-</div>
-<div class="section" id="entityissuehandler">
+</section>
+<section id="entityissuehandler">
 <h4>EntityIssueHandler<a class="headerlink" href="#entityissuehandler" title="Permalink to this headline">¶</a></h4>
-<p>In addition to the base <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>, there is also a
-<a class="reference internal" href="#sg_jira.handlers.EntityIssueHandler" title="sg_jira.handlers.EntityIssueHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityIssueHandler</span></code></a> which serves as a base class for handlers
+<p>In addition to the base <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code>, there is also a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">EntityIssueHandler</span></code> which serves as a base class for handlers
 that sync between a ShotGrid Entity type and a Jira Issue resource. Since this
 is probably how a majority of workflows will work, it is provided to add an
 additional level of convenience.</p>
-<p>It inherits from <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>. When using
+<p>It inherits from <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code>. When using
 <code class="xref py py-class docutils literal notranslate"><span class="pre">EntityIssueHander</span></code> as a base class, the following methods
 must be overridden <em>in addition to the ones required by</em>
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>:</p>
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_get_jira_issue_field_for_shotgun_field</span><span class="p">()</span>
 <span class="n">_supported_shotgun_fields_for_jira_event</span><span class="p">()</span>
 <span class="n">_get_shotgun_entity_field_for_issue_field</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="api">
+</section>
+</section>
+</section>
+<section id="api">
 <h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="connections-to-shotgrid-and-jira">
+<section id="connections-to-shotgrid-and-jira">
 <h3>Connections to ShotGrid and Jira<a class="headerlink" href="#connections-to-shotgrid-and-jira" title="Permalink to this headline">¶</a></h3>
 <p>These classes manage the specific connections to ShotGrid and Jira.</p>
-<div class="section" id="shotgunsession">
+<section id="shotgunsession">
 <h4>ShotgunSession<a class="headerlink" href="#shotgunsession" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="sg_jira.shotgun_session.ShotgunSession">
-<em class="property">class </em><code class="descclassname">sg_jira.shotgun_session.</code><code class="descname">ShotgunSession</code><span class="sig-paren">(</span><em>base_url</em>, <em>script_name=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wraps a <a class="reference external" href="http://developer.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
-session caches.</p>
-<p>Ensures all the values we get from ShotGrid are unicode and not utf-8 encoded
-strings. Utf-8 encodes unicode values before sending them to ShotGrid.</p>
-<p>Instantiate a <a class="reference external" href="http://developer.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
-<dl class="attribute">
-<dt id="sg_jira.shotgun_session.ShotgunSession.current_user">
-<code class="descname">current_user</code><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the ShotGrid user used for the connection.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A ShotGrid record dictionary with an <cite>id</cite> key and a <cite>type</cite> key.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check the ShotGrid site and cache site level values.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the ShotGrid site was not correctly configured to
-be used with this bridge.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.assert_field">
-<code class="descname">assert_field</code><span class="sig-paren">(</span><em>entity_type</em>, <em>field_name</em>, <em>field_type</em>, <em>check_unique=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.assert_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.assert_field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if the given field with the given type exists for the given ShotGrid
-Entity type.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type.</li>
-<li><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</li>
-<li><strong>field_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid field type, e.g. ‘text’.</li>
-<li><strong>check_unique</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, check the specified field
-is configured to only accept unique values. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>RuntimeError</strong> – if the field does not exist or does not have the
-expected type.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.get_field_schema">
-<code class="descname">get_field_schema</code><span class="sig-paren">(</span><em>entity_type</em>, <em>field_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.get_field_schema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.get_field_schema" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the ShotGrid schema for the given Entity field.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">ShotGrid schemas are cached and the bridge needs to be restarted
-if schemas are changed in ShotGrid.</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type.</li>
-<li><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The ShotGrid schema for the given field as a dictionary or <cite>None</cite>.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema">
-<code class="descname">clear_cached_field_schema</code><span class="sig-paren">(</span><em>entity_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.clear_cached_field_schema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clear all cached ShotGrid schema or just the cached schema for the given
-ShotGrid Entity type.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type or None.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="sg_jira.shotgun_session.ShotgunSession.get_entity_name_field">
-<em class="property">static </em><code class="descname">get_entity_name_field</code><span class="sig-paren">(</span><em>entity_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.get_entity_name_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.get_entity_name_field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the ShotGrid name field to use for the specified entity type.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The entity type to get the name field for.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The name field for the specified entity type.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.is_project_entity">
-<code class="descname">is_project_entity</code><span class="sig-paren">(</span><em>entity_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.is_project_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.is_project_entity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return <cite>True</cite> if the given ShotGrid Entity type is a project Entity,
-that is an Entity linked to a Project, <cite>False</cite> if it is a non-project
-Entity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.consolidate_entity">
-<code class="descname">consolidate_entity</code><span class="sig-paren">(</span><em>shotgun_entity</em>, <em>fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.consolidate_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.consolidate_entity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Consolidate the given ShotGrid Entity: collect additional field values,
-ensure the Entity name is available under a “name” key.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>shotgun_entity</strong> – A ShotGrid Entity dictionary with at least its id
-and its type.</li>
-<li><strong>fields</strong> – An optional list of fields to add to the query.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The consolidated ShotGrid Entity or <cite>None</cite> if it can’t be retrieved.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.match_entity_by_name">
-<code class="descname">match_entity_by_name</code><span class="sig-paren">(</span><em>name</em>, <em>entity_types</em>, <em>shotgun_project</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.match_entity_by_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.match_entity_by_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve a ShotGrid Entity with the given name from the given list of
-Entity types.</p>
-<p>Project ShotGrid Entities are restricted to the given ShotGrid Project.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A name to match.</li>
-<li><strong>entity_types</strong> – A list of ShotGrid Entity types to consider.</li>
-<li><strong>shotgun_project</strong> – A ShotGrid Project dictionary.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A ShotGrid Entity dictionary or <cite>None</cite>.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.shotgun_session.ShotgunSession.get_entity_page_url">
-<code class="descname">get_entity_page_url</code><span class="sig-paren">(</span><em>shotgun_entity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.get_entity_page_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.get_entity_page_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the ShotGrid page url for the given Entity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shotgun_entity</strong> – A ShotGrid Entity dictionary with at least a ‘type’
-key and an ‘id’ key.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="jirasession">
+</section>
+<section id="jirasession">
 <h4>JiraSession<a class="headerlink" href="#jirasession" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="sg_jira.jira_session.JiraSession">
-<em class="property">class </em><code class="descclassname">sg_jira.jira_session.</code><code class="descname">JiraSession</code><span class="sig-paren">(</span><em>jira_site</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extend <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.JIRA</span></code> with helpers.</p>
-<p>Instantiate a JiraSession.</p>
-<p>Connect to the given Jira site with given parameters.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – on Jira connection errors.</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>jira_site</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate a JiraSession.</p>
-<p>Connect to the given Jira site with given parameters.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – on Jira connection errors.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check the Jira site and cache site level values.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the Jira site was not correctly configured to
-be used with this bridge.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.jira_session.JiraSession.is_jira_cloud">
-<code class="descname">is_jira_cloud</code><a class="headerlink" href="#sg_jira.jira_session.JiraSession.is_jira_cloud" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return if the site is a JIRA Cloud site.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Rerturns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">True</span></code> if the site is hosted in the cloud, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.get_jira_issue_field_id">
-<code class="descname">get_jira_issue_field_id</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.get_jira_issue_field_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.get_jira_issue_field_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the Jira field id for the Issue field with the given name.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The id as a string or None if the field is unknown.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.jira_session.JiraSession.jira_shotgun_type_field">
-<code class="descname">jira_shotgun_type_field</code><a class="headerlink" href="#sg_jira.jira_session.JiraSession.jira_shotgun_type_field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the id of the Jira field used to store the type of a linked ShotGrid
-Entity.</p>
-<p>Two custom fields are used in Jira to store a reference to a ShotGrid
-Entity: its ShotGrid Entity type and id. This method returns the id of
-the Jira field used to store the ShotGrid type.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.jira_session.JiraSession.jira_shotgun_id_field">
-<code class="descname">jira_shotgun_id_field</code><a class="headerlink" href="#sg_jira.jira_session.JiraSession.jira_shotgun_id_field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the id of the Jira field used to store the id of a linked ShotGrid
-Entity.</p>
-<p>Two custom fields are used in Jira to store a reference to a ShotGrid
-Entity: its ShotGrid Entity type and id. This method returns the id of
-the Jira field used to store the ShotGrid id.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.jira_session.JiraSession.jira_shotgun_url_field">
-<code class="descname">jira_shotgun_url_field</code><a class="headerlink" href="#sg_jira.jira_session.JiraSession.jira_shotgun_url_field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the id of the Jira field used to store the url of a linked ShotGrid
-Entity.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.sanitize_jira_update_value">
-<code class="descname">sanitize_jira_update_value</code><span class="sig-paren">(</span><em>jira_value</em>, <em>jira_field_schema</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.sanitize_jira_update_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.sanitize_jira_update_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform sanity checks for the given Jira value and ensure it can be used
-to update the Jira field with the given schema.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A Jira value which can safely be used to update the Jira field.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>UserWarning</strong> – if a safe value can’t be obtained.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.find_jira_assignee_for_issue">
-<code class="descname">find_jira_assignee_for_issue</code><span class="sig-paren">(</span><em>user_email</em>, <em>jira_project=None</em>, <em>jira_issue=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.find_jira_assignee_for_issue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.find_jira_assignee_for_issue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a Jira user the given issue can be assigned to, based
-on the given email address.</p>
-<p>A Jira Project must be specified when creating an Issue. A Jira Issue must
-be specified when editing an Issue.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>jira_project</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</li>
-<li><strong>jira_issue</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</li>
-<li><strong>user_email</strong> – An email address as a string.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.User</span></code> instance or None.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – if no Project nor Issue is specified.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.find_jira_user">
-<code class="descname">find_jira_user</code><span class="sig-paren">(</span><em>user_email</em>, <em>jira_project=None</em>, <em>jira_issue=None</em>, <em>for_assignment=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.find_jira_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.find_jira_user" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a Jira an assignable user or with browse permission for the given
-Project or Issue, with the given email address. Either a jira_project
-or jira_issue must be provided.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Due to problems with user searching in Jira, this method always
-returns assignable users for the time being.</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>user_email</strong> – An email address as a string.</li>
-<li><strong>jira_project</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</li>
-<li><strong>jira_issue</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</li>
-<li><strong>for_assignment</strong> – A boolean, if <cite>False</cite> the user just needs to have read
-permission. If <cite>True</cite> the user needs to be suitable for
-Issue assignments.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.User</span></code> instance or None.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – if no Project nor Issue is specified.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.set_jira_issue_status">
-<code class="descname">set_jira_issue_status</code><span class="sig-paren">(</span><em>jira_issue</em>, <em>jira_status_name</em>, <em>comment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.set_jira_issue_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.set_jira_issue_status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attempt to change the Jira Issue status to the given value.</p>
-<p>Lookup for a Jira transition where the target status is the
-given one and try to apply it.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>jira_issue</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance.</li>
-<li><strong>jira_status</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira status name, e.g. <cite>In Progress</cite>.</li>
-<li><strong>comment</strong> – A string, a comment to apply to the Jira transition.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><cite>True</cite> if the status could be set, <cite>False</cite> otherwise.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.create_issue_from_data">
-<code class="descname">create_issue_from_data</code><span class="sig-paren">(</span><em>jira_project</em>, <em>issue_type</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.create_issue_from_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.create_issue_from_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create an Issue from the given data.</p>
-<p>Sanity check the data against Jira create meta data. Try to amend the
-data, if possible, to complete the Issue creation. Raise <cite>ValueError</cite> if
-the data can’t be amended to complete the Issue creation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>jira_project</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance.</li>
-<li><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The target Issue type name.</li>
-<li><strong>data</strong> – A dictionary where keys are Jira Issue field ids and values
-are Jira values.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
-<li><strong>RuntimeError</strong> – if the Jira create meta data can’t be retrieved.</li>
-<li><strong>ValueError</strong> – if invalid and unfixable data is provided.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.jira_session.JiraSession.get_jira_issue_edit_meta">
-<code class="descname">get_jira_issue_edit_meta</code><span class="sig-paren">(</span><em>jira_issue</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.get_jira_issue_edit_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.get_jira_issue_edit_meta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the edit metadata for the given Jira Issue.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jira_issue</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code>.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The Jira Issue edit metadata <cite>fields</cite> property.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the edit metadata can’t be retrieved for the
-given Issue.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="id1">
+</section>
+</section>
+<section id="id1">
 <h3>Bridge<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>This is the main class that holds handles to both ShotGrid and Jira
 and handles dispatching events to both sites.</p>
-<dl class="class">
-<dt id="sg_jira.Bridge">
-<em class="property">class </em><code class="descclassname">sg_jira.</code><code class="descname">Bridge</code><span class="sig-paren">(</span><em>sg_site</em>, <em>sg_script</em>, <em>sg_script_key</em>, <em>jira_site</em>, <em>jira_user</em>, <em>jira_secret</em>, <em>sync_settings=None</em>, <em>sg_http_proxy=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge" title="Permalink to this definition">¶</a></dt>
-<dd><p>A bridge between ShotGrid and Jira.</p>
-<p>The bridge handles connections to the ShotGrid and Jira servers and dispatches
-sync events.</p>
-<p>Instatiate a new bridge between the given SG site and Jira site.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Jira Cloud requires the use of an API token and will not work with
-a user’s password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a>
-for information on how to generate a token.
-Jira Server will still work with a users’s password and does not
-support API tokens.</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid site url.</li>
-<li><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid script user name.</li>
-<li><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The script user key for the ShotGrid script.</li>
-<li><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</li>
-<li><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira user name, either his email address or short
-name.</li>
-<li><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira user password or API key.</li>
-<li><strong>sync_settings</strong> – A dictionary where keys are settings names.</li>
-<li><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
-connection, or None.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="sg_jira.Bridge.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>sg_site</em>, <em>sg_script</em>, <em>sg_script_key</em>, <em>jira_site</em>, <em>jira_user</em>, <em>jira_secret</em>, <em>sync_settings=None</em>, <em>sg_http_proxy=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instatiate a new bridge between the given SG site and Jira site.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Jira Cloud requires the use of an API token and will not work with
-a user’s password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a>
-for information on how to generate a token.
-Jira Server will still work with a users’s password and does not
-support API tokens.</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid site url.</li>
-<li><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid script user name.</li>
-<li><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The script user key for the ShotGrid script.</li>
-<li><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</li>
-<li><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira user name, either his email address or short
-name.</li>
-<li><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira user password or API key.</li>
-<li><strong>sync_settings</strong> – A dictionary where keys are settings names.</li>
-<li><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
-connection, or None.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="sg_jira.Bridge.get_bridge">
-<em class="property">classmethod </em><code class="descname">get_bridge</code><span class="sig-paren">(</span><em>settings_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.get_bridge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.get_bridge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the given settings and instantiate a new <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> with them.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>settings_file</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Path to a settings Python file.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – on missing required settings.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="sg_jira.Bridge.read_settings">
-<em class="property">classmethod </em><code class="descname">read_settings</code><span class="sig-paren">(</span><em>settings_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.read_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.read_settings" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the given settings file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>settings_file</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Path to a settings Python file.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple of settings:
-(logger settings, shotgun settings, jira settings, sync settings)</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if the file does not exist or if its name does not end
-with <code class="docutils literal notranslate"><span class="pre">.py</span></code>.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Bridge.shotgun">
-<code class="descname">shotgun</code><a class="headerlink" href="#sg_jira.Bridge.shotgun" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a connected <a class="reference internal" href="#sg_jira.shotgun_session.ShotgunSession" title="sg_jira.shotgun_session.ShotgunSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShotgunSession</span></code></a> instance.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Bridge.current_shotgun_user">
-<code class="descname">current_shotgun_user</code><a class="headerlink" href="#sg_jira.Bridge.current_shotgun_user" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the ShotGrid user used for the connection.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A ShotGrid record dictionary with an <cite>id</cite> key and a <cite>type</cite> key.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Bridge.current_jira_username">
-<code class="descname">current_jira_username</code><a class="headerlink" href="#sg_jira.Bridge.current_jira_username" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the username of the current Jira user.</p>
-<p>The jira API escapes special characters using %xx syntax when storing
-the username. For example, the username <code class="docutils literal notranslate"><span class="pre">richard+hendricks</span></code> is stored
-as <code class="docutils literal notranslate"><span class="pre">richard%2bhendricks</span></code> by the jira API. We decode the username here
-before returning it to ensure we return the exact value (eg.
-<code class="docutils literal notranslate"><span class="pre">richard+hendricks</span></code>)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A string with the username.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Bridge.jira">
-<code class="descname">jira</code><a class="headerlink" href="#sg_jira.Bridge.jira" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a connected <a class="reference internal" href="#sg_jira.jira_session.JiraSession" title="sg_jira.jira_session.JiraSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">JiraSession</span></code></a> instance.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Bridge.sync_settings_names">
-<code class="descname">sync_settings_names</code><a class="headerlink" href="#sg_jira.Bridge.sync_settings_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the list of sync settings this bridge handles.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Bridge.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset the bridge.</p>
-<p>Clears all caches.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Bridge.get_syncer">
-<code class="descname">get_syncer</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.get_syncer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.get_syncer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance for the given settings name.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> – A settings name.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – for invalid settings.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Bridge.sync_in_jira">
-<code class="descname">sync_in_jira</code><span class="sig-paren">(</span><em>settings_name</em>, <em>entity_type</em>, <em>entity_id</em>, <em>event</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.sync_in_jira"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.sync_in_jira" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sync the given ShotGrid Entity to Jira.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>settings_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The name of the settings to use for this sync.</li>
-<li><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</li>
-<li><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the Entity was actually synced in Jira, False if
-syncing was skipped for any reason.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Bridge.sync_in_shotgun">
-<code class="descname">sync_in_shotgun</code><span class="sig-paren">(</span><em>settings_name</em>, <em>resource_type</em>, <em>resource_id</em>, <em>event</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.sync_in_shotgun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Bridge.sync_in_shotgun" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sync the given Jira Resource to ShotGrid.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>settings_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The name of the settings to use for this sync.</li>
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the resource was actually synced in ShotGrid, False if
-syncing was skipped for any reason.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="id2">
+</section>
+<section id="id2">
 <h3>Syncers<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>Base class in charge of initially determining whether to accept events
 from ShotGrid and Jira for syncing. If accepted, it then passes on
@@ -1160,845 +472,101 @@ to Handlers.</p>
         <span class="p">]</span>
 </pre></div>
 </div>
-<div class="section" id="syncer">
+<section id="syncer">
 <h4>Syncer<a class="headerlink" href="#syncer" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="sg_jira.Syncer">
-<em class="property">class </em><code class="descclassname">sg_jira.</code><code class="descname">Syncer</code><span class="sig-paren">(</span><em>name</em>, <em>bridge</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Syncer" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class handling syncing between ShotGrid and Jira.</p>
-<p>All Syncers should define a list of <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> which should reject
-or accept and process events.</p>
-<p>Instatiate a new syncer for the given bridge.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A unique name for the syncer.</li>
-<li><strong>bridge</strong> – A <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> instance.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="sg_jira.Syncer.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em>, <em>bridge</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Syncer.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instatiate a new syncer for the given bridge.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A unique name for the syncer.</li>
-<li><strong>bridge</strong> – A <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> instance.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Syncer.bridge">
-<code class="descname">bridge</code><a class="headerlink" href="#sg_jira.Syncer.bridge" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> instance used by this syncer.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Syncer.shotgun">
-<code class="descname">shotgun</code><a class="headerlink" href="#sg_jira.Syncer.shotgun" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a connected <a class="reference internal" href="#sg_jira.shotgun_session.ShotgunSession" title="sg_jira.shotgun_session.ShotgunSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShotgunSession</span></code></a> instance.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Syncer.jira">
-<code class="descname">jira</code><a class="headerlink" href="#sg_jira.Syncer.jira" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a connected Jira handle.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.Syncer.handlers">
-<code class="descname">handlers</code><a class="headerlink" href="#sg_jira.Syncer.handlers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Needs to be re-implemented in deriving classes and return a list of
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> instances.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Syncer.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Syncer.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check the Jira and ShotGrid site, ensure that the sync can safely happen
-and cache any value which is slow to retrieve.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Syncer.get_jira_project">
-<code class="descname">get_jira_project</code><span class="sig-paren">(</span><em>project_key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.get_jira_project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Syncer.get_jira_project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the Jira Project with the given key, if any.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Syncer.accept_shotgun_event">
-<code class="descname">accept_shotgun_event</code><span class="sig-paren">(</span><em>entity_type</em>, <em>entity_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.accept_shotgun_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Syncer.accept_shotgun_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> instance if the event is accepted for
-processing, <cite>None</cite> otherwise.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.Syncer.accept_jira_event">
-<code class="descname">accept_jira_event</code><span class="sig-paren">(</span><em>resource_type</em>, <em>resource_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.accept_jira_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.Syncer.accept_jira_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given Jira resource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> instance if the event is accepted for
-processing, <cite>None</cite> otherwise.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="synchandlers">
+</section>
+</section>
+<section id="synchandlers">
 <h3>SyncHandlers<a class="headerlink" href="#synchandlers" title="Permalink to this headline">¶</a></h3>
 <p>Base class that handles a particular sync instance between ShotGrid and Jira.</p>
 <p>Handlers hold the main logic for syncing values between a ShotGrid Entity type
-and a Jira resource. They are owned by a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.
+and a Jira resource. They are owned by a <code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code> instance.
 This base class defines the interface all handlers should support and
 provides helpers methods useful to all implementations.</p>
-<div class="section" id="synchandler">
+<section id="synchandler">
 <h4>SyncHandler<a class="headerlink" href="#synchandler" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="sg_jira.handlers.SyncHandler">
-<em class="property">class </em><code class="descclassname">sg_jira.handlers.</code><code class="descname">SyncHandler</code><span class="sig-paren">(</span><em>syncer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class to handle a particular sync between ShotGrid and Jira.</p>
-<p>Handlers typically handle syncing values between a ShotGrid Entity type and
-a Jira resource and are owned by a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</p>
-<p>This base class defines the interface all handlers should support and
-provides some helpers which can be useful to all handlers.</p>
-<p>Instantiate a handler for the given syncer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>syncer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate a handler for the given syncer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.get_jira_project">
-<code class="descname">get_jira_project</code><span class="sig-paren">(</span><em>project_key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.get_jira_project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.get_jira_project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the Jira Project with the given key, if any.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.get_jira_issue">
-<code class="descname">get_jira_issue</code><span class="sig-paren">(</span><em>issue_key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.get_jira_issue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.get_jira_issue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the Jira Issue with the given key, if any.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method can be re-implemented in deriving classes to Check the Jira
-and ShotGrid site, ensure that the sync can safely happen and cache any
-value which is slow to retrieve.</p>
-<p>This base implementation does nothing.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.accept_shotgun_event">
-<code class="descname">accept_shotgun_event</code><span class="sig-paren">(</span><em>entity_type</em>, <em>entity_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.accept_shotgun_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.accept_shotgun_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
-<p>Must be re-implemented in deriving classes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><cite>True</cite> if the event is accepted for processing, <cite>False</cite> otherwise.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.process_shotgun_event">
-<code class="descname">process_shotgun_event</code><span class="sig-paren">(</span><em>entity_type</em>, <em>entity_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.process_shotgun_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.process_shotgun_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Process the given ShotGrid event for the given ShotGrid Entity</p>
-<p>Must be re-implemented in deriving classes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</li>
-<li><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</li>
-<li><strong>event</strong> – A dictionary with the event for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event was successfully processed, False if the
-sync didn’t happen for any reason.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.accept_jira_event">
-<code class="descname">accept_jira_event</code><span class="sig-paren">(</span><em>resource_type</em>, <em>resource_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.accept_jira_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.accept_jira_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given Jira resource.</p>
-<p>Must be re-implemented in deriving classes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event is accepted for processing, False otherwise.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.SyncHandler.process_jira_event">
-<code class="descname">process_jira_event</code><span class="sig-paren">(</span><em>resource_type</em>, <em>resource_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.process_jira_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.process_jira_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Process the given Jira event for the given Jira resource.</p>
-<p>Must be re-implemented in deriving classes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event was successfully processed, False if the
-sync didn’t happen for any reason.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="id3">
+</section>
+<section id="id3">
 <h4>EntityIssueHandler<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
 <p>Base class for syncing ShotGrid Entities and Jira Issues. This inherits from
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>.</p>
-<dl class="class">
-<dt id="sg_jira.handlers.EntityIssueHandler">
-<em class="property">class </em><code class="descclassname">sg_jira.handlers.</code><code class="descname">EntityIssueHandler</code><span class="sig-paren">(</span><em>syncer</em>, <em>issue_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/entity_issue_handler.html#EntityIssueHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sg_jira.handlers.sync_handler.SyncHandler</span></code></p>
-<p>Base class for handlers syncing a ShotGrid Entity to a Jira Issue.</p>
-<p>Instantiate an Entity Issue handler for the given syncer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</li>
-<li><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A target Issue type, e.g. ‘Task’, ‘Story’.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>syncer</em>, <em>issue_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/entity_issue_handler.html#EntityIssueHandler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate an Entity Issue handler for the given syncer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</li>
-<li><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A target Issue type, e.g. ‘Task’, ‘Story’.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.accept_jira_event">
-<code class="descname">accept_jira_event</code><span class="sig-paren">(</span><em>resource_type</em>, <em>resource_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/entity_issue_handler.html#EntityIssueHandler.accept_jira_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.accept_jira_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given Jira resource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event is accepted for processing, False otherwise.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.process_jira_event">
-<code class="descname">process_jira_event</code><span class="sig-paren">(</span><em>resource_type</em>, <em>resource_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/entity_issue_handler.html#EntityIssueHandler.process_jira_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.process_jira_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Process the given Jira event for the given Jira resource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource to sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event was successfully processed, False if the
-sync didn’t happen for any reason.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.accept_shotgun_event">
-<code class="descname">accept_shotgun_event</code><span class="sig-paren">(</span><em>entity_type</em>, <em>entity_id</em>, <em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.accept_shotgun_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
-<p>Must be re-implemented in deriving classes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><cite>True</cite> if the event is accepted for processing, <cite>False</cite> otherwise.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.get_jira_issue">
-<code class="descname">get_jira_issue</code><span class="sig-paren">(</span><em>issue_key</em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.get_jira_issue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the Jira Issue with the given key, if any.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.get_jira_project">
-<code class="descname">get_jira_project</code><span class="sig-paren">(</span><em>project_key</em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.get_jira_project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the Jira Project with the given key, if any.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.process_shotgun_event">
-<code class="descname">process_shotgun_event</code><span class="sig-paren">(</span><em>entity_type</em>, <em>entity_id</em>, <em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.process_shotgun_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Process the given ShotGrid event for the given ShotGrid Entity</p>
-<p>Must be re-implemented in deriving classes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</li>
-<li><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</li>
-<li><strong>event</strong> – A dictionary with the event for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event was successfully processed, False if the
-sync didn’t happen for any reason.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EntityIssueHandler.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method can be re-implemented in deriving classes to Check the Jira
-and ShotGrid site, ensure that the sync can safely happen and cache any
-value which is slow to retrieve.</p>
-<p>This base implementation does nothing.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="enablesyncinghandler">
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code>.</p>
+</section>
+<section id="enablesyncinghandler">
 <h4>EnableSyncingHandler<a class="headerlink" href="#enablesyncinghandler" title="Permalink to this headline">¶</a></h4>
 <p>A handler that controls the initial sync for a ShotGrid Task and Jira Issue when
 the “Sync In Jira” checkbox is toggled in ShotGrid. It combines multiple
 handlers to begin the syncing process by performing a full sync each time the
 checkbox is toggled on. This allows one to manually force a re-sync if needed
 by just toggling the checkbox off and then on again.</p>
-<p>Inherits from <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>.</p>
-<dl class="class">
-<dt id="sg_jira.handlers.EnableSyncingHandler">
-<em class="property">class </em><code class="descclassname">sg_jira.handlers.</code><code class="descname">EnableSyncingHandler</code><span class="sig-paren">(</span><em>syncer</em>, <em>handlers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler" title="Permalink to this definition">¶</a></dt>
-<dd><p>A handler which combines multiple handlers to start syncing Tasks and Entities
-linked to them when a Task “Sync In Jira” (sg_sync_in_jira) checkbox field
-is changed in ShotGrid.</p>
-<p>A full sync is performed each time the checkbox is turned on. This allows
-to manually force a re-sync if needed by just setting off the checkbox, and
-then back to on.</p>
-<p>Instantiate a new handler which combines the provided handlers.</p>
-<p>The first handler in the list is assumed to be a primary handler, the
-others are assumed to be secondary handlers.</p>
-<p>Events will be sent to secondary handlers for processing only if the
-primary handler was able to successfully process them.</p>
-<p>This allows to control from the primary handler if a ShotGrid Entity should
-be synced or not, and then automatically start syncing secondary Entities
-which are linked to this primary Entity, e.g. Notes on a Task, without
-having to explicitely enable syncing for the linked Entities.</p>
-<p>Combined handlers shouldn’t accept the events which are accepted by this
-handler, but they need to be able to process them.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</li>
-<li><strong>handlers</strong> – A non empty list of <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> instances.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>syncer</em>, <em>handlers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate a new handler which combines the provided handlers.</p>
-<p>The first handler in the list is assumed to be a primary handler, the
-others are assumed to be secondary handlers.</p>
-<p>Events will be sent to secondary handlers for processing only if the
-primary handler was able to successfully process them.</p>
-<p>This allows to control from the primary handler if a ShotGrid Entity should
-be synced or not, and then automatically start syncing secondary Entities
-which are linked to this primary Entity, e.g. Notes on a Task, without
-having to explicitely enable syncing for the linked Entities.</p>
-<p>Combined handlers shouldn’t accept the events which are accepted by this
-handler, but they need to be able to process them.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</li>
-<li><strong>handlers</strong> – A non empty list of <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> instances.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check the Jira and ShotGrid site, ensure that the sync can safely happen.
-This can be used as well to cache any value which is slow to retrieve.</p>
-<p>Run all handlers setup.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event">
-<code class="descname">accept_shotgun_event</code><span class="sig-paren">(</span><em>entity_type</em>, <em>entity_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.accept_shotgun_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><cite>True</cite> if the event is accepted for processing, <cite>False</cite> otherwise.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.process_shotgun_event">
-<code class="descname">process_shotgun_event</code><span class="sig-paren">(</span><em>entity_type</em>, <em>entity_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.process_shotgun_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.process_shotgun_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Process the given ShotGrid event for the given ShotGrid Entity</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</li>
-<li><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</li>
-<li><strong>event</strong> – A dictionary with the event for the change.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.accept_jira_event">
-<code class="descname">accept_jira_event</code><span class="sig-paren">(</span><em>resource_type</em>, <em>resource_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.accept_jira_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.accept_jira_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accept or reject the given event for the given Jira resource.</p>
-<p>This handler rejects all Jira events.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event is accepted for processing, False otherwise.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.get_jira_issue">
-<code class="descname">get_jira_issue</code><span class="sig-paren">(</span><em>issue_key</em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.get_jira_issue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the Jira Issue with the given key, if any.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.get_jira_project">
-<code class="descname">get_jira_project</code><span class="sig-paren">(</span><em>project_key</em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.get_jira_project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the Jira Project with the given key, if any.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.handlers.EnableSyncingHandler.process_jira_event">
-<code class="descname">process_jira_event</code><span class="sig-paren">(</span><em>resource_type</em>, <em>resource_id</em>, <em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.process_jira_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Process the given Jira event for the given Jira resource.</p>
-<p>Must be re-implemented in deriving classes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</li>
-<li><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</li>
-<li><strong>event</strong> – A dictionary with the event meta data for the change.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the event was successfully processed, False if the
-sync didn’t happen for any reason.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="utils">
+<p>Inherits from <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code>.</p>
+</section>
+</section>
+<section id="utils">
 <h3>Utils<a class="headerlink" href="#utils" title="Permalink to this headline">¶</a></h3>
 <p>Common utility functions.</p>
 <span class="target" id="module-sg_jira.utils"></span><dl class="function">
 <dt id="sg_jira.utils.utf8_to_unicode">
-<code class="descclassname">sg_jira.utils.</code><code class="descname">utf8_to_unicode</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/utils.html#utf8_to_unicode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.utils.utf8_to_unicode" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sg_jira.utils.</code><code class="sig-name descname">utf8_to_unicode</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/utils.html#utf8_to_unicode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.utils.utf8_to_unicode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert any string in the given input to unicode. Strings are expected to be
 in utf-8 encoding.</p>
 <p>Treat containers by recursively iterating over all the values they contain.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – A string, a list, a tuple, or a dictionary.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The value with all strings converted to unicode.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if a converted UTF-8 decoded key is already present in the
-original value of a dictionary.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – A string, a list, a tuple, or a dictionary.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The value with all strings converted to unicode.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – if a converted UTF-8 decoded key is already present in the
+original value of a dictionary.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="sg_jira.utils.unicode_to_utf8">
-<code class="descclassname">sg_jira.utils.</code><code class="descname">unicode_to_utf8</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/utils.html#unicode_to_utf8"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.utils.unicode_to_utf8" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">sg_jira.utils.</code><code class="sig-name descname">unicode_to_utf8</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/utils.html#unicode_to_utf8"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.utils.unicode_to_utf8" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert any unicode in the given input to an utf8 encoded string value.</p>
 <p>Treat containers by recursively iterating over all the values they contain.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – A string, a list, a tuple, or a dictionary.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The value with all unicode values converted to strings.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if a converted UTF-8 encoded key is already present in the
-original value of a dictionary.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – A string, a list, a tuple, or a dictionary.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The value with all unicode values converted to strings.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – if a converted UTF-8 encoded key is already present in the
+original value of a dictionary.</p>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-sg_jira.errors">
-<span id="errors"></span><h3>Errors<a class="headerlink" href="#module-sg_jira.errors" title="Permalink to this headline">¶</a></h3>
-<dl class="exception">
-<dt id="sg_jira.errors.InvalidSyncValue">
-<em class="property">exception </em><code class="descclassname">sg_jira.errors.</code><code class="descname">InvalidSyncValue</code><span class="sig-paren">(</span><em>field</em>, <em>value</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/errors.html#InvalidSyncValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.errors.InvalidSyncValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for exceptions raised when a value can’t be translated to a valid
-value for a given field.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>field</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</li>
-<li><strong>value</strong> – The Jira or SG value for which the exception was raised.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="sg_jira.errors.InvalidSyncValue.field">
-<code class="descname">field</code><a class="headerlink" href="#sg_jira.errors.InvalidSyncValue.field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the field for which the exception was raised.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.errors.InvalidSyncValue.value">
-<code class="descname">value</code><a class="headerlink" href="#sg_jira.errors.InvalidSyncValue.value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the value for which the exception was raised.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.errors.InvalidSyncValue.with_traceback">
-<code class="descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.errors.InvalidSyncValue.with_traceback" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="exception">
-<dt id="sg_jira.errors.InvalidShotgunValue">
-<em class="property">exception </em><code class="descclassname">sg_jira.errors.</code><code class="descname">InvalidShotgunValue</code><span class="sig-paren">(</span><em>field</em>, <em>value</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/errors.html#InvalidShotgunValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.errors.InvalidShotgunValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>An exception raised when a ShotGrid value can’t be translated to a valid
-Jira value for a given field.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>field</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</li>
-<li><strong>value</strong> – The Jira or SG value for which the exception was raised.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="sg_jira.errors.InvalidShotgunValue.field">
-<code class="descname">field</code><a class="headerlink" href="#sg_jira.errors.InvalidShotgunValue.field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the field for which the exception was raised.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.errors.InvalidShotgunValue.value">
-<code class="descname">value</code><a class="headerlink" href="#sg_jira.errors.InvalidShotgunValue.value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the value for which the exception was raised.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.errors.InvalidShotgunValue.with_traceback">
-<code class="descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.errors.InvalidShotgunValue.with_traceback" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="exception">
-<dt id="sg_jira.errors.InvalidJiraValue">
-<em class="property">exception </em><code class="descclassname">sg_jira.errors.</code><code class="descname">InvalidJiraValue</code><span class="sig-paren">(</span><em>field</em>, <em>value</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/errors.html#InvalidJiraValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sg_jira.errors.InvalidJiraValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>An exception raised when a Jira value can’t be translated to a valid
-ShotGrid value for a given field.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>field</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</li>
-<li><strong>value</strong> – The Jira or SG value for which the exception was raised.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="sg_jira.errors.InvalidJiraValue.field">
-<code class="descname">field</code><a class="headerlink" href="#sg_jira.errors.InvalidJiraValue.field" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the field for which the exception was raised.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sg_jira.errors.InvalidJiraValue.value">
-<code class="descname">value</code><a class="headerlink" href="#sg_jira.errors.InvalidJiraValue.value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the value for which the exception was raised.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="sg_jira.errors.InvalidJiraValue.with_traceback">
-<code class="descname">with_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.errors.InvalidJiraValue.with_traceback" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exception.with_traceback(tb) –
-set self.__traceback__ to tb and return self.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="tests-ci">
+</section>
+<section id="errors">
+<h3>Errors<a class="headerlink" href="#errors" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="tests-ci">
 <h2>Tests &amp; CI<a class="headerlink" href="#tests-ci" title="Permalink to this headline">¶</a></h2>
 <p>Unit tests are in the <code class="docutils literal notranslate"><span class="pre">/tests</span></code> folder. A <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file is
 available in this folder as well to install the required modules to run the
 tests.</p>
 <p>Run the tests from the tests directory with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">run_tests.py</span></code>.</p>
-<div class="section" id="continuous-integration-ci">
+<section id="continuous-integration-ci">
 <h3>Continuous Integration (CI)<a class="headerlink" href="#continuous-integration-ci" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference external" href="https://github.com/marketplace/azure-pipelines">Azure Pipelines</a> are used
 for the continuous integration and run the following validations:</p>
 <ul class="simple">
-<li>Enforce reasonable PEP-8 conventions with Flake8.</li>
-<li>Run unit tests on Linux, Mac and Windows with Python 2.7.</li>
+<li><p>Enforce reasonable PEP-8 conventions with Flake8.</p></li>
+<li><p>Run unit tests on Linux, Mac and Windows with Python 2.7.</p></li>
 </ul>
 <p>Azure Pipelines jobs are defined by the description files in the
 <code class="docutils literal notranslate"><span class="pre">/azure-pipelines</span></code> folder.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
