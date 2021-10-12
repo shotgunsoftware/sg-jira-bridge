@@ -5,6 +5,12 @@
 # this software in either electronic or hard copy form.
 #
 
+for package_name in ["daemonize", "shotgun_api3", "jira", "dotenv", "six"]:
+    try:
+        __import__(package_name)
+    except Exception as e:
+        raise RuntimeError("Could not import %s package. Did you install the requirements.txt file? %s" % (package_name, str(e)))
+
 from .bridge import Bridge
 from .syncer import Syncer
 from .jira_session import JiraSession
