@@ -126,7 +126,7 @@
     <b>sg-jira-bridge</b> master.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>Shotgun Support</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -203,10 +203,10 @@ cases where certain features have not been implemented yet.</p>
 existing ones. This means syncing can only <em>initiate</em> from ShotGrid and not
 from Jira. If an entity in ShotGrid that was synced with an issue in Jira is
 deleted, it will not currently be re-created in ShotGrid.</li>
-<li>In most cases only one <a class="reference internal" href="developer.html#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> can handle a
+<li>In most cases only one <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code> can handle a
 given event. The exception is with the <strong>Sync In Jira</strong> event which is a
 special case that is handled by the
-<a class="reference internal" href="developer.html#sg_jira.handlers.EnableSyncingHandler" title="sg_jira.handlers.EnableSyncingHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnableSyncingHandler</span></code></a> which is a container
+<code class="xref py py-class docutils literal notranslate"><span class="pre">EnableSyncingHandler</span></code> which is a container
 for multiple handlers.</li>
 <li>Notes in ShotGrid can be linked to multiple entities, but Comments in Jira
 can only be linked to a single Issue. Notes linked to multiple entities in
