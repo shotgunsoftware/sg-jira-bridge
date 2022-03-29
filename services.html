@@ -7,8 +7,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Installing as a Service &mdash; sg-jira-bridge master documentation</title>
@@ -24,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -206,10 +205,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="installing-as-a-service">
+  <div class="section" id="installing-as-a-service">
 <h1>Installing as a Service<a class="headerlink" href="#installing-as-a-service" title="Permalink to this headline">¶</a></h1>
 <p>ShotGrid Jira Bridge can be run as a service on MacOS/Linux and Windows.</p>
-<section id="macos-and-linux">
+<div class="section" id="macos-and-linux">
 <h2>MacOS and Linux<a class="headerlink" href="#macos-and-linux" title="Permalink to this headline">¶</a></h2>
 <p>On MacOS and Linux, the <code class="docutils literal notranslate"><span class="pre">service.py</span></code> script can be used with systemd. It
 accepts parameters from the command-line and responds to the standard commands:</p>
@@ -218,46 +217,46 @@ accepts parameters from the command-line and responds to the standard commands:<
               <span class="p">{</span><span class="n">start</span><span class="p">,</span><span class="n">stop</span><span class="p">,</span><span class="n">restart</span><span class="p">,</span><span class="n">status</span><span class="p">}</span>
 </pre></div>
 </div>
-<section id="parameters">
+<div class="section" id="parameters">
 <h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p><strong>-h</strong>: Display the usage help.</p></li>
-<li><p><strong>–pid_file</strong>: Full path to the pid file used by the service. Defaults to
-<code class="docutils literal notranslate"><span class="pre">/tmp/sg_jira.pid</span></code>.</p></li>
-<li><p><strong>–log_file</strong>: An optional log file to use for the daemon output. By
-default the daemon uses a syslog handler.</p></li>
-<li><p><strong>–port</strong>: The port number for the web app to listen on. Defaults to <code class="docutils literal notranslate"><span class="pre">9090</span></code>.</p></li>
-<li><p><strong>–settings</strong>: (required) Full path to settings file for the web app.</p></li>
+<li><strong>-h</strong>: Display the usage help.</li>
+<li><strong>–pid_file</strong>: Full path to the pid file used by the service. Defaults to
+<code class="docutils literal notranslate"><span class="pre">/tmp/sg_jira.pid</span></code>.</li>
+<li><strong>–log_file</strong>: An optional log file to use for the daemon output. By
+default the daemon uses a syslog handler.</li>
+<li><strong>–port</strong>: The port number for the web app to listen on. Defaults to <code class="docutils literal notranslate"><span class="pre">9090</span></code>.</li>
+<li><strong>–settings</strong>: (required) Full path to settings file for the web app.</li>
 </ul>
-</section>
-</section>
-<section id="windows">
+</div>
+</div>
+<div class="section" id="windows">
 <h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">win_service.py</span></code> script can be installed to allow the Service Manager
 to control ShotGrid Jira Bridge.</p>
-<section id="environment-variables">
+<div class="section" id="environment-variables">
 <h3>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>Environment variables are used to specify the settings and port parameters.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SETTINGS_FILE</span></code>: Full path to settings file for the web app. If not
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_SETTINGS_FILE</span></code>: Full path to settings file for the web app. If not
 provided, the app will look for a <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file in the root of the
-ShotGrid Jira Bridge directory (where it exists in the default structure).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_PORT_NUMBER</span></code>: The port number for the web app to listen on.
-Defaults to <code class="docutils literal notranslate"><span class="pre">9090</span></code>.</p></li>
+ShotGrid Jira Bridge directory (where it exists in the default structure).</li>
+<li><code class="docutils literal notranslate"><span class="pre">SGJIRA_PORT_NUMBER</span></code>: The port number for the web app to listen on.
+Defaults to <code class="docutils literal notranslate"><span class="pre">9090</span></code>.</li>
 </ul>
-</section>
-<section id="installing-the-service">
+</div>
+<div class="section" id="installing-the-service">
 <h3>Installing the Service<a class="headerlink" href="#installing-the-service" title="Permalink to this headline">¶</a></h3>
 <p>The Windows service requires the
 <a class="reference external" href="https://pypi.org/project/pywin32/">Python for Win32 (pywin32) extensions</a>.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
+<p class="first admonition-title">Note</p>
 <p>If installing pywin32 with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pywin32</span></code>, the following must be
 run after the installation in order to allow it to manage services:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">Scripts</span><span class="o">/</span><span class="n">pywin32_postinstall</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">install</span>
 </pre></div>
 </div>
-<p>See <a class="reference external" href="https://github.com/mhammond/pywin32#installing-via-pip">https://github.com/mhammond/pywin32#installing-via-pip</a> for more info.</p>
+<p class="last">See <a class="reference external" href="https://github.com/mhammond/pywin32#installing-via-pip">https://github.com/mhammond/pywin32#installing-via-pip</a> for more info.</p>
 </div>
 <p>Install the service from an elevanted command prompt with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
@@ -267,13 +266,13 @@ run after the installation in order to allow it to manage services:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">start</span><span class="o">|</span><span class="n">stop</span><span class="o">|</span><span class="n">restart</span>
 </pre></div>
 </div>
-</section>
-<section id="logging">
+</div>
+<div class="section" id="logging">
 <h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
 <p>Log messages from the Windows Service are logged to the Event Viewer.</p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>
@@ -295,7 +294,7 @@ run after the installation in order to allow it to manage services:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2021, Autodesk
+        &copy; Copyright 2022, Autodesk
 
     </p>
   </div> 
