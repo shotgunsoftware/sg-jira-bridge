@@ -532,7 +532,7 @@ class JiraSession(jira.client.JIRA):
                 )
             fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
         else:
-            # TODO: Change for Jira Server 9.0.0 and Jira Python client 3.5.0
+            # Support for Jira Python client 3.5.0 (Jira 9.0.0)
             create_meta_data = self.createmeta_issuetypes(
                 jira_project,
                 expand="values.fields",
