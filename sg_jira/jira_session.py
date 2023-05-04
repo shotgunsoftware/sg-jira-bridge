@@ -509,26 +509,47 @@ class JiraSession(jira.client.JIRA):
         # It seems a Project `simplified` key can help distinguish between old
         # school projects and new simpler projects.
         # TODO: cache the retrieved data to avoid multiple requests to the server
-        create_meta_data = self.createmeta(
-            jira_project,
-            issuetypeIds=jira_issue_type.id,
-            expand="projects.issuetypes.fields",
-        )
-        # We asked for a single project / single issue type, so we can just pick
-        # the first entry, if it exists.
-        if (
-            not create_meta_data["projects"]
-            or not create_meta_data["projects"][0]["issuetypes"]
-        ):
-            logger.debug(
-                "Create meta data for Project %s Issue type %s: %s"
-                % (jira_project, jira_issue_type.id, create_meta_data)
+
+        if self._is_jira_cloud:
+            create_meta_data = self.createmeta(
+                jira_project,
+                issuetypeIds=jira_issue_type.id,
+                expand="projects.issuetypes.fields",
             )
-            raise RuntimeError(
-                "Unable to retrieve create meta data for Project %s Issue type %s."
-                % (jira_project, jira_issue_type.id,)
+            # We asked for a single project / single issue type, so we can just pick
+            # the first entry, if it exists.
+            if (
+                not create_meta_data["projects"]
+                or not create_meta_data["projects"][0]["issuetypes"]
+            ):
+                logger.debug(
+                    "Create meta data for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (jira_project, jira_issue_type.id,)
+                )
+            fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
+        else:
+            # TODO: Change for Jira Server 9.0.0 and Jira Python client 3.5.0
+            create_meta_data = self.createmeta_issuetypes(
+                jira_project,
+                expand="values.fields",
             )
-        fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
+            if (
+                not create_meta_data["values"]
+                or not create_meta_data["values"][0]["fields"]
+            ):
+                logger.debug(
+                    "Create meta data for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (jira_project, jira_issue_type.id,)
+                )
+            fields_createmeta = create_meta_data["values"][0]["fields"]
 
         # Make a shallow copy so we can add/delete keys
         data = dict(data)
