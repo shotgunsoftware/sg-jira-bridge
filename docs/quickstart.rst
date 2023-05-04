@@ -7,7 +7,7 @@ The instructions below will help you get up and running quickly.
 
 Requirements
 ************
-- Python 2.7
+- Python 2.7/3.7
 - A ShotGrid site
 - A Jira site
 
@@ -134,7 +134,7 @@ Jira Webhook
 Jira Permissions
 ================
 In order for the Jira Bridge to be able to create and update issues in Jira, the Jira user associated with the Bridge
-will need to be given certain permissions. Depending on your current Jira permission rules, you may not need to make
+will need to have certain permissions. Depending on your current Jira permission rules, you may not need to make
 any changes here. But if you would like to restrict the user to only the required permissions, you will need to add
 the following:
 
@@ -187,7 +187,7 @@ A ``requirements.txt`` file is provided to install all required packages.
     If you are upgrading from a previous version of the bridge, we recommend you upgrade the dependencies
     as we've had to fork the ``jira`` Python module to add a missing feature:
 
-    .. code-block::
+    .. code-block:: bash
 
         pip install --upgrade -r /path/to/sg-jira-bridge/requirements.txt
 
