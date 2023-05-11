@@ -317,12 +317,17 @@ class JiraSession(jira.client.JIRA):
 
         # Direct user search with their email
         logger.debug("Looking up %s in assignable users" % user_email)
-        jira_users = search_method(
-            user_email,
+        search_params = dict(
             project=jira_project,
             issueKey=jira_issue.key if jira_issue else None,
             maxResults=JIRA_RESULT_PAGING,
         )
+        if self._is_jira_cloud:
+            search_params["query"] = user_email
+        else:
+            search_params["username"] = user_email
+
+        jira_users = search_method(**search_params)
         if jira_users:
             jira_assignee = jira_users[0]
             if len(jira_users) > 1:
@@ -349,11 +354,8 @@ class JiraSession(jira.client.JIRA):
         start_idx = 0
         logger.debug("Querying all assignable users starting at #%d" % start_idx)
         jira_users = search_method(
-            None,
-            project=jira_project,
-            issueKey=jira_issue.key if jira_issue else None,
-            maxResults=JIRA_RESULT_PAGING,
             startAt=start_idx,
+            **search_params
         )
         while jira_users:
             for jira_user in jira_users:
@@ -372,11 +374,8 @@ class JiraSession(jira.client.JIRA):
                     "Querying all assignable users starting at #%d" % start_idx
                 )
                 jira_users = search_method(
-                    None,
-                    project=jira_project,
-                    issueKey=jira_issue.key if jira_issue else None,
-                    maxResults=JIRA_RESULT_PAGING,
                     startAt=start_idx,
+                    **search_params
                 )
                 logger.debug("Found %s users" % (len(jira_users)))
 
