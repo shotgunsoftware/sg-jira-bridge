@@ -504,15 +504,17 @@ class TestJiraSyncer(TestSyncBase):
                 },
             )
         # Test valid values in data
-        bridge.sync_in_jira(
-            "task_issue",
-            "Task",
-            2,
-            {
-                "user": {"type": "HumanUser", "id": 1},
-                "project": {"type": "Project", "id": 2},
-                "meta": SG_EVENT_META,
-            },
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "task_issue",
+                "Task",
+                2,
+                {
+                    "user": {"type": "HumanUser", "id": 1},
+                    "project": {"type": "Project", "id": 2},
+                    "meta": SG_EVENT_META,
+                },
+            )
         )
 
     def test_shotgun_assignee(self, mocked_sg):

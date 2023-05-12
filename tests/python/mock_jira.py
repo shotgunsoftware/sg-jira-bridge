@@ -447,6 +447,17 @@ class MockedJira(object):
             if project.key == project_id:
                 return project
         raise JIRAError("Unable to find resource Project({})".format(project_id))
+    
+    def createmeta_issuetypes(self, *args):
+        """
+        Mocked Jira method.
+        Return a dictionary with create metadata for all projects.
+        """
+        return {
+            "values": [
+                {"fields": ISSUE_FIELDS}
+            ]
+        }
 
     def createmeta(self, *args, **kwargs):
         """
@@ -1619,28 +1630,46 @@ class MockedJira(object):
         """
         Mocked Jira method.
         """
-        return []
+        return [{
+            "id": 1,
+            "name": "From Fake",
+            "to": {
+                "name": "To Do"
+            },
+        }]
+    
+    def transition_issue(self, *args, **kwargs):
+        return ""
 
     def search_assignable_users_for_issues(
-        self, name, startAt=0, maxResults=20, *args, **kwargs
+        self, username=None, query=None, startAt=0, maxResults=2, *args, **kwargs
     ):
         """
         Mocked Jira method.
         Return a list :class:`JiraUser`.
         """
-        if name:
+        options = {"deployment_type": "Cloud" if self.is_jira_cloud else "Server"}
+
+        if username:
             # Mock Jira REST api bug
             return []
 
-        options = {"deployment_type": "Cloud" if self.is_jira_cloud else "Server"}
+        elif query == JIRA_USER["emailAddress"]:
+            return [User(options, None, JIRA_USER)]
 
-        # Create a list of users.
-        users = [User(options, None, JIRA_USER_2)] * maxResults + [
-            User(options, None, JIRA_USER)
-        ]
+        elif query == JIRA_USER_2["emailAddress"]:
+            return [User(options, None, JIRA_USER_2)]
+        
+        else:
+            return []
 
-        # Return the requested slice.
-        return users[startAt : startAt + maxResults]
+        # # Create a list of users.
+        # users = [User(options, None, JIRA_USER_2)] * maxResults + [
+        #     User(options, None, JIRA_USER)
+        # ]
+
+        # # Return the requested slice.
+        # return users[startAt : startAt + maxResults]
 
     def user(self, id, payload="username"):
         """
