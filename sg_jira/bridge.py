@@ -95,7 +95,11 @@ class Bridge(object):
         shotgun.setup()
 
         self._jira_user = jira_user
-        self._jira = JiraSession(jira_site, basic_auth=(jira_user, jira_secret),)
+        if jira_user == "None":
+            options = dict(token_auth=jira_secret)
+        else:
+            options = dict(basic_auth=(jira_user, jira_secret))
+        self._jira = JiraSession(jira_site, **options)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
         self._jira.setup()
