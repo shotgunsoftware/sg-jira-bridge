@@ -501,7 +501,7 @@ class JiraSession(jira.client.JIRA):
         :raises RuntimeError: if the Jira create meta data can't be retrieved.
         :raises ValueError: if invalid and unfixable data is provided.
         """
-        jira_issue_type = self.issue_type_by_name(issue_type)
+        jira_issue_type = self.issue_type_by_name(issue_type, project=jira_project)
         # Retrieve creation meta data for the project / issue type
         # Note: there is a new simpler Project type in Jira where createmeta is not
         # available.
