@@ -511,7 +511,8 @@ class JiraSession(jira.client.JIRA):
         # school projects and new simpler projects.
         # TODO: cache the retrieved data to avoid multiple requests to the server
 
-        if self._is_jira_cloud:
+        if self._is_jira_cloud or self._version < (9, 0, 0):
+            # Existing logic works for Jira Cloud or Jira Server 8 or prior.
             create_meta_data = self.createmeta(
                 jira_project,
                 issuetypeIds=jira_issue_type.id,
@@ -533,7 +534,7 @@ class JiraSession(jira.client.JIRA):
                 )
             fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
         else:
-            # Support for Jira Python client 3.5.0 (Jira 9.0.0)
+            # createmeta is not supported on Jira Server 9 and Python client 3.5.0
             create_meta_data = self.createmeta_issuetypes(
                 jira_project,
                 expand="values.fields",
