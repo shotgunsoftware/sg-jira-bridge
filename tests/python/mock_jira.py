@@ -1642,7 +1642,7 @@ class MockedJira(object):
         return ""
 
     def search_assignable_users_for_issues(
-        self, name, startAt=0, maxResults=20, *args, **kwargs
+        self, username=None, query=None, startAt=0, maxResults=20, *args, **kwargs
     ):
         """
         Mocked Jira method.
