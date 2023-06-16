@@ -5,20 +5,26 @@
 # this software in either electronic or hard copy form.
 #
 
-pool:
-  vmImage: 'ubuntu-22.04'
+jobs:
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: 3.9
-    architecture: 'x64'
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: 'ubuntu-20.04'
 
-- script: |
-    python -m pip install --upgrade pip setuptools wheel
-  displayName: 'Install prerequisites'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.9
+      addToPath: True
+      architecture: 'x64'
 
-- script: |
-    python -m pip install flake8
-    flake8 .
-  displayName: 'Run flake8'
+  - script: |
+      python -m pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+      pip install -r tests/requirements.txt
+    displayName: Install dependencies
+
+  - script: |
+      python -m pip install flake8
+      flake8 .
+    displayName: 'Run flake8'
