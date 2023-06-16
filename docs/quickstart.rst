@@ -384,3 +384,7 @@ shotgunEvents in your terminal window for log messages.
     the **Shotgun Type** and **Shotgun ID** fields as well as a link to the
     entity in ShotGrid in the **Shotgun URL** field. This is a good indicator
     that things are working correctly.
+
+.. note::
+    If you are using a Jira Server version 9 or later, API breaking changes
+    were introduced. Beta versions of sg-jira-bridge will be available soon.
