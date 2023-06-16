@@ -27,7 +27,7 @@ def main():
     args = parser.parse_args()
 
     sg_url = args.shotgun
-    sg = Shotgun(sg_url, login=raw_input("Login: "), password=getpass.getpass())
+    sg = Shotgun(sg_url, login=input("Login: "), password=getpass.getpass())
     schema_dir = args.path
     if not os.path.exists(schema_dir):
         os.makedirs(schema_dir)
