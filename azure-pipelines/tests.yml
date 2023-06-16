@@ -3,17 +3,21 @@
 # Use of this software is subject to the terms of the Autodesk license agreement
 # provided at the time of installation or download, or which otherwise accompanies
 # this software in either electronic or hard copy form.
-#
+
+# This is the list of parameters for this template and their default values.
+parameters:
+  name: ''
+  vm_image: ''
 
 jobs:
 
-- job: 'Linux_test'
+- job: ${{ parameters.name }}
   pool:
-    vmImage: 'ubuntu-22.04'
+    vmImage: ${{ parameters.vm_image }}
   strategy:
     matrix:
-      Python27:
-        python.version: '2.7'
+      Python37:
+        python.version: '3.7'
       Python39:
         python.version: '3.9'
     maxParallel: 2
@@ -22,89 +26,22 @@ jobs:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '$(python.version)'
+      addToPath: True
       architecture: 'x64'
 
   - script: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt
       pip install -r tests/requirements.txt
-    displayName: 'Install dependencies'
+    displayName: Install dependencies
 
   - script: |
       python tests/run_tests.py --xmlout test-results
-    displayName: 'Test SG Jira'
+    displayName: Test SG Jira
     env: { 'LANG': 'en_US.UTF-8' }
 
   - task: PublishTestResults@2
     inputs:
       testResultsFiles: 'test-results/**.xml'
-      testRunTitle: 'Windows Python $(python.version)'
-    condition: succeededOrFailed()
-
-- job: 'Windows_test'
-  pool:
-    vmImage: 'windows-2022'
-  strategy:
-    matrix:
-      Python27:
-        python.version: '2.7'
-      Python39:
-        python.version: '3.9'
-    maxParallel: 2
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
-
-  - script: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-      pip install -r tests/requirements.txt
-    displayName: 'Install dependencies'
-
-  - script: |
-      python tests/run_tests.py --xmlout test-results
-    displayName: 'Test SG Jira'
-    env: { 'LANG': 'en_US.UTF-8' }
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: 'test-results/**.xml'
-      testRunTitle: 'Windows Python $(python.version)'
-    condition: succeededOrFailed()
-
-- job: 'Mac_test'
-  pool:
-    vmImage: 'macOS-12'
-  strategy:
-    matrix:
-      Python27:
-        python.version: '2.7'
-      Python39:
-        python.version: '3.9'
-    maxParallel: 2
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
-
-  - script: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-      pip install -r tests/requirements.txt
-    displayName: 'Install dependencies'
-
-  - script: |
-      python tests/run_tests.py --xmlout test-results
-    displayName: 'Test SG Jira'
-    env: { 'LANG': 'en_US.UTF-8' }
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: 'test-results/**.xml'
-      testRunTitle: 'Windows Python $(python.version)'
+      testRunTitle: ${{ parameters.name }} Python $(python.version)
     condition: succeededOrFailed()
