@@ -6,8 +6,12 @@
 
 # This is the list of parameters for this template and their default values.
 parameters:
-  name: ''
-  vm_image: ''
+  - name: name
+    type: string
+    default: ''
+  - name: vm_image
+    type: string
+    default: ''
 
 jobs:
 
