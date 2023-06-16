@@ -20,8 +20,6 @@ jobs:
     vmImage: ${{ parameters.vm_image }}
   strategy:
     matrix:
-      Python37:
-        python.version: '3.7'
       Python39:
         python.version: '3.9'
     maxParallel: 2

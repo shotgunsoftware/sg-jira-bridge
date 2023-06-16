@@ -7,7 +7,7 @@ The instructions below will help you get up and running quickly.
 
 Requirements
 ************
-- Python 2.7/3.7
+- Python 3.9
 - A ShotGrid site
 - A Jira site
 
