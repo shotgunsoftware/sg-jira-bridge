@@ -21,9 +21,17 @@ pr:
     - "*"
 
 jobs:
-- job: Lint
-  steps:
-  - template: azure-pipelines/flake8.yml
-- job: Tests
-  steps:
-  - template: azure-pipelines/tests.yml
+- template: azure-pipelines/flake8.yml
+- template: azure-pipelines/tests.yml
+  parameters:
+    name: Linux
+    vm_image: 'ubuntu-20.04'
+- template: azure-pipelines/tests.yml
+  parameters:
+    name: macOS
+    vm_image: 'macOS-12'
+# Commented until daemonize issue with fcntl import is resolved
+# - template: azure-pipelines/tests.yml
+#   parameters:
+#     name: Windows
+#     vm_image: 'windows-2022'
