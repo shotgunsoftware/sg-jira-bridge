@@ -12,7 +12,12 @@ if sys.version_info[0] == 2:
 else:
     ex_type = ModuleNotFoundError
 
-for module_name in ["daemonize", "shotgun_api3", "jira", "dotenv", "six"]:
+IMPORT_MODULES = ["shotgun_api3", "jira", "dotenv", "six"]
+
+if sys.platform != "win32":
+    IMPORT_MODULES.append("daemonize")
+
+for module_name in IMPORT_MODULES:
     try:
         __import__(module_name)
     except ex_type as e:

@@ -1642,7 +1642,7 @@ class MockedJira(object):
         return ""
 
     def search_assignable_users_for_issues(
-        self, username=None, query=None, startAt=0, maxResults=2, *args, **kwargs
+        self, username=None, query=None, startAt=0, maxResults=20, *args, **kwargs
     ):
         """
         Mocked Jira method.
@@ -1659,17 +1659,8 @@ class MockedJira(object):
 
         elif query == JIRA_USER_2["emailAddress"]:
             return [User(options, None, JIRA_USER_2)]
-        
         else:
             return []
-
-        # # Create a list of users.
-        # users = [User(options, None, JIRA_USER_2)] * maxResults + [
-        #     User(options, None, JIRA_USER)
-        # ]
-
-        # # Return the requested slice.
-        # return users[startAt : startAt + maxResults]
 
     def user(self, id, payload="username"):
         """
