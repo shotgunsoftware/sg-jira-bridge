@@ -1659,7 +1659,7 @@ class MockedJira(object):
 
         elif query == JIRA_USER_2["emailAddress"]:
             return [User(options, None, JIRA_USER_2)]
-        
+
         else:
             return []
 

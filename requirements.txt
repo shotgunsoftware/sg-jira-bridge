@@ -7,7 +7,7 @@
 # List of Python packages needed by this stack
 
 # Needed to run the Linux service.
-daemonize==2.4.7
+daemonize==2.4.7; sys.platform != 'win32'
 
 # Python Jira client.
 jira==3.5.0

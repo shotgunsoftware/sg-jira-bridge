@@ -30,8 +30,7 @@ jobs:
   parameters:
     name: macOS
     vm_image: 'macOS-12'
-# Commented until daemonize issue with fcntl import is resolved
-# - template: azure-pipelines/tests.yml
-#   parameters:
-#     name: Windows
-#     vm_image: 'windows-2022'
+- template: azure-pipelines/tests.yml
+  parameters:
+    name: Windows
+    vm_image: 'windows-2022'
