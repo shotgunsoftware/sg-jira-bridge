@@ -9,13 +9,11 @@
 # Needed to run the Linux service.
 daemonize==2.4.7
 
-# Python Jira api.
-# Our fork provides a few fixes that are not part of the official API. Unfortunately
-# contributing back is going to be difficult because Python 2 is not supported anymore.
-git+https://github.com/shotgunsoftware/jira.git@2.0.0.sg.3#egg=jira
+# Python Jira client.
+jira==3.5.0
 
 # Install Shotgun API 3 from archive
-https://github.com/shotgunsoftware/python-api/archive/v3.2.4.zip
+https://github.com/shotgunsoftware/python-api/archive/v3.3.5.zip
 
 # Allows defining env vars in a .env file that can be loaded at runtime
 python-dotenv==0.13.0

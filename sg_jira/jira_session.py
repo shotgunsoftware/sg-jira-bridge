@@ -6,15 +6,17 @@
 #
 
 import logging
+from packaging import version
 
 from jira import JIRAError
 import jira
 
 # Since we are using pbr in the forked jira repo, the tags we are using are marked as dev versions and
 # pip doesn't update them as expected.
-if not hasattr(jira.User, "user_id"):
+
+if version.parse(jira.__version__) < version.parse("3.5.0"):
     raise ImportError(
-        "The jira version installed is too old. Make sure it is updated to 2.0.0.sg.2+. "
+        "The jira version installed is too old. Make sure it is updated to 3.5.0. "
         'You can do this by using "pip install -r /path/to/requirements.txt --upgrade"'
     )
 
@@ -315,12 +317,17 @@ class JiraSession(jira.client.JIRA):
 
         # Direct user search with their email
         logger.debug("Looking up %s in assignable users" % user_email)
-        jira_users = search_method(
-            user_email,
+        search_params = dict(
             project=jira_project,
             issueKey=jira_issue.key if jira_issue else None,
             maxResults=JIRA_RESULT_PAGING,
         )
+        if self._is_jira_cloud:
+            search_params["query"] = user_email
+        else:
+            search_params["username"] = user_email
+
+        jira_users = search_method(**search_params)
         if jira_users:
             jira_assignee = jira_users[0]
             if len(jira_users) > 1:
@@ -347,11 +354,8 @@ class JiraSession(jira.client.JIRA):
         start_idx = 0
         logger.debug("Querying all assignable users starting at #%d" % start_idx)
         jira_users = search_method(
-            None,
-            project=jira_project,
-            issueKey=jira_issue.key if jira_issue else None,
-            maxResults=JIRA_RESULT_PAGING,
             startAt=start_idx,
+            **search_params
         )
         while jira_users:
             for jira_user in jira_users:
@@ -370,11 +374,8 @@ class JiraSession(jira.client.JIRA):
                     "Querying all assignable users starting at #%d" % start_idx
                 )
                 jira_users = search_method(
-                    None,
-                    project=jira_project,
-                    issueKey=jira_issue.key if jira_issue else None,
-                    maxResults=JIRA_RESULT_PAGING,
                     startAt=start_idx,
+                    **search_params
                 )
                 logger.debug("Found %s users" % (len(jira_users)))
 
@@ -509,26 +510,48 @@ class JiraSession(jira.client.JIRA):
         # It seems a Project `simplified` key can help distinguish between old
         # school projects and new simpler projects.
         # TODO: cache the retrieved data to avoid multiple requests to the server
-        create_meta_data = self.createmeta(
-            jira_project,
-            issuetypeIds=jira_issue_type.id,
-            expand="projects.issuetypes.fields",
-        )
-        # We asked for a single project / single issue type, so we can just pick
-        # the first entry, if it exists.
-        if (
-            not create_meta_data["projects"]
-            or not create_meta_data["projects"][0]["issuetypes"]
-        ):
-            logger.debug(
-                "Create meta data for Project %s Issue type %s: %s"
-                % (jira_project, jira_issue_type.id, create_meta_data)
+
+        if self._is_jira_cloud or self._version < (9, 0, 0):
+            # Existing logic works for Jira Cloud or Jira Server 8 or prior.
+            create_meta_data = self.createmeta(
+                jira_project,
+                issuetypeIds=jira_issue_type.id,
+                expand="projects.issuetypes.fields",
             )
-            raise RuntimeError(
-                "Unable to retrieve create meta data for Project %s Issue type %s."
-                % (jira_project, jira_issue_type.id,)
+            # We asked for a single project / single issue type, so we can just pick
+            # the first entry, if it exists.
+            if (
+                not create_meta_data["projects"]
+                or not create_meta_data["projects"][0]["issuetypes"]
+            ):
+                logger.debug(
+                    "Create meta data for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (jira_project, jira_issue_type.id,)
+                )
+            fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
+        else:
+            # createmeta is not supported on Jira Server 9 and Python client 3.5.0
+            create_meta_data = self.createmeta_issuetypes(
+                jira_project,
+                expand="values.fields",
             )
-        fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
+            if (
+                not create_meta_data["values"]
+                or not create_meta_data["values"][0]["fields"]
+            ):
+                logger.debug(
+                    "Create meta data for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (jira_project, jira_issue_type.id,)
+                )
+            fields_createmeta = create_meta_data["values"][0]["fields"]
 
         # Make a shallow copy so we can add/delete keys
         data = dict(data)

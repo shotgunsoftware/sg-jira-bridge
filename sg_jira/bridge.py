@@ -95,7 +95,12 @@ class Bridge(object):
         shotgun.setup()
 
         self._jira_user = jira_user
-        self._jira = JiraSession(jira_site, basic_auth=(jira_user, jira_secret),)
+        options = (
+            {"token_auth": jira_secret}
+            if jira_user == "None"
+            else {"basic_auth": (jira_user, jira_secret)}
+        )
+        self._jira = JiraSession(jira_site, **options)
         self._sync_settings = sync_settings or {}
         self._syncers = {}
         self._jira.setup()
@@ -317,7 +322,10 @@ class Bridge(object):
                 logger.debug("%s" % e, exc_info=True)
                 raise ValueError(
                     "Unable to retrieve a %s class from module %s"
-                    % (class_name, module,)
+                    % (
+                        class_name,
+                        module,
+                    )
                 )
             # Retrieve the settings for the syncer, if any
             settings = sync_settings.get("settings") or {}
