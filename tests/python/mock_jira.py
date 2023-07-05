@@ -1657,13 +1657,11 @@ class MockedJira(object):
         elif query == JIRA_USER["emailAddress"]:
             return [User(options, None, JIRA_USER)]
 
-        # Create a list of users.
-        users = [User(options, None, JIRA_USER_2)] * maxResults + [
-            User(options, None, JIRA_USER)
-        ]
+        elif query == JIRA_USER_2["emailAddress"]:
+            return [User(options, None, JIRA_USER_2)]
 
-        # Return the requested slice.
-        return users[startAt : startAt + maxResults]
+        else:
+            return []
 
     def user(self, id, payload="username"):
         """
