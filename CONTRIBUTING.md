@@ -44,4 +44,4 @@ Also do your best to factor commits appropriately, not too large with unrelated 
 
 ### Notes
 
-If you have made significant contributions to this project and are interested in becoming a maintainer, email support@shotgunsoftware.com.
+If you have made significant contributions to this project and are interested in becoming a maintainer, email ems.shotgrid.team.eng@autodesk.com.

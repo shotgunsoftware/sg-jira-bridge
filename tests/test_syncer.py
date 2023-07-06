@@ -180,7 +180,7 @@ JIRA_ISSUE_FIELDS = {
         "accountId": "557058:aecf5cfd-e13d-45a4-8db5-59da3ad254ce",
         "active": True,
         "displayName": "Shotgun Synch",
-        "emailAddress": "stephane.deverly@shotgunsoftware.com",
+        "emailAddress": "syncsync@foo.com",
         "key": "shotgun-synch",
         "name": "shotgun-synch",
         "self": "https://myjira.atlassian.net/rest/api/2/user?accountId=557058%3Aaecf5cfd-e13d-45a4-8db5-59da3ad254ce",
