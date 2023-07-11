@@ -490,7 +490,7 @@ class MockedJira(object):
         """
         return TASK_EDIT_META
 
-    def issue_type_by_name(self, name):
+    def issue_type_by_name(self, name, project=None):
         """
         Mocked Jira method.
         Return a :class:`IssueType`.
