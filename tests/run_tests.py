@@ -9,7 +9,7 @@
 import sys
 import os
 import argparse
-import unittest2 as unittest
+import unittest
 import xmlrunner
 
 import logging

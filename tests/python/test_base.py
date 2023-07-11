@@ -6,7 +6,7 @@
 #
 
 import os
-import unittest2 as unittest
+import unittest
 
 from shotgun_api3.lib import mockgun
 

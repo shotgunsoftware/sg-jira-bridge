@@ -15,7 +15,7 @@ import threading
 from shotgun_api3 import Shotgun
 from jira import JIRA
 
-from unittest2 import TestCase, skipIf
+from unittest import TestCase, skipIf
 
 import webapp
 

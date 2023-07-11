@@ -8,7 +8,7 @@
 
 from sg_jira.handlers.entity_issue_handler import EntityIssueHandler
 
-from unittest2 import TestCase
+from unittest import TestCase
 
 
 class TestHierarchySyncer(TestCase):
