@@ -49,11 +49,11 @@ following entity types:
 Entity Type  Data Type  Display Name      Description                           Field Name (auto-generated)
 ===========  =========  ================  ====================================  ======================
 Project      File/Link  Jira Sync URL     URL of SG Jira Bridge (see below)     ``sg_jira_sync_url``
-Project      Text       Jira Key*         Synced Project Key value in Jira      ``sg_jira_key``
-Task         Text       Jira Key*         Synced Issue Key value in Jira        ``sg_jira_key``
+Project      Text       Jira Key          Synced Project Key value in Jira      ``sg_jira_key``
+Task         Text       Jira Key          Synced Issue Key value in Jira        ``sg_jira_key``
 Task         Checkbox   Sync In Jira      Enable/Disable syncing for this Task  ``sg_sync_in_jira``
 Task         File/Link  Jira URL          Link to synced Issue in Jira          ``sg_jira_url``
-Note         Text       Jira Key*         Synced Issue Key/Comment ID in Jira   ``sg_jira_key``
+Note         Text       Jira Key          Synced Issue Key/Comment ID in Jira   ``sg_jira_key``
 HumanUser    Text       Jira Account Id   Synced Account Id in Jira.            ``sg_jira_account_id``
 ===========  =========  ================  ====================================  ======================
 
