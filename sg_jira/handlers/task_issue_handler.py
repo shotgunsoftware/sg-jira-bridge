@@ -9,6 +9,9 @@ from ..constants import (
     SHOTGUN_JIRA_ID_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
     SHOTGUN_JIRA_URL_FIELD,
+    TASK_FIELDS_MAPPING,
+    TASK_ISSUE_FIELDS_MAPPING,
+    TASK_ISSUE_STATUS_MAPPING,
 )
 from ..errors import InvalidShotgunValue
 from .entity_issue_handler import EntityIssueHandler
@@ -22,31 +25,12 @@ class TaskIssueHandler(EntityIssueHandler):
     # Define the mapping between Shotgun Task fields and Jira Issue fields
     # if the Jira target is None, it means the target field is not settable
     # directly.
-    __TASK_FIELDS_MAPPING = {
-        "content": "summary",
-        "sg_description": "description",
-        "sg_status_list": None,
-        "task_assignees": "assignee",
-        "tags": "labels",
-        "created_by": "reporter",
-        "due_date": "duedate",
-        "est_in_mins": "timetracking",  # time tracking needs to be enabled in Jira.
-        "addressings_cc": None,
-    }
+    __TASK_FIELDS_MAPPING = TASK_FIELDS_MAPPING
 
     # Define the mapping between Jira Issue fields and Shotgun Task fields
     # if the Shotgun target is None, it means the target field is not settable
     # directly.
-    __ISSUE_FIELDS_MAPPING = {
-        "summary": "content",
-        "description": "sg_description",
-        "status": "sg_status_list",
-        "assignee": "task_assignees",
-        "labels": "tags",
-        "duedate": "due_date",
-        "timetracking": "est_in_mins",  # time tracking needs to be enabled in Jira.
-        "watches": "addressings_cc",
-    }
+    __ISSUE_FIELDS_MAPPING = TASK_ISSUE_FIELDS_MAPPING
 
     @property
     def _sg_jira_status_mapping(self):
@@ -54,14 +38,7 @@ class TaskIssueHandler(EntityIssueHandler):
         Return a dictionary where keys are ShotGrid status short codes and values
         Jira Issue status names.
         """
-        return {
-            "wtg": "To Do",
-            "rdy": "Open",
-            "ip": "In Progress",
-            "fin": "Done",
-            "hld": "Backlog",
-            "omt": "Closed",
-        }
+        return TASK_ISSUE_STATUS_MAPPING
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):

@@ -9,7 +9,11 @@ import re
 
 from jira import JIRAError
 from ..errors import InvalidJiraValue
-from ..constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
+from ..constants import (
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+    NOTE_FIELDS_MAPPING
+)
 from .sync_handler import SyncHandler
 
 # Template used to build Jira comments body from a Note.
@@ -34,12 +38,7 @@ class NoteCommentHandler(SyncHandler):
     # Define the mapping between Shotgun Note fields and Jira Comment fields.
     # If the Jira target is None, it means the target field is not settable
     # directly.
-    __NOTE_FIELDS_MAPPING = {
-        "subject": None,
-        "content": None,
-        "user": None,
-        "tasks": None,
-    }
+    __NOTE_FIELDS_MAPPING = NOTE_FIELDS_MAPPING
 
     def setup(self):
         """
