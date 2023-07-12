@@ -490,7 +490,7 @@ class MockedJira(object):
         """
         return TASK_EDIT_META
 
-    def issue_type_by_name(self, name):
+    def issue_type_by_name(self, name, project=None):
         """
         Mocked Jira method.
         Return a :class:`IssueType`.
@@ -1659,7 +1659,6 @@ class MockedJira(object):
 
         elif query == JIRA_USER_2["emailAddress"]:
             return [User(options, None, JIRA_USER_2)]
-
         else:
             return []
 
