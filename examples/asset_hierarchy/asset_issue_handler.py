@@ -572,13 +572,13 @@ class AssetIssueHandler(EntityIssueHandler):
 
         # Add for creating JIRA story if story doesn't exist
         jira_issue = None
-        # if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
-        #     # Retrieve the Jira Issue
-        #     jira_issue = self._get_jira_issue_and_validate(
-        #         sg_entity[SHOTGUN_JIRA_ID_FIELD], sg_entity
-        #     )
-        #     if not jira_issue:
-        #         return False
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
+            # Retrieve the Jira Issue
+            jira_issue = self._get_jira_issue_and_validate(
+                sg_entity[SHOTGUN_JIRA_ID_FIELD], sg_entity
+            )
+            if not jira_issue:
+                return False
 
         # Create it if needed
         self._logger.debug("No Story found. Creating ...")

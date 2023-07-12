@@ -65,7 +65,6 @@ class TestHierarchySyncer(TestSyncBase):
             "code": "Foo",
             "description": "I'm Foo !",
             "tasks": [],
-            SHOTGUN_JIRA_ID_FIELD: issue.key,
             SHOTGUN_SYNC_IN_JIRA_FIELD: True,
         }
         self.add_to_sg_mock_db(bridge.shotgun, sg_asset)
