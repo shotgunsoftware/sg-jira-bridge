@@ -635,7 +635,6 @@ class AssetIssueHandler(EntityIssueHandler):
 
         # Update existing synced Issue (if any) Issue dependencies
         # Note: deleting a Task does not seem to trigger an Asset.tasks change?
-        # import pdb; pdb.set_trace()
         if shotgun_field == "tasks":
             return self._sync_asset_tasks_change_to_jira(
                 sg_entity,
