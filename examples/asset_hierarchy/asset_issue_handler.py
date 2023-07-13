@@ -58,15 +58,15 @@ class AssetIssueHandler(EntityIssueHandler):
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
-        """ "
+        """
         Return the list of fields this handler can process for a Jira event.
 
         :returns: A list of strings.
         """
         # By convention we might have `None` as values in our mapping dictionary
         # meaning that we handle a specific Jira field but there is not a direct
-        # mapping to a Shotgun field and a special logic must be implemented
-        # and called to perform the update to Shotgun.
+        # mapping to a ShotGrid field and a special logic must be implemented
+        # and called to perform the update to ShotGrid.
         return [field for field in self.__ISSUE_FIELDS_MAPPING.values() if field]
 
     def _supported_shotgun_fields_for_shotgun_event(self):
