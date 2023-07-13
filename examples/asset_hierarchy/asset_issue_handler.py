@@ -65,8 +65,8 @@ class AssetIssueHandler(EntityIssueHandler):
         """
         # By convention we might have `None` as values in our mapping dictionary
         # meaning that we handle a specific Jira field but there is not a direct
-        # mapping to a ShotGrid field and a special logic must be implemented
-        # and called to perform the update to ShotGrid.
+        # mapping to a Shotgun field and a special logic must be implemented
+        # and called to perform the update to Shotgun.
         return [field for field in self.__ISSUE_FIELDS_MAPPING.values() if field]
 
     def _supported_shotgun_fields_for_shotgun_event(self):
@@ -528,7 +528,7 @@ class AssetIssueHandler(EntityIssueHandler):
         jira_project_key = sg_entity["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
         if not jira_project_key:
             self._logger.debug(
-                "Skipping Shotgun event for %s (%d). Entity's Project %s "
+                "Skipping ShotGrid event for %s (%d). Entity's Project %s "
                 "is not linked to a Jira Project. Event: %s"
                 % (
                     entity_type,
@@ -541,7 +541,7 @@ class AssetIssueHandler(EntityIssueHandler):
         jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
             self._logger.warning(
-                "Unable to find a Jira Project %s for Shotgun Project %s"
+                "Unable to find a Jira Project %s for ShotGrid Project %s"
                 % (
                     jira_project_key,
                     sg_entity["project"],

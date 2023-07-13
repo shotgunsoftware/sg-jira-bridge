@@ -73,12 +73,12 @@ LOGGING = {
     "handlers": {
         # Print out any message to stdout
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "standard"
         },
         "file": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "standard",
             # this location should be updated to where you store logs
