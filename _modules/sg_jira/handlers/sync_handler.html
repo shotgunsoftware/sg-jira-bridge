@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge master documentation</title>
+  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge v0.4.0b1 documentation</title>
   
 
   
@@ -122,14 +122,20 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> master.<br>
+    <b>sg-jira-bridge</b> v0.4.0b1.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
     </div>
+    <style>
+        p.privacy_links { margin: 4px 0px;}
+    </style>
+    <p class="privacy_links"><a data-opt-in-preferences href="javascript:;">Privacy settings</a></p>
+    <p class="privacy_links"><a data-wat-linkname="manage-ccpa-settings-footer-link" href="javascript:;">Do not sell my personal information</a></p>
+    <p class="privacy_links"><a href="https://www.autodesk.com/company/legal-notices-trademarks/privacy-statement">Privacy/Cookies</a></p>
 
 
 
@@ -207,7 +213,7 @@
 
 
 <div class="viewcode-block" id="SyncHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler">[docs]</a><span class="k">class</span> <span class="nc">SyncHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class to handle a particular sync between ShotGrid and Jira.</span>
 
 <span class="sd">    Handlers typically handle syncing values between a ShotGrid Entity type and</span>
@@ -218,7 +224,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="SyncHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate a handler for the given syncer.</span>
 
 <span class="sd">        :param syncer: A :class:`~sg_jira.Syncer` instance.</span>
@@ -227,35 +233,35 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the syncer logger.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">_logger</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_bridge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~sg_jira.Bridge` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">bridge</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~sg_jira.shotgun_session.ShotgunSession` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">shotgun</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~sg_jira.jira_session.JiraSession` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">jira</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_sg_jira_status_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Needs to be re-implemented in deriving classes and return a dictionary</span>
 <span class="sd">        where keys are ShotGrid status short codes and values are Jira status</span>
 <span class="sd">        names, or any string value which should be mapped to ShotGrid status.</span>
@@ -263,7 +269,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
 <div class="viewcode-block" id="SyncHandler.get_jira_project"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_project">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_key</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve the Jira Project with the given key, if any.</span>
 
 <span class="sd">        :returns: A :class:`jira.resources.Project` instance or None.</span>
@@ -271,7 +277,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">get_jira_project</span><span class="p">(</span><span class="n">project_key</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SyncHandler.get_jira_issue"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_issue">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_issue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_key</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve the Jira Issue with the given key, if any.</span>
 
 <span class="sd">        :param str issue_key: A Jira Issue key to look for.</span>
@@ -298,7 +304,7 @@
         <span class="k">return</span> <span class="n">jira_issue</span></div>
 
 <div class="viewcode-block" id="SyncHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method can be re-implemented in deriving classes to Check the Jira</span>
 <span class="sd">        and ShotGrid site, ensure that the sync can safely happen and cache any</span>
 <span class="sd">        value which is slow to retrieve.</span>
@@ -308,7 +314,7 @@
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="SyncHandler.accept_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.accept_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept or reject the given event for the given ShotGrid Entity.</span>
 
 <span class="sd">        Must be re-implemented in deriving classes.</span>
@@ -318,7 +324,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 <div class="viewcode-block" id="SyncHandler.process_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.process_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process the given ShotGrid event for the given ShotGrid Entity</span>
 
 <span class="sd">        Must be re-implemented in deriving classes.</span>
@@ -332,7 +338,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 <div class="viewcode-block" id="SyncHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.accept_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept or reject the given event for the given Jira resource.</span>
 
 <span class="sd">        Must be re-implemented in deriving classes.</span>
@@ -345,7 +351,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 <div class="viewcode-block" id="SyncHandler.process_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.process_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process the given Jira event for the given Jira resource.</span>
 
 <span class="sd">        Must be re-implemented in deriving classes.</span>
@@ -361,7 +367,7 @@
     <span class="k">def</span> <span class="nf">_get_shotgun_value_from_jira_change</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">shotgun_field_schema</span><span class="p">,</span> <span class="n">change</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a ShotGrid value suitable to update the given ShotGrid Entity field</span>
 <span class="sd">        from the given Jira change.</span>
 
@@ -570,7 +576,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 
@@ -598,15 +604,14 @@
   
  
 
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-2114792-1', 'auto');
-  ga('send', 'pageview');
-</script>
-
+  <script type="text/javascript">
+    window.wafCCPAForceShow = true;
+    (function(a,b,c,d){
+      a='https://tags.tiqcdn.com/utag/autodesk/micro-basic/prod/utag.js';
+      b=document;c='script';d=b.createElement(c);d.src=a;d.type='text/java'+c;d.async=true;
+      a=b.getElementsByTagName(c)[0];a.parentNode.insertBefore(d,a);
+    })();
+  </script>
 
 
 </body>

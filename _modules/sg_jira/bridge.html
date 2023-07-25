@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sg_jira.bridge &mdash; sg-jira-bridge master documentation</title>
+  <title>sg_jira.bridge &mdash; sg-jira-bridge v0.4.0b1 documentation</title>
   
 
   
@@ -122,14 +122,20 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> master.<br>
+    <b>sg-jira-bridge</b> v0.4.0b1.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
     </div>
+    <style>
+        p.privacy_links { margin: 4px 0px;}
+    </style>
+    <p class="privacy_links"><a data-opt-in-preferences href="javascript:;">Privacy settings</a></p>
+    <p class="privacy_links"><a data-wat-linkname="manage-ccpa-settings-footer-link" href="javascript:;">Do not sell my personal information</a></p>
+    <p class="privacy_links"><a href="https://www.autodesk.com/company/legal-notices-trademarks/privacy-statement">Privacy/Cookies</a></p>
 
 
 
@@ -220,7 +226,7 @@
 
 
 <div class="viewcode-block" id="Bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge">[docs]</a><span class="k">class</span> <span class="nc">Bridge</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A bridge between ShotGrid and Jira.</span>
 
 <span class="sd">    The bridge handles connections to the ShotGrid and Jira servers and dispatches</span>
@@ -238,7 +244,7 @@
         <span class="n">sync_settings</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">sg_http_proxy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instatiate a new bridge between the given SG site and Jira site.</span>
 
 <span class="sd">        .. note::</span>
@@ -289,14 +295,19 @@
         <span class="n">shotgun</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user</span> <span class="o">=</span> <span class="n">jira_user</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span> <span class="o">=</span> <span class="n">JiraSession</span><span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="n">basic_auth</span><span class="o">=</span><span class="p">(</span><span class="n">jira_user</span><span class="p">,</span> <span class="n">jira_secret</span><span class="p">),)</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{</span><span class="s2">&quot;token_auth&quot;</span><span class="p">:</span> <span class="n">jira_secret</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">jira_user</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span>
+            <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;basic_auth&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">jira_user</span><span class="p">,</span> <span class="n">jira_secret</span><span class="p">)}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span> <span class="o">=</span> <span class="n">JiraSession</span><span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sync_settings</span> <span class="o">=</span> <span class="n">sync_settings</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_syncers</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Bridge.get_bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.get_bridge">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_bridge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the given settings and instantiate a new :class:`Bridge` with them.</span>
 
 <span class="sd">        :param str settings_file: Path to a settings Python file.</span>
@@ -334,7 +345,7 @@
 
 <div class="viewcode-block" id="Bridge.read_settings"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.read_settings">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">read_settings</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the given settings file.</span>
 
 <span class="sd">        :param str settings_file: Path to a settings Python file.</span>
@@ -411,7 +422,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~shotgun_session.ShotgunSession` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># This ensures we end up with a connection per thread. See the comment</span>
@@ -433,7 +444,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current_shotgun_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the ShotGrid user used for the connection.</span>
 
 <span class="sd">        :returns: A ShotGrid record dictionary with an `id` key and a `type` key.</span>
@@ -442,7 +453,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current_jira_username</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the username of the current Jira user.</span>
 
 <span class="sd">        The jira API escapes special characters using %xx syntax when storing</span>
@@ -457,20 +468,20 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">jira</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~jira_session.JiraSession` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sync_settings_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the list of sync settings this bridge handles.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_settings</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 <div class="viewcode-block" id="Bridge.reset"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset the bridge.</span>
 
 <span class="sd">        Clears all caches.</span>
@@ -479,7 +490,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">clear_cached_field_schema</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Bridge.get_syncer"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.get_syncer">[docs]</a>    <span class="k">def</span> <span class="nf">get_syncer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a :class:`Syncer` instance for the given settings name.</span>
 
 <span class="sd">        :param str: A settings name.</span>
@@ -511,7 +522,10 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;Unable to retrieve a </span><span class="si">%s</span><span class="s2"> class from module </span><span class="si">%s</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">class_name</span><span class="p">,</span>
+                        <span class="n">module</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
             <span class="c1"># Retrieve the settings for the syncer, if any</span>
             <span class="n">settings</span> <span class="o">=</span> <span class="n">sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;settings&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -522,7 +536,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Bridge.sync_in_jira"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.sync_in_jira">[docs]</a>    <span class="k">def</span> <span class="nf">sync_in_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sync the given ShotGrid Entity to Jira.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
@@ -556,7 +570,7 @@
 <div class="viewcode-block" id="Bridge.sync_in_shotgun"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.sync_in_shotgun">[docs]</a>    <span class="k">def</span> <span class="nf">sync_in_shotgun</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sync the given Jira Resource to ShotGrid.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
@@ -592,7 +606,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 
@@ -620,15 +634,14 @@
   
  
 
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-2114792-1', 'auto');
-  ga('send', 'pageview');
-</script>
-
+  <script type="text/javascript">
+    window.wafCCPAForceShow = true;
+    (function(a,b,c,d){
+      a='https://tags.tiqcdn.com/utag/autodesk/micro-basic/prod/utag.js';
+      b=document;c='script';d=b.createElement(c);d.src=a;d.type='text/java'+c;d.async=true;
+      a=b.getElementsByTagName(c)[0];a.parentNode.insertBefore(d,a);
+    })();
+  </script>
 
 
 </body>

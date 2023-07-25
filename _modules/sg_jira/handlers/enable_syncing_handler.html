@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sg_jira.handlers.enable_syncing_handler &mdash; sg-jira-bridge master documentation</title>
+  <title>sg_jira.handlers.enable_syncing_handler &mdash; sg-jira-bridge v0.4.0b1 documentation</title>
   
 
   
@@ -122,14 +122,20 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> master.<br>
+    <b>sg-jira-bridge</b> v0.4.0b1.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgridsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
     </div>
+    <style>
+        p.privacy_links { margin: 4px 0px;}
+    </style>
+    <p class="privacy_links"><a data-opt-in-preferences href="javascript:;">Privacy settings</a></p>
+    <p class="privacy_links"><a data-wat-linkname="manage-ccpa-settings-footer-link" href="javascript:;">Do not sell my personal information</a></p>
+    <p class="privacy_links"><a href="https://www.autodesk.com/company/legal-notices-trademarks/privacy-statement">Privacy/Cookies</a></p>
 
 
 
@@ -204,7 +210,7 @@
 
 
 <div class="viewcode-block" id="EnableSyncingHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler">[docs]</a><span class="k">class</span> <span class="nc">EnableSyncingHandler</span><span class="p">(</span><span class="n">SyncHandler</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A handler which combines multiple handlers to start syncing Tasks and Entities</span>
 <span class="sd">    linked to them when a Task &quot;Sync In Jira&quot; (sg_sync_in_jira) checkbox field</span>
 <span class="sd">    is changed in ShotGrid.</span>
@@ -215,7 +221,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="EnableSyncingHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">,</span> <span class="n">handlers</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate a new handler which combines the provided handlers.</span>
 
 <span class="sd">        The first handler in the list is assumed to be a primary handler, the</span>
@@ -242,7 +248,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_secondary_handlers</span> <span class="o">=</span> <span class="n">handlers</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span></div>
 
 <div class="viewcode-block" id="EnableSyncingHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check the Jira and ShotGrid site, ensure that the sync can safely happen.</span>
 <span class="sd">        This can be used as well to cache any value which is slow to retrieve.</span>
 
@@ -253,7 +259,7 @@
             <span class="n">handler</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="EnableSyncingHandler.accept_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept or reject the given event for the given ShotGrid Entity.</span>
 
 <span class="sd">        :returns: `True` if the event is accepted for processing, `False` otherwise.</span>
@@ -271,7 +277,7 @@
             <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;new_value&quot;</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="EnableSyncingHandler.process_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.process_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process the given ShotGrid event for the given ShotGrid Entity</span>
 
 <span class="sd">        :param str entity_type: The ShotGrid Entity type to sync.</span>
@@ -301,7 +307,7 @@
         <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="EnableSyncingHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.accept_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept or reject the given event for the given Jira resource.</span>
 
 <span class="sd">        This handler rejects all Jira events.</span>
@@ -324,7 +330,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 
@@ -352,15 +358,14 @@
   
  
 
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-2114792-1', 'auto');
-  ga('send', 'pageview');
-</script>
-
+  <script type="text/javascript">
+    window.wafCCPAForceShow = true;
+    (function(a,b,c,d){
+      a='https://tags.tiqcdn.com/utag/autodesk/micro-basic/prod/utag.js';
+      b=document;c='script';d=b.createElement(c);d.src=a;d.type='text/java'+c;d.async=true;
+      a=b.getElementsByTagName(c)[0];a.parentNode.insertBefore(d,a);
+    })();
+  </script>
 
 
 </body>

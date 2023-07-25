@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Start &mdash; sg-jira-bridge master documentation</title>
+  <title>Quick Start &mdash; sg-jira-bridge v0.4.0b1 documentation</title>
   
 
   
@@ -163,7 +163,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> master.<br>
+    <b>sg-jira-bridge</b> v0.4.0b1.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
@@ -244,7 +244,7 @@
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Python 2.7/3.7</li>
+<li>Python 3.9</li>
 <li>A ShotGrid site</li>
 <li>A Jira site</li>
 </ul>
@@ -256,9 +256,9 @@
 <li>SG Jira Bridge: <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge">https://github.com/shotgunsoftware/sg-jira-bridge</a></li>
 <li>shotgunEvents: <a class="reference external" href="https://github.com/shotgunsoftware/shotgunEvents">https://github.com/shotgunsoftware/shotgunEvents</a></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /path/to/put/this
-$ git clone git@github.com:shotgunsoftware/sg-jira-bridge.git
-$ git clone git@github.com:shotgunsoftware/shotgunEvents.git
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/path/to/put/this
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:shotgunsoftware/sg-jira-bridge.git
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:shotgunsoftware/shotgunEvents.git
 </pre></div>
 </div>
 </div>
@@ -302,13 +302,13 @@ following entity types:</p>
 </tr>
 <tr class="row-odd"><td>Project</td>
 <td>Text</td>
-<td>Jira Key*</td>
+<td>Jira Key</td>
 <td>Synced Project Key value in Jira</td>
 <td><code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code></td>
 </tr>
 <tr class="row-even"><td>Task</td>
 <td>Text</td>
-<td>Jira Key*</td>
+<td>Jira Key</td>
 <td>Synced Issue Key value in Jira</td>
 <td><code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code></td>
 </tr>
@@ -326,7 +326,7 @@ following entity types:</p>
 </tr>
 <tr class="row-odd"><td>Note</td>
 <td>Text</td>
-<td>Jira Key*</td>
+<td>Jira Key</td>
 <td>Synced Issue Key/Comment ID in Jira</td>
 <td><code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code></td>
 </tr>
@@ -506,23 +506,23 @@ separately.</p>
 Ensure you have <a class="reference external" href="https://pypi.org/project/virtualenv/">virtualenv</a> installed in your global Python installation.
 A <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file is provided to install all required packages.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a virtualenv</span>
-$ virtualenv venv
+$<span class="w"> </span>virtualenv<span class="w"> </span>venv
 
 <span class="c1"># Activate the virtualenv</span>
 <span class="c1"># On MacOS/Linux:</span>
-$ <span class="nb">source</span> venv/bin/activate
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>venv/bin/activate
 <span class="c1"># On Windows (using PowerShell)</span>
-$ venv/Scripts/activate
+$<span class="w"> </span>venv/Scripts/activate
 
 <span class="c1"># Install required packages</span>
-pip install -r /path/to/sg-jira-bridge/requirements.txt
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>/path/to/sg-jira-bridge/requirements.txt
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>If you are upgrading from a previous version of the bridge, we recommend you upgrade the dependencies
 as we’ve had to fork the <code class="docutils literal notranslate"><span class="pre">jira</span></code> Python module to add a missing feature:</p>
-<div class="last highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade -r /path/to/sg-jira-bridge/requirements.txt
+<div class="last highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>-r<span class="w"> </span>/path/to/sg-jira-bridge/requirements.txt
 </pre></div>
 </div>
 </div>
@@ -579,18 +579,18 @@ to create a dedicated user account in Jira for use with the bridge.</p>
 <p>We recommend <a class="reference external" href="https://docs.python-guide.org/dev/virtualenvs/">setting up a virtual environment</a>.
 Ensure you have <a class="reference external" href="https://pypi.org/project/virtualenv/">virtualenv</a> installed in your global Python installation.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a virtualenv</span>
-$ virtualenv venv
+$<span class="w"> </span>virtualenv<span class="w"> </span>venv
 
 <span class="c1"># Activate the virtualenv</span>
 <span class="c1"># On MacOS/Linux:</span>
-$ <span class="nb">source</span> venv/bin/activate
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>venv/bin/activate
 <span class="c1"># On Windows (using PowerShell)</span>
-$ venv/Scripts/activate
+$<span class="w"> </span>venv/Scripts/activate
 
 <span class="c1"># Install required packages for the trigger.</span>
 <span class="c1"># Note: This requirements.txt is in the &quot;sg-jira-bridge/triggers&quot;</span>
 <span class="c1">#       subdirectory, NOT in the root of the project.</span>
-pip install -r /path/to/sg-jira-bridge/triggers/requirements.txt
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>/path/to/sg-jira-bridge/triggers/requirements.txt
 </pre></div>
 </div>
 </div>
@@ -651,7 +651,7 @@ match the names used in your workflow:</p>
 <h2>Starting Everything Up<a class="headerlink" href="#starting-everything-up" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="match-shotgrid-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only">
 <h3>Match ShotGrid users with Jira users (for Jira servers hosted by Atlassian only)<a class="headerlink" href="#match-shotgrid-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python update_shotgun_users.py --settings &lt;path to your settings.py&gt; --project &lt;id of your project&gt;
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>update_shotgun_users.py<span class="w"> </span>--settings<span class="w"> </span>&lt;path<span class="w"> </span>to<span class="w"> </span>your<span class="w"> </span>settings.py&gt;<span class="w"> </span>--project<span class="w"> </span>&lt;id<span class="w"> </span>of<span class="w"> </span>your<span class="w"> </span>project&gt;
 </pre></div>
 </div>
 <div class="admonition note">
@@ -680,13 +680,13 @@ and paired with a ShotGrid user.</p>
 </div>
 <div class="section" id="start-sg-jira-bridge">
 <h3>Start SG Jira Bridge<a class="headerlink" href="#start-sg-jira-bridge" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python webapp.py --settings &lt;path to your settings.py&gt; --port <span class="m">9090</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>webapp.py<span class="w"> </span>--settings<span class="w"> </span>&lt;path<span class="w"> </span>to<span class="w"> </span>your<span class="w"> </span>settings.py&gt;<span class="w"> </span>--port<span class="w"> </span><span class="m">9090</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="start-shotgunevents">
 <h3>Start shotgunEvents<a class="headerlink" href="#start-shotgunevents" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./shotgunEventDaemon.py foreground
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./shotgunEventDaemon.py<span class="w"> </span>foreground
 </pre></div>
 </div>
 <div class="admonition note">
@@ -717,6 +717,11 @@ the <strong>Shotgun Type</strong> and <strong>Shotgun ID</strong> fields as well
 entity in ShotGrid in the <strong>Shotgun URL</strong> field. This is a good indicator
 that things are working correctly.</p>
 </div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you are using a Jira Server version 9 or later, API breaking changes
+were introduced. Beta versions of sg-jira-bridge will be available soon.</p>
+</div>
 </div>
 </div>
 
@@ -740,7 +745,7 @@ that things are working correctly.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 

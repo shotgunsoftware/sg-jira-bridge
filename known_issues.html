@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Known Issues &amp; Compatibility Notes &mdash; sg-jira-bridge master documentation</title>
+  <title>Known Issues &amp; Compatibility Notes &mdash; sg-jira-bridge v0.4.0b1 documentation</title>
   
 
   
@@ -123,7 +123,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> master.<br>
+    <b>sg-jira-bridge</b> v0.4.0b1.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
@@ -209,10 +209,10 @@ cases where certain features have not been implemented yet.</p>
 existing ones. This means syncing can only <em>initiate</em> from ShotGrid and not
 from Jira. If an entity in ShotGrid that was synced with an issue in Jira is
 deleted, it will not currently be re-created in ShotGrid.</li>
-<li>In most cases only one <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code> can handle a
+<li>In most cases only one <a class="reference internal" href="developer.html#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> can handle a
 given event. The exception is with the <strong>Sync In Jira</strong> event which is a
 special case that is handled by the
-<code class="xref py py-class docutils literal notranslate"><span class="pre">EnableSyncingHandler</span></code> which is a container
+<a class="reference internal" href="developer.html#sg_jira.handlers.EnableSyncingHandler" title="sg_jira.handlers.EnableSyncingHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnableSyncingHandler</span></code></a> which is a container
 for multiple handlers.</li>
 <li>Notes in ShotGrid can be linked to multiple entities, but Comments in Jira
 can only be linked to a single Issue. Notes linked to multiple entities in
@@ -261,7 +261,7 @@ in ShotGrid.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 
