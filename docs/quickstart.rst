@@ -303,10 +303,10 @@ Define a Mapping Between Jira and ShotGrid Status Names
 -------------------------------------------------------
 The bridge needs to know how to map a status in ShotGrid to a status in Jira and vice versa. Your status names likely
 differ from the default ones. Make sure the values in
-`TaskIssueHandler._sg_jira_status_mapping <https://github.com/shotgunsoftware/sg-jira-bridge/blob/725f63c19b45529f2507c530c7923cb4d55459e1/sg_jira/handlers/task_issue_handler.py#L47/>`_
+`TASK_ISSUE_STATUS_MAPPING <https://github.com/shotgunsoftware/sg-jira-bridge/blob/v0.4.0b2/sg_jira/constants.py#L90/>`_
 match the names used in your workflow::
 
-    return {
+    {
         "wtg": "Backlog",
         "rdy": "Selected For Development",
         "ip": "In Progress",
