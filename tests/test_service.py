@@ -8,7 +8,7 @@
 from __future__ import print_function
 import os
 import sys
-import unittest2 as unittest
+import unittest
 import tempfile
 import time
 from multiprocessing import Process
