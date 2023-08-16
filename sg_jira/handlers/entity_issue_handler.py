@@ -640,7 +640,9 @@ class EntityIssueHandler(SyncHandler):
                         "Removing %s from %s watchers list."
                         % (jira_user.displayName, jira_issue)
                     )
-                    self._jira.remove_watcher(jira_issue, jira_user.user_id)
+                    # In older versions of the client (<= 3.0) we used jira_user.user_id
+                    # However, newer versions of the remove_watcher method supports name search
+                    self._jira.remove_watcher(jira_issue, jira_user.displayName)
 
         for user in added:
             if user["type"] != "HumanUser":
@@ -656,7 +658,8 @@ class EntityIssueHandler(SyncHandler):
                         "Adding %s to %s watchers list."
                         % (jira_user.displayName, jira_issue)
                     )
-                    self._jira.add_watcher(jira_issue, jira_user.user_id)
+                    # add_watcher method supports both user_id and accountId properties
+                    self._jira.add_watcher(jira_issue, jira_user.accountId)
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
