@@ -10,38 +10,31 @@ from sg_jira.constants import (
     SHOTGUN_JIRA_ID_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
     SHOTGUN_JIRA_URL_FIELD,
+    ASSET_FIELDS_MAPPING,
+    JIRA_PARENT_LINK_TYPE,
+    ISSUE_FIELDS_MAPPING,
+    ASSET_ISSUE_STATUS_MAPPING,
 )
 from sg_jira.errors import InvalidShotgunValue
 
 
 class AssetIssueHandler(EntityIssueHandler):
     """
-    A handler which syncs a ShotGrid Asset as a Jira Issue
+    A handler which syncs a ShotGrid Asset as a Jira Issue.
+    Need to update process_shotgun_event to add create Story functions.
     """
 
     # Define the mapping between Shotgun Asset fields and Jira Issue fields
-    __ASSET_FIELDS_MAPPING = {
-        "code": "summary",
-        "description": "description",
-        "tags": "labels",
-        "created_by": "reporter",
-        "tasks": None,
-        "sg_status_list": None,
-    }
+    __ASSET_FIELDS_MAPPING = ASSET_FIELDS_MAPPING
 
     # The type of Issue link to use when linking a Task Issue to the Issue
     # representing the Asset.
-    __JIRA_PARENT_LINK_TYPE = "relates to"
+    __JIRA_PARENT_LINK_TYPE = JIRA_PARENT_LINK_TYPE
 
     # Define the mapping between Jira Issue fields and Shotgun Asset fields
     # if the Shotgun target is None, it means the target field is not settable
     # directly.
-    __ISSUE_FIELDS_MAPPING = {
-        "summary": "code",
-        "description": "description",
-        "status": "sg_status_list",
-        "labels": "tags",
-    }
+    __ISSUE_FIELDS_MAPPING = ISSUE_FIELDS_MAPPING
 
     @property
     def _shotgun_asset_fields(self):
@@ -61,18 +54,11 @@ class AssetIssueHandler(EntityIssueHandler):
         Return a dictionary where keys are ShotGrid status short codes and values
         are Jira Issue status names.
         """
-        return {
-            "wtg": "To Do",
-            "rdy": "Open",
-            "ip": "In Progress",
-            "fin": "Done",
-            "hld": "Backlog",
-            "omt": "Closed",
-        }
+        return ASSET_ISSUE_STATUS_MAPPING
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
-        """"
+        """
         Return the list of fields this handler can process for a Jira event.
 
         :returns: A list of strings.
@@ -519,6 +505,7 @@ class AssetIssueHandler(EntityIssueHandler):
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
             "project.Project.name",
             SHOTGUN_JIRA_ID_FIELD,
+            SHOTGUN_SYNC_IN_JIRA_FIELD,
         ] + self._supported_shotgun_fields_for_shotgun_event()
 
         sg_entity = self._shotgun.consolidate_entity(
@@ -530,6 +517,37 @@ class AssetIssueHandler(EntityIssueHandler):
             )
             return False
 
+        # Explicit sync: check if the "Sync in Jira" checkbox is on.
+        if not sg_entity[SHOTGUN_SYNC_IN_JIRA_FIELD]:
+            self._logger.debug(
+                "Not syncing Shotgun entity %s. 'Sync in Jira' is off" % sg_entity,
+            )
+            return False
+
+        # Check if the Project is linked to a Jira Project
+        jira_project_key = sg_entity["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
+        if not jira_project_key:
+            self._logger.debug(
+                "Skipping ShotGrid event for %s (%d). Entity's Project %s "
+                "is not linked to a Jira Project. Event: %s"
+                % (
+                    entity_type,
+                    entity_id,
+                    sg_entity["project"],
+                    event,
+                )
+            )
+            return False
+        jira_project = self.get_jira_project(jira_project_key)
+        if not jira_project:
+            self._logger.warning(
+                "Unable to find a Jira Project %s for ShotGrid Project %s"
+                % (
+                    jira_project_key,
+                    sg_entity["project"],
+                )
+            )
+            return False
         # When an Entity is created in Shotgun, a unique event is generated for
         # each field value set in the creation of the Entity. These events
         # have an additional "in_create" key in the metadata, identifying them
@@ -552,11 +570,76 @@ class AssetIssueHandler(EntityIssueHandler):
             )
             return False
 
+        # Add for creating JIRA story if story doesn't exist
+        jira_issue = None
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD]:
+            # Retrieve the Jira Issue
+            jira_issue = self._get_jira_issue_and_validate(
+                sg_entity[SHOTGUN_JIRA_ID_FIELD], sg_entity
+            )
+            if not jira_issue:
+                return False
+
+        # Create it if needed
+        self._logger.debug("No Story found. Creating ...")
+
+        if not jira_issue:
+            jira_issue = self._create_jira_issue_for_entity(
+                sg_entity,
+                jira_project,
+                self._issue_type,
+                summary=sg_entity["code"],
+            )
+            self._shotgun.update(
+                sg_entity["type"],
+                sg_entity["id"],
+                {
+                    SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+                    SHOTGUN_JIRA_URL_FIELD: {
+                        "url": jira_issue.permalink(),
+                        "name": "View in Jira",
+                    },
+                },
+            )
+
+        sg_field = event["meta"]["attribute_name"]
+
+        # Note: we don't accept events for the SHOTGUN_SYNC_IN_JIRA_FIELD field
+        # but we process them. Accepting the event is done by a higher level handler.
+        if sg_field == SHOTGUN_SYNC_IN_JIRA_FIELD:
+            # If sg_sync_in_jira was turned on, sync all supported values
+            # Note: if the Issue was just created, we might be syncing some
+            # values a second time. This seems safer than checking which fields
+            # are accepted in the the Issue create meta and trying to be smart here.
+            # The efficiency cost does not seem high, except maybe for any fields
+            # requiring a user lookup. But this could be handled by caching
+            # retrieved users
+            self._sync_shotgun_fields_to_jira(
+                sg_entity,
+                jira_issue,
+            )
+            return True
+
+        # Otherwise, handle the attribute change
+        self._logger.info(
+            "Syncing Shotgun %s.%s (%d) to Jira %s %s"
+            % (
+                entity_type,
+                sg_field,
+                entity_id,
+                jira_issue.fields.issuetype.name,
+                jira_issue.key,
+            )
+        )
+        self._logger.debug("Shotgun event: %s" % event)
+
         # Update existing synced Issue (if any) Issue dependencies
         # Note: deleting a Task does not seem to trigger an Asset.tasks change?
         if shotgun_field == "tasks":
             return self._sync_asset_tasks_change_to_jira(
-                sg_entity, meta["added"], meta["removed"],
+                sg_entity,
+                meta["added"],
+                meta["removed"],
             )
 
         # Update the Jira Issue itself

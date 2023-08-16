@@ -70,7 +70,7 @@ TASK_FIELDS_MAPPING = {
     "created_by": "reporter",
     "due_date": "duedate",
     "est_in_mins": "timetracking",  # time tracking needs to be enabled in Jira.
-    "addressings_cc": None,
+    "addressings_cc": "watches",
 }
 
 # Define the mapping between Jira Issue fields and Shotgun Task fields
