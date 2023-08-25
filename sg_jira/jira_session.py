@@ -537,7 +537,6 @@ class JiraSession(jira.client.JIRA):
             # createmeta is not supported on Jira Server 9 and Python client 3.5.0
             create_meta_data = self.createmeta_issuetypes(
                 jira_project,
-                expand="values.fields",
             )
             if (
                 not create_meta_data["values"]
