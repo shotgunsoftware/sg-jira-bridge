@@ -1,56 +1,36 @@
 
 
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Debugging &mdash; sg-jira-bridge v0.4.0b1 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debugging &mdash; sg-jira-bridge v0.4.0b3 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Developer Resources" href="developer.html" />
     <link rel="prev" title="Settings" href="settings.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
     <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
@@ -64,35 +44,20 @@
     
 
           
-            <a href="index.html" class="icon icon-home"> sg-jira-bridge
           
-
-          
+          <a href="index.html" class="icon icon-home">
+            sg-jira-bridge
           </a>
-
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
 
-          
-
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
     
-            
-            
-              
-            
-            
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
@@ -121,8 +86,6 @@
 <li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
-            
-          
 
     <a href='genindex.html'>Alphabetic Index</a>
 
@@ -142,7 +105,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.0b1.<br>
+    <b>sg-jira-bridge</b> v0.4.0b3.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
@@ -163,72 +126,37 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">sg-jira-bridge</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Debugging</li>
-    
-    
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Debugging</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="debugging">
-<h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="logging">
-<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+             
+  <section id="debugging">
+<h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h1>
+<section id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this heading"></a></h2>
 <p>The SG-Jira-Bridge uses standard Python logging. The logging configuration is
 stored in a <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> <em>dict</em> in the <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file and uses the
 standard <a class="reference external" href="https://docs.python.org/2/library/logging.config.html#module-logging.config" title="(in Python v2.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging.config</span></code></a> format.</p>
 <p>By default the SG Jira Bridge logs <code class="docutils literal notranslate"><span class="pre">INFO</span></code> messages and above which provide
 a good amount of detail to audit what is happening with each request.</p>
 <div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">If you are troubleshooting or doing development, setting the logging level
+<p class="admonition-title">Warning</p>
+<p>If you are troubleshooting or doing development, setting the logging level
 to <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> can be useful. However, this log level is extremely verbose.
 Under normal operation, it is recommended to use <code class="docutils literal notranslate"><span class="pre">INFO</span></code>.</p>
 </div>
@@ -285,11 +213,11 @@ Under normal operation, it is recommended to use <code class="docutils literal n
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="testing-on-a-machine-not-accessible-to-jira">
-<h2>Testing on a Machine Not Accessible to Jira<a class="headerlink" href="#testing-on-a-machine-not-accessible-to-jira" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="installing-ngrok">
-<h3>Installing ngrok<a class="headerlink" href="#installing-ngrok" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="testing-on-a-machine-not-accessible-to-jira">
+<h2>Testing on a Machine Not Accessible to Jira<a class="headerlink" href="#testing-on-a-machine-not-accessible-to-jira" title="Permalink to this heading"></a></h2>
+<section id="installing-ngrok">
+<h3>Installing ngrok<a class="headerlink" href="#installing-ngrok" title="Permalink to this heading"></a></h3>
 <p>If you are testing locally, it’s likely your machine isn’t accessible from the
 Jira server (especially if you’re using a Jira cloud server). However, you can
 use ngrok <a class="reference external" href="https://ngrok.com">https://ngrok.com</a> to allow it to securely access your local machine
@@ -300,25 +228,25 @@ install ngrok</a>. If you use a package manager like
 <p>Setup authentication by running <code class="docutils literal notranslate"><span class="pre">ngrok</span> <span class="pre">authtoken</span> <span class="pre">&lt;your</span> <span class="pre">auth</span> <span class="pre">token&gt;</span></code> where
 <code class="docutils literal notranslate"><span class="pre">&lt;your</span> <span class="pre">auth</span> <span class="pre">token&gt;</span></code> is the auth token assigned to your ngrok account. You can
 get the token from <a class="reference external" href="https://dashboard.ngrok.com/auth">https://dashboard.ngrok.com/auth</a>.</p>
-</div>
-<div class="section" id="starting-ngrok">
-<h3>Starting ngrok<a class="headerlink" href="#starting-ngrok" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="starting-ngrok">
+<h3>Starting ngrok<a class="headerlink" href="#starting-ngrok" title="Permalink to this heading"></a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ngrok<span class="w"> </span>http<span class="w"> </span><span class="m">9090</span>
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Each time you start ngrok, it assigns a random hostname to your connection.
+<p class="admonition-title">Note</p>
+<p>Each time you start ngrok, it assigns a random hostname to your connection.
 This means you’ll need to update the Jira Webhook you setup to point to the
 correct hostname each time. ngrok does have a paid plan that allows
 you to specify the hostname you wish to use.</p>
 </div>
-</div>
-</div>
-<div class="section" id="common-issues">
-<h2>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="runtimeerror-maximum-recursion-depth-exceeded">
-<h3>RuntimeError: maximum recursion depth exceeded<a class="headerlink" href="#runtimeerror-maximum-recursion-depth-exceeded" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="common-issues">
+<h2>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this heading"></a></h2>
+<section id="runtimeerror-maximum-recursion-depth-exceeded">
+<h3>RuntimeError: maximum recursion depth exceeded<a class="headerlink" href="#runtimeerror-maximum-recursion-depth-exceeded" title="Permalink to this heading"></a></h3>
 <p>If you are seeing this error in your logs when trying to start the web service,
 you may be using an old version the ShotGrid Jira Bridge and need to update.</p>
 <p>Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
@@ -331,17 +259,17 @@ token.</p>
 <p>Jira Server should be unaffected by this error as it still works with user
 passwords and does not support API tokens.</p>
 <p>For more information, see: <a class="reference external" href="https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/">https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/</a></p>
-</div>
-<div class="section" id="not-seeing-changes-sync">
-<h3>Not Seeing Changes Sync<a class="headerlink" href="#not-seeing-changes-sync" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="not-seeing-changes-sync">
+<h3>Not Seeing Changes Sync<a class="headerlink" href="#not-seeing-changes-sync" title="Permalink to this heading"></a></h3>
 <p>When you make a change in ShotGrid or Jira, the bridge evaluates whether the
 change should be synced to to the target site, tries to convert the value to an
 acceptable value in the target site, and then submits the change.</p>
 <p>If you’re not seeing your changes sync across, there are a few things you can
 check.</p>
-</div>
-<div class="section" id="sg-jira-bridge-webapp-isn-t-responding">
-<h3>SG Jira Bridge Webapp Isn’t Responding<a class="headerlink" href="#sg-jira-bridge-webapp-isn-t-responding" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="sg-jira-bridge-webapp-isn-t-responding">
+<h3>SG Jira Bridge Webapp Isn’t Responding<a class="headerlink" href="#sg-jira-bridge-webapp-isn-t-responding" title="Permalink to this heading"></a></h3>
 <p>You can check to see if the Bridge is running by issuing a GET request for the
 sync URL in your browser. Copy the URL you have entered in the
 <strong>Jira Sync URL</strong> field in your ShotGrid Project and enter it in your browser.
@@ -352,9 +280,9 @@ You should see a message that says something like:</p>
 </div>
 <p>If there is no connection:</p>
 <ul class="simple">
-<li>Make sure you’ve started the Sg Jira Bridge</li>
-<li>Verify the URL you entered is in the correct format.</li>
-<li>Ensure you’re connecting to the correct port number.</li>
+<li><p>Make sure you’ve started the Sg Jira Bridge</p></li>
+<li><p>Verify the URL you entered is in the correct format.</p></li>
+<li><p>Ensure you’re connecting to the correct port number.</p></li>
 </ul>
 <p>If you see an Error Response, the server is running but your URL may not be
 correct. The URL should look like:</p>
@@ -362,9 +290,9 @@ correct. The URL should look like:</p>
 </pre></div>
 </div>
 <p>For example: <code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code></p>
-</div>
-<div class="section" id="shotgrid-changes-aren-t-syncing-to-jira">
-<h3>ShotGrid changes aren’t syncing to Jira<a class="headerlink" href="#shotgrid-changes-aren-t-syncing-to-jira" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="shotgrid-changes-aren-t-syncing-to-jira">
+<h3>ShotGrid changes aren’t syncing to Jira<a class="headerlink" href="#shotgrid-changes-aren-t-syncing-to-jira" title="Permalink to this heading"></a></h3>
 <p>The first place to check is in the shotgunEvents log files to see if the
 trigger was run and issued a successful call to the SG Jira Bridge.</p>
 <p>Next, check the logs for the SG Jira Bridge and see if the request was
@@ -373,29 +301,29 @@ received and processed successfully. The logs should make this very apparent.</p
 accepting the event for processing.</p>
 <p>Other things to check:</p>
 <ul class="simple">
-<li>Is your ShotGrid Project configured to sync to Jira?</li>
-<li>Is the Entity type configured to sync to Jira?</li>
-<li>Does the Entity that generated the event enabled for syncing (the <strong>Sync In
-Jira</strong> checkbox field is checked)?</li>
+<li><p>Is your ShotGrid Project configured to sync to Jira?</p></li>
+<li><p>Is the Entity type configured to sync to Jira?</p></li>
+<li><p>Does the Entity that generated the event enabled for syncing (the <strong>Sync In
+Jira</strong> checkbox field is checked)?</p></li>
 </ul>
-</div>
-<div class="section" id="jira-changes-aren-t-syncing-to-shotgrid">
-<h3>Jira changes aren’t syncing to ShotGrid<a class="headerlink" href="#jira-changes-aren-t-syncing-to-shotgrid" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="jira-changes-aren-t-syncing-to-shotgrid">
+<h3>Jira changes aren’t syncing to ShotGrid<a class="headerlink" href="#jira-changes-aren-t-syncing-to-shotgrid" title="Permalink to this heading"></a></h3>
 <p>Check the logs for the SG Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.</p>
 <p>If SG Jira Bridge is not receiving the request:</p>
 <ul class="simple">
-<li>Check that your Jira Webhook is setup and configured correctly. If you’re
+<li><p>Check that your Jira Webhook is setup and configured correctly. If you’re
 using a local Jira instance, you can also check the logs to see if the
-webhook fired.</li>
-<li>Make sure your SG Jira Bridge is accessible from your Jira server. If you
+webhook fired.</p></li>
+<li><p>Make sure your SG Jira Bridge is accessible from your Jira server. If you
 are using a Jira Cloud instance and SG Jira Bridge is running inside a
 firewalled environment, you’ll need to open up access to the application
-or move SG Jira Bridge into some sort of DMZ setup.</li>
+or move SG Jira Bridge into some sort of DMZ setup.</p></li>
 </ul>
-</div>
-<div class="section" id="value-can-t-be-translated-to-a-shotgrid-jira-value">
-<h3>Value can’t be translated to a ShotGrid/Jira value<a class="headerlink" href="#value-can-t-be-translated-to-a-shotgrid-jira-value" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="value-can-t-be-translated-to-a-shotgrid-jira-value">
+<h3>Value can’t be translated to a ShotGrid/Jira value<a class="headerlink" href="#value-can-t-be-translated-to-a-shotgrid-jira-value" title="Permalink to this heading"></a></h3>
 <p>If you change a status in ShotGrid or Jira and there’s no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs:</p>
@@ -416,9 +344,9 @@ You can see there’s no <code class="docutils literal notranslate"><span class=
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="time-tracking-original-estimate-is-required">
-<h3>Time Tracking: Original Estimate is Required<a class="headerlink" href="#time-tracking-original-estimate-is-required" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="time-tracking-original-estimate-is-required">
+<h3>Time Tracking: Original Estimate is Required<a class="headerlink" href="#time-tracking-original-estimate-is-required" title="Permalink to this heading"></a></h3>
 <p>If you encounter the following error:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">JIRAError</span><span class="p">:</span> <span class="n">JiraError</span> <span class="n">HTTP</span> <span class="mi">400</span> <span class="n">url</span><span class="p">:</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">myjira</span><span class="o">.</span><span class="n">atlassian</span><span class="o">.</span><span class="n">net</span><span class="o">/</span><span class="n">rest</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">issue</span>
         <span class="n">text</span><span class="p">:</span> <span class="n">Time</span> <span class="n">Tracking</span><span class="p">:</span> <span class="n">Original</span> <span class="n">Estimate</span> <span class="ow">is</span> <span class="n">required</span><span class="o">.</span>
@@ -430,56 +358,36 @@ screen.</p>
 <p><strong>Solution</strong></p>
 <p>Add Time Tracking to the default Issue creation screen for this project and
 this error should be resolved.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="developer.html" class="btn btn-neutral float-right" title="Developer Resources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="settings.html" class="btn btn-neutral float-left" title="Settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="settings.html" class="btn btn-neutral float-left" title="Settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="developer.html" class="btn btn-neutral float-right" title="Developer Resources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2023, Autodesk
+    <p>&#169; Copyright 2023, Autodesk.</p>
+  </div>
 
-    </p>
-  </div> 
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
  
 
   <script type="text/javascript">
