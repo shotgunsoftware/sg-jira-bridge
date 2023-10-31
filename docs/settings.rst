@@ -12,9 +12,9 @@ Authentication
 **************
 Credentials are retrieved by default from environment variables:
 
-- ``SGJIRA_SG_SITE``: the Shotgun site url
-- ``SGJIRA_SG_SCRIPT_NAME``: a Shotgun script user name
-- ``SGJIRA_SG_SCRIPT_KEY``: the Shotgun script user Application Key
+- ``SGJIRA_SG_SITE``: the ShotGrid site url
+- ``SGJIRA_SG_SCRIPT_NAME``: a ShotGrid script user name
+- ``SGJIRA_SG_SCRIPT_KEY``: the ShotGrid script user Application Key
 - ``SGJIRA_JIRA_SITE``: the Jira server url
 - ``SGJIRA_JIRA_USER``: the system name of the Jira user used to
   connect for the sync.  This is usually your email address you
@@ -22,18 +22,18 @@ Credentials are retrieved by default from environment variables:
   user so this will need to be the designated user account that
   will control the sync updates. It will need appropriate
   permissions to make any changes required.
-- ``SGJIRA_JIRA_USER_SECRET``: the Jira user password or API Key. 
+- ``SGJIRA_JIRA_USER_SECRET``: the Jira user password or API Key.
 
 .. note::
 
     **Jira Cloud** requires the use of an API token and will not work with
-    a user password. See https://confluence.atlassian.com/x/Vo71Nw for information 
+    a user password. See https://confluence.atlassian.com/x/Vo71Nw for information
     on how to generate a token.
-    
-    **Jira Server** will still work with a user password and does not support 
+
+    **Jira Server** will still work with a user password and does not support
     API tokens.
 
-    For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/ 
+    For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/
 
 You may set these in your environment or by installing
 `python-dotenv <https://pypi.org/project/python-dotenv>`_ and defining these
@@ -41,8 +41,8 @@ in a ``.env`` file.
 
 ::
 
-    # Shotgun credentials
-    SGJIRA_SG_SITE='https://mysite.shotgunstudio.com'
+    # ShotGrid credentials
+    SGJIRA_SG_SITE='https://mysite.shotgrid.autodesk.com'
     SGJIRA_SG_SCRIPT_NAME='sg-jira-bridge'
     SGJIRA_SG_SCRIPT_KEY='01234567@abcdef0123456789'
 

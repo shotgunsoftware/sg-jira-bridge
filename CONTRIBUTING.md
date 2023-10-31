@@ -1,8 +1,8 @@
-# Contributing to the Shotgun Jira Bridge
+# Contributing to the ShotGrid Jira Bridge
 
 ### Overview
 
-Shotgun's Jira Bridge is an open source project.
+ShotGrid's Jira Bridge is an open source project.
 
 This project accepts and greatly appreciates contributions.
 The project follows the [fork & pull](https://help.github.com/articles/using-pull-requests/#fork--pull) model for accepting contributions.
@@ -18,7 +18,7 @@ When contributing code, please follow the following process:
    * An example branch name could be `bugs/fix-link-field-updates-on-delete-103`
 * Create a pull request (and reference the issue if created)
    * The description of the pull request should describe in detail the change being made. It should be possible to understand all aspects of the change from the PR description without having to read code
-* Shotgun developers will provide feedback on pull requests
+* ShotGrid developers will provide feedback on pull requests
    * The developers will look at code quality, style, tests, performance, maintainability, and directional alignment with the goals of the project
    * Code that implements behavior considered not appropriate for general use will be send back for updates
 * For code to be accepted, you must have a signed [individual](pdfs/ind_contrib_agmt_forshotgun_jira_bridge.pdf) or [corporate](pdfs/corp_contrib_agmt_forshotgun_jira_bridge.pdf) contribution agreement
@@ -44,4 +44,4 @@ Also do your best to factor commits appropriately, not too large with unrelated 
 
 ### Notes
 
-If you have made significant contributions to this project and are interested in becoming a maintainer, email support@shotgunsoftware.com.
+If you have made significant contributions to this project and are interested in becoming a maintainer, email ems.shotgrid.team.eng@autodesk.com.

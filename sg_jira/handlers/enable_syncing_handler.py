@@ -13,7 +13,7 @@ class EnableSyncingHandler(SyncHandler):
     """
     A handler which combines multiple handlers to start syncing Tasks and Entities
     linked to them when a Task "Sync In Jira" (sg_sync_in_jira) checkbox field
-    is changed in Shotgun.
+    is changed in ShotGrid.
 
     A full sync is performed each time the checkbox is turned on. This allows
     to manually force a re-sync if needed by just setting off the checkbox, and
@@ -30,7 +30,7 @@ class EnableSyncingHandler(SyncHandler):
         Events will be sent to secondary handlers for processing only if the
         primary handler was able to successfully process them.
 
-        This allows to control from the primary handler if a Shotgun Entity should
+        This allows to control from the primary handler if a ShotGrid Entity should
         be synced or not, and then automatically start syncing secondary Entities
         which are linked to this primary Entity, e.g. Notes on a Task, without
         having to explicitely enable syncing for the linked Entities.
@@ -49,7 +49,7 @@ class EnableSyncingHandler(SyncHandler):
 
     def setup(self):
         """
-        Check the Jira and Shotgun site, ensure that the sync can safely happen.
+        Check the Jira and ShotGrid site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
 
         Run all handlers setup.
@@ -60,7 +60,7 @@ class EnableSyncingHandler(SyncHandler):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given Shotgun Entity.
+        Accept or reject the given event for the given ShotGrid Entity.
 
         :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
@@ -78,39 +78,31 @@ class EnableSyncingHandler(SyncHandler):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given Shotgun event for the given Shotgun Entity
+        Process the given ShotGrid event for the given ShotGrid Entity
 
-        :param str entity_type: The Shotgun Entity type to sync.
-        :param int entity_id: The id of the Shotgun Entity to sync.
+        :param str entity_type: The ShotGrid Entity type to sync.
+        :param int entity_id: The id of the ShotGrid Entity to sync.
         :param event: A dictionary with the event for the change.
         """
         # Run the primary handler, stop processing if the primary handler
         # didn't perform anything.
         self._logger.debug(
-            "Dispatching event to primary handler %s. Event: %s" % (
-                self._primary_handler,
-                event
-            )
+            "Dispatching event to primary handler %s. Event: %s"
+            % (self._primary_handler, event)
         )
         if not self._primary_handler.process_shotgun_event(
-            entity_type,
-            entity_id,
-            event,
+            entity_type, entity_id, event,
         ):
             return False
 
         # Run all the secondary handlers
         for handler in self._secondary_handlers:
             self._logger.debug(
-                "Dispatching event to secondary handler %s. Event: %s" % (
-                    handler,
-                    event
-                )
+                "Dispatching event to secondary handler %s. Event: %s"
+                % (handler, event)
             )
             handler.process_shotgun_event(
-                entity_type,
-                entity_id,
-                event,
+                entity_type, entity_id, event,
             )
         return True
 

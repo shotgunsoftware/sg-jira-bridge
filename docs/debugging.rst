@@ -4,11 +4,11 @@ Debugging
 Logging
 =======
 The SG-Jira-Bridge uses standard Python logging. The logging configuration is
-stored in a ``LOGGING`` *dict* in the ``settings.py`` file and uses the 
+stored in a ``LOGGING`` *dict* in the ``settings.py`` file and uses the
 standard :mod:`logging.config` format.
 
 By default the SG Jira Bridge logs ``INFO`` messages and above which provide
-a good amount of detail to audit what is happening with each request. 
+a good amount of detail to audit what is happening with each request.
 
 .. warning::
 
@@ -78,14 +78,14 @@ Installing ngrok
 ----------------
 If you are testing locally, it's likely your machine isn't accessible from the
 Jira server (especially if you're using a Jira cloud server). However, you can
-use ngrok https://ngrok.com to allow it to securely access your local machine 
+use ngrok https://ngrok.com to allow it to securely access your local machine
 for testing and development: ``ngrok http 9090``.
 
 To get ngrok running, sign up for a free account at ngrok.com. `Download and
 install ngrok <https://ngrok.com/download>`_. If you use a package manager like
 `Homebrew <https://brew.sh/>`_, you may be able to install from there as well.
 
-Setup authentication by running ``ngrok authtoken <your auth token>`` where 
+Setup authentication by running ``ngrok authtoken <your auth token>`` where
 ``<your auth token>`` is the auth token assigned to your ngrok account. You can
 get the token from https://dashboard.ngrok.com/auth.
 
@@ -96,7 +96,7 @@ Starting ngrok
     $ ngrok http 9090
 
 .. note::
-    Each time you start ngrok, it assigns a random hostname to your connection. 
+    Each time you start ngrok, it assigns a random hostname to your connection.
     This means you'll need to update the Jira Webhook you setup to point to the
     correct hostname each time. ngrok does have a paid plan that allows
     you to specify the hostname you wish to use.
@@ -107,25 +107,25 @@ Common Issues
 RuntimeError: maximum recursion depth exceeded
 ----------------------------------------------
 If you are seeing this error in your logs when trying to start the web service,
-you may be using an old version the Shotgun Jira Bridge and need to update.
+you may be using an old version the ShotGrid Jira Bridge and need to update.
 
 Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
 Jira client library to generate this error. Updating to the latest version of
-Shotgun Jira Bridge transitions the authentication to use Basic Auth.
+ShotGrid Jira Bridge transitions the authentication to use Basic Auth.
 
-You will need to generate an API token and use this as your user secret (password). 
-User passwords are no longer supported by Jira Cloud. See 
-https://confluence.atlassian.com/x/Vo71Nw for information on how to generate a 
+You will need to generate an API token and use this as your user secret (password).
+User passwords are no longer supported by Jira Cloud. See
+https://confluence.atlassian.com/x/Vo71Nw for information on how to generate a
 token.
 
-Jira Server should be unaffected by this error as it still works with user 
+Jira Server should be unaffected by this error as it still works with user
 passwords and does not support API tokens.
 
 For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/
 
 Not Seeing Changes Sync
 -----------------------
-When you make a change in Shotgun or Jira, the bridge evaluates whether the
+When you make a change in ShotGrid or Jira, the bridge evaluates whether the
 change should be synced to to the target site, tries to convert the value to an
 acceptable value in the target site, and then submits the change.
 
@@ -136,15 +136,15 @@ SG Jira Bridge Webapp Isn't Responding
 --------------------------------------
 You can check to see if the Bridge is running by issuing a GET request for the
 sync URL in your browser. Copy the URL you have entered in the
-**Jira Sync URL** field in your Shotgun Project and enter it in your browser.
+**Jira Sync URL** field in your ShotGrid Project and enter it in your browser.
 You should see a message that says something like::
 
-    Shotgun to Jira
+    ShotGrid to Jira
     Syncing with default settings.
 
 If there is no connection:
 
-- Make sure you've started the Sg Jira Bridge 
+- Make sure you've started the Sg Jira Bridge
 - Verify the URL you entered is in the correct format.
 - Ensure you're connecting to the correct port number.
 
@@ -155,8 +155,8 @@ correct. The URL should look like::
 
 For example: ``http://localhost:9090/sg2jira/my_settings``
 
-Shotgun changes aren't syncing to Jira
---------------------------------------
+ShotGrid changes aren't syncing to Jira
+---------------------------------------
 The first place to check is in the shotgunEvents log files to see if the
 trigger was run and issued a successful call to the SG Jira Bridge.
 
@@ -168,13 +168,13 @@ accepting the event for processing.
 
 Other things to check:
 
-- Is your Shotgun Project configured to sync to Jira?
+- Is your ShotGrid Project configured to sync to Jira?
 - Is the Entity type configured to sync to Jira?
 - Does the Entity that generated the event enabled for syncing (the **Sync In
   Jira** checkbox field is checked)?
 
-Jira changes aren't syncing to Shotgun
---------------------------------------
+Jira changes aren't syncing to ShotGrid
+---------------------------------------
 Check the logs for the SG Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.
 
@@ -189,16 +189,16 @@ If SG Jira Bridge is not receiving the request:
   or move SG Jira Bridge into some sort of DMZ setup.
 
 
-Value can't be translated to a Shotgun/Jira value
--------------------------------------------------
-If you change a status in Shotgun or Jira and there's no matching status value
+Value can't be translated to a ShotGrid/Jira value
+--------------------------------------------------
+If you change a status in ShotGrid or Jira and there's no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs::
 
-    2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for Shotgun status 'na'
+    2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for ShotGrid status 'na'
 
 In this case, there is no Jira status defined in the handlers to match with
-the ``na`` status in Shotgun. Your handler defines a
+the ``na`` status in ShotGrid. Your handler defines a
 ``_sg_jira_status_mapping()`` property that returns the status mapping.
 You can see there's no ``na`` status here::
 
@@ -212,4 +212,18 @@ You can see there's no ``na`` status here::
     }
 
 
+Time Tracking: Original Estimate is Required
+--------------------------------------------
+If you encounter the following error::
 
+    JIRAError: JiraError HTTP 400 url: https://myjira.atlassian.net/rest/api/2/issue
+	    text: Time Tracking: Original Estimate is required.
+
+This means you have Time Tracking enabled on your Jira site and set as a
+required field. However, Time Tracking is not on your default Issue creation
+screen.
+
+**Solution**
+
+Add Time Tracking to the default Issue creation screen for this project and
+this error should be resolved.

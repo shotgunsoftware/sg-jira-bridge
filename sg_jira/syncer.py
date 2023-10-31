@@ -10,7 +10,7 @@ import logging
 
 class Syncer(object):
     """
-    A class handling syncing between Shotgun and Jira.
+    A class handling syncing between ShotGrid and Jira.
 
     All Syncers should define a list of :class:`~handlers.SyncHandler` which should reject
     or accept and process events.
@@ -40,7 +40,7 @@ class Syncer(object):
     @property
     def shotgun(self):
         """
-        Return a connected :class:`ShotgunSession` instance.
+        Return a connected :class:`~shotgun_session.ShotgunSession` instance.
         """
         return self._bridge.shotgun
 
@@ -61,7 +61,7 @@ class Syncer(object):
 
     def setup(self):
         """
-        Check the Jira and Shotgun site, ensure that the sync can safely happen
+        Check the Jira and ShotGrid site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
         self._logger.debug(
@@ -83,7 +83,7 @@ class Syncer(object):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given Shotgun Entity.
+        Accept or reject the given event for the given ShotGrid Entity.
 
         :returns: A :class:`~handlers.SyncHandler` instance if the event is accepted for
                   processing, `None` otherwise.
@@ -114,9 +114,7 @@ class Syncer(object):
         field = meta.get("attribute_name")
         if not field:
             self._logger.debug(
-                "Rejecting event %s with missing attribute name." % (
-                    event
-                )
+                "Rejecting event %s with missing attribute name." % (event)
             )
             return None
 
@@ -124,7 +122,10 @@ class Syncer(object):
         user = event.get("user")
         current_user = self._bridge.current_shotgun_user
         if user and current_user:
-            if user["type"] == current_user["type"] and user["id"] == current_user["id"]:
+            if (
+                user["type"] == current_user["type"]
+                and user["id"] == current_user["id"]
+            ):
                 self._logger.debug("Rejecting event %s created by us." % event)
                 return None
 
@@ -140,10 +141,9 @@ class Syncer(object):
                 self._logger.debug("Dispatching event to %s" % handler)
                 return handler
 
-        self._logger.debug("Event %s was rejected by all handlers %s" % (
-            event,
-            self.handlers,
-        ))
+        self._logger.debug(
+            "Event %s was rejected by all handlers %s" % (event, self.handlers,)
+        )
         return None
 
     def accept_jira_event(self, resource_type, resource_id, event):
@@ -159,17 +159,44 @@ class Syncer(object):
         # Check we didn't trigger the event to avoid infinite loops.
         user = event.get("user")
         if user:
-            if user["name"].lower() == self.bridge.current_jira_username.lower():
-                self._logger.debug("Rejecting event %s triggered by us (%s)" % (
-                    event,
-                    user["name"],
-                ))
+            if (
+                self.bridge.jira.is_jira_cloud
+                and user["accountId"] == self.bridge.jira.myself()["accountId"]
+            ):
+                self._logger.debug(
+                    "Rejecting event %s triggered by us (%s)"
+                    % (event, user["accountId"],)
+                )
                 return None
-            if user["emailAddress"].lower() == self.bridge.current_jira_username.lower():
-                self._logger.debug("Rejecting event %s triggered by us (%s)" % (
-                    event,
-                    user["emailAddress"],
-                ))
+
+            # TODO: It's hard to tell if these next to ifs are actually needed anymore.
+            # From testing it seems that accountId is always set, so testing for name
+            # and emailAddress is probably not needed anymore. We've left these tests
+            # for now as we don't have access to a JIRA local instance to test on, which
+            # may (but unlikely) behave differently.
+
+            # On GDPR compliant versions of JIRA, the name field is not returned.
+            if (
+                "name" in user
+                and user["name"].lower() == self.bridge.current_jira_username.lower()
+            ):
+                self._logger.debug(
+                    "Rejecting event %s triggered by us (%s)" % (event, user["name"],)
+                )
+                return None
+
+            # The email field is always present, even on GDPR versions of JIRA, but set to "?".
+            # Protect ourselves here by testing for it's presence since it wouldn't be surprising
+            # if it was completely removed at some point.
+            if (
+                "emailAddress" in user
+                and user["emailAddress"].lower()
+                == self.bridge.current_jira_username.lower()
+            ):
+                self._logger.debug(
+                    "Rejecting event %s triggered by us (%s)"
+                    % (event, user["emailAddress"],)
+                )
                 return None
 
         # Loop over all handlers and return the first one which accepts the
@@ -184,8 +211,7 @@ class Syncer(object):
                 self._logger.debug("Dispatching event to %s" % handler)
                 return handler
 
-        self._logger.debug("Event %s was rejected by all handlers %s" % (
-            event,
-            self.handlers,
-        ))
+        self._logger.debug(
+            "Event %s was rejected by all handlers %s" % (event, self.handlers,)
+        )
         return None

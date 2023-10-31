@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2018 Autodesk, Inc.  All rights reserved.
 #
 # Use of this software is subject to the terms of the Autodesk license agreement
@@ -8,10 +9,11 @@
 import sys
 import os
 import argparse
-import unittest2 as unittest
+import unittest
 import xmlrunner
 
 import logging
+
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("run_tests")
 logger.setLevel(logging.INFO)
@@ -21,6 +23,7 @@ class TestRunner(object):
     """
     A test runner which auto discovers all tests and supports xml output.
     """
+
     def __init__(self, xml_output=None):
         """
         :param xml_output: Directory path where xml reports are generated.
@@ -29,12 +32,10 @@ class TestRunner(object):
         self._xml_output = xml_output
         # Tweak Python path so our modules can be found
         sys.path.insert(
-            0,
-            os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+            0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         )
         sys.path.insert(
-            0,
-            os.path.abspath(os.path.join(os.path.dirname(__file__), "python"))
+            0, os.path.abspath(os.path.join(os.path.dirname(__file__), "python"))
         )
 
     def setup_suite(self, test_names):
@@ -61,7 +62,9 @@ class TestRunner(object):
         if self._xml_output:
             return xmlrunner.XMLTestRunner(output=self._xml_output).run(self.suite)
         else:
-            return unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(self.suite)
+            return unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(
+                self.suite
+            )
 
 
 def run_tests():
@@ -70,17 +73,22 @@ def run_tests():
 
     :returns: A :class:`unittest.TestResult` instance.
     """
-    parser = argparse.ArgumentParser(
-        description="run tests"
+    parser = argparse.ArgumentParser(description="run tests")
+    parser.add_argument(
+        "--xmlout", help="Output directory for xml reports",
     )
     parser.add_argument(
-        "--xmlout",
-        help="Output directory for xml reports",
+        "--print-env",
+        action="store_true",
+        help="Print environment variables on startup",
     )
-    # Dump the environment for debug purpose
-    for name, value in os.environ.iteritems():
-        logger.info("Env %s: %s" % (name, value))
     args, other_args = parser.parse_known_args()
+
+    if args.print_env:
+        # Dump the environment for debug purpose
+        for name in sorted(os.environ, key=lambda x: x.lower()):
+            logger.info("Env %s: %s" % (name, os.environ[name]))
+
     runner = TestRunner(args.xmlout)
     return runner.run_tests(other_args)
 

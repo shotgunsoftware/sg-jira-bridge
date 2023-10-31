@@ -1,0 +1,36 @@
+# Copyright (c) 2023 Shotgun Software Inc.
+#
+# CONFIDENTIAL AND PROPRIETARY
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
+# Source Code License included in this distribution package. See LICENSE.
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
+# not expressly granted therein are reserved by Shotgun Software Inc.
+
+trigger:
+  branches:
+    include:
+    - master
+  tags:
+    include:
+    - v*
+pr:
+  branches:
+    include:
+    - "*"
+
+jobs:
+- template: azure-pipelines/flake8.yml
+- template: azure-pipelines/tests.yml
+  parameters:
+    name: Linux
+    vm_image: 'ubuntu-20.04'
+- template: azure-pipelines/tests.yml
+  parameters:
+    name: macOS
+    vm_image: 'macOS-12'
+- template: azure-pipelines/tests.yml
+  parameters:
+    name: Windows
+    vm_image: 'windows-2022'

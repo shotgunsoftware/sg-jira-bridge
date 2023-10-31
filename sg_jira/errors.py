@@ -11,6 +11,7 @@ class InvalidSyncValue(ValueError):
     Base class for exceptions raised when a value can't be translated to a valid
     value for a given field.
     """
+
     def __init__(self, field, value, *args, **kwargs):
         """
         :param str field: The Jira or SG field for which the exception was raised.
@@ -37,15 +38,17 @@ class InvalidSyncValue(ValueError):
 
 class InvalidShotgunValue(InvalidSyncValue):
     """
-    An exception raised when a Shotgun value can't be translated to a valid
+    An exception raised when a ShotGrid value can't be translated to a valid
     Jira value for a given field.
     """
+
     pass
 
 
 class InvalidJiraValue(InvalidSyncValue):
     """
     An exception raised when a Jira value can't be translated to a valid
-    Shotgun value for a given field.
+    ShotGrid value for a given field.
     """
+
     pass

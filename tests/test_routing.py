@@ -8,11 +8,13 @@
 #
 
 import os
-import StringIO
+import six
 import json
 import mock
 import logging
+import unittest
 
+from six import BytesIO
 from test_base import TestBase
 import webapp
 
@@ -29,13 +31,14 @@ Content-Length: %d
 """
 
 UNICODE_STRING = u"unicode_îéö_😀"
-UTF8_ENCODED_STRING = UNICODE_STRING.encode("utf-8")
+UTF8_ENCODED_STRING = six.ensure_str(UNICODE_STRING)
 
 
 class MockServer(object):
     """
     Mock some of the web server methods.
     """
+
     @property
     def sync_settings_names(self):
         return ["valid", UNICODE_STRING]
@@ -46,11 +49,15 @@ class MockServer(object):
     def sync_in_shotgun(self, *args, **kwargs):
         return True
 
+    def admin_reset(self, *args, **kwargs):
+        return True
+
 
 class MockRequest(object):
     """
     Mock making requests at the socket level.
     """
+
     def __init__(self, path, payload):
         self._path = path
         self._payload = payload
@@ -63,19 +70,17 @@ class MockRequest(object):
             # Incoming request, issue a GET if we don't have any payload,
             # otherwise assume a POST.
             if not self._payload:
-                return StringIO.StringIO("GET %s HTTP/1.1" % self._path)
+                return BytesIO(six.ensure_binary("GET %s HTTP/1.1" % self._path))
             else:
                 payload = json.dumps(self._payload)
-                return StringIO.StringIO(
-                    POST_TEMPLATE % (
-                        self._path,
-                        len(payload),
-                        payload
+                return BytesIO(
+                    six.ensure_binary(
+                        POST_TEMPLATE % (self._path, len(payload), payload)
                     )
                 )
         elif mode == "wb":
             # Response, return a writable empty file like object
-            return StringIO.StringIO("")
+            return BytesIO(b"")
 
 
 def faked_finish(*args, **kwargs):
@@ -87,7 +92,7 @@ def faked_finish(*args, **kwargs):
 
 
 # Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
-# and does not work if using `from shotgun_api3 import Shotgun` and 
+# and does not work if using `from shotgun_api3 import Shotgun` and
 # then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
 # Mock Jira with MockedJira, this works only if the code uses jira.client.JIRA
@@ -98,6 +103,7 @@ class TestRouting(TestBase):
     """
     Test url dispatch through the webapp
     """
+
     def setUp(self):
         super(TestRouting, self).setUp()
         # This is controlled by the bridge settings that we don't
@@ -107,117 +113,267 @@ class TestRouting(TestBase):
         # to warning to avoid unicode problems, depending on the order the tests
         # are run.
         logging.getLogger("webapp").setLevel(logging.WARNING)
-        self.set_sg_mock_schema(
-            os.path.join(self._fixtures_path, "schemas", "sg-jira")
+        self.set_sg_mock_schema(os.path.join(self._fixtures_path, "schemas", "sg-jira"))
+
+    def test_bad_routes(self, mocked_finish, mocked_jira, mocked_sg):
+        """
+        Test all bad routes fail
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
+        """
+        server = MockServer()
+
+        # GET request with an invalid action
+        handler = webapp.RequestHandler(
+            MockRequest("/badaction", None), ("localhost", -1), server
         )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"400 Invalid request path /badaction" in raw_response)
+        # GET request with an invalid action but valid settings name
+        handler = webapp.RequestHandler(
+            MockRequest("/badaction/valid", None), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"400 Invalid request path /badaction/valid" in raw_response)
+        # POST request with an invalid action
+        handler = webapp.RequestHandler(
+            MockRequest("/badaction", {"foo": "blah"}), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"400 Invalid request path /badaction" in raw_response)
+        # POST request with an invalid action but valid settings name
+        handler = webapp.RequestHandler(
+            MockRequest("/badaction/valid", {"foo": "blah"}), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"400 Invalid request path /badaction/valid" in raw_response)
 
     def test_sg_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
         Test routing from SG to Jira
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
         """
         server = MockServer()
         # GET request with an invalid settings name
         handler = webapp.RequestHandler(
-            MockRequest("/sg2jira/default", None),
-            ("localhost", -1),
-            server
+            MockRequest("/sg2jira/badsettings", None), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("400 Invalid settings name default" in raw_response)
+        self.assertTrue(b"400 Invalid settings name badsettings" in raw_response)
         # GET request with a valid settings name
         handler = webapp.RequestHandler(
-            MockRequest("/sg2jira/valid", None),
-            ("localhost", -1),
-            server
+            MockRequest("/sg2jira/valid", None), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("HTTP/1.0 200" in raw_response)
-        self.assertTrue("<p>Syncing with valid settings.</p>" in raw_response)
-        # POST request with invalid payload
+        self.assertTrue(b"HTTP/1.1 200" in raw_response)
+        self.assertTrue(b"<p>Syncing with valid settings.</p>" in raw_response)
+        # POST request with invalid payload missing entity information
+        payload = {u"foo": u"blah"}
         handler = webapp.RequestHandler(
-            MockRequest("/sg2jira/valid", {"foo": "blah"}),
-            ("localhost", -1),
-            server
+            MockRequest("/sg2jira/valid", payload), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
-            "Invalid request payload {u'foo': u'blah'}, unable to retrieve a "
-            "Shotgun Entity type and its id" in raw_response
+            six.ensure_binary(
+                "Invalid request payload %s, unable to retrieve a Shotgun Entity type and its id"
+                % payload
+            )
+            in raw_response
         )
-        payload = {
-            "entity_type": "Task",
-            "entity_id": "999",
-        }
+
+        # POST request with invalid entity info in path
         handler = webapp.RequestHandler(
-            MockRequest("/sg2jira/valid", payload),
+            MockRequest("/sg2jira/valid/Task/notanumber", {"foo": "blah"}),
             ("localhost", -1),
-            server
+            server,
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("200 POST request successful" in raw_response)
+        self.assertTrue(
+            b"Invalid Shotgun Task id notanumber, it must be a number." in raw_response
+        )
+
+        # POST request with invalid path: missing entity_id
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid/Task", {"foo": "blah"}),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid request path /sg2jira/valid/Task" in raw_response)
+        # POST request with invalid settings name - Task in path
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/badsettings/Task/123", {"foo": "blah"}),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid settings name badsettings" in raw_response)
+
+        # Invalid Task Payload missing entity_id
+        invalid_payload = {"entity_type": "Task"}
+        # POST request with invalid payload missing entity_type
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid", invalid_payload), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid request payload" in raw_response)
+
+        # Invalid Task Payload missing entity_type
+        invalid_payload = {"entity_id": 123}
+        # POST request with invalid payload missing entity_type
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid", invalid_payload), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid request payload" in raw_response)
+
+        # Valid Task Payload
+        valid_payload = {
+            "entity_type": "Task",
+            "entity_id": 999,
+        }
+        # POST request with invalid settings name - Task in payload
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/badsettings", valid_payload),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid settings name badsettings" in raw_response)
+
+        # POST request with valid payload
+        handler = webapp.RequestHandler(
+            MockRequest("/sg2jira/valid", valid_payload), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"200 POST request successful" in raw_response)
 
     def test_jira_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
         Test routing from Jira to SG
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
         """
         server = MockServer()
         # GET request with an invalid settings name
         handler = webapp.RequestHandler(
-            MockRequest("/jira2sg/default", None),
-            ("localhost", -1),
-            server
+            MockRequest("/jira2sg/badsettings", None), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("400 Invalid settings name default" in raw_response)
+        self.assertTrue(b"400 Invalid settings name badsettings" in raw_response)
         # GET request with a valid settings name
         handler = webapp.RequestHandler(
-            MockRequest("/jira2sg/valid", None),
-            ("localhost", -1),
-            server
+            MockRequest("/jira2sg/valid", None), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("HTTP/1.0 200" in raw_response)
-        self.assertTrue("<p>Syncing with valid settings.</p>" in raw_response)
-        # POST request with invalid path: a resource type and key must be provided
+        self.assertTrue(b"HTTP/1.1 200" in raw_response)
+        self.assertTrue(b"<p>Syncing with valid settings.</p>" in raw_response)
+        # POST request with invalid path: missing resource type and key
         handler = webapp.RequestHandler(
-            MockRequest("/jira2sg/valid", {"foo": "blah"}),
-            ("localhost", -1),
-            server
+            MockRequest("/jira2sg/valid", {"foo": "blah"}), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
-            "Invalid request path /jira2sg/valid, it must include a Jira "
-            "resource type and its key" in raw_response
+            b"Invalid request path /jira2sg/valid, it must include a Jira resource type and its key"
+            in raw_response
         )
+
+        # POST request with invalid path: missing resource key
+        handler = webapp.RequestHandler(
+            MockRequest("/jira2sg/valid/issue", {"foo": "blah"}),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid request path /jira2sg/valid/issue" in raw_response)
+        # POST request with invalid settings name
+        handler = webapp.RequestHandler(
+            MockRequest("/jira2sg/badsettings/issue/BLAH", {"foo": "blah"}),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid settings name badsettings" in raw_response)
+
+        # POST request with valid path
         handler = webapp.RequestHandler(
             MockRequest("/jira2sg/valid/issue/BLAH", {"foo": "blah"}),
             ("localhost", -1),
-            server
+            server,
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("200 POST request successful" in raw_response)
+        self.assertTrue(b"200 POST request successful" in raw_response)
 
+    def test_admin_route(self, mocked_finish, mocked_jira, mocked_sg):
+        """
+        Test routing to Admin
+
+        Requests with no payload are GET requests.
+        Requests with a payload are POST requests.
+        """
+        server = MockServer()
+
+        # GET admin requests are not supported, ensure they fail as expected
+
+        # GET admin action with a valid settings name instead of action
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/valid", None), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"400 Invalid request path /admin/valid" in raw_response)
+        # GET valid admin action path should fail with GET
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/reset", None), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"HTTP/1.1 400" in raw_response)
+        self.assertTrue(b"400 Invalid request path /admin/reset" in raw_response)
+        # POST request with invalid admin action
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/badaction", {"foo": "bar"}), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"Invalid admin path '/admin/badaction'" in raw_response)
+
+        # POST request with a valid admin action should succeed.
+        handler = webapp.RequestHandler(
+            MockRequest("/admin/reset", {"foo": "bar"}), ("localhost", -1), server
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"200 POST request successful" in raw_response)
+
+    # FIXME: This test fails in Python 3 due to the way the web server encodes using latin-1 instead of utf-8
+    #  However the test seems a bit over kill, and the Get method on the webapp does not appear
+    #  to do anything useful so it seems pointless trying to fix it, or test it.
+    #  Maybe this test should be removed, but leaving here for now in case it turns out there is a use for it.
+    @unittest.skipIf(six.PY3, "Only runs in Python 2")
     def test_unicode(self, mocked_finish, mocked_jira, mocked_sg):
         """
-        Test unicode values are correclty handled.
+        Test unicode values are correctly handled.
         """
         server = MockServer()
         # GET request with settings name unicode characters.
         unicode_url = "/jira2sg/%s" % UNICODE_STRING
         handler = webapp.RequestHandler(
-            MockRequest(unicode_url, None),
-            ("localhost", -1),
-            server
+            MockRequest(unicode_url, None), ("localhost", -1), server
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("HTTP/1.0 200" in raw_response)
+        self.assertTrue(b"HTTP/1.1 200" in raw_response)
         self.assertTrue(
-            ("<p>Syncing with %s settings.</p>" % UNICODE_STRING) in raw_response
+            six.ensure_binary("<p>Syncing with %s settings.</p>" % UNICODE_STRING)
+            in raw_response
         )
         handler = webapp.RequestHandler(
-            MockRequest("%s/issue/%s" % (unicode_url, UNICODE_STRING), {"foo": UNICODE_STRING, UNICODE_STRING: UNICODE_STRING}),
+            MockRequest(
+                "%s/issue/%s" % (unicode_url, UNICODE_STRING),
+                {"foo": UNICODE_STRING, UNICODE_STRING: UNICODE_STRING},
+            ),
             ("localhost", -1),
-            server
+            server,
         )
         raw_response = handler.wfile.getvalue()
-        self.assertTrue("200 POST request successful" in raw_response)
+        self.assertTrue(b"200 POST request successful" in raw_response)

@@ -14,9 +14,9 @@ from ..errors import InvalidJiraValue
 
 class SyncHandler(object):
     """
-    Base class to handle a particular sync between Shotgun and Jira.
+    Base class to handle a particular sync between ShotGrid and Jira.
 
-    Handlers typically handle syncing values between a Shotgun Entity type and
+    Handlers typically handle syncing values between a ShotGrid Entity type and
     a Jira resource and are owned by a :class:`~sg_jira.Syncer` instance.
 
     This base class defines the interface all handlers should support and
@@ -63,8 +63,8 @@ class SyncHandler(object):
     def _sg_jira_status_mapping(self):
         """
         Needs to be re-implemented in deriving classes and return a dictionary
-        where keys are Shotgun status short codes and values are Jira status
-        names, or any string value which should be mapped to Shotgun status.
+        where keys are ShotGrid status short codes and values are Jira status
+        names, or any string value which should be mapped to ShotGrid status.
         """
         raise NotImplementedError
 
@@ -106,7 +106,7 @@ class SyncHandler(object):
     def setup(self):
         """
         This method can be re-implemented in deriving classes to Check the Jira
-        and Shotgun site, ensure that the sync can safely happen and cache any
+        and ShotGrid site, ensure that the sync can safely happen and cache any
         value which is slow to retrieve.
 
         This base implementation does nothing.
@@ -115,7 +115,7 @@ class SyncHandler(object):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given Shotgun Entity.
+        Accept or reject the given event for the given ShotGrid Entity.
 
         Must be re-implemented in deriving classes.
 
@@ -125,12 +125,12 @@ class SyncHandler(object):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given Shotgun event for the given Shotgun Entity
+        Process the given ShotGrid event for the given ShotGrid Entity
 
         Must be re-implemented in deriving classes.
 
-        :param str entity_type: The Shotgun Entity type to sync.
-        :param int entity_id: The id of the Shotgun Entity to sync.
+        :param str entity_type: The ShotGrid Entity type to sync.
+        :param int entity_id: The id of the ShotGrid Entity to sync.
         :param event: A dictionary with the event for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
@@ -165,18 +165,13 @@ class SyncHandler(object):
         raise NotImplementedError
 
     def _get_shotgun_value_from_jira_change(
-        self,
-        shotgun_entity,
-        shotgun_field,
-        shotgun_field_schema,
-        change,
-        jira_value,
+        self, shotgun_entity, shotgun_field, shotgun_field_schema, change, jira_value,
     ):
         """
-        Return a Shotgun value suitable to update the given Shotgun Entity field
+        Return a ShotGrid value suitable to update the given ShotGrid Entity field
         from the given Jira change.
 
-        The following Shotgun field types are supported by this method:
+        The following ShotGrid field types are supported by this method:
         - text
         - list
         - status_list
@@ -186,15 +181,15 @@ class SyncHandler(object):
         - number
         - checkbox
 
-        :param str shotgun_entity: A Shotgun Entity dictionary as retrieved from
-                                   Shotgun.
-        :param str shotgun_field: The Shotgun Entity field to get a value for.
-        :param shotgun_field_schema: The Shotgun Entity field schema.
+        :param str shotgun_entity: A ShotGrid Entity dictionary as retrieved from
+                                   ShotGrid.
+        :param str shotgun_field: The ShotGrid Entity field to get a value for.
+        :param shotgun_field_schema: The ShotGrid Entity field schema.
         :param change: A Jira event changelog dictionary with 'fromString',
                        'toString', 'from' and 'to' keys.
         :param jira_value: The full current Jira value.
-        :raises RuntimeError: if the Shotgun Entity can't be retrieved from Shotgun.
-        :raises ValueError: for unsupported Shotgun data types.
+        :raises RuntimeError: if the ShotGrid Entity can't be retrieved from ShotGrid.
+        :raises ValueError: for unsupported ShotGrid data types.
         """
         data_type = shotgun_field_schema["data_type"]["value"]
         if data_type == "text":
@@ -215,16 +210,11 @@ class SyncHandler(object):
             # would be to raise an InvalidJiraValue
             all_allowed.append(value)
             self._logger.info(
-                "Updating Shotgun %s.%s schema with valid values: %s" % (
-                    shotgun_entity["type"],
-                    shotgun_field,
-                    all_allowed
-                )
+                "Updating Shotgun %s.%s schema with valid values: %s"
+                % (shotgun_entity["type"], shotgun_field, all_allowed)
             )
             self._shotgun.schema_field_update(
-                shotgun_entity["type"],
-                shotgun_field,
-                {"valid_values": all_allowed}
+                shotgun_entity["type"], shotgun_field, {"valid_values": all_allowed}
             )
             # Clear the schema to take into account the change we just made.
             self._shotgun.clear_cached_field_schema(shotgun_entity["type"])
@@ -238,17 +228,15 @@ class SyncHandler(object):
             # Look up a matching Shotgun status from our mapping
             # Please note that if we have multiple matching values the first
             # one will be arbitrarily returned.
-            for sg_code, jira_name in self._sg_jira_status_mapping.iteritems():
+            for sg_code, jira_name in self._sg_jira_status_mapping.items():
                 if value.lower() == jira_name.lower():
                     return sg_code
             # No match.
             raise InvalidJiraValue(
                 shotgun_field,
                 value,
-                "Unable to find a matching Shotgun status for %s from %s" % (
-                    value,
-                    self._sg_jira_status_mapping
-                )
+                "Unable to find a matching Shotgun status for %s from %s"
+                % (value, self._sg_jira_status_mapping),
             )
 
         if data_type == "multi_entity":
@@ -257,7 +245,9 @@ class SyncHandler(object):
             # We're assuming here that if someone maps a Jira simple field to
             # a Shotgun multi entity field the same convention will be applied
             # and spaces will be used as separators.
-            allowed_entities = shotgun_field_schema["properties"]["valid_types"]["value"]
+            allowed_entities = shotgun_field_schema["properties"]["valid_types"][
+                "value"
+            ]
             old_list = set()
             new_list = set()
             if change["fromString"]:
@@ -268,25 +258,21 @@ class SyncHandler(object):
             added_list = new_list - old_list
             # Make sure we have the current value and the Shotgun project
             consolidated = self._shotgun.consolidate_entity(
-                shotgun_entity,
-                fields=[shotgun_field, "project"]
+                shotgun_entity, fields=[shotgun_field, "project"]
             )
             if not consolidated:
                 raise RuntimeError(
-                    "Unable to find %s (%d) in Shotgun" % (
-                        shotgun_entity["type"],
-                        shotgun_entity["id"]
-                    )
+                    "Unable to find %s (%d) in Shotgun"
+                    % (shotgun_entity["type"], shotgun_entity["id"])
                 )
             current_sg_value = consolidated[shotgun_field]
             for removed in removed_list:
                 # Try to remove the entries from the Shotgun value. We make a
                 # copy of the list so we can delete entries while iterating
-                self._logger.debug("Trying to remove %s from Shotgun %s value %s" % (
-                    removed, 
-                    shotgun_field,
-                    current_sg_value,
-                ))
+                self._logger.debug(
+                    "Trying to remove %s from Shotgun %s value %s"
+                    % (removed, shotgun_field, current_sg_value,)
+                )
                 for i, sg_value in enumerate(list(current_sg_value)):
                     # Match the SG entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
@@ -295,20 +281,15 @@ class SyncHandler(object):
                     if removed.lower() == sg_value["name"].lower():
                         self._logger.debug(
                             "Removing %s from Shotgun value %s since Jira "
-                            "removed %s " % (
-                                sg_value, 
-                                current_sg_value,
-                                removed,
-                            )
+                            "removed %s " % (sg_value, current_sg_value, removed,)
                         )
                         del current_sg_value[i]
             for added in added_list:
                 # Check if the value is already there
-                self._logger.debug("Trying to add %s to Shotgun %s value %s" % (
-                    added, 
-                    shotgun_field,
-                    current_sg_value,
-                ))
+                self._logger.debug(
+                    "Trying to add %s to Shotgun %s value %s"
+                    % (added, shotgun_field, current_sg_value,)
+                )
                 for sg_value in current_sg_value:
                     # Match the SG entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
@@ -316,35 +297,26 @@ class SyncHandler(object):
                     # name e.g. "code"
                     if added.lower() == sg_value["name"].lower():
                         self._logger.debug(
-                            "%s is already in current Shotgun value: %s" % (
-                                added, sg_value,
-                            )
+                            "%s is already in current Shotgun value: %s"
+                            % (added, sg_value,)
                         )
                         break
                 else:
                     # We need to retrieve a matching Entity from Shotgun and
                     # add it to the list, if we found one.
                     sg_value = self._shotgun.match_entity_by_name(
-                        added,
-                        allowed_entities,
-                        consolidated["project"]
+                        added, allowed_entities, consolidated["project"]
                     )
                     if sg_value:
                         self._logger.debug(
                             "Adding %s to Shotgun value %s since Jira "
-                            "added %s" % (
-                                sg_value, 
-                                current_sg_value,
-                                added,
-                            )
+                            "added %s" % (sg_value, current_sg_value, added,)
                         )
                         current_sg_value.append(sg_value)
                     else:
                         self._logger.warning(
-                            "Couldn't find a %s named '%s' in Shotgun" % (
-                                " or ".join(allowed_entities),
-                                added
-                            )
+                            "Couldn't find a %s named '%s' in Shotgun"
+                            % (" or ".join(allowed_entities), added)
                         )
 
             return current_sg_value
@@ -359,20 +331,13 @@ class SyncHandler(object):
                 # Validate the date string
                 datetime.datetime.strptime(value, "%Y-%m-%d")
             except ValueError as e:
-                message = "Unable to parse Jira value %s as a date: %s" % (
-                    value, e
-                )
+                message = "Unable to parse Jira value %s as a date: %s" % (value, e)
                 # Log the original error with a traceback for debug purpose
                 self._logger.debug(
-                    message,
-                    exc_info=True,
+                    message, exc_info=True,
                 )
                 # Notify the caller that the value is not right
-                raise InvalidJiraValue(
-                    shotgun_field,
-                    value,
-                    message
-                )
+                raise InvalidJiraValue(shotgun_field, value, message)
             return value
 
         if data_type in ["duration", "number"]:
@@ -384,29 +349,18 @@ class SyncHandler(object):
             try:
                 return int(value)
             except ValueError as e:
-                message = "Jira value %s is not a valid integer: %s" % (
-                    value, e
-                )
+                message = "Jira value %s is not a valid integer: %s" % (value, e)
                 # Log the original error with a traceback for debug purpose
                 self._logger.debug(
-                    message,
-                    exc_info=True,
+                    message, exc_info=True,
                 )
                 # Notify the caller that the value is not right
-                raise InvalidJiraValue(
-                    shotgun_field,
-                    value,
-                    message
-                )
+                raise InvalidJiraValue(shotgun_field, value, message)
 
         if data_type == "checkbox":
             return bool(change["toString"])
 
         raise ValueError(
-            "Unsupported data type %s for %s.%s change from Jira update: %s" % (
-                data_type,
-                shotgun_entity["type"],
-                shotgun_field,
-                change
-            )
+            "Unsupported data type %s for %s.%s change from Jira update: %s"
+            % (data_type, shotgun_entity["type"], shotgun_field, change)
         )

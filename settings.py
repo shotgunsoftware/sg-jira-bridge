@@ -5,24 +5,23 @@
 # this software in either electronic or hard copy form.
 #
 """
-Shotgun Jira sync settings
+ShotGrid Jira sync settings
 """
 import os
 import sys
 import logging
 
-# Documentation for these settings are available at 
-# https://developer.shotgunsoftware.com/sg-jira-bridge/settings.html
+# Documentation for these settings are available at
+# https://developer.shotgridsoftware.com/sg-jira-bridge/settings.html
 
-try:
-    # Allow users to define their sensible data in a .env file and
-    # load it in environment variables with python-dotenv.
-    # https://pypi.org/project/python-dotenv/
-    from dotenv import load_dotenv
-    load_dotenv(override=True)
-except ImportError:
-    pass
+# Allow users to define their sensitive data in a .env file and
+# load it in environment variables with python-dotenv.
+# https://pypi.org/project/python-dotenv/
+from dotenv import load_dotenv
 
+load_dotenv(override=True)
+
+# fmt: off
 # Shotgun site and credentials
 SHOTGUN = {
     "site": os.environ.get("SGJIRA_SG_SITE"),
@@ -122,3 +121,4 @@ SYNC = {
         },
     }
 }
+# fmt: on

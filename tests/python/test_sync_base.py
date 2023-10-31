@@ -6,11 +6,8 @@
 #
 
 import os
-import mock
-
 
 from shotgun_api3.lib import mockgun
-from mock_jira import MockedJira
 import sg_jira
 
 from test_base import TestBase
@@ -20,6 +17,7 @@ class ExtMockgun(mockgun.Shotgun):
     """
     Add missing mocked methods to mockgun.Shotgun
     """
+
     def add_user_agent(*args, **kwargs):
         pass
 
@@ -38,24 +36,20 @@ class TestSyncBase(TestBase):
 
     All test methods will have an extra mocked_sg parameter.
     """
+
     def _get_mocked_sg_handle(self):
         """
         Return a mocked SG handle.
         """
-        return ExtMockgun(
-            "https://mocked.my.com",
-            "Ford Prefect",
-            "xxxxxxxxxx",
-        )
+        return ExtMockgun("https://mocked.my.com", "Ford Prefect", "xxxxxxxxxx",)
 
     def _get_syncer(self, mocked_sg, name="task_issue"):
         """
-        Helper to get a syncer and a bridge with a mocked Shotgun.
+        Helper to get a syncer and a bridge with a mocked ShotGrid.
 
         :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.
         """
-
         mocked_sg.return_value = self._get_mocked_sg_handle()
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
@@ -68,24 +62,11 @@ class TestSyncBase(TestBase):
         Test setup.
         """
         super(TestSyncBase, self).setUp()
-        self.set_sg_mock_schema(os.path.join(
-            self._fixtures_path,
-            "schemas", "sg-jira",
-        ))
-        # Patch the JiraSession base class to use our MockedJira instead of
-        # the jira.client.Jira class.
-        patcher = mock.patch.object(
-            sg_jira.jira_session.JiraSession,
-            "__bases__",
-            (MockedJira,)
+        self.set_sg_mock_schema(
+            os.path.join(self._fixtures_path, "schemas", "sg-jira",)
         )
-        patcher.is_local = True
-        patcher.start()
-        # FIXME: the patcher fails with TypeError: can't delete JiraSession.__bases__
-        # in its __exit__. We don't need the original jira.client.Jira class
-        # in these tests, so restoring it is not an issue, but this is not
-        # clean and should be fixed.
-        # self.addCleanup(patcher.stop)
+
+        self.mock_jira_session_bases()
 
         # TODO: add a Shotgun patcher so deriving classes don't have to patch
         # Shotgun themselves.
