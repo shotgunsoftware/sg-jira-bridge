@@ -537,7 +537,7 @@ def main():
     try:
         socket.inet_aton(args.listen_address)
     except socket.error:
-        print "The specified listen address is not a valid IPv4 address."
+        print("The specified listen address is not a valid IPv4 address.")
         sys.exit(1)
 
     run_server(
