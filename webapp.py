@@ -12,7 +12,9 @@ import argparse
 from six.moves.urllib import parse
 from six.moves import BaseHTTPServer
 import json
+import socket
 import ssl
+import sys
 import logging
 import subprocess
 
@@ -470,11 +472,12 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         logger.error(message)
 
 
-def create_server(port, settings, keyfile=None, certfile=None):
+def create_server(port, listen_address, settings, keyfile=None, certfile=None):
     """
     Create the server.
 
     :param int port: A port number to listen to.
+    :param str listen_address: The address to listen to.
     :param str settings: Path to settings file.
     :param str keyfile: Optional path to a PEM key file to run in HTTPS mode.
     :param str certfile:  Optional path to a PEM certificate file to run in HTTPS mode.
@@ -482,7 +485,7 @@ def create_server(port, settings, keyfile=None, certfile=None):
     :returns: The HTTP Server
     :type: :class:`BaseHTTPServer.BaseHTTPRequestHandler`
     """
-    httpd = Server(settings, ("localhost", port), RequestHandler)
+    httpd = Server(settings, (listen_address, port), RequestHandler)
     if keyfile and certfile:
         # Activate HTTPS.
         httpd.socket = ssl.wrap_socket(
@@ -491,16 +494,17 @@ def create_server(port, settings, keyfile=None, certfile=None):
     return httpd
 
 
-def run_server(port, settings, keyfile=None, certfile=None):
+def run_server(port, listen_address, settings, keyfile=None, certfile=None):
     """
     Run the server until a shutdown is requested.
 
     :param int port: A port number to listen to.
+    :param str listen_address: The address to listen to.
     :param str settings: Path to settings file.
     :param str keyfile: Optional path to a PEM key file to run in https mode.
     :param str certfile:  Optional path to a PEM certificate file to run in https mode.
     """
-    create_server(port, settings, keyfile, certfile).serve_forever()
+    create_server(port, listen_address, settings, keyfile, certfile).serve_forever()
 
 
 def main():
@@ -508,6 +512,11 @@ def main():
     Retrieve command line arguments and start the server.
     """
     parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument(
+        "--listen_address",
+        default="127.0.0.1",
+        help="The IPv4 address that the server binds to. Use 0.0.0.0 to bind on all network interfaces.",
+    )
     parser.add_argument(
         "--port", type=int, default=9090, help="The port number to listen to.",
     )
@@ -525,8 +534,18 @@ def main():
     if args.ssl_context:
         keyfile, certfile = args.ssl_context
 
+    try:
+        socket.inet_aton(args.listen_address)
+    except socket.error:
+        print("The specified listen address is not a valid IPv4 address.")
+        sys.exit(1)
+
     run_server(
-        port=args.port, settings=args.settings, keyfile=keyfile, certfile=certfile,
+        listen_address=args.listen_address,
+        port=args.port,
+        settings=args.settings,
+        keyfile=keyfile,
+        certfile=certfile,
     )
 
 
