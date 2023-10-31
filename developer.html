@@ -362,11 +362,11 @@ must be overridden <em>in addition to the ones required by</em>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.shotgun_session.</span></span><span class="sig-name descname"><span class="pre">ShotgunSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition"></a></dt>
-<dd><p>Wraps a <a class="reference external" href="https://developer.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developer.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.4.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
 <p>Ensures all the values we get from ShotGrid are unicode and not utf-8 encoded
 strings. Utf-8 encodes unicode values before sending them to ShotGrid.</p>
-<p>Instantiate a <a class="reference external" href="https://developer.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
+<p>Instantiate a <a class="reference external" href="https://developer.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.4.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.current_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_user</span></span><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition"></a></dt>
@@ -384,7 +384,7 @@ strings. Utf-8 encodes unicode values before sending them to ShotGrid.</p>
 <dd><p>Check the ShotGrid site and cache site level values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – if the ShotGrid site was not correctly configured to
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the ShotGrid site was not correctly configured to
 be used with this bridge.</p>
 </dd>
 </dl>
@@ -398,15 +398,15 @@ Entity type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type.</p></li>
-<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</p></li>
-<li><p><strong>field_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid field type, e.g. ‘text’.</p></li>
-<li><p><strong>check_unique</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, check the specified field
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type.</p></li>
+<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</p></li>
+<li><p><strong>field_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid field type, e.g. ‘text’.</p></li>
+<li><p><strong>check_unique</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, check the specified field
 is configured to only accept unique values. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – if the field does not exist or does not have the
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the field does not exist or does not have the
 expected type.</p>
 </dd>
 </dl>
@@ -424,8 +424,8 @@ if schemas are changed in ShotGrid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type.</p></li>
-<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type.</p></li>
+<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -441,7 +441,7 @@ if schemas are changed in ShotGrid.</p>
 ShotGrid Entity type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type or None.</p>
+<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type or None.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -452,7 +452,7 @@ ShotGrid Entity type.</p>
 <dd><p>Return the ShotGrid name field to use for the specified entity type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The entity type to get the name field for.</p>
+<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The entity type to get the name field for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The name field for the specified entity type.</p>
@@ -468,7 +468,7 @@ that is an Entity linked to a Project, <cite>False</cite> if it is a non-project
 Entity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid Entity type.</p>
+<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -501,7 +501,7 @@ Entity types.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A name to match.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A name to match.</p></li>
 <li><p><strong>entity_types</strong> – A list of ShotGrid Entity types to consider.</p></li>
 <li><p><strong>shotgun_project</strong> – A ShotGrid Project dictionary.</p></li>
 </ul>
@@ -537,10 +537,10 @@ key and an ‘id’ key.</p>
 <p>Connect to the given Jira site with given parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</p>
+<dd class="field-odd"><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira site url.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – on Jira connection errors.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – on Jira connection errors.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -550,10 +550,10 @@ key and an ‘id’ key.</p>
 <p>Connect to the given Jira site with given parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</p>
+<dd class="field-odd"><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira site url.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – on Jira connection errors.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – on Jira connection errors.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -564,7 +564,7 @@ key and an ‘id’ key.</p>
 <dd><p>Check the Jira site and cache site level values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – if the Jira site was not correctly configured to
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the Jira site was not correctly configured to
 be used with this bridge.</p>
 </dd>
 </dl>
@@ -629,7 +629,7 @@ to update the Jira field with the given schema.</p>
 <dd class="field-odd"><p>A Jira value which can safely be used to update the Jira field.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>UserWarning</strong> – if a safe value can’t be obtained.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#UserWarning" title="(in Python v3.9)"><strong>UserWarning</strong></a> – if a safe value can’t be obtained.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -653,7 +653,7 @@ be specified when editing an Issue.</p>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.User</span></code> instance or None.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – if no Project nor Issue is specified.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if no Project nor Issue is specified.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -684,7 +684,7 @@ Issue assignments.</p></li>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.User</span></code> instance or None.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – if no Project nor Issue is specified.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if no Project nor Issue is specified.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -699,7 +699,7 @@ given one and try to apply it.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>jira_issue</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance.</p></li>
-<li><p><strong>jira_status</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira status name, e.g. <cite>In Progress</cite>.</p></li>
+<li><p><strong>jira_status</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira status name, e.g. <cite>In Progress</cite>.</p></li>
 <li><p><strong>comment</strong> – A string, a comment to apply to the Jira transition.</p></li>
 </ul>
 </dd>
@@ -720,7 +720,7 @@ the data can’t be amended to complete the Issue creation.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>jira_project</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance.</p></li>
-<li><p><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The target Issue type name.</p></li>
+<li><p><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The target Issue type name.</p></li>
 <li><p><strong>data</strong> – A dictionary where keys are Jira Issue field ids and values
 are Jira values.</p></li>
 </ul>
@@ -730,8 +730,8 @@ are Jira values.</p></li>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>RuntimeError</strong> – if the Jira create meta data can’t be retrieved.</p></li>
-<li><p><strong>ValueError</strong> – if invalid and unfixable data is provided.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the Jira create meta data can’t be retrieved.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if invalid and unfixable data is provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -749,7 +749,7 @@ are Jira values.</p></li>
 <dd class="field-even"><p>The Jira Issue edit metadata <cite>fields</cite> property.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – if the edit metadata can’t be retrieved for the
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the edit metadata can’t be retrieved for the
 given Issue.</p>
 </dd>
 </dl>
@@ -781,15 +781,15 @@ support API tokens.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid site url.</p></li>
-<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid script user name.</p></li>
-<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The script user key for the ShotGrid script.</p></li>
-<li><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</p></li>
-<li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira user name, either his email address or short
+<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid site url.</p></li>
+<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid script user name.</p></li>
+<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The script user key for the ShotGrid script.</p></li>
+<li><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira site url.</p></li>
+<li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira user name, either his email address or short
 name.</p></li>
-<li><p><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira user password or API key.</p></li>
+<li><p><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira user password or API key.</p></li>
 <li><p><strong>sync_settings</strong> – A dictionary where keys are settings names.</p></li>
-<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
+<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
 connection, or None.</p></li>
 </ul>
 </dd>
@@ -809,15 +809,15 @@ support API tokens.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid site url.</p></li>
-<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A ShotGrid script user name.</p></li>
-<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The script user key for the ShotGrid script.</p></li>
-<li><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira site url.</p></li>
-<li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira user name, either his email address or short
+<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid site url.</p></li>
+<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid script user name.</p></li>
+<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The script user key for the ShotGrid script.</p></li>
+<li><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira site url.</p></li>
+<li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira user name, either his email address or short
 name.</p></li>
-<li><p><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira user password or API key.</p></li>
+<li><p><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira user password or API key.</p></li>
 <li><p><strong>sync_settings</strong> – A dictionary where keys are settings names.</p></li>
-<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
+<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
 connection, or None.</p></li>
 </ul>
 </dd>
@@ -830,10 +830,10 @@ connection, or None.</p></li>
 <dd><p>Read the given settings and instantiate a new <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> with them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>settings_file</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Path to a settings Python file.</p>
+<dd class="field-odd"><p><strong>settings_file</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to a settings Python file.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – on missing required settings.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – on missing required settings.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -844,14 +844,14 @@ connection, or None.</p></li>
 <dd><p>Read the given settings file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>settings_file</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Path to a settings Python file.</p>
+<dd class="field-odd"><p><strong>settings_file</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Path to a settings Python file.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A tuple of settings:
 (logger settings, shotgun settings, jira settings, sync settings)</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – if the file does not exist or if its name does not end
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if the file does not exist or if its name does not end
 with <code class="docutils literal notranslate"><span class="pre">.py</span></code>.</p>
 </dd>
 </dl>
@@ -918,7 +918,7 @@ before returning it to ensure we return the exact value (eg.
 <dd class="field-odd"><p><strong>str</strong> – A settings name.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – for invalid settings.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – for invalid settings.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -930,9 +930,9 @@ before returning it to ensure we return the exact value (eg.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>settings_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The name of the settings to use for this sync.</p></li>
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>settings_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the settings to use for this sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -950,9 +950,9 @@ syncing was skipped for any reason.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>settings_name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The name of the settings to use for this sync.</p></li>
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>settings_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the settings to use for this sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1026,7 +1026,7 @@ or accept and process events.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A unique name for the syncer.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A unique name for the syncer.</p></li>
 <li><p><strong>bridge</strong> – A <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> instance.</p></li>
 </ul>
 </dd>
@@ -1038,7 +1038,7 @@ or accept and process events.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A unique name for the syncer.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A unique name for the syncer.</p></li>
 <li><p><strong>bridge</strong> – A <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> instance.</p></li>
 </ul>
 </dd>
@@ -1107,8 +1107,8 @@ processing, <cite>None</cite> otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1174,13 +1174,13 @@ provides some helpers which can be useful to all handlers.</p>
 <dd><p>Retrieve the Jira Issue with the given key, if any.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</p>
+<dd class="field-odd"><p><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira Issue key to look for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the Issue if not bound to any Project.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1214,8 +1214,8 @@ value which is slow to retrieve.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event for the change.</p></li>
 </ul>
 </dd>
@@ -1234,8 +1234,8 @@ sync didn’t happen for any reason.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1253,8 +1253,8 @@ sync didn’t happen for any reason.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1282,7 +1282,7 @@ sync didn’t happen for any reason.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</p></li>
-<li><p><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A target Issue type, e.g. ‘Task’, ‘Story’.</p></li>
+<li><p><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A target Issue type, e.g. ‘Task’, ‘Story’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1294,7 +1294,7 @@ sync didn’t happen for any reason.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>syncer</strong> – A <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</p></li>
-<li><p><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A target Issue type, e.g. ‘Task’, ‘Story’.</p></li>
+<li><p><strong>issue_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A target Issue type, e.g. ‘Task’, ‘Story’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1307,8 +1307,8 @@ sync didn’t happen for any reason.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1325,8 +1325,8 @@ sync didn’t happen for any reason.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource to sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource to sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1355,13 +1355,13 @@ sync didn’t happen for any reason.</p>
 <dd><p>Retrieve the Jira Issue with the given key, if any.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</p>
+<dd class="field-odd"><p><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira Issue key to look for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the Issue if not bound to any Project.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1385,8 +1385,8 @@ sync didn’t happen for any reason.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event for the change.</p></li>
 </ul>
 </dd>
@@ -1495,8 +1495,8 @@ This can be used as well to cache any value which is slow to retrieve.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event for the change.</p></li>
 </ul>
 </dd>
@@ -1511,8 +1511,8 @@ This can be used as well to cache any value which is slow to retrieve.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1528,13 +1528,13 @@ This can be used as well to cache any value which is slow to retrieve.</p>
 <dd><p>Retrieve the Jira Issue with the given key, if any.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – A Jira Issue key to look for.</p>
+<dd class="field-odd"><p><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira Issue key to look for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.Issue</span></code> instance or None.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – if the Issue if not bound to any Project.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the Issue if not bound to any Project.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1558,8 +1558,8 @@ This can be used as well to cache any value which is slow to retrieve.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
-<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
+<li><p><strong>resource_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The type of Jira resource sync, e.g. Issue.</p></li>
+<li><p><strong>resource_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The id of the Jira resource to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -1591,7 +1591,7 @@ in utf-8 encoding.</p>
 <dd class="field-even"><p>The value with all strings converted to unicode.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – if a converted UTF-8 decoded key is already present in the
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if a converted UTF-8 decoded key is already present in the
 original value of a dictionary.</p>
 </dd>
 </dl>
@@ -1610,7 +1610,7 @@ original value of a dictionary.</p>
 <dd class="field-even"><p>The value with all unicode values converted to strings.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – if a converted UTF-8 encoded key is already present in the
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if a converted UTF-8 encoded key is already present in the
 original value of a dictionary.</p>
 </dd>
 </dl>
@@ -1627,7 +1627,7 @@ value for a given field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
 <li><p><strong>value</strong> – The Jira or SG value for which the exception was raised.</p></li>
 </ul>
 </dd>
@@ -1661,7 +1661,7 @@ Jira value for a given field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
 <li><p><strong>value</strong> – The Jira or SG value for which the exception was raised.</p></li>
 </ul>
 </dd>
@@ -1695,7 +1695,7 @@ ShotGrid value for a given field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
 <li><p><strong>value</strong> – The Jira or SG value for which the exception was raised.</p></li>
 </ul>
 </dd>
