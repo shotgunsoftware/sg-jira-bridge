@@ -535,22 +535,43 @@ class JiraSession(jira.client.JIRA):
             fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
         else:
             # createmeta is not supported on Jira Server 9 and Python client 3.5.0
+            # Instead, we'll use the new createmeta_issuetypes and createmeta_fieldtypes methods
             create_meta_data = self.createmeta_issuetypes(
                 jira_project,
             )
+            # We asked for a single project / single issue type, so we can just pick
+            # the first entry, if it exists.
             if (
                 not create_meta_data["values"]
-                or not create_meta_data["values"][0]["fields"]
+                or not len(create_meta_data["values"]) > 0
             ):
-                logger.debug(
-                    "Create meta data for Project %s Issue type %s: %s"
+                logger.error(
+                    "Create meta data issue types for Project %s Issue type %s: %s"
                     % (jira_project, jira_issue_type.id, create_meta_data)
                 )
                 raise RuntimeError(
                     "Unable to retrieve create meta data for Project %s Issue type %s."
                     % (jira_project, jira_issue_type.id,)
                 )
-            fields_createmeta = create_meta_data["values"][0]["fields"]
+            # Get the field types because createmeta_issuetypes doesn't expand the fields
+            create_meta_data_fieldtypes = self.createmeta_fieldtypes(
+                jira_project,
+                issueTypeId=create_meta_data["values"][0]["id"],
+            )
+            if not create_meta_data_fieldtypes["values"]:
+                logger.debug(
+                    "Create meta data field types for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data_fieldtypes)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (jira_project, jira_issue_type.id,)
+                )
+            # Convert response to be backwards compatible
+            fields_createmeta = {
+                value["fieldId"]: value
+                for value in create_meta_data_fieldtypes["values"]
+            }
 
         # Make a shallow copy so we can add/delete keys
         data = dict(data)
