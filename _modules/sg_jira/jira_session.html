@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.4.0b3 documentation</title>
+  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.4.0b4 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -84,7 +84,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.0b3.<br>
+    <b>sg-jira-bridge</b> v0.4.0b4.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
@@ -665,7 +665,6 @@
             <span class="c1"># createmeta is not supported on Jira Server 9 and Python client 3.5.0</span>
             <span class="n">create_meta_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createmeta_issuetypes</span><span class="p">(</span>
                 <span class="n">jira_project</span><span class="p">,</span>
-                <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;values.fields&quot;</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="ow">not</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span>
