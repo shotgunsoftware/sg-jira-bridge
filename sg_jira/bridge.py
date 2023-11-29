@@ -51,8 +51,7 @@ class Bridge(object):
             Jira Cloud requires the use of an API token and will not work with
             a user's password. See https://confluence.atlassian.com/x/Vo71Nw
             for information on how to generate a token.
-            Jira Server will still work with a users's password and does not
-            support API tokens.
+            Jira Server will use PAT so please provide empty string as `SGJIRA_JIRA_USER`.
 
         :param str sg_site: A ShotGrid site url.
         :param str sg_script: A ShotGrid script user name.
@@ -97,7 +96,7 @@ class Bridge(object):
         self._jira_user = jira_user
         options = (
             {"token_auth": jira_secret}
-            if jira_user == "None"
+            if not jira_user
             else {"basic_auth": (jira_user, jira_secret)}
         )
         self._jira = JiraSession(jira_site, **options)
@@ -207,7 +206,7 @@ class Bridge(object):
             raise ValueError("Missing Jira settings in %s" % full_path)
 
         missing = [
-            name for name in ["site", "user", "secret"] if not jira_settings.get(name)
+            name for name in ["site", "secret"] if not jira_settings.get(name)
         ]
         if missing:
             raise ValueError(

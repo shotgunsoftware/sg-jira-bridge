@@ -7,6 +7,7 @@
 
 import logging
 from packaging import version
+from json.decoder import JSONDecodeError
 
 from jira import JIRAError
 import jira
@@ -46,6 +47,11 @@ class JiraSession(jira.client.JIRA):
         """
         try:
             super(JiraSession, self).__init__(jira_site, *args, **kwargs)
+        except JSONDecodeError as e:
+            logger.debug("Unable to connect to %s: %s" % (jira_site, e), exc_info=True)
+            raise RuntimeError(
+                "Unable to connect to %s. See the log for details." % jira_site
+            )
         except JIRAError as e:
             # Jira puts some huge html / javascript code in the exception
             # string so we catch it to issue a more reasonable message.
