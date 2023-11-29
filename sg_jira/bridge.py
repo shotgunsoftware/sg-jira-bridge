@@ -96,7 +96,7 @@ class Bridge(object):
         self._jira_user = jira_user
         options = (
             {"token_auth": jira_secret}
-            if not jira_user
+            if jira_user in (None, "None", "")
             else {"basic_auth": (jira_user, jira_secret)}
         )
         self._jira = JiraSession(jira_site, **options)
