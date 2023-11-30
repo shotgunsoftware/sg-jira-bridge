@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Resources &mdash; sg-jira-bridge v0.4.0b4 documentation</title>
+  <title>Developer Resources &mdash; sg-jira-bridge v0.4.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -139,7 +139,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.0b4.<br>
+    <b>sg-jira-bridge</b> v0.4.1.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
@@ -362,11 +362,11 @@ must be overridden <em>in addition to the ones required by</em>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.shotgun_session.</span></span><span class="sig-name descname"><span class="pre">ShotgunSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition"></a></dt>
-<dd><p>Wraps a <code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.4.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
 <p>Ensures all the values we get from ShotGrid are unicode and not utf-8 encoded
 strings. Utf-8 encodes unicode values before sending them to ShotGrid.</p>
-<p>Instantiate a <code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code> with the sanitized parameters.</p>
+<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.4.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.current_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_user</span></span><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition"></a></dt>
@@ -775,8 +775,7 @@ sync events.</p>
 <p>Jira Cloud requires the use of an API token and will not work with
 a user’s password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a>
 for information on how to generate a token.
-Jira Server will still work with a users’s password and does not
-support API tokens.</p>
+Jira Server will use PAT so please provide empty string as <cite>SGJIRA_JIRA_USER</cite>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -803,8 +802,7 @@ connection, or None.</p></li>
 <p>Jira Cloud requires the use of an API token and will not work with
 a user’s password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a>
 for information on how to generate a token.
-Jira Server will still work with a users’s password and does not
-support API tokens.</p>
+Jira Server will use PAT so please provide empty string as <cite>SGJIRA_JIRA_USER</cite>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

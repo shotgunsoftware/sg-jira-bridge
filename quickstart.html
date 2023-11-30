@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; sg-jira-bridge v0.4.0b4 documentation</title>
+  <title>Quick Start &mdash; sg-jira-bridge v0.4.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -126,7 +126,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.0b4.<br>
+    <b>sg-jira-bridge</b> v0.4.1.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
@@ -460,8 +460,8 @@ and define these in a <code class="docutils literal notranslate"><span class="pr
 <p><strong>Jira Cloud</strong> requires the use of an API token and will not work with
 a user password. See <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a> for information
 on how to generate a token.</p>
-<p><strong>Jira Server</strong> will still work with a user password and does not support
-API tokens.</p>
+<p><strong>Jira Server</strong> Support API tokens. Please provide an empty string as <cite>SGJIRA_JIRA_USER</cite> and
+make sure <cite>SGJIRA_JIRA_SITE</cite> is the REST API base URL.</p>
 <p>For more information, see: <a class="reference external" href="https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/">https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/</a></p>
 </div>
 <div class="admonition note">
