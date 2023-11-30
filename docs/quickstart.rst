@@ -221,8 +221,8 @@ and define these in a ``.env`` file.
     a user password. See https://confluence.atlassian.com/x/Vo71Nw for information
     on how to generate a token.
 
-    **Jira Server** will still work with a user password and does not support
-    API tokens.
+    **Jira Server** Support API tokens. Please provide an empty string as `SGJIRA_JIRA_USER` and
+    make sure `SGJIRA_JIRA_SITE` is the REST API base URL.
 
     For more information, see: https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/
 
