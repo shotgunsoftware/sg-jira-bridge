@@ -1,8 +1,8 @@
-# Contributing to the ShotGrid Jira Bridge
+# Contributing to the Flow Production Tracking Jira Bridge
 
 ### Overview
 
-ShotGrid's Jira Bridge is an open source project.
+Flow Production Tracking's Jira Bridge is an open source project.
 
 This project accepts and greatly appreciates contributions.
 The project follows the [fork & pull](https://help.github.com/articles/using-pull-requests/#fork--pull) model for accepting contributions.
@@ -18,7 +18,7 @@ When contributing code, please follow the following process:
    * An example branch name could be `bugs/fix-link-field-updates-on-delete-103`
 * Create a pull request (and reference the issue if created)
    * The description of the pull request should describe in detail the change being made. It should be possible to understand all aspects of the change from the PR description without having to read code
-* ShotGrid developers will provide feedback on pull requests
+* Flow Production Tracking developers will provide feedback on pull requests
    * The developers will look at code quality, style, tests, performance, maintainability, and directional alignment with the goals of the project
    * Code that implements behavior considered not appropriate for general use will be send back for updates
 * For code to be accepted, you must have a signed [individual](pdfs/ind_contrib_agmt_forshotgun_jira_bridge.pdf) or [corporate](pdfs/corp_contrib_agmt_forshotgun_jira_bridge.pdf) contribution agreement

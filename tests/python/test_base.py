@@ -56,8 +56,8 @@ class TestBase(unittest.TestCase):
 
     def add_to_sg_mock_db(self, mockgun, entities):
         """
-        Adds an entity or entities to the mocked ShotGrid database.
-        :param entities: A ShotGrid style dictionary with keys for id, type, and name
+        Adds an entity or entities to the mocked Flow Production Tracking database.
+        :param entities: A Flow Production Tracking style dictionary with keys for id, type, and name
                          defined. A list of such dictionaries is also valid.
         """
         # make sure it's a list

@@ -26,10 +26,10 @@ COMMENT_BODY_TEMPLATE = """
 
 class NoteCommentHandler(SyncHandler):
     """
-    Sync a ShotGrid Task Note with a comment attached to the associated Jira Issue for
+    Sync a Flow Production Tracking Task Note with a comment attached to the associated Jira Issue for
     this Task.
 
-    .. note:: The same ShotGrid Note can be attached to multiple Tasks, but it is
+    .. note:: The same Flow Production Tracking Note can be attached to multiple Tasks, but it is
               not possible to share the same comment across multiple Issues in
               Jira. If a Note is attached to multiple Tasks, only one Issue comment
               will be updated.
@@ -42,7 +42,7 @@ class NoteCommentHandler(SyncHandler):
 
     def setup(self):
         """
-        Check the Jira and ShotGrid site, ensure that the sync can safely happen
+        Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field(
@@ -51,16 +51,16 @@ class NoteCommentHandler(SyncHandler):
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
-        Return the list of ShotGrid fields that this handler can process for a
-        ShotGrid to Jira event.
+        Return the list of Flow Production Tracking fields that this handler can process for a
+        Flow Production Tracking to Jira event.
         """
         return list(self.__NOTE_FIELDS_MAPPING.keys())
 
     def _compose_jira_comment_body(self, shotgun_note):
         """
-        Return a body value to update a Jira comment from the given ShotGrid Note.
+        Return a body value to update a Jira comment from the given Flow Production Tracking Note.
 
-        :param shotgun_note: A ShotGrid Note dictionary.
+        :param shotgun_note: A Flow Production Tracking Note dictionary.
         :returns: A string.
         """
         return COMMENT_BODY_TEMPLATE % (
@@ -70,7 +70,7 @@ class NoteCommentHandler(SyncHandler):
 
     def _compose_shotgun_note(self, jira_comment):
         """
-        Return a subject and content value to update a ShotGrid Note from the
+        Return a subject and content value to update a Flow Production Tracking Note from the
         given Jira comment.
 
         Notes created in SG are stored in Jira with some fanciness markup (see
@@ -139,7 +139,7 @@ class NoteCommentHandler(SyncHandler):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given ShotGrid Entity.
+        Accept or reject the given event for the given Flow Production Tracking Entity.
 
         :returns: `True if the event is accepted for processing, `False` otherwise.
         """
@@ -182,7 +182,7 @@ class NoteCommentHandler(SyncHandler):
 
     def _parse_note_jira_key(self, shotgun_note):
         """
-        Parse the Jira key value set in the given ShotGrid Note and return the Jira
+        Parse the Jira key value set in the given Flow Production Tracking Note and return the Jira
         Issue key and the Jira comment id it refers to, if it is not empty.
 
         :returns: A tuple with a Jira Issue key and a Jira comment id, or
@@ -202,10 +202,10 @@ class NoteCommentHandler(SyncHandler):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given ShotGrid event for the given ShotGrid Entity
+        Process the given Flow Production Tracking event for the given Flow Production Tracking Entity
 
-        :param str entity_type: The ShotGrid Entity type to sync.
-        :param int entity_id: The id of the ShotGrid Entity to sync.
+        :param str entity_type: The Flow Production Tracking Entity type to sync.
+        :param int entity_id: The id of the Flow Production Tracking Entity to sync.
         :param event: A dictionary with the event for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
@@ -271,9 +271,9 @@ class NoteCommentHandler(SyncHandler):
 
     def _sync_note_content_to_jira(self, shotgun_note):
         """
-        Update an existing Jira Comment body from the ShotGrid Note fields.
+        Update an existing Jira Comment body from the Flow Production Tracking Note fields.
 
-        :param shotgun_note: A ShotGrid Note dictionary.
+        :param shotgun_note: A Flow Production Tracking Note dictionary.
         :returns: `True` if a Jira Comment was updated, `False` otherwise.
         """
         jira_issue_key, jira_comment_id = self._parse_note_jira_key(shotgun_note)
@@ -310,12 +310,12 @@ class NoteCommentHandler(SyncHandler):
 
     def _sync_note_tasks_change_to_jira(self, shotgun_note, added, removed):
         """
-        Update Jira with tasks changes for the given ShotGrid Note.
+        Update Jira with tasks changes for the given Flow Production Tracking Note.
 
-        :param shotgun_note: A ShotGrid Note dictionary.
-        :param added: A list of ShotGrid Task dictionaries which were added to
+        :param shotgun_note: A Flow Production Tracking Note dictionary.
+        :param added: A list of Flow Production Tracking Task dictionaries which were added to
                       the given Note.
-        :param removed: A list of ShotGrid Task dictionaries which were removed from
+        :param removed: A list of Flow Production Tracking Task dictionaries which were removed from
                         the given Note.
         :returns: `True` if the given changes could be processed sucessfully,
                   `False` otherwise.
@@ -430,7 +430,7 @@ class NoteCommentHandler(SyncHandler):
                   the logic in here and in :method:`process_jira_event`, is
                   a little different than in Issue-based handlers. For
                   example, we can't examine the existing Issue fields to see
-                  whether the issue is synced with ShotGrid without doing
+                  whether the issue is synced with Flow Production Tracking without doing
                   another query somewhere, so we leave this to
                   :method:`process_jira_event`.
 
@@ -548,9 +548,9 @@ class NoteCommentHandler(SyncHandler):
 
     def _sync_shotgun_task_notes_to_jira(self, shotgun_task):
         """
-        Sync all Notes attached to the given ShotGrid Task to Jira.
+        Sync all Notes attached to the given Flow Production Tracking Task to Jira.
 
-        :param shotgun_taks: A ShotGrid Task dictionary.
+        :param shotgun_taks: A Flow Production Tracking Task dictionary.
         :returns: `True` if any update happened, `False` otherwise.
         """
         shotgun_notes = self._shotgun.find(

@@ -27,9 +27,9 @@ logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 
 class Bridge(object):
     """
-    A bridge between ShotGrid and Jira.
+    A bridge between Flow Production Tracking and Jira.
 
-    The bridge handles connections to the ShotGrid and Jira servers and dispatches
+    The bridge handles connections to the Flow Production Tracking and Jira servers and dispatches
     sync events.
     """
 
@@ -53,15 +53,15 @@ class Bridge(object):
             for information on how to generate a token.
             Jira Server will use PAT so please provide empty string as `SGJIRA_JIRA_USER`.
 
-        :param str sg_site: A ShotGrid site url.
-        :param str sg_script: A ShotGrid script user name.
-        :param str sg_script_key: The script user key for the ShotGrid script.
+        :param str sg_site: A Flow Production Tracking site url.
+        :param str sg_script: A Flow Production Tracking script user name.
+        :param str sg_script_key: The script user key for the Flow Production Tracking script.
         :param str jira_site: A Jira site url.
         :param str jira_user: A Jira user name, either his email address or short
                               name.
         :param str jira_secret: The Jira user password or API key.
         :param sync_settings: A dictionary where keys are settings names.
-        :param str sg_http_proxy: Optional, a http proxy to use for the ShotGrid
+        :param str sg_http_proxy: Optional, a http proxy to use for the Flow Production Tracking
                                   connection, or None.
         """
         super(Bridge, self).__init__()
@@ -244,9 +244,9 @@ class Bridge(object):
     @property
     def current_shotgun_user(self):
         """
-        Return the ShotGrid user used for the connection.
+        Return the Flow Production Tracking user used for the connection.
 
-        :returns: A ShotGrid record dictionary with an `id` key and a `type` key.
+        :returns: A Flow Production Tracking record dictionary with an `id` key and a `type` key.
         """
         return self.shotgun.current_user
 
@@ -336,11 +336,11 @@ class Bridge(object):
 
     def sync_in_jira(self, settings_name, entity_type, entity_id, event, **kwargs):
         """
-        Sync the given ShotGrid Entity to Jira.
+        Sync the given Flow Production Tracking Entity to Jira.
 
         :param str settings_name: The name of the settings to use for this sync.
-        :param str entity_type: The ShotGrid Entity type to sync.
-        :param int entity_id: The id of the ShotGrid Entity to sync.
+        :param str entity_type: The Flow Production Tracking Entity type to sync.
+        :param int entity_id: The id of the Flow Production Tracking Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         :returns: True if the Entity was actually synced in Jira, False if
                   syncing was skipped for any reason.
@@ -370,13 +370,13 @@ class Bridge(object):
         self, settings_name, resource_type, resource_id, event, **kwargs
     ):
         """
-        Sync the given Jira Resource to ShotGrid.
+        Sync the given Jira Resource to Flow Production Tracking.
 
         :param str settings_name: The name of the settings to use for this sync.
         :param str resource_type: The type of Jira resource sync, e.g. Issue.
         :param str resource_id: The id of the Jira resource to sync.
         :param event: A dictionary with the event meta data for the change.
-        :returns: True if the resource was actually synced in ShotGrid, False if
+        :returns: True if the resource was actually synced in Flow Production Tracking, False if
                   syncing was skipped for any reason.
         """
         synced = False

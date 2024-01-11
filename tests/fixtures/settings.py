@@ -7,7 +7,7 @@
 # this software in either electronic or hard copy form.
 #
 """
-ShotGrid Jira sync settings
+Flow Production Tracking Jira sync settings
 """
 import os
 import sys

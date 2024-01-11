@@ -8,7 +8,7 @@ The instructions below will help you get up and running quickly.
 Requirements
 ************
 - Python 3.9
-- A ShotGrid site
+- A Flow Production Tracking site
 - A Jira site
 
 
@@ -33,16 +33,16 @@ In April 2019, Atlassian put a new set of rules around accessing user data
 due to the the European GDPR regulation. Since then, email addresses of Jira
 users are no longer accessible.
 
-As the ShotGrid Jira bridge relies on this information to pair ShotGrid users
+As the Flow Production Tracking Jira bridge relies on this information to pair Flow Production Tracking users
 with Jira users, some extra steps will be required to configure the Jira
 bridge. This quickstart page will alert you when these extra steps are needed.
 
 
-Setting up ShotGrid
+Setting up Flow Production Tracking
 *******************
 Required Fields
 ===============
-The following fields must be created in ShotGrid for each of the
+The following fields must be created in Flow Production Tracking for each of the
 following entity types:
 
 ===========  =========  ================  ====================================  ======================
@@ -67,9 +67,9 @@ HumanUser    Text       Jira Account Id   Synced Account Id in Jira.            
       Jira server is hosted by Atlassian.
 
 
-Configure your ShotGrid Project
+Configure your Flow Production Tracking Project
 ===============================
-Configure your ShotGrid Project entity with your Jira Sync Settings:
+Configure your Flow Production Tracking Project entity with your Jira Sync Settings:
 
 +--------------+------------------------------------------+-----------------------------------------+
 | Field        | Value                                    | Description                             |
@@ -92,11 +92,11 @@ The following fields must be created in Jira and made available in Boards:
 +--------------+------+-----------------------------------------------------------------------+
 | Field Name   | Type | Description                                                           |
 +==============+======+=======================================================================+
-| Shotgun Type | Text | Stores the associated ShotGrid Entity type                            |
+| Shotgun Type | Text | Stores the associated Flow Production Tracking Entity type                            |
 +--------------+------+-----------------------------------------------------------------------+
-| Shotgun ID   | Text | Stores the associated ShotGrid Entity ID                              |
+| Shotgun ID   | Text | Stores the associated Flow Production Tracking Entity ID                              |
 +--------------+------+-----------------------------------------------------------------------+
-| Shotgun URL  | Text | Stores a link to the detail page for the associated entity in ShotGrid|
+| Shotgun URL  | Text | Stores a link to the detail page for the associated entity in Flow Production Tracking|
 +--------------+------+-----------------------------------------------------------------------+
 
 Jira Webhook
@@ -115,7 +115,7 @@ Jira Webhook
 |              | | The ``<url_for_sg_jira_bridge>`` is the host name or IP address of the computer you   |
 |              | | will be launching ``webapp.py`` or ``service.py`` from.                               |
 +--------------+-----------------------------------------------------------------------------------------+
-| Description  | "Webhook that syncs Jira data with ShotGrid using the SG Jira Bridge"                   |
+| Description  | "Webhook that syncs Jira data with Flow Production Tracking using the SG Jira Bridge"                   |
 +--------------+-----------------------------------------------------------------------------------------+
 | JQL          | ``project = "Your Project Name"``                                                       |
 +--------------+-----------------------------------------------------------------------------------------+
@@ -152,9 +152,9 @@ the following:
 Setting Up Your Config and Env
 ******************************
 
-There are two different pieces to setting up the ShotGrid Jira Bridge. There's the bridge itself
-(``sg-jira-bridge``), which handles all of the syncing of data between ShotGrid and Jira. Then
-there's the ShotGrid Event Daemon (``shotgunEvents``), which handles dispatching supported ShotGrid
+There are two different pieces to setting up the Flow Production Tracking Jira Bridge. There's the bridge itself
+(``sg-jira-bridge``), which handles all of the syncing of data between Flow Production Tracking and Jira. Then
+there's the Flow Production Tracking Event Daemon (``shotgunEvents``), which handles dispatching supported Flow Production Tracking
 events to the bridge.
 
 Since they are installed in different locations and each setup has different python module
@@ -205,7 +205,7 @@ and define these in a ``.env`` file.
 
 ::
 
-    # ShotGrid credentials
+    # Flow Production Tracking credentials
     SGJIRA_SG_SITE='https://mysite.shotgrid.autodesk.com'
     SGJIRA_SG_SCRIPT_NAME='sg-jira-bridge'
     SGJIRA_SG_SCRIPT_KEY='01234567@abcdef0123456789'  # replace with your api key
@@ -232,15 +232,15 @@ and define these in a ``.env`` file.
     will need to be the designated user account, with appropriate
     permissions, that will control the sync updates. Note that the user should
     not be your personal user account, as the bridge will ignore and not sync
-    to ShotGrid any events triggered in Jira by that user. This ensures that
+    to Flow Production Tracking any events triggered in Jira by that user. This ensures that
     the bridge will not end up in a "ping pong" state, where it bounces the
-    same event back-and-forth between Jira and ShotGrid. As such, you will need
+    same event back-and-forth between Jira and Flow Production Tracking. As such, you will need
     to create a dedicated user account in Jira for use with the bridge.
 
 
 shotgunEvents
 =============
-Details for configuring the ShotGrid Event Daemon are available on the
+Details for configuring the Flow Production Tracking Event Daemon are available on the
 `shotgunEvents wiki <https://github.com/shotgunsoftware/shotgunEvents/wiki>`_
 
 Installing Required Modules
@@ -280,7 +280,7 @@ shotgunEvents conf file::
 
 Authentication
 --------------
-The trigger uses the following environment variables to retrieve ShotGrid
+The trigger uses the following environment variables to retrieve Flow Production Tracking
 credentials::
 
     # sg_jira_event_trigger.py credentials
@@ -289,9 +289,9 @@ credentials::
 
 .. note::
 
-    The trigger uses it's own authentication to ShotGrid, independent of the
+    The trigger uses it's own authentication to Flow Production Tracking, independent of the
     auth used in the SG Jira Bridge Server and the main shotgunEvents settings.
-    We highly recommend you add an additional Script User in ShotGrid solely
+    We highly recommend you add an additional Script User in Flow Production Tracking solely
     for this trigger.
 
 .. note::
@@ -299,9 +299,9 @@ credentials::
     file from the SG Jira Bridge section
 
 
-Define a Mapping Between Jira and ShotGrid Status Names
+Define a Mapping Between Jira and Flow Production Tracking Status Names
 -------------------------------------------------------
-The bridge needs to know how to map a status in ShotGrid to a status in Jira and vice versa. Your status names likely
+The bridge needs to know how to map a status in Flow Production Tracking to a status in Jira and vice versa. Your status names likely
 differ from the default ones. Make sure the values in
 `TASK_ISSUE_STATUS_MAPPING <https://github.com/shotgunsoftware/sg-jira-bridge/blob/v0.4.0b2/sg_jira/constants.py#L90/>`_
 match the names used in your workflow::
@@ -315,7 +315,7 @@ match the names used in your workflow::
 Starting Everything Up
 **********************
 
-Match ShotGrid users with Jira users (for Jira servers hosted by Atlassian only)
+Match Flow Production Tracking users with Jira users (for Jira servers hosted by Atlassian only)
 ================================================================================
 
 .. code-block:: bash
@@ -323,18 +323,18 @@ Match ShotGrid users with Jira users (for Jira servers hosted by Atlassian only)
     $ python update_shotgun_users.py --settings <path to your settings.py> --project <id of your project>
 
 .. note::
-    For every user found in ShotGrid, the script will search for a Jira user with
-    the same email address. If you have multiple users in ShotGrid with
+    For every user found in Flow Production Tracking, the script will search for a Jira user with
+    the same email address. If you have multiple users in Flow Production Tracking with
     the same email address, only the first one, i.e. the one with the lowest id,
     will be associated with a Jira account.
 
-    If you wish to change the ShotGrid user associated with a Jira account, e.g. the
-    script associated the first ShotGrid user with an account when you actually wanted
+    If you wish to change the Flow Production Tracking user associated with a Jira account, e.g. the
+    script associated the first Flow Production Tracking user with an account when you actually wanted
     the second one, you can take the account id from the ``HumanUser.sg_jira_account_id``
     field from one user and copy it to another user and then clear the original user's
     account id.
 
-    If new users are added to Jira and ShotGrid, run this script again and the new user
+    If new users are added to Jira and Flow Production Tracking, run this script again and the new user
     accounts will be paired. Existing pairings will be left as they were.
 
 .. note::
@@ -343,7 +343,7 @@ Match ShotGrid users with Jira users (for Jira servers hosted by Atlassian only)
     your Jira users can access any Jira project, the value for the ``--project``
     argument can be any project id. If you have restrictions, you will need to
     run this script once per project so that all your Jira users can be discovered
-    and paired with a ShotGrid user.
+    and paired with a Flow Production Tracking user.
 
 Start SG Jira Bridge
 ====================
@@ -369,20 +369,20 @@ Testing It Out
 **************
 Once everything is running you're ready to test it!
 
-- Create an Asset in ShotGrid with a TaskTemplate appied.
+- Create an Asset in Flow Production Tracking with a TaskTemplate appied.
 - Toggle the **Sync In Jira** checkbox ``on`` for one of the Tasks.
 - Navigate to your Jira site to see the Issue created for that Task.
-- Change the status in Jira to see the status change in ShotGrid.
+- Change the status in Jira to see the status change in Flow Production Tracking.
 
 If things don't seem to be working, check the output from SG Jira Bridge and
 shotgunEvents in your terminal window for log messages.
 
 .. note::
-    For any synced entity, ShotGrid stores the associated Jira key in the
+    For any synced entity, Flow Production Tracking stores the associated Jira key in the
     ``sg_jira_key`` field which will update automatically when you initially
-    sync the Task. Jira stores the associated ShotGrid Entity type and ID in
+    sync the Task. Jira stores the associated Flow Production Tracking Entity type and ID in
     the **Shotgun Type** and **Shotgun ID** fields as well as a link to the
-    entity in ShotGrid in the **Shotgun URL** field. This is a good indicator
+    entity in Flow Production Tracking in the **Shotgun URL** field. This is a good indicator
     that things are working correctly.
 
 .. note::

@@ -39,8 +39,8 @@ class WindowsService(win32serviceutil.ServiceFramework):
     """
 
     _svc_name_ = "ShotgunJiraBridge"
-    _svc_display_name_ = "ShotGrid Jira Bridge"
-    _svc_description_ = "Run the ShotGrid Jira web app as a Windows service."
+    _svc_display_name_ = "Flow Production Tracking Jira Bridge"
+    _svc_description_ = "Run the Flow Production Tracking Jira web app as a Windows service."
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)

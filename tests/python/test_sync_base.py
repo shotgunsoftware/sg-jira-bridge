@@ -45,7 +45,7 @@ class TestSyncBase(TestBase):
 
     def _get_syncer(self, mocked_sg, name="task_issue"):
         """
-        Helper to get a syncer and a bridge with a mocked ShotGrid.
+        Helper to get a syncer and a bridge with a mocked Flow Production Tracking.
 
         :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.

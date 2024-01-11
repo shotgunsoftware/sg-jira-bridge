@@ -57,7 +57,7 @@ def mocked_requests_post(*args, **kwargs):
 
 class TestSGTrigger(TestBase):
     """
-    Tests related to the ShotGrid Event trigger.
+    Tests related to the Flow Production Tracking Event trigger.
     """
 
     def setUp(self):

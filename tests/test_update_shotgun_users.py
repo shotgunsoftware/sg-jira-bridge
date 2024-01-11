@@ -110,10 +110,10 @@ class TestUpdateShotgunUsers(TestBase):
 
     def _assert_sg_users_account_ids(self, *jira_users):
         """
-        Ensure each user in ShotGrid have the right JIRA accountId.
+        Ensure each user in Flow Production Tracking have the right JIRA accountId.
 
         :param list(dict) jira_users: List of JIRA user dictionary. The first
-            JIRA user is for ShotGrid user 1, and so on. If the associated ShotGrid
+            JIRA user is for Flow Production Tracking user 1, and so on. If the associated Flow Production Tracking
             user has no accountId, then the JIRA user can be None.
         """
         self.assertEqual(len(jira_users), 4)
@@ -124,10 +124,10 @@ class TestUpdateShotgunUsers(TestBase):
 
     def _assert_sg_user_account_id(self, entity_id, expected_jira_user):
         """
-        Ensure that the ShotGrid user with a given id is associated with the
+        Ensure that the Flow Production Tracking user with a given id is associated with the
         given jira user.
 
-        :param int entity_id: Id of the ShotGrid user.
+        :param int entity_id: Id of the Flow Production Tracking user.
         :param dict expected_jira_user: Expected JIRA user dictionary. Can be None.
         """
         account_id = self._shotgun.find_one(

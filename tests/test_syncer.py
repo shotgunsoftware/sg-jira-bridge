@@ -300,7 +300,7 @@ JIRA_COMMENT_EVENT = {
 @mock.patch("shotgun_api3.Shotgun")
 class TestJiraSyncer(TestSyncBase):
     """
-    Test syncing from ShotGrid to Jira.
+    Test syncing from Flow Production Tracking to Jira.
     """
 
     def test_bad_syncer(self, mocked_sg):
@@ -346,7 +346,7 @@ class TestJiraSyncer(TestSyncBase):
     @mock.patch("sg_jira.Bridge.current_shotgun_user", new_callable=mock.PropertyMock)
     def test_shotgun_event_accept(self, mocked_cur_user, mocked_sg):
         """
-        Test syncer accepts the right ShotGrid events.
+        Test syncer accepts the right Flow Production Tracking events.
         """
         mocked_cur_user.return_value = {"type": "ApiUser", "id": 1}
         syncer, bridge = self._get_syncer(mocked_sg)
@@ -431,7 +431,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_project_match(self, mocked_sg):
         """
-        Test matching a Project between ShotGrid and Jira, handling Jira
+        Test matching a Project between Flow Production Tracking and Jira, handling Jira
         create meta data and creating an Issue.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
@@ -519,7 +519,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_shotgun_assignee(self, mocked_sg):
         """
-        Test matching ShotGrid assignment to Jira.
+        Test matching Flow Production Tracking assignment to Jira.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
@@ -705,7 +705,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_shotgun_tag(self, mocked_sg):
         """
-        Test matching ShotGrid tags to Jira labels.
+        Test matching Flow Production Tracking tags to Jira labels.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         bridge.jira.set_projects([JIRA_PROJECT])
@@ -795,19 +795,19 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_hosted_jira_assignment(self, mocked_sg):
         """
-        Test syncing Jira Cloud assignment to ShotGrid
+        Test syncing Jira Cloud assignment to Flow Production Tracking
         """
         self._test_jira_assignment(mocked_sg, is_jira_cloud=True)
 
     def test_local_jira_assignment(self, mocked_sg):
         """
-        Test syncing Jira Cloud assignment to ShotGrid
+        Test syncing Jira Cloud assignment to Flow Production Tracking
         """
         self._test_jira_assignment(mocked_sg, is_jira_cloud=False)
 
     def _test_jira_assignment(self, mocked_sg, is_jira_cloud):
         """
-        Test syncing JIRA assignment to ShotGrid.
+        Test syncing JIRA assignment to Flow Production Tracking.
         """
         # Force JIRA cloud or not on the session, which will impact how the
         # webhook data is interpreted.
@@ -942,7 +942,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_jira_labels(self, mocked_sg):
         """
-        Test syncing Jira labels to ShotGrid
+        Test syncing Jira labels to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
@@ -1018,7 +1018,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_jira_status(self, mocked_sg):
         """
-        Test syncing Jira status to ShotGrid
+        Test syncing Jira status to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
@@ -1060,7 +1060,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_jira_2_shotgun(self, mocked_sg):
         """
-        Test syncing from Jira to ShotGrid
+        Test syncing from Jira to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         # Syncing without the target entities shouldn't cause problems
