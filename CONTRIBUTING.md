@@ -2,7 +2,7 @@
 
 ### Overview
 
-Flow Production Tracking's Jira Bridge is an open source project.
+Flow Production Tracking Jira Bridge is an open source project.
 
 This project accepts and greatly appreciates contributions.
 The project follows the [fork & pull](https://help.github.com/articles/using-pull-requests/#fork--pull) model for accepting contributions.

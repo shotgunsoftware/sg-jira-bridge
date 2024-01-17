@@ -39,7 +39,7 @@ bridge. This quickstart page will alert you when these extra steps are needed.
 
 
 Setting up Flow Production Tracking
-*******************
+***********************************
 Required Fields
 ===============
 The following fields must be created in Flow Production Tracking for each of the
@@ -68,7 +68,7 @@ HumanUser    Text       Jira Account Id   Synced Account Id in Jira.            
 
 
 Configure your Flow Production Tracking Project
-===============================
+===============================================
 Configure your Flow Production Tracking Project entity with your Jira Sync Settings:
 
 +--------------+------------------------------------------+-----------------------------------------+
@@ -115,7 +115,7 @@ Jira Webhook
 |              | | The ``<url_for_sg_jira_bridge>`` is the host name or IP address of the computer you   |
 |              | | will be launching ``webapp.py`` or ``service.py`` from.                               |
 +--------------+-----------------------------------------------------------------------------------------+
-| Description  | "Webhook that syncs Jira data with Flow Production Tracking using the SG Jira Bridge"                   |
+Description  | "Webhook that syncs Jira data with Flow Production Tracking using the Jira Bridge"
 +--------------+-----------------------------------------------------------------------------------------+
 | JQL          | ``project = "Your Project Name"``                                                       |
 +--------------+-----------------------------------------------------------------------------------------+
@@ -300,7 +300,7 @@ credentials::
 
 
 Define a Mapping Between Jira and Flow Production Tracking Status Names
--------------------------------------------------------
+-----------------------------------------------------------------------
 The bridge needs to know how to map a status in Flow Production Tracking to a status in Jira and vice versa. Your status names likely
 differ from the default ones. Make sure the values in
 `TASK_ISSUE_STATUS_MAPPING <https://github.com/shotgunsoftware/sg-jira-bridge/blob/v0.4.0b2/sg_jira/constants.py#L90/>`_
@@ -316,7 +316,7 @@ Starting Everything Up
 **********************
 
 Match Flow Production Tracking users with Jira users (for Jira servers hosted by Atlassian only)
-================================================================================
+================================================================================================
 
 .. code-block:: bash
 

@@ -156,7 +156,7 @@ correct. The URL should look like::
 For example: ``http://localhost:9090/sg2jira/my_settings``
 
 Flow Production Tracking changes aren't syncing to Jira
----------------------------------------
+-------------------------------------------------------
 The first place to check is in the shotgunEvents log files to see if the
 trigger was run and issued a successful call to the SG Jira Bridge.
 
@@ -174,7 +174,7 @@ Other things to check:
   Jira** checkbox field is checked)?
 
 Jira changes aren't syncing to Flow Production Tracking
----------------------------------------
+-------------------------------------------------------
 Check the logs for the SG Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.
 
@@ -190,7 +190,7 @@ If SG Jira Bridge is not receiving the request:
 
 
 Value can't be translated to a Flow Production Tracking/Jira value
---------------------------------------------------
+------------------------------------------------------------------
 If you change a status in Flow Production Tracking or Jira and there's no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs::
