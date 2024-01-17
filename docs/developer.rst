@@ -5,7 +5,7 @@ Developer Resources
 
 Customizing the Workflow
 ************************
-SG Jira Bridge is structured so that studios can tailor the workflow to
+Flow Production Tracking Jira Bridge is structured so that studios can tailor the workflow to
 meet their specific needs. Because both Flow Production Tracking and Jira are highly
 customizable, exposing a handful of settings would not be sufficient.
 Therefore, the bridge has been structured to allow subclassing the

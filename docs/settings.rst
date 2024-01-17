@@ -76,7 +76,7 @@ The sync settings are stored in a ``SYNC`` *dict* in the format:
 
 Each key is a settings name that contains a dictionary containing the syncer
 and the settings to use. The key is the settings name used when composing the
-URL for SG Jira Bridge. For example,
+URL for Flow Production Tracking Jira Bridge. For example,
 ``http://localhost:9090/sg2jira/my_settings`` uses the settings named
 ``my_settings``.
 

@@ -9,7 +9,7 @@ cases where certain features have not been implemented yet.
 
 - Deletion events are not handled yet.
 
-- SG Jira Bridge does not create entities in Flow Production Tracking, it will only update
+- Flow Production Tracking Jira Bridge does not create entities in Flow Production Tracking, it will only update
   existing ones. This means syncing can only *initiate* from Flow Production Tracking and not
   from Jira. If an entity in Flow Production Tracking that was synced with an issue in Jira is
   deleted, it will not currently be re-created in Flow Production Tracking.
@@ -32,7 +32,7 @@ cases where certain features have not been implemented yet.
   must retain this formatting otherwise the Comment will not sync back to
   Flow Production Tracking.
 
-- Note Replies in Flow Production Tracking are not currently handled by SG Jira Bridge. Jira
+- Note Replies in Flow Production Tracking are not currently handled by Flow Production Tracking Jira Bridge. Jira
   has no concept of replies, or threading in Comments. This workflow is
   being investigated.
 

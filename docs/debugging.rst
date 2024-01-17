@@ -7,7 +7,7 @@ The SG-Jira-Bridge uses standard Python logging. The logging configuration is
 stored in a ``LOGGING`` *dict* in the ``settings.py`` file and uses the
 standard :mod:`logging.config` format.
 
-By default the SG Jira Bridge logs ``INFO`` messages and above which provide
+By default the Flow Production Tracking Jira Bridge logs ``INFO`` messages and above which provide
 a good amount of detail to audit what is happening with each request.
 
 .. warning::
@@ -132,8 +132,8 @@ acceptable value in the target site, and then submits the change.
 If you're not seeing your changes sync across, there are a few things you can
 check.
 
-SG Jira Bridge Webapp Isn't Responding
---------------------------------------
+Flow Production Tracking Jira Bridge Webapp Isn't Responding
+------------------------------------------------------------
 You can check to see if the Bridge is running by issuing a GET request for the
 sync URL in your browser. Copy the URL you have entered in the
 **Jira Sync URL** field in your Flow Production Tracking Project and enter it in your browser.
@@ -158,9 +158,9 @@ For example: ``http://localhost:9090/sg2jira/my_settings``
 Flow Production Tracking changes aren't syncing to Jira
 -------------------------------------------------------
 The first place to check is in the shotgunEvents log files to see if the
-trigger was run and issued a successful call to the SG Jira Bridge.
+trigger was run and issued a successful call to the Flow Production Tracking Jira Bridge.
 
-Next, check the logs for the SG Jira Bridge and see if the request was
+Next, check the logs for the Flow Production Tracking Jira Bridge and see if the request was
 received and processed successfully. The logs should make this very apparent.
 
 If you don't see any errors, make sure your Syncer and SyncHandler are
@@ -175,18 +175,18 @@ Other things to check:
 
 Jira changes aren't syncing to Flow Production Tracking
 -------------------------------------------------------
-Check the logs for the SG Jira Bridge and see if the request from Jira was
+Check the logs for the Flow Production Tracking Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.
 
-If SG Jira Bridge is not receiving the request:
+If Flow Production Tracking Jira Bridge is not receiving the request:
 
 - Check that your Jira Webhook is setup and configured correctly. If you're
   using a local Jira instance, you can also check the logs to see if the
   webhook fired.
-- Make sure your SG Jira Bridge is accessible from your Jira server. If you
-  are using a Jira Cloud instance and SG Jira Bridge is running inside a
+- Make sure your Flow Production Tracking Jira Bridge is accessible from your Jira server. If you
+  are using a Jira Cloud instance and Flow Production Tracking Jira Bridge is running inside a
   firewalled environment, you'll need to open up access to the application
-  or move SG Jira Bridge into some sort of DMZ setup.
+  or move Flow Production Tracking Jira Bridge into some sort of DMZ setup.
 
 
 Value can't be translated to a Flow Production Tracking/Jira value

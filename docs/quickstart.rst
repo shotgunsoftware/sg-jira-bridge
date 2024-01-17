@@ -16,7 +16,7 @@ Getting the Code
 ****************
 The quickest way to get the code required is by cloning the Github repos
 
-- SG Jira Bridge: https://github.com/shotgunsoftware/sg-jira-bridge
+- Flow Production Tracking Jira Bridge: https://github.com/shotgunsoftware/sg-jira-bridge
 - shotgunEvents: https://github.com/shotgunsoftware/shotgunEvents
 
 .. code-block:: bash
@@ -45,17 +45,17 @@ Required Fields
 The following fields must be created in Flow Production Tracking for each of the
 following entity types:
 
-===========  =========  ================  ====================================  ======================
-Entity Type  Data Type  Display Name      Description                           Field Name (auto-generated)
-===========  =========  ================  ====================================  ======================
-Project      File/Link  Jira Sync URL     URL of SG Jira Bridge (see below)     ``sg_jira_sync_url``
-Project      Text       Jira Key          Synced Project Key value in Jira      ``sg_jira_key``
-Task         Text       Jira Key          Synced Issue Key value in Jira        ``sg_jira_key``
-Task         Checkbox   Sync In Jira      Enable/Disable syncing for this Task  ``sg_sync_in_jira``
-Task         File/Link  Jira URL          Link to synced Issue in Jira          ``sg_jira_url``
-Note         Text       Jira Key          Synced Issue Key/Comment ID in Jira   ``sg_jira_key``
-HumanUser    Text       Jira Account Id   Synced Account Id in Jira.            ``sg_jira_account_id``
-===========  =========  ================  ====================================  ======================
+===========  =========  ================  =======================================================  ======================
+Entity Type  Data Type  Display Name      Description                                              Field Name (auto-generated)
+===========  =========  ================  =======================================================  ======================
+Project      File/Link  Jira Sync URL     URL of Flow Production Tracking Jira Bridge (see below)  ``sg_jira_sync_url``
+Project      Text       Jira Key          Synced Project Key value in Jira                         ``sg_jira_key``
+Task         Text       Jira Key          Synced Issue Key value in Jira                           ``sg_jira_key``
+Task         Checkbox   Sync In Jira      Enable/Disable syncing for this Task                     ``sg_sync_in_jira``
+Task         File/Link  Jira URL          Link to synced Issue in Jira                             ``sg_jira_url``
+Note         Text       Jira Key          Synced Issue Key/Comment ID in Jira                      ``sg_jira_key``
+HumanUser    Text       Jira Account Id   Synced Account Id in Jira.                               ``sg_jira_account_id``
+===========  =========  ================  =======================================================  ======================
 
 .. note::
     - All ``Jira Key`` fields must be configured with the "*Ensure unique
@@ -109,7 +109,7 @@ Jira Webhook
 +--------------+-----------------------------------------------------------------------------------------+
 | Field        | Example                                                                                 |
 +==============+=========================================================================================+
-| Name         | "SG Jira Bridge Test"                                                                   |
+| Name         | "Flow Production Tracking Jira Bridge Test"                                             |
 +--------------+-----------------------------------------------------------------------------------------+
 | URL          | | ``https://<url_for_sg_jira_bridge>/jira2sg/default/issue/${issue.key}``               |
 |              | | The ``<url_for_sg_jira_bridge>`` is the host name or IP address of the computer you   |
@@ -161,8 +161,8 @@ Since they are installed in different locations and each setup has different pyt
 requirements, the instructions below describe how to setup an environment for each of them
 separately.
 
-SG Jira Bridge
-==============
+Flow Production Tracking Jira Bridge
+====================================
 Installing Required Modules
 ---------------------------
 We recommend `setting up a virtual environment <https://docs.python-guide.org/dev/virtualenvs/>`_.
@@ -266,7 +266,7 @@ Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed i
 
 Enable the SG Jira Trigger
 --------------------------
-Add the path to the SG Jira Bridge ``sg_jira_event_trigger.py`` file to the
+Add the path to the Flow Production Tracking Jira Bridge ``sg_jira_event_trigger.py`` file to the
 shotgunEvents conf file::
 
     ...
@@ -290,13 +290,13 @@ credentials::
 .. note::
 
     The trigger uses it's own authentication to Flow Production Tracking, independent of the
-    auth used in the SG Jira Bridge Server and the main shotgunEvents settings.
+    auth used in the Flow Production Tracking Jira Bridge Server and the main shotgunEvents settings.
     We highly recommend you add an additional Script User in Flow Production Tracking solely
     for this trigger.
 
 .. note::
     If you are using sg-jira-bridge v0.2.2 or later, these environment variables can also be defined in the ``.env``
-    file from the SG Jira Bridge section
+    file from the Flow Production Tracking Jira Bridge section
 
 
 Define a Mapping Between Jira and Flow Production Tracking Status Names
@@ -345,8 +345,8 @@ Match Flow Production Tracking users with Jira users (for Jira servers hosted by
     run this script once per project so that all your Jira users can be discovered
     and paired with a Flow Production Tracking user.
 
-Start SG Jira Bridge
-====================
+Start Flow Production Tracking Jira Bridge
+==========================================
 .. code-block:: bash
 
     $ python webapp.py --settings <path to your settings.py> --port 9090
@@ -374,7 +374,7 @@ Once everything is running you're ready to test it!
 - Navigate to your Jira site to see the Issue created for that Task.
 - Change the status in Jira to see the status change in Flow Production Tracking.
 
-If things don't seem to be working, check the output from SG Jira Bridge and
+If things don't seem to be working, check the output from Flow Production Tracking Jira Bridge and
 shotgunEvents in your terminal window for log messages.
 
 .. note::
