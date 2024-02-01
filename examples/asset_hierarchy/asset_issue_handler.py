@@ -134,7 +134,12 @@ class AssetIssueHandler(EntityIssueHandler):
         except InvalidShotgunValue as e:
             self._logger.warning(
                 "Unable to update Jira %s %s for event %s: %s"
-                % (jira_issue.fields.issuetype.name, jira_issue.key, event_meta, e,)
+                % (
+                    jira_issue.fields.issuetype.name,
+                    jira_issue.key,
+                    event_meta,
+                    e,
+                )
             )
             self._logger.debug("%s" % e, exc_info=True)
             return False
@@ -276,7 +281,10 @@ class AssetIssueHandler(EntityIssueHandler):
                 if not jira_project:
                     self._logger.warning(
                         "Unable to find Jira Project %s for Shotgun Project %s."
-                        % (jira_project_key, shotgun_asset["project"],)
+                        % (
+                            jira_project_key,
+                            shotgun_asset["project"],
+                        )
                     )
                     return False
 
@@ -322,7 +330,10 @@ class AssetIssueHandler(EntityIssueHandler):
                         outwardIssue=jira_issue.key,
                         comment={
                             "body": "Linking %s to %s"
-                            % (shotgun_asset["code"], sg_task["content"],),
+                            % (
+                                shotgun_asset["code"],
+                                sg_task["content"],
+                            ),
                         },
                     )
                     updated = True

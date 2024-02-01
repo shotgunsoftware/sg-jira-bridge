@@ -13,7 +13,7 @@ import six
 from test_base import TestBase
 import sg_jira
 
-UNICODE_STRING = u"unicode_îéö_😀"
+UNICODE_STRING = "unicode_îéö_😀"
 UTF8_ENCODED_STRING = six.ensure_str(UNICODE_STRING)
 
 

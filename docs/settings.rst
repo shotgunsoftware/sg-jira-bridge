@@ -53,7 +53,7 @@ in a ``.env`` file.
 
 Logging
 *******
-The SG-Jira-Bridge uses standard Python logging. The logging configuration is
+The PTR-Jira-Bridge uses standard Python logging. The logging configuration is
 stored in a ``LOGGING`` *dict* using the standard :mod:`logging.config` format.
 
 

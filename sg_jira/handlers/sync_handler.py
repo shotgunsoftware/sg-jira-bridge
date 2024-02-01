@@ -165,7 +165,12 @@ class SyncHandler(object):
         raise NotImplementedError
 
     def _get_shotgun_value_from_jira_change(
-        self, shotgun_entity, shotgun_field, shotgun_field_schema, change, jira_value,
+        self,
+        shotgun_entity,
+        shotgun_field,
+        shotgun_field_schema,
+        change,
+        jira_value,
     ):
         """
         Return a Flow Production Tracking value suitable to update the given Flow Production Tracking Entity field
@@ -271,34 +276,50 @@ class SyncHandler(object):
                 # copy of the list so we can delete entries while iterating
                 self._logger.debug(
                     "Trying to remove %s from Shotgun %s value %s"
-                    % (removed, shotgun_field, current_sg_value,)
+                    % (
+                        removed,
+                        shotgun_field,
+                        current_sg_value,
+                    )
                 )
                 for i, sg_value in enumerate(list(current_sg_value)):
-                    # Match the SG entity name, because this is retrieved
+                    # Match the PTR entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
                     # even if the linked Entities use another field to store their
                     # name e.g. "code"
                     if removed.lower() == sg_value["name"].lower():
                         self._logger.debug(
                             "Removing %s from Shotgun value %s since Jira "
-                            "removed %s " % (sg_value, current_sg_value, removed,)
+                            "removed %s "
+                            % (
+                                sg_value,
+                                current_sg_value,
+                                removed,
+                            )
                         )
                         del current_sg_value[i]
             for added in added_list:
                 # Check if the value is already there
                 self._logger.debug(
                     "Trying to add %s to Shotgun %s value %s"
-                    % (added, shotgun_field, current_sg_value,)
+                    % (
+                        added,
+                        shotgun_field,
+                        current_sg_value,
+                    )
                 )
                 for sg_value in current_sg_value:
-                    # Match the SG entity name, because this is retrieved
+                    # Match the PTR entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
                     # even if the linked Entities use another field to store their
                     # name e.g. "code"
                     if added.lower() == sg_value["name"].lower():
                         self._logger.debug(
                             "%s is already in current Shotgun value: %s"
-                            % (added, sg_value,)
+                            % (
+                                added,
+                                sg_value,
+                            )
                         )
                         break
                 else:
@@ -310,7 +331,12 @@ class SyncHandler(object):
                     if sg_value:
                         self._logger.debug(
                             "Adding %s to Shotgun value %s since Jira "
-                            "added %s" % (sg_value, current_sg_value, added,)
+                            "added %s"
+                            % (
+                                sg_value,
+                                current_sg_value,
+                                added,
+                            )
                         )
                         current_sg_value.append(sg_value)
                     else:
@@ -334,7 +360,8 @@ class SyncHandler(object):
                 message = "Unable to parse Jira value %s as a date: %s" % (value, e)
                 # Log the original error with a traceback for debug purpose
                 self._logger.debug(
-                    message, exc_info=True,
+                    message,
+                    exc_info=True,
                 )
                 # Notify the caller that the value is not right
                 raise InvalidJiraValue(shotgun_field, value, message)
@@ -352,7 +379,8 @@ class SyncHandler(object):
                 message = "Jira value %s is not a valid integer: %s" % (value, e)
                 # Log the original error with a traceback for debug purpose
                 self._logger.debug(
-                    message, exc_info=True,
+                    message,
+                    exc_info=True,
                 )
                 # Notify the caller that the value is not right
                 raise InvalidJiraValue(shotgun_field, value, message)

@@ -13,7 +13,7 @@ import argparse
 import signal
 
 DESCRIPTION = """
-Run the SG Jira web app as a Linux service.
+Run the PTR Jira web app as a Linux service.
 
 This script can be used with a systemd setup and handles the usual start, stop,
 restart and status actions.
@@ -143,10 +143,14 @@ def main():
         help="Full path to a file where to write the process pid.",
     )
     parser.add_argument(
-        "--log_file", help="Full path to a file where to log output.",
+        "--log_file",
+        help="Full path to a file where to log output.",
     )
     parser.add_argument(
-        "--port", type=int, default=9090, help="The port number to listen on.",
+        "--port",
+        type=int,
+        default=9090,
+        help="The port number to listen on.",
     )
     parser.add_argument("--settings", help="Full path to settings file.", required=True)
     parser.add_argument(
@@ -158,7 +162,10 @@ def main():
 
     if args.action == "start":
         start(
-            args.pid_file, args.port, os.path.abspath(args.settings), args.log_file,
+            args.pid_file,
+            args.port,
+            os.path.abspath(args.settings),
+            args.log_file,
         )
     elif args.action == "stop":
         stop(args.pid_file)
@@ -171,7 +178,10 @@ def main():
     elif args.action == "restart":
         stop(args.pid_file)
         start(
-            args.pid_file, args.port, os.path.abspath(args.settings), args.log_file,
+            args.pid_file,
+            args.port,
+            os.path.abspath(args.settings),
+            args.log_file,
         )
 
 

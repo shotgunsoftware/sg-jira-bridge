@@ -18,13 +18,13 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 """
-A Flow Production Tracking event daemon plugin which sends all events to the SG/Jira bridge.
+A Flow Production Tracking event daemon plugin which sends all events to the PTR/Jira bridge.
 
 Flow Production Tracking Projects are associated with a Jira sync server by specifying an url in the
 custom `sg_jira_sync_url` field.
 """
 
-# These events potentially modify the SG schema
+# These events potentially modify the PTR schema
 SCHEMA_CHANGE_EVENT_TYPES = [
     "Shotgun_DisplayColumn_New",
     "Shotgun_DisplayColumn_Change",
@@ -85,7 +85,7 @@ def process_event(sg, logger, event, dispatch_routes):
     :param sg: Flow Production Tracking API handle.
     :param logger: Logger instance.
     :param event: A Flow Production Tracking EventLogEntry entity dictionary.
-    :param dispatch_routes: A dictionary where keys are SG Project ids and values urls.
+    :param dispatch_routes: A dictionary where keys are PTR Project ids and values urls.
     """
     logger.debug("Processing %s" % event)
     if event.get("event_type") in SCHEMA_CHANGE_EVENT_TYPES:
@@ -169,7 +169,10 @@ def process_event(sg, logger, event, dispatch_routes):
     )
     logger.debug("Posting event %s to %s" % (payload["meta"], sync_url))
     # Post application/json request
-    response = requests.post(sync_url, json=payload,)
+    response = requests.post(
+        sync_url,
+        json=payload,
+    )
     response.raise_for_status()
     logger.debug("Event successfully processed.")
 
@@ -181,7 +184,7 @@ def _get_dispatch_route(sg, logger, project, dispatch_routes):
     :param sg: Flow Production Tracking API handle.
     :param logger: Logger instance.
     :param list project: A Flow Production Tracking Project entity dictionary.
-    :param dict dispatch_routes: A mapping of SG Project ids to sync urls.
+    :param dict dispatch_routes: A mapping of PTR Project ids to sync urls.
     :returns: Sync url as a string or ``None``.
     """
     # Shotgun requests are costly so we cache Projects dispatch routes and re-use
@@ -227,7 +230,7 @@ def _get_project_sync_url(sg_field_value, logger):
     """
     # We expect a File/Link field with a web link, something like:
     # {
-    #    'name': 'SG Jira Bridge',
+    #    'name': 'PTR Jira Bridge',
     #    'url': 'http://localhost:9090',
     #    'content_type': None,
     #    'type': 'Attachment',
@@ -258,7 +261,7 @@ def _reset_bridge(server_url, logger):
     """
     Reset the Jira bridge
 
-    :param str server_url: Sync URL of the SG Jira Bridge.
+    :param str server_url: Sync URL of the PTR Jira Bridge.
     :param logger: Logger instance.
     """
     # The url is for the sync and contains a direction and settings name.

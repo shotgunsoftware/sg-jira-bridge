@@ -40,7 +40,9 @@ class WindowsService(win32serviceutil.ServiceFramework):
 
     _svc_name_ = "ShotgunJiraBridge"
     _svc_display_name_ = "Flow Production Tracking Jira Bridge"
-    _svc_description_ = "Run the Flow Production Tracking Jira web app as a Windows service."
+    _svc_description_ = (
+        "Run the Flow Production Tracking Jira web app as a Windows service."
+    )
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
@@ -134,7 +136,8 @@ class WindowsService(win32serviceutil.ServiceFramework):
             import webapp
 
             webapp.run_server(
-                port=port_number, settings=settings_path,
+                port=port_number,
+                settings=settings_path,
             )
         except Exception as e:
             servicemanager.LogErrorMsg("Unable to start %s: %s" % (self._svc_name_, e))

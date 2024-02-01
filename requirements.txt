@@ -9,11 +9,11 @@
 # Needed to run the Linux service.
 daemonize==2.4.7; sys.platform != 'win32'
 
-# Python Jira client.
-jira==3.5.2
-
 # Install Shotgun API 3 from archive
 https://github.com/shotgunsoftware/python-api/archive/v3.4.0.zip
+
+# Python Jira client.
+jira==3.5.2
 
 # Allows defining env vars in a .env file that can be loaded at runtime
 python-dotenv==0.13.0

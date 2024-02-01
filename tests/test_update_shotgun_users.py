@@ -71,7 +71,7 @@ class TestUpdateShotgunUsers(TestBase):
 
     def test_users_get_synced_properly(self):
         """
-        Test syncing links from SG to Jira.
+        Test syncing links from PTR to Jira.
         """
         # Due to the way users are set up in the setUp method, we'll test
         # 1. The first of two users with the same email will be assigned the account id.

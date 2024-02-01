@@ -69,7 +69,12 @@ class TestSGTrigger(TestBase):
         needed fields are missing in the schema
         """
         self.set_sg_mock_schema(
-            os.path.join(os.path.dirname(__file__), "fixtures", "schemas", "base",)
+            os.path.join(
+                os.path.dirname(__file__),
+                "fixtures",
+                "schemas",
+                "base",
+            )
         )
         shotgun = mockgun.Shotgun("http://unit_test_mock_sg", "mock_user", "mock_key")
         # Check nothing bad happens if a Project can't be found or if some
@@ -89,7 +94,12 @@ class TestSGTrigger(TestBase):
         routing = {}
         # Switch to a schema with needed fields
         self.set_sg_mock_schema(
-            os.path.join(os.path.dirname(__file__), "fixtures", "schemas", "sg-jira",)
+            os.path.join(
+                os.path.dirname(__file__),
+                "fixtures",
+                "schemas",
+                "sg-jira",
+            )
         )
         shotgun = mockgun.Shotgun("http://unit_test_mock_sg", "mock_user", "mock_key")
         self.add_to_sg_mock_db(shotgun, PROJECT)

@@ -45,7 +45,7 @@ class Bridge(object):
         sg_http_proxy=None,
     ):
         """
-        Instatiate a new bridge between the given SG site and Jira site.
+        Instatiate a new bridge between the given PTR site and Jira site.
 
         .. note::
             Jira Cloud requires the use of an API token and will not work with
@@ -53,7 +53,7 @@ class Bridge(object):
             for information on how to generate a token.
             Jira Server will use PAT so please provide empty string as `SGJIRA_JIRA_USER`.
 
-        :param str sg_site: A Flow Production Tracking site url.
+        :param str sg_site: A Flow Production Tracking URL.
         :param str sg_script: A Flow Production Tracking script user name.
         :param str sg_script_key: The script user key for the Flow Production Tracking script.
         :param str jira_site: A Jira site url.
@@ -67,7 +67,7 @@ class Bridge(object):
         super(Bridge, self).__init__()
 
         # The bridge webserver is multithreaded, which means we need to
-        # track Shotgun connections via the API per thread. The SG Python
+        # track Shotgun connections via the API per thread. The PTR Python
         # API is not threadsafe, and using a single, global connection
         # across all threads will lead to some weird behavior.
         self._SG_CACHED_CONNECTIONS = threading.local()
@@ -205,9 +205,7 @@ class Bridge(object):
         if not jira_settings:
             raise ValueError("Missing Jira settings in %s" % full_path)
 
-        missing = [
-            name for name in ["site", "secret"] if not jira_settings.get(name)
-        ]
+        missing = [name for name in ["site", "secret"] if not jira_settings.get(name)]
         if missing:
             raise ValueError(
                 "Missing Jira setting values %s in %s" % (missing, full_path)

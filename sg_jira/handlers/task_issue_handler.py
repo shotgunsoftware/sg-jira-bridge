@@ -42,7 +42,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
-        """"
+        """ "
         Return the list of fields this handler can process for a Jira event.
 
         :returns: A list of strings.
@@ -152,14 +152,22 @@ class TaskIssueHandler(EntityIssueHandler):
             self._logger.debug(
                 "Skipping Shotgun event for %s (%d). Entity's Project %s "
                 "is not linked to a Jira Project. Event: %s"
-                % (entity_type, entity_id, sg_entity["project"], event,)
+                % (
+                    entity_type,
+                    entity_id,
+                    sg_entity["project"],
+                    event,
+                )
             )
             return False
         jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
             self._logger.warning(
                 "Unable to find a Jira Project %s for Shotgun Project %s"
-                % (jira_project_key, sg_entity["project"],)
+                % (
+                    jira_project_key,
+                    sg_entity["project"],
+                )
             )
             return False
 
@@ -230,7 +238,8 @@ class TaskIssueHandler(EntityIssueHandler):
             # requiring a user lookup. But this could be handled by caching
             # retrieved users
             self._sync_shotgun_fields_to_jira(
-                sg_entity, jira_issue,
+                sg_entity,
+                jira_issue,
             )
             return True
 
@@ -262,7 +271,11 @@ class TaskIssueHandler(EntityIssueHandler):
         except InvalidShotgunValue as e:
             self._logger.warning(
                 "Unable to update Jira %s %s: %s"
-                % (jira_issue.fields.issuetype.name, jira_issue.key, e,)
+                % (
+                    jira_issue.fields.issuetype.name,
+                    jira_issue.key,
+                    e,
+                )
             )
             self._logger.debug("%s" % e, exc_info=True)
             return False
@@ -286,7 +299,9 @@ class TaskIssueHandler(EntityIssueHandler):
             )
         if sg_field == "addressings_cc":
             self._sync_shotgun_cced_changes_to_jira(
-                jira_issue, event["meta"]["added"], event["meta"]["removed"],
+                jira_issue,
+                event["meta"]["added"],
+                event["meta"]["removed"],
             )
             return True
         return False
@@ -393,5 +408,7 @@ class TaskIssueHandler(EntityIssueHandler):
             and sg_entity["addressings_cc"]
         ):
             self._sync_shotgun_cced_changes_to_jira(
-                jira_issue, sg_entity["addressings_cc"], [],
+                jira_issue,
+                sg_entity["addressings_cc"],
+                [],
             )

@@ -50,7 +50,7 @@ SG_ENTITY_SPECIAL_NAME_FIELDS = {
     "Tag": "name",
     "Ticket": "title",
     "ApiUser": "name",
-    "TimeLog": "description"
+    "TimeLog": "description",
 }
 
 # Jira search methods use some paging

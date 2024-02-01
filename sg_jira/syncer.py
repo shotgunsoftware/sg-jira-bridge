@@ -142,7 +142,11 @@ class Syncer(object):
                 return handler
 
         self._logger.debug(
-            "Event %s was rejected by all handlers %s" % (event, self.handlers,)
+            "Event %s was rejected by all handlers %s"
+            % (
+                event,
+                self.handlers,
+            )
         )
         return None
 
@@ -165,7 +169,10 @@ class Syncer(object):
             ):
                 self._logger.debug(
                     "Rejecting event %s triggered by us (%s)"
-                    % (event, user["accountId"],)
+                    % (
+                        event,
+                        user["accountId"],
+                    )
                 )
                 return None
 
@@ -181,7 +188,11 @@ class Syncer(object):
                 and user["name"].lower() == self.bridge.current_jira_username.lower()
             ):
                 self._logger.debug(
-                    "Rejecting event %s triggered by us (%s)" % (event, user["name"],)
+                    "Rejecting event %s triggered by us (%s)"
+                    % (
+                        event,
+                        user["name"],
+                    )
                 )
                 return None
 
@@ -195,7 +206,10 @@ class Syncer(object):
             ):
                 self._logger.debug(
                     "Rejecting event %s triggered by us (%s)"
-                    % (event, user["emailAddress"],)
+                    % (
+                        event,
+                        user["emailAddress"],
+                    )
                 )
                 return None
 
@@ -212,6 +226,10 @@ class Syncer(object):
                 return handler
 
         self._logger.debug(
-            "Event %s was rejected by all handlers %s" % (event, self.handlers,)
+            "Event %s was rejected by all handlers %s"
+            % (
+                event,
+                self.handlers,
+            )
         )
         return None

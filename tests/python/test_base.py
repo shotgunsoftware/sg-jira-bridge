@@ -16,7 +16,7 @@ from mock_jira import MockedJira
 
 class TestBase(unittest.TestCase):
     """
-    A TestCase class with some helpers to mock SG calls.
+    A TestCase class with some helpers to mock PTR calls.
     """
 
     def setUp(self):
@@ -44,7 +44,7 @@ class TestBase(unittest.TestCase):
 
     def set_sg_mock_schema(self, path):
         """
-        Set the SG mock schema from files in the given folder.
+        Set the PTR mock schema from files in the given folder.
 
         :param str path: A folder path which contains schema pickle files.
         """

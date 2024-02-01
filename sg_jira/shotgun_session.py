@@ -107,7 +107,10 @@ class ShotgunSession(object):
         if not field:
             raise RuntimeError(
                 "Missing required custom Shotgun %s field %s"
-                % (entity_type, field_name,)
+                % (
+                    entity_type,
+                    field_name,
+                )
             )
         if field["data_type"]["value"] != field_type:
             raise RuntimeError(
@@ -228,7 +231,10 @@ class ShotgunSession(object):
             if not consolidated:
                 logger.warning(
                     "Unable to find %s (%d) in Shotgun"
-                    % (shotgun_entity["type"], shotgun_entity["id"],)
+                    % (
+                        shotgun_entity["type"],
+                        shotgun_entity["id"],
+                    )
                 )
                 return None
             shotgun_entity = consolidated
@@ -257,7 +263,11 @@ class ShotgunSession(object):
             if self.is_project_entity(entity_type):
                 filters.append(["project", "is", shotgun_project])
                 fields.append("project")
-            sg_value = self.find_one(entity_type, filters, fields,)
+            sg_value = self.find_one(
+                entity_type,
+                filters,
+                fields,
+            )
             if sg_value:
                 return self.consolidate_entity(sg_value)
         return None

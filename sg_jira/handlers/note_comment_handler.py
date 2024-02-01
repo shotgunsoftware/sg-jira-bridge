@@ -12,7 +12,7 @@ from ..errors import InvalidJiraValue
 from ..constants import (
     SHOTGUN_JIRA_ID_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
-    NOTE_FIELDS_MAPPING
+    NOTE_FIELDS_MAPPING,
 )
 from .sync_handler import SyncHandler
 
@@ -73,8 +73,8 @@ class NoteCommentHandler(SyncHandler):
         Return a subject and content value to update a Flow Production Tracking Note from the
         given Jira comment.
 
-        Notes created in SG are stored in Jira with some fanciness markup (see
-        ``COMMENT_BODY_TEMPLATE``) to mimic the subject and content format that SG has.
+        Notes created in PTR are stored in Jira with some fanciness markup (see
+        ``COMMENT_BODY_TEMPLATE``) to mimic the subject and content format that PTR has.
         This attempts to parse the Jira Comment assuming this format is still
         intact.
 
@@ -260,7 +260,9 @@ class NoteCommentHandler(SyncHandler):
         # Update existing synced comment (if any) Issue attachment
         if shotgun_field == "tasks":
             return self._sync_note_tasks_change_to_jira(
-                sg_entity, meta["added"], meta["removed"],
+                sg_entity,
+                meta["added"],
+                meta["removed"],
             )
 
         self._logger.debug(
@@ -301,7 +303,11 @@ class NoteCommentHandler(SyncHandler):
             if jira_comment:
                 self._logger.info(
                     "Shotgun Note (%d) updated. Syncing to Jira Issue %s Comment %s"
-                    % (shotgun_note["id"], jira_issue_key, jira_comment,)
+                    % (
+                        shotgun_note["id"],
+                        jira_issue_key,
+                        jira_comment,
+                    )
                 )
                 jira_comment.update(body=self._compose_jira_comment_body(shotgun_note))
                 return True
@@ -351,7 +357,11 @@ class NoteCommentHandler(SyncHandler):
                     self._logger.info(
                         "Shotgun Note (%d) removed from synced Task. Deleting synced "
                         "Jira Issue %s Comment (%s)"
-                        % (shotgun_note["id"], jira_issue_key, jira_comment_id,)
+                        % (
+                            shotgun_note["id"],
+                            jira_issue_key,
+                            jira_comment_id,
+                        )
                     )
                     jira_comment.delete()
                     updated = True
@@ -374,7 +384,7 @@ class NoteCommentHandler(SyncHandler):
             if len(sg_tasks) > 1:
                 self._logger.warning(
                     "Multiple Shotgun Tasks are linked to the same Jira Issue "
-                    "for Note %s, only one will be updated. SG Tasks: %s"
+                    "for Note %s, only one will be updated. PTR Tasks: %s"
                     % (shotgun_note, sg_tasks)
                 )
             for sg_task in sg_tasks:
@@ -383,7 +393,10 @@ class NoteCommentHandler(SyncHandler):
                 if not jira_issue:
                     self._logger.warning(
                         "Unable to find Jira Issue %s for Note %s"
-                        % (sg_task[SHOTGUN_JIRA_ID_FIELD], shotgun_note,)
+                        % (
+                            sg_task[SHOTGUN_JIRA_ID_FIELD],
+                            shotgun_note,
+                        )
                     )
                     continue
                 # Add the Note as a comment to the Issue
@@ -409,7 +422,10 @@ class NoteCommentHandler(SyncHandler):
         if comment_key != shotgun_note[SHOTGUN_JIRA_ID_FIELD]:
             self._logger.info(
                 "Updating Shotgun Note (%d) with Jira comment key %s"
-                % (shotgun_note["id"], comment_key,)
+                % (
+                    shotgun_note["id"],
+                    comment_key,
+                )
             )
             self._shotgun.update(
                 shotgun_note["type"],
@@ -522,7 +538,12 @@ class NoteCommentHandler(SyncHandler):
         #       will still sync the Note.
         self._logger.info(
             "Jira %s %s Comment %s updated. Syncing to Shotgun Note (%d)"
-            % (resource_type, resource_id, jira_comment["id"], sg_notes[0]["id"],)
+            % (
+                resource_type,
+                resource_id,
+                jira_comment["id"],
+                sg_notes[0]["id"],
+            )
         )
         self._logger.debug("Jira event: %s" % event)
 

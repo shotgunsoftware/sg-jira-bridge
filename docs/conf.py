@@ -32,14 +32,14 @@ sys.path.insert(0, os.path.abspath("..handlers"))
 
 # -- Project information -----------------------------------------------------
 
-project = u"Flow Production Tracking Jira Bridge"
-copyright = u"2019, Autodesk Inc."
-author = u"Autodesk Inc."
+project = "Flow Production Tracking Jira Bridge"
+copyright = "2019, Autodesk Inc."
+author = "Autodesk Inc."
 
 # The short X.Y version
-version = u""
+version = ""
 # The full version, including alpha/beta/rc tags
-release = u""
+release = ""
 
 
 # -- General configuration ---------------------------------------------------
@@ -88,7 +88,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [u"_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -156,8 +156,8 @@ latex_documents = [
     (
         master_doc,
         "sg-jira-bridge.tex",
-        u"sg-jira-bridge Documentation",
-        u"Autodesk Inc.",
+        "sg-jira-bridge Documentation",
+        "Autodesk Inc.",
         "manual",
     ),
 ]
@@ -168,7 +168,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "sg-jira-bridge", u"sg-jira-bridge Documentation", [author], 1)
+    (master_doc, "sg-jira-bridge", "sg-jira-bridge Documentation", [author], 1)
 ]
 
 
@@ -181,7 +181,7 @@ texinfo_documents = [
     (
         master_doc,
         "sg-jira-bridge",
-        u"sg-jira-bridge Documentation",
+        "sg-jira-bridge Documentation",
         author,
         "sg-jira-bridge",
         "One line description of project.",

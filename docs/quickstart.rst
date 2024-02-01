@@ -71,15 +71,15 @@ Configure your Flow Production Tracking Project
 ===============================================
 Configure your Flow Production Tracking Project entity with your Jira Sync Settings:
 
-+--------------+------------------------------------------+-----------------------------------------+
-| Field        | Value                                    | Description                             |
-+==============+==========================================+=========================================+
-| Jira Sync URL| ``http://localhost:9090/sg2jira/default``| The address where you'll run the SG     |
-|              |                                          | Jira Bridge webserver                   |
-+--------------+------------------------------------------+-----------------------------------------+
-| Jira Key     | <JIRA PROJECT KEY>                       | The Project Key in Jira for the Project |
-|              |                                          | you're syncing (eg ``TEST``).           |
-+--------------+------------------------------------------+-----------------------------------------+
++--------------+------------------------------------------+------------------------------------------+
+| Field        | Value                                    | Description                              |
++==============+==========================================+==========================================+
+| Jira Sync URL| ``http://localhost:9090/sg2jira/default``| The address where you'll run the PTR     |
+|              |                                          | Jira Bridge webserver                    |
++--------------+------------------------------------------+------------------------------------------+
+| Jira Key     | <JIRA PROJECT KEY>                       | The Project Key in Jira for the Project  |
+|              |                                          | you're syncing (eg ``TEST``).            |
++--------------+------------------------------------------+------------------------------------------+
 
 
 
@@ -264,7 +264,7 @@ Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed i
     #       subdirectory, NOT in the root of the project.
     pip install -r /path/to/sg-jira-bridge/triggers/requirements.txt
 
-Enable the SG Jira Trigger
+Enable the PTR Jira Trigger
 --------------------------
 Add the path to the Flow Production Tracking Jira Bridge ``sg_jira_event_trigger.py`` file to the
 shotgunEvents conf file::

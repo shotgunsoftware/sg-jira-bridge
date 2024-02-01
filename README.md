@@ -8,7 +8,7 @@ Flow Production Tracking Jira Bridge is a simple synchronization setup between F
 
 By extending the base syncer and sync handlers you can quickly build custom workflows to connect your Flow Production Tracking and Jira sites. Details like entity types, hierarchy, issue types, fields, statuses, and logic can all be custom defined to match your studio's workflow.
 
-![alt text](https://developer.shotgridsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
+![alt text](https://developer.shotgridsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "PTR Jira Bridge Overview")
 
 # Components
 

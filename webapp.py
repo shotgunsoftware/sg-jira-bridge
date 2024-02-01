@@ -23,7 +23,7 @@ from six.moves.socketserver import ThreadingMixIn
 import sg_jira
 
 DESCRIPTION = """
-A simple web app frontend to the SG Jira bridge.
+A simple web app frontend to the PTR Jira bridge.
 """
 
 CSS_TEMPLATE = """
@@ -50,11 +50,11 @@ CSS_TEMPLATE = """
 
 HMTL_TEMPLATE = """
     <head>
-        <title>SG Jira Bridge: %s</title>
+        <title>PTR Jira Bridge: %s</title>
         {style}
     </head>
     <body>
-        <h1>SG Jira Bridge</h1>
+        <h1>PTR Jira Bridge</h1>
         <div class="content">
             <h2>%s</h2>
             <p>%s</p>
@@ -72,11 +72,11 @@ HMTL_TEMPLATE = """
 # - %(message)s - for a detailed message about the error
 HTML_ERROR_TEMPLATE = """
     <head>
-        <title>SG Jira Bridge Error %(code)d: %(message)s</title>
+        <title>PTR Jira Bridge Error %(code)d: %(message)s</title>
         {style}
     </head>
     <body>
-        <h1>SG Jira Bridge</h1>
+        <h1>PTR Jira Bridge</h1>
         <div class="error">
             <h2>Error %(code)d</h2>
             <p>%(explain)s</p>
@@ -143,19 +143,19 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
     def sync_in_jira(self, *args, **kwargs):
         """
-        Just pass the given parameters to the SG Jira Brige method.
+        Just pass the given parameters to the PTR Jira Brige method.
         """
         return self._sg_jira.sync_in_jira(*args, **kwargs)
 
     def sync_in_shotgun(self, *args, **kwargs):
         """
-        Just pass the given parameters to the SG Jira Brige method.
+        Just pass the given parameters to the PTR Jira Brige method.
         """
         return self._sg_jira.sync_in_shotgun(*args, **kwargs)
 
     def admin_reset(self, *args, **kwargs):
         """
-        Just pass the given parameters to the SG Jira Bridge method.
+        Just pass the given parameters to the PTR Jira Bridge method.
         """
         return self._sg_jira.reset(*args, **kwargs)
 
@@ -275,7 +275,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
           jira2sg/<settings_name>/<jira_resource_type>/<jira_resource_key>
           admin/reset
 
-        If the SG Entity is not specified in the path, it must be specified in
+        If the PTR Entity is not specified in the path, it must be specified in
         the provided payload.
         """
         # /sg2jira/default[/Task/123]
@@ -353,7 +353,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             sg2jira/<settings_name>[/<sg_entity_type>/<sg_entity_id>]
             jira2sg/<settings_name>/<jira_resource_type>/<jira_resource_key>
 
-        If the SG Entity is not specified in the path, it must be present in
+        If the PTR Entity is not specified in the path, it must be present in
         the loaded payload.
 
         :param list path_parts: List of strings representing each part of the
@@ -399,7 +399,10 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 logger.debug(e, exc_info=True)
                 raise SgJiraBridgeBadRequestError(
                     "Invalid Shotgun %s id %s, it must be a number."
-                    % (entity_type, entity_key,)
+                    % (
+                        entity_type,
+                        entity_key,
+                    )
                 )
 
             self.server.sync_in_jira(
@@ -518,7 +521,10 @@ def main():
         help="The IPv4 address that the server binds to. Use 0.0.0.0 to bind on all network interfaces.",
     )
     parser.add_argument(
-        "--port", type=int, default=9090, help="The port number to listen to.",
+        "--port",
+        type=int,
+        default=9090,
+        help="The port number to listen to.",
     )
     parser.add_argument("--settings", help="Full path to settings file.", required=True)
     parser.add_argument(

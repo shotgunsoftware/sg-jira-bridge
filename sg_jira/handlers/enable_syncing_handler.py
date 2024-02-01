@@ -91,7 +91,9 @@ class EnableSyncingHandler(SyncHandler):
             % (self._primary_handler, event)
         )
         if not self._primary_handler.process_shotgun_event(
-            entity_type, entity_id, event,
+            entity_type,
+            entity_id,
+            event,
         ):
             return False
 
@@ -102,7 +104,9 @@ class EnableSyncingHandler(SyncHandler):
                 % (handler, event)
             )
             handler.process_shotgun_event(
-                entity_type, entity_id, event,
+                entity_type,
+                entity_id,
+                event,
             )
         return True
 
