@@ -33,7 +33,7 @@ sys.path.insert(0, os.path.abspath("..handlers"))
 # -- Project information -----------------------------------------------------
 
 project = "Flow Production Tracking Jira Bridge"
-copyright = "2019, Autodesk Inc."
+copyright = "2024, Autodesk Inc."
 author = "Autodesk Inc."
 
 # The short X.Y version
