@@ -48,7 +48,7 @@ following entity types:
 ===========  =========  ================  ====================================  ======================
 Entity Type  Data Type  Display Name      Description                           Field Name (auto-generated)
 ===========  =========  ================  ====================================  ======================
-Project      File/Link  Jira Sync URL     URL of FPT Jira Bridge (see below)    ``sg_jira_sync_url``
+Project      File/Link  Jira Sync URL     URL of PTR Jira Bridge (see below)    ``sg_jira_sync_url``
 Project      Text       Jira Key          Synced Project Key value in Jira      ``sg_jira_key``
 Task         Text       Jira Key          Synced Issue Key value in Jira        ``sg_jira_key``
 Task         Checkbox   Sync In Jira      Enable/Disable syncing for this Task  ``sg_sync_in_jira``
