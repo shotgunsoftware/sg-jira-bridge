@@ -25,7 +25,7 @@ Full documentation is available at https://developer.shotgridsoftware.com/sg-jir
 # Requirements
 
 - Python 3.9
-- A [Flow Production Tracking](https://shotgridsoftware.com) site
+- A [Flow Production Tracking](https://autodesk.com/products/flow-production-tracking) site
 - A [Jira](https://www.atlassian.com/software/jira) site
 
 # Building the Docs

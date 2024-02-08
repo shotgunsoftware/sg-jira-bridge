@@ -700,7 +700,7 @@ class EntityIssueHandler(SyncHandler):
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
-        """ "
+        """
         Return the list of fields this handler can process for a Jira event.
 
         Needs to be re-implemented in deriving classes.
