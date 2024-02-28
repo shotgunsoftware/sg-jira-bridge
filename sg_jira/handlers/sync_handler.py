@@ -103,6 +103,34 @@ class SyncHandler(object):
                 raise
         return jira_issue
 
+    def get_jira_user(self, user_email, jira_project):
+        """
+        Given an email address, find the associated Jira User in the given Jira Project.
+
+        :param user_email: The email address of the user we want to retrieve
+        :param jira_project: An instance of :class:`jira.resources.Project` we want to retrieve the user from
+        :returns: A :class:`jira.resources.User` instance or None.
+        """
+
+        reporter = None
+
+        jira_user = self._jira.find_jira_user(
+            user_email,
+            jira_project=jira_project,
+        )
+        # If we found a Jira user, use his name as the reporter name,
+        # otherwise use the reporter name retrieved from the user used
+        # to run the bridge.
+        if jira_user:
+            # Jira Cloud no longer supports the name field and Jira server does not support
+            # accountId. So we need different behaviour based on the type of Jira we're using
+            if self._jira.is_jira_cloud:
+                reporter = jira_user.accountId
+            else:
+                reporter = jira_user.name
+
+        return reporter
+
     def setup(self):
         """
         This method can be re-implemented in deriving classes to Check the Jira
@@ -165,7 +193,12 @@ class SyncHandler(object):
         raise NotImplementedError
 
     def _get_shotgun_value_from_jira_change(
-        self, shotgun_entity, shotgun_field, shotgun_field_schema, change, jira_value,
+        self,
+        shotgun_entity,
+        shotgun_field,
+        shotgun_field_schema,
+        change,
+        jira_value,
     ):
         """
         Return a ShotGrid value suitable to update the given ShotGrid Entity field
@@ -271,7 +304,11 @@ class SyncHandler(object):
                 # copy of the list so we can delete entries while iterating
                 self._logger.debug(
                     "Trying to remove %s from Shotgun %s value %s"
-                    % (removed, shotgun_field, current_sg_value,)
+                    % (
+                        removed,
+                        shotgun_field,
+                        current_sg_value,
+                    )
                 )
                 for i, sg_value in enumerate(list(current_sg_value)):
                     # Match the SG entity name, because this is retrieved
@@ -281,14 +318,23 @@ class SyncHandler(object):
                     if removed.lower() == sg_value["name"].lower():
                         self._logger.debug(
                             "Removing %s from Shotgun value %s since Jira "
-                            "removed %s " % (sg_value, current_sg_value, removed,)
+                            "removed %s "
+                            % (
+                                sg_value,
+                                current_sg_value,
+                                removed,
+                            )
                         )
                         del current_sg_value[i]
             for added in added_list:
                 # Check if the value is already there
                 self._logger.debug(
                     "Trying to add %s to Shotgun %s value %s"
-                    % (added, shotgun_field, current_sg_value,)
+                    % (
+                        added,
+                        shotgun_field,
+                        current_sg_value,
+                    )
                 )
                 for sg_value in current_sg_value:
                     # Match the SG entity name, because this is retrieved
@@ -298,7 +344,10 @@ class SyncHandler(object):
                     if added.lower() == sg_value["name"].lower():
                         self._logger.debug(
                             "%s is already in current Shotgun value: %s"
-                            % (added, sg_value,)
+                            % (
+                                added,
+                                sg_value,
+                            )
                         )
                         break
                 else:
@@ -310,7 +359,12 @@ class SyncHandler(object):
                     if sg_value:
                         self._logger.debug(
                             "Adding %s to Shotgun value %s since Jira "
-                            "added %s" % (sg_value, current_sg_value, added,)
+                            "added %s"
+                            % (
+                                sg_value,
+                                current_sg_value,
+                                added,
+                            )
                         )
                         current_sg_value.append(sg_value)
                     else:
@@ -334,7 +388,8 @@ class SyncHandler(object):
                 message = "Unable to parse Jira value %s as a date: %s" % (value, e)
                 # Log the original error with a traceback for debug purpose
                 self._logger.debug(
-                    message, exc_info=True,
+                    message,
+                    exc_info=True,
                 )
                 # Notify the caller that the value is not right
                 raise InvalidJiraValue(shotgun_field, value, message)
@@ -352,7 +407,8 @@ class SyncHandler(object):
                 message = "Jira value %s is not a valid integer: %s" % (value, e)
                 # Log the original error with a traceback for debug purpose
                 self._logger.debug(
-                    message, exc_info=True,
+                    message,
+                    exc_info=True,
                 )
                 # Notify the caller that the value is not right
                 raise InvalidJiraValue(shotgun_field, value, message)
