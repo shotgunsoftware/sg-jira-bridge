@@ -7,7 +7,7 @@
 
 jobs:
 
-- job: Code Style Validation
+- job: flake8
   pool:
     vmImage: 'ubuntu-20.04'
 
