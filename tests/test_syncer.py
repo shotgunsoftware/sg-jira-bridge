@@ -1172,7 +1172,6 @@ class TestJiraSyncer(TestSyncBase):
             )["due_date"],
         )
 
-
     def test_jira_2_shotgun(self, mocked_sg):
         """
         Test syncing from Jira to ShotGrid

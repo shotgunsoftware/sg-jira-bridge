@@ -7,14 +7,14 @@
 
 jobs:
 
-- job: ${{ parameters.name }}
+- job: Code Style Validation
   pool:
     vmImage: 'ubuntu-20.04'
 
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: 3.9
+      versionSpec: 3.11
       addToPath: True
       architecture: 'x64'
 
