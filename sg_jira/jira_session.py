@@ -91,7 +91,12 @@ class JiraSession(jira.client.JIRA):
         """
         # Build a mapping from Jira field names to their id for fast lookup.
         for jira_field in self.fields():
-            self._jira_fields_map[jira_field["name"].lower()] = jira_field["id"]
+            field_name = jira_field["name"].lower()
+            if field_name == "due date":
+                # "Due date" is an special case that Jira uses `duedate` in the change payload
+                field_name = "duedate"
+            self._jira_fields_map[field_name] = jira_field["id"]
+
         self._jira_shotgun_type_field = self.get_jira_issue_field_id(
             JIRA_SHOTGUN_TYPE_FIELD.lower()
         )
