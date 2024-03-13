@@ -91,7 +91,11 @@ class JiraSession(jira.client.JIRA):
         """
         # Build a mapping from Jira field names to their id for fast lookup.
         for jira_field in self.fields():
-            self._jira_fields_map[jira_field["name"].lower()] = jira_field["id"]
+            if self._name_is_shotgun_field(jira_field["name"]):
+                field_name = jira_field["name"].lower()
+            else:
+                field_name = jira_field["key"].lower()
+            self._jira_fields_map[field_name] = jira_field["id"]
         self._jira_shotgun_type_field = self.get_jira_issue_field_id(
             JIRA_SHOTGUN_TYPE_FIELD.lower()
         )
@@ -113,6 +117,13 @@ class JiraSession(jira.client.JIRA):
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
             )
+        
+    def _name_is_shotgun_field(self, field_name):
+        return field_name.lower() in [
+            JIRA_SHOTGUN_TYPE_FIELD.lower(),
+            JIRA_SHOTGUN_ID_FIELD.lower(),
+            JIRA_SHOTGUN_URL_FIELD.lower(),
+        ]
 
     @property
     def is_jira_cloud(self):
