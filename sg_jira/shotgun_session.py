@@ -107,7 +107,10 @@ class ShotgunSession(object):
         if not field:
             raise RuntimeError(
                 "Missing required custom Shotgun %s field %s"
-                % (entity_type, field_name,)
+                % (
+                    entity_type,
+                    field_name,
+                )
             )
         if field["data_type"]["value"] != field_type:
             raise RuntimeError(
@@ -188,7 +191,7 @@ class ShotgunSession(object):
         # standard field.
         return True
 
-    def consolidate_entity(self, shotgun_entity, fields=None):
+    def consolidate_entity(self, shotgun_entity, fields=None, retired_only=False):
         """
         Consolidate the given ShotGrid Entity: collect additional field values,
         ensure the Entity name is available under a "name" key.
@@ -196,6 +199,7 @@ class ShotgunSession(object):
         :param shotgun_entity: A ShotGrid Entity dictionary with at least its id
                                and its type.
         :param fields: An optional list of fields to add to the query.
+        :param retired_only: An optional boolean indicating if the entity we're consolidating has been retired.
         :returns: The consolidated ShotGrid Entity or `None` if it can't be retrieved.
         """
 
@@ -224,11 +228,15 @@ class ShotgunSession(object):
                 shotgun_entity["type"],
                 [["id", "is", shotgun_entity["id"]]],
                 missing + list(shotgun_entity.keys()),
+                retired_only=retired_only,
             )
             if not consolidated:
                 logger.warning(
                     "Unable to find %s (%d) in Shotgun"
-                    % (shotgun_entity["type"], shotgun_entity["id"],)
+                    % (
+                        shotgun_entity["type"],
+                        shotgun_entity["id"],
+                    )
                 )
                 return None
             shotgun_entity = consolidated
@@ -257,7 +265,11 @@ class ShotgunSession(object):
             if self.is_project_entity(entity_type):
                 filters.append(["project", "is", shotgun_project])
                 fields.append("project")
-            sg_value = self.find_one(entity_type, filters, fields,)
+            sg_value = self.find_one(
+                entity_type,
+                filters,
+                fields,
+            )
             if sg_value:
                 return self.consolidate_entity(sg_value)
         return None
