@@ -143,6 +143,66 @@ class SyncHandler(object):
 
         return reporter
 
+    def get_sg_user(self, user_id, jira_user=None):
+        """
+        Resolve the ShotGrid user associated to the JIRA user passed in.
+
+        :param str user_id: Value of the to or from of a JIRA changelog.
+        :param dict jira_user: User resource, typically the assignee field on an issue. Can be None
+
+        :returns: A ShotGrid user entity dictionary or None
+        """
+
+        # Due to GDPR, some changes were done to JIRA Cloud which complicates
+        # matching users by email. So let's use the right resolver based
+        # on the server type.
+        if self._jira.is_jira_cloud:
+
+            sg_field = "sg_jira_account_id"
+            sg_value = user_id
+
+            if jira_user is not None:
+                sg_value = jira_user["accountId"]
+
+            # jira_user is None when the user resolving code is trying to resolve the `from` user in the changelog.
+            # When this happens, we only have a user id in the `from` to indicate what the original value was.
+            #
+            # Interestingly, when the user field is updated via the JIRA API,
+            # the username is passed in instead of the account id in the `from` field, so we'll have to
+            # resolve it.
+            elif self.ACCOUNT_ID_RE.match(user_id) is None:
+                self._logger.debug(
+                    "The changelog's to/from contains a user name. accountId will be retrieved."
+                )
+                user = self._jira.user(user_id, payload="key")
+                if not user:
+                    self._logger.debug("Unable to find JIRA user %s" % user_id)
+                    return None
+                sg_value = user.accountId
+
+        else:
+
+            sg_field = "email"
+
+            if jira_user is not None:
+                sg_value = jira_user["emailAddress"]
+            elif user_id is not None:
+                sg_value = self._jira.user(user_id).emailAddress
+            else:
+                # The code that calls this method should always have a user passed in. If there is not
+                # user_id or jira_user value, we shouldn't even be calling this method in the first
+                # place!
+                raise RuntimeError("jira_user or user_id cannot be both None.")
+
+        sg_user = self._shotgun.find_one(
+            "HumanUser", [[sg_field, "is", sg_value]], ["email", "name"]
+        )
+        if not sg_user:
+            self._logger.debug(
+                "Unable to find a Shotgun user with %s %s" % (sg_field, sg_value)
+            )
+        return sg_user
+
     def setup(self):
         """
         This method can be re-implemented in deriving classes to Check the Jira
