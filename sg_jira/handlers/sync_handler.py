@@ -6,6 +6,7 @@
 #
 
 import datetime
+import re
 
 from jira import JIRAError
 
@@ -22,6 +23,16 @@ class SyncHandler(object):
     This base class defines the interface all handlers should support and
     provides some helpers which can be useful to all handlers.
     """
+
+    # This will match JIRA accounts in the following format
+    # 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0
+    # 24 hexdecimal characters: 5b6a25ab7c14b729f2208297
+    # We're only matching the first 20 characters instead of the first 24, since the
+    # account id format isn't documented.
+    # It could in theory match a very long user name that uses hexadecimal characters
+    # only, but that would be unlikely.
+    # https://regex101.com/r/E1ysHQ/1
+    ACCOUNT_ID_RE = re.compile("^[0-9a-f:-]{20}")
 
     def __init__(self, syncer):
         """
@@ -118,6 +129,7 @@ class SyncHandler(object):
             user_email,
             jira_project=jira_project,
         )
+
         # If we found a Jira user, use his name as the reporter name,
         # otherwise use the reporter name retrieved from the user used
         # to run the bridge.
@@ -125,9 +137,9 @@ class SyncHandler(object):
             # Jira Cloud no longer supports the name field and Jira server does not support
             # accountId. So we need different behaviour based on the type of Jira we're using
             if self._jira.is_jira_cloud:
-                reporter = jira_user.accountId
+                reporter = {"accountId": jira_user.accountId}
             else:
-                reporter = jira_user.name
+                reporter = {"name": jira_user.name}
 
         return reporter
 
