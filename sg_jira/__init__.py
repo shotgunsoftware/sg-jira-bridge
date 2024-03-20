@@ -21,7 +21,10 @@ for module_name in IMPORT_MODULES:
     try:
         __import__(module_name)
     except ex_type as e:
-        raise RuntimeError("Could not import '%s' module. Did you install the requirements.txt file? Original error: %s" % (module_name, str(e)))
+        raise RuntimeError(
+            "Could not import '%s' module. Did you install the requirements.txt file? Original error: %s"
+            % (module_name, str(e))
+        )
 
 from .bridge import Bridge
 from .syncer import Syncer

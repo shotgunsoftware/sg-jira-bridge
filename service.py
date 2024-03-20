@@ -13,7 +13,7 @@ import argparse
 import signal
 
 DESCRIPTION = """
-Run the SG Jira web app as a Linux service.
+Run the PTR Jira web app as a Linux service.
 
 This script can be used with a systemd setup and handles the usual start, stop,
 restart and status actions.

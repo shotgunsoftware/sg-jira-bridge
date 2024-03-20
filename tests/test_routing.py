@@ -30,7 +30,7 @@ Content-Length: %d
 %s
 """
 
-UNICODE_STRING = u"unicode_îéö_😀"
+UNICODE_STRING = "unicode_îéö_😀"
 UTF8_ENCODED_STRING = six.ensure_str(UNICODE_STRING)
 
 
@@ -151,7 +151,7 @@ class TestRouting(TestBase):
 
     def test_sg_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
-        Test routing from SG to Jira
+        Test routing from PTR to Jira
 
         Requests with no payload are GET requests.
         Requests with a payload are POST requests.
@@ -171,7 +171,7 @@ class TestRouting(TestBase):
         self.assertTrue(b"HTTP/1.1 200" in raw_response)
         self.assertTrue(b"<p>Syncing with valid settings.</p>" in raw_response)
         # POST request with invalid payload missing entity information
-        payload = {u"foo": u"blah"}
+        payload = {"foo": "blah"}
         handler = webapp.RequestHandler(
             MockRequest("/sg2jira/valid", payload), ("localhost", -1), server
         )
@@ -253,7 +253,7 @@ class TestRouting(TestBase):
 
     def test_jira_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
-        Test routing from Jira to SG
+        Test routing from Jira to PTR
 
         Requests with no payload are GET requests.
         Requests with a payload are POST requests.

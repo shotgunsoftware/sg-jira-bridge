@@ -10,7 +10,7 @@ import logging
 
 class Syncer(object):
     """
-    A class handling syncing between ShotGrid and Jira.
+    A class handling syncing between Flow Production Tracking and Jira.
 
     All Syncers should define a list of :class:`~handlers.SyncHandler` which should reject
     or accept and process events.
@@ -61,7 +61,7 @@ class Syncer(object):
 
     def setup(self):
         """
-        Check the Jira and ShotGrid site, ensure that the sync can safely happen
+        Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen
         and cache any value which is slow to retrieve.
         """
         self._logger.debug(
@@ -83,7 +83,7 @@ class Syncer(object):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given ShotGrid Entity.
+        Accept or reject the given event for the given Flow Production Tracking Entity.
 
         :returns: A :class:`~handlers.SyncHandler` instance if the event is accepted for
                   processing, `None` otherwise.
@@ -142,7 +142,11 @@ class Syncer(object):
                 return handler
 
         self._logger.debug(
-            "Event %s was rejected by all handlers %s" % (event, self.handlers,)
+            "Event %s was rejected by all handlers %s"
+            % (
+                event,
+                self.handlers,
+            )
         )
         return None
 
@@ -165,7 +169,10 @@ class Syncer(object):
             ):
                 self._logger.debug(
                     "Rejecting event %s triggered by us (%s)"
-                    % (event, user["accountId"],)
+                    % (
+                        event,
+                        user["accountId"],
+                    )
                 )
                 return None
 
@@ -181,7 +188,11 @@ class Syncer(object):
                 and user["name"].lower() == self.bridge.current_jira_username.lower()
             ):
                 self._logger.debug(
-                    "Rejecting event %s triggered by us (%s)" % (event, user["name"],)
+                    "Rejecting event %s triggered by us (%s)"
+                    % (
+                        event,
+                        user["name"],
+                    )
                 )
                 return None
 
@@ -195,7 +206,10 @@ class Syncer(object):
             ):
                 self._logger.debug(
                     "Rejecting event %s triggered by us (%s)"
-                    % (event, user["emailAddress"],)
+                    % (
+                        event,
+                        user["emailAddress"],
+                    )
                 )
                 return None
 
@@ -212,6 +226,10 @@ class Syncer(object):
                 return handler
 
         self._logger.debug(
-            "Event %s was rejected by all handlers %s" % (event, self.handlers,)
+            "Event %s was rejected by all handlers %s"
+            % (
+                event,
+                self.handlers,
+            )
         )
         return None

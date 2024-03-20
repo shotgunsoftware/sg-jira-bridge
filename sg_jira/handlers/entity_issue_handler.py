@@ -15,7 +15,7 @@ from .sync_handler import SyncHandler
 
 class EntityIssueHandler(SyncHandler):
     """
-    Base class for handlers syncing a ShotGrid Entity to a Jira Issue.
+    Base class for handlers syncing a Flow Production Tracking Entity to a Jira Issue.
     """
 
     # This will match JIRA accounts in the following format
@@ -105,7 +105,12 @@ class EntityIssueHandler(SyncHandler):
         if not shotgun_id or not shotgun_type:
             self._logger.debug(
                 "Rejecting event for %s %s. It's not linked to a Shotgun "
-                "Entity: %s" % (issue_type["name"], resource_id, event,)
+                "Entity: %s"
+                % (
+                    issue_type["name"],
+                    resource_id,
+                    event,
+                )
             )
             return False
 
@@ -114,10 +119,10 @@ class EntityIssueHandler(SyncHandler):
     def _get_jira_issue_and_validate(self, jira_issue_key, shotgun_entity):
         """
         Load Jira Issue with the given Jira key, validate it exists and is
-        syncing to the given ShotGrid Entity.
+        syncing to the given Flow Production Tracking Entity.
 
         :param str jira_issue_key: Jira key for the Issue to load
-        :param dict shotgun_entity: ShotGrid Entity dictionary
+        :param dict shotgun_entity: Flow Production Tracking Entity dictionary
         :returns: A :class:`jira.Issue` instance if it exists and is valid.
             Otherwise ``None``
         """
@@ -128,7 +133,7 @@ class EntityIssueHandler(SyncHandler):
             # recreating it. So we play safe until we correctly handle the
             # deleted case.
             self._logger.warning(
-                "Unable to find Jira Issue %s for Shotgun %s (%d)"
+                "Unable to find Jira Issue %s for Flow Production Tracking %s (%d)"
                 % (jira_issue_key, shotgun_entity["type"], shotgun_entity["id"])
             )
             return None
@@ -145,8 +150,8 @@ class EntityIssueHandler(SyncHandler):
             # the Jira Issue has the same Shotgun Entity type and id so we
             # can prevent data corruption.
             self._logger.warning(
-                "Rejecting Jira Issue %s. Expected it to be linked to Shotgun "
-                "%s (%d) but instead it is linked to Shotgun %s (%s)."
+                "Rejecting Jira Issue %s. Expected it to be linked to Flow Production Tracking "
+                "%s (%d) but instead it is linked to Flow Production Tracking %s (%s)."
                 % (
                     jira_issue_key,
                     shotgun_entity["type"],
@@ -171,7 +176,7 @@ class EntityIssueHandler(SyncHandler):
         """
         Create a Jira issue linked to the given Shothgun Entity with the given properties
 
-        :param sg_entity: A ShotGrid Entity dictionary.
+        :param sg_entity: A Flow Production Tracking Entity dictionary.
         :param jira_project: A :class:`jira.resources.Project` instance.
         :param str issue_type: The target Issue type name.
         :param str summary: The Issue summary.
@@ -189,7 +194,8 @@ class EntityIssueHandler(SyncHandler):
             if user:
                 user_email = user["email"]
                 jira_user = self._jira.find_jira_user(
-                    user_email, jira_project=jira_project,
+                    user_email,
+                    jira_project=jira_project,
                 )
                 # If we found a Jira user, use his name as the reporter name,
                 # otherwise use the reporter name retrieved from the user used
@@ -225,11 +231,15 @@ class EntityIssueHandler(SyncHandler):
             data.update(properties)
 
         self._logger.info(
-            "Creating Jira Issue in Project %s for Shotgun %s '%s' (%d)"
+            "Creating Jira Issue in Project %s for Flow Production Tracking %s '%s' (%d)"
             % (jira_project, sg_entity["type"], sg_entity["name"], sg_entity["id"])
         )
 
-        return self._jira.create_issue_from_data(jira_project, issue_type, data,)
+        return self._jira.create_issue_from_data(
+            jira_project,
+            issue_type,
+            data,
+        )
 
     def _get_jira_issue_field_sync_value(
         self,
@@ -242,8 +252,8 @@ class EntityIssueHandler(SyncHandler):
         new_value=None,
     ):
         """
-        Retrieve the Jira Issue field and the value to set from the given ShotGrid
-        field name and the given changes for the given ShotGrid Entity type.
+        Retrieve the Jira Issue field and the value to set from the given Flow Production Tracking
+        field name and the given changes for the given Flow Production Tracking Entity type.
 
         This methods supports list fields changes with the `added` and `removed`
         parameters, or a value being set directly with the `new_value` parameter.
@@ -252,16 +262,16 @@ class EntityIssueHandler(SyncHandler):
 
         :param jira_project: A :class:`jira.resources.Project` instance.
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param shotgun_entity_type: A ShotGrid Entity type as a string.
-        :param shotgun_field: A ShotGrid Entity field name as a string.
-        :param added: A list of ShotGrid values added to the given field.
-        :param removed: A list of ShotGrid values removed from the given field.
-        :param new_value: A ShotGrid value the given field was set to.
+        :param shotgun_entity_type: A Flow Production Tracking Entity type as a string.
+        :param shotgun_field: A Flow Production Tracking Entity field name as a string.
+        :param added: A list of Flow Production Tracking values added to the given field.
+        :param removed: A list of Flow Production Tracking values removed from the given field.
+        :param new_value: A Flow Production Tracking value the given field was set to.
 
         :returns: A tuple with a Jira field id and a Jira value usable for an
                   update. The returned field id is `None` if no valid field or
                   value could be retrieved.
-        :raises InvalidShotgunValue: if the ShotGrid value can't be translated
+        :raises InvalidShotgunValue: if the Flow Production Tracking value can't be translated
                  into a valid Jira value.
         """
         # Retrieve the matching Jira field
@@ -271,7 +281,7 @@ class EntityIssueHandler(SyncHandler):
         # Bail out if we couldn't find a target Jira field
         if not jira_field:
             self._logger.debug(
-                "Not syncing Shotgun %s.%s to Jira. No target Jira field "
+                "Not syncing Flow Production Tracking %s.%s to Jira. No target Jira field "
                 "is defined" % (shotgun_entity_type, shotgun_field)
             )
             return None, None
@@ -282,7 +292,7 @@ class EntityIssueHandler(SyncHandler):
         # Bail out if the target Jira field is not editable
         if jira_field not in jira_fields:
             self._logger.warning(
-                "Not syncing Shotgun %s.%s to Jira. Target Jira %s %s field "
+                "Not syncing Flow Production Tracking %s.%s to Jira. Target Jira %s %s field "
                 "is not editable"
                 % (
                     shotgun_entity_type,
@@ -302,7 +312,7 @@ class EntityIssueHandler(SyncHandler):
 
         if added is not None or removed is not None:
             self._logger.debug(
-                "Processing Shotgun list change: added %s, removed %s"
+                "Processing Flow Production Tracking list change: added %s, removed %s"
                 % (added, removed)
             )
             jira_value = self._get_jira_value_for_shotgun_list_changes(
@@ -339,8 +349,12 @@ class EntityIssueHandler(SyncHandler):
                 raise InvalidShotgunValue(
                     jira_field,
                     shotgun_value,
-                    "Couldn't translate Shotgun value %s to a valid value "
-                    "for Jira field %s" % (shotgun_value, jira_field,),
+                    "Couldn't translate Flow Production Tracking value %s to a valid value "
+                    "for Jira field %s"
+                    % (
+                        shotgun_value,
+                        jira_field,
+                    ),
                 )
             if isinstance(jira_value, jira.resources.Resource):
                 # jira.Resource instances are not json serializable so we need
@@ -365,7 +379,7 @@ class EntityIssueHandler(SyncHandler):
     ):
         """
         Needs to be re-implemented in deriving classes and return the Jira Issue
-        field id to use to sync the given ShotGrid Entity type field.
+        field id to use to sync the given Flow Production Tracking Entity type field.
 
         :returns: A string or `None`.
         """
@@ -381,7 +395,7 @@ class EntityIssueHandler(SyncHandler):
         shotgun_removed,
     ):
         """
-        Handle a ShotGrid list value modification and return a Jira value
+        Handle a Flow Production Tracking list value modification and return a Jira value
         corresponding to changes for the given Issue field.
 
         :param jira_project: A :class:`jira.resources.Project` instance.
@@ -389,8 +403,8 @@ class EntityIssueHandler(SyncHandler):
         :param jira_field: A Jira field id, as a string.
         :param jira_field_schema: The jira create or edit meta data for the given
                                   field.
-        :param shotgun_added: A list of ShotGrid added values.
-        :param shotgun_removed: A list of ShotGrid removed values.
+        :param shotgun_added: A list of Flow Production Tracking added values.
+        :param shotgun_removed: A list of Flow Production Tracking removed values.
         """
         current_value = getattr(jira_issue.fields, jira_field)
         is_array = jira_field_schema["schema"]["type"] == "array"
@@ -410,13 +424,21 @@ class EntityIssueHandler(SyncHandler):
                     else:
                         self._logger.debug(
                             "Unable to remove %s from current Jira value %s. "
-                            "Removed Shotgun value was %s"
-                            % (value, current_value, removed,)
+                            "Removed Flow Production Tracking value was %s"
+                            % (
+                                value,
+                                current_value,
+                                removed,
+                            )
                         )
 
             for added in shotgun_added:
                 value = self._get_jira_value_for_shotgun_value(
-                    jira_project, jira_issue, jira_field, jira_field_schema, added,
+                    jira_project,
+                    jira_issue,
+                    jira_field,
+                    jira_field_schema,
+                    added,
                 )
                 if value and value not in current_value:
                     current_value.append(value)
@@ -440,8 +462,11 @@ class EntityIssueHandler(SyncHandler):
                         break
                 else:
                     self._logger.debug(
-                        "Current Jira value %s unaffected by Shotgun %s removal."
-                        % (current_value, shotgun_removed,)
+                        "Current Jira value %s unaffected by Flow Production Tracking %s removal."
+                        % (
+                            current_value,
+                            shotgun_removed,
+                        )
                     )
 
             if not current_value and shotgun_added:
@@ -463,7 +488,7 @@ class EntityIssueHandler(SyncHandler):
                         if added_count > 1:
                             self._logger.warning(
                                 "Only a single value is accepted by Jira for "
-                                "field %s. Shotgun added %d values. Using %s "
+                                "field %s. Flow Production Tracking added %d values. Using %s "
                                 "translated to Jira value %s"
                                 % (jira_field, added_count, sg_value, current_value)
                             )
@@ -472,13 +497,18 @@ class EntityIssueHandler(SyncHandler):
         return current_value
 
     def _get_jira_value_for_shotgun_value(
-        self, jira_project, jira_issue, jira_field, jira_field_schema, shotgun_value,
+        self,
+        jira_project,
+        jira_issue,
+        jira_field,
+        jira_field_schema,
+        shotgun_value,
     ):
         """
-        Return a Jira value corresponding to the given ShotGrid value for the
+        Return a Jira value corresponding to the given Flow Production Tracking value for the
         given Issue field.
 
-        .. note:: This method only handles single values. ShotGrid list values
+        .. note:: This method only handles single values. Flow Production Tracking list values
                   must be handled by calling this method for each of the individual
                   values.
 
@@ -487,11 +517,13 @@ class EntityIssueHandler(SyncHandler):
         :param jira_field: A Jira field id, as a string.
         :param jira_field_schema: The jira create or edit meta data for the given
                                   field.
-        :param shotgun_value: A single value retrieved from ShotGrid.
+        :param shotgun_value: A single value retrieved from Flow Production Tracking.
         :returns: A :class:`jira.resources.Resource` instance, or a dictionary,
                   or a string, depending on the field type.
         """
-        self._logger.debug("Getting Jira value for Shotgun value %s" % shotgun_value)
+        self._logger.debug(
+            "Getting Jira value for Flow Production Tracking value %s" % shotgun_value
+        )
         jira_type = jira_field_schema["schema"]["type"]
         # Deal with unset or empty value
         if not shotgun_value:
@@ -546,7 +578,7 @@ class EntityIssueHandler(SyncHandler):
                     if allowed_value.lower() == sg_value_name:
                         return allowed_value
             self._logger.warning(
-                "Shotgun value '%s' is not in the list of allowed values for "
+                "Flow Production Tracking value '%s' is not in the list of allowed values for "
                 "Jira field %s: %s" % (shotgun_value, jira_field, allowed_values)
             )
             return None
@@ -560,15 +592,20 @@ class EntityIssueHandler(SyncHandler):
                     email_address = shotgun_value.get("email")
                     if not email_address:
                         self._logger.warning(
-                            "Jira field %s requires an email address but Shotgun "
+                            "Jira field %s requires an email address but Flow Production Tracking "
                             "value to sync has no email key %s"
-                            % (jira_field, shotgun_value,)
+                            % (
+                                jira_field,
+                                shotgun_value,
+                            )
                         )
                         return None
                 else:
                     email_address = shotgun_value
                 jira_value = self._jira.find_jira_assignee_for_issue(
-                    email_address, jira_project, jira_issue,
+                    email_address,
+                    jira_project,
+                    jira_issue,
                 )
             elif jira_field == "labels":
                 if isinstance(shotgun_value, dict):
@@ -598,17 +635,17 @@ class EntityIssueHandler(SyncHandler):
 
     def _sync_shotgun_status_to_jira(self, jira_issue, shotgun_status, comment):
         """
-        Set the status of the Jira Issue based on the given ShotGrid status.
+        Set the status of the Jira Issue based on the given Flow Production Tracking status.
 
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param shotgun_status: A ShotGrid status short code as a string.
+        :param shotgun_status: A Flow Production Tracking status short code as a string.
         :param comment: A string, a comment to apply to the Jira transition.
         :returns: `True` if the status was successfully set, `False` otherwise.
         """
         jira_status = self._sg_jira_status_mapping.get(shotgun_status)
         if not jira_status:
             self._logger.warning(
-                "Unable to find a matching Jira status for Shotgun "
+                "Unable to find a matching Jira status for Flow Production Tracking "
                 "status '%s'" % shotgun_status
             )
             return False
@@ -617,11 +654,11 @@ class EntityIssueHandler(SyncHandler):
 
     def _sync_shotgun_cced_changes_to_jira(self, jira_issue, added, removed):
         """
-        Update the given Jira Issue watchers from the given ShotGrid changes.
+        Update the given Jira Issue watchers from the given Flow Production Tracking changes.
 
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param added: A list of ShotGrid user dictionaries.
-        :param removed: A list of ShotGrid user dictionaries.
+        :param added: A list of Flow Production Tracking user dictionaries.
+        :param removed: A list of Flow Production Tracking user dictionaries.
         """
 
         for user in removed:
@@ -631,7 +668,8 @@ class EntityIssueHandler(SyncHandler):
             sg_user = self._shotgun.consolidate_entity(user)
             if sg_user:
                 jira_user = self._jira.find_jira_user(
-                    sg_user["email"], jira_issue=jira_issue,
+                    sg_user["email"],
+                    jira_issue=jira_issue,
                 )
                 if jira_user:
                     # No need to check if the user is in the current watchers list:
@@ -651,7 +689,8 @@ class EntityIssueHandler(SyncHandler):
             sg_user = self._shotgun.consolidate_entity(user)
             if sg_user:
                 jira_user = self._jira.find_jira_user(
-                    sg_user["email"], jira_issue=jira_issue,
+                    sg_user["email"],
+                    jira_issue=jira_issue,
                 )
                 if jira_user:
                     self._logger.debug(
@@ -663,7 +702,7 @@ class EntityIssueHandler(SyncHandler):
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
-        """"
+        """
         Return the list of fields this handler can process for a Jira event.
 
         Needs to be re-implemented in deriving classes.
@@ -689,19 +728,22 @@ class EntityIssueHandler(SyncHandler):
         shotgun_id = fields.get(self._jira.jira_shotgun_id_field)
         if not shotgun_id.isdigit():
             raise ValueError(
-                "Invalid Shotgun id %s, it must be an integer" % shotgun_id
+                "Invalid Flow Production Tracking id %s, it must be an integer"
+                % shotgun_id
             )
         shotgun_type = fields.get(self._jira.jira_shotgun_type_field)
         # Collect the list of fields we might need to process the event
         sg_fields = self._supported_shotgun_fields_for_jira_event
         sg_entity = self._shotgun.consolidate_entity(
-            {"type": shotgun_type, "id": int(shotgun_id)}, fields=sg_fields,
+            {"type": shotgun_type, "id": int(shotgun_id)},
+            fields=sg_fields,
         )
         if not sg_entity:
             # Note: For the time being we don't allow Jira to create new Shotgun
             # Entities.
             self._logger.warning(
-                "Unable to find Shotgun %s (%s)" % (shotgun_type, shotgun_id)
+                "Unable to find Flow Production Tracking %s (%s)"
+                % (shotgun_type, shotgun_id)
             )
             return False
 
@@ -710,7 +752,7 @@ class EntityIssueHandler(SyncHandler):
         shotgun_data = {}
 
         self._logger.debug(
-            "Attempting to sync %s (%s) to Shotgun %s (%d) for event %s"
+            "Attempting to sync %s (%s) to Flow Production Tracking %s (%d) for event %s"
             % (
                 issue_type["name"],
                 resource_id,
@@ -734,13 +776,16 @@ class EntityIssueHandler(SyncHandler):
                     shotgun_field,
                     shotgun_value,
                 ) = self._get_shotgun_entity_field_sync_value(
-                    sg_entity, jira_issue, field_id, change,
+                    sg_entity,
+                    jira_issue,
+                    field_id,
+                    change,
                 )
                 if shotgun_field:
                     shotgun_data[shotgun_field] = shotgun_value
                     # we definitely have data to sync at this point
                     self._logger.info(
-                        "Syncing Jira %s %s '%s' to Shotgun %s (%d) as value '%s'"
+                        "Syncing Jira %s %s '%s' to Flow Production Tracking %s (%d) as value '%s'"
                         % (
                             issue_type["name"],
                             jira_issue["key"],
@@ -752,7 +797,7 @@ class EntityIssueHandler(SyncHandler):
                     )
             except InvalidJiraValue as e:
                 self._logger.warning(
-                    "Unable to sync Jira %s %s '%s' to Shotgun %s (%d): %s"
+                    "Unable to sync Jira %s %s '%s' to Flow Production Tracking %s (%d): %s"
                     % (
                         issue_type["name"],
                         jira_issue["key"],
@@ -766,11 +811,17 @@ class EntityIssueHandler(SyncHandler):
 
         if shotgun_data:
             self._logger.debug(
-                "Updating Shotgun %s (%d) with %s"
-                % (sg_entity["type"], sg_entity["id"], shotgun_data,)
+                "Updating Flow Production Tracking %s (%d) with %s"
+                % (
+                    sg_entity["type"],
+                    sg_entity["id"],
+                    shotgun_data,
+                )
             )
             self._shotgun.update(
-                sg_entity["type"], sg_entity["id"], shotgun_data,
+                sg_entity["type"],
+                sg_entity["id"],
+                shotgun_data,
             )
             return True
 
@@ -780,7 +831,7 @@ class EntityIssueHandler(SyncHandler):
         self, shotgun_entity, jira_issue, jira_field_id, change
     ):
         """
-        Retrieve the ShotGrid Entity field and the value to set from the given Jira
+        Retrieve the Flow Production Tracking Entity field and the value to set from the given Jira
         Issue field value.
 
         Jira changes are expressed with a dictionary which has `toString`, `to`,
@@ -793,25 +844,27 @@ class EntityIssueHandler(SyncHandler):
         or the actual values on a case by cases basis, depending on the target
         data type.
 
-        :param shotgun_entity: A ShotGrid Entity dictionary with at least a type
+        :param shotgun_entity: A Flow Production Tracking Entity dictionary with at least a type
                                and an id.
         :param jira_issue: A Jira Issue raw dictionary.
         :param jira_field_id: A Jira field id as a string.
         :param change: A dictionary with the field change retrieved from the
                        event change log.
-        :returns: A tuple with a ShotGrid field name and a ShotGrid value usable
+        :returns: A tuple with a Flow Production Tracking field name and a Flow Production Tracking value usable
                   for an update. The returned field id is `None` if no valid
                   field or value could be retrieved.
         :raises InvalidJiraValue: if the Jira value can't be translated
-                 into a valid ShotGrid value.
-        :raises ValueError: if the target ShotGrid field is not valid.
+                 into a valid Flow Production Tracking value.
+        :raises ValueError: if the target Flow Production Tracking field is not valid.
         """
 
         # Retrieve the Shotgun field to update
-        shotgun_field = self._get_shotgun_entity_field_for_issue_field(jira_field_id,)
+        shotgun_field = self._get_shotgun_entity_field_for_issue_field(
+            jira_field_id,
+        )
         if not shotgun_field:
             self._logger.debug(
-                "Unable to find a target Shotgun field for Jira field %s"
+                "Unable to find a target Flow Production Tracking field for Jira field %s"
                 % jira_field_id
             )
             return None, None
@@ -822,14 +875,22 @@ class EntityIssueHandler(SyncHandler):
         )
         if not shotgun_field_schema:
             raise ValueError(
-                "Unknown Shotgun field %s.%s" % (shotgun_entity["type"], shotgun_field,)
+                "Unknown Flow Production Tracking field %s.%s"
+                % (
+                    shotgun_entity["type"],
+                    shotgun_field,
+                )
             )
 
         if not shotgun_field_schema["editable"]["value"]:
             self._logger.debug(
-                "Unable to translate Jira field %s value to Shotgun. Target "
-                "Shotgun field %s.%s is not editable"
-                % (jira_field_id, shotgun_entity["type"], shotgun_field,)
+                "Unable to translate Jira field %s value to Flow Production Tracking. Target "
+                "Flow Production Tracking field %s.%s is not editable"
+                % (
+                    jira_field_id,
+                    shotgun_entity["type"],
+                    shotgun_field,
+                )
             )
             return None, None
 
@@ -853,7 +914,7 @@ class EntityIssueHandler(SyncHandler):
 
     def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
         """
-        Returns the ShotGrid field name to use to sync the given Jira Issue field.
+        Returns the Flow Production Tracking field name to use to sync the given Jira Issue field.
 
         Must be re-implemented in deriving classes.
 
@@ -863,26 +924,31 @@ class EntityIssueHandler(SyncHandler):
         raise NotImplementedError
 
     def _get_shotgun_assignment_from_jira_issue_change(
-        self, shotgun_entity, shotgun_field, shotgun_field_schema, jira_issue, change,
+        self,
+        shotgun_entity,
+        shotgun_field,
+        shotgun_field_schema,
+        jira_issue,
+        change,
     ):
         """
-        Retrieve a ShotGrid assignment value from the given Jira change.
+        Retrieve a Flow Production Tracking assignment value from the given Jira change.
 
-        This method supports single entity and multi entity ShotGrid fields.
+        This method supports single entity and multi entity Flow Production Tracking fields.
 
         Jira users keys are retrieved from the `from` and `to` values in the
         change dictionary.
 
-        :param str shotgun_entity: A ShotGrid Entity dictionary as retrieved from
-                                   ShotGrid.
-        :param str shotgun_field: The ShotGrid Entity field to get a value for.
-        :param shotgun_field_schema: The ShotGrid Entity field schema.
+        :param str shotgun_entity: A Flow Production Tracking Entity dictionary as retrieved from
+                                   Flow Production Tracking.
+        :param str shotgun_field: The Flow Production Tracking Entity field to get a value for.
+        :param shotgun_field_schema: The Flow Production Tracking Entity field schema.
         :param jira_issue: A Jira Issue raw dictionary.
         :param change: A Jira event changelog dictionary with 'from' and
                        'to' keys.
 
-        :returns: The updated value to set in ShotGrid for the given field.
-        :raises ValueError: if the target ShotGrid field is not suitable
+        :returns: The updated value to set in Flow Production Tracking for the given field.
+        :raises ValueError: if the target Flow Production Tracking field is not suitable
         """
         # Change log example
         # {
@@ -898,7 +964,7 @@ class EntityIssueHandler(SyncHandler):
         data_type = shotgun_field_schema["data_type"]["value"]
         if data_type not in ["multi_entity", "entity"]:
             raise ValueError(
-                "%s field type is not valid for Shotgun %s.%s assignments. Expected "
+                "%s field type is not valid for Flow Production Tracking %s.%s assignments. Expected "
                 "entity or multi_entity."
                 % (data_type, shotgun_entity["type"], shotgun_field)
             )
@@ -906,7 +972,7 @@ class EntityIssueHandler(SyncHandler):
         sg_valid_types = shotgun_field_schema["properties"]["valid_types"]["value"]
         if "HumanUser" not in sg_valid_types:
             raise ValueError(
-                "Shotgun %s.%s assignment field must accept HumanUser entities "
+                "Flow Production Tracking %s.%s assignment field must accept HumanUser entities "
                 "but only accepts %s"
                 % (shotgun_entity["type"], shotgun_field, sg_valid_types)
             )
@@ -925,7 +991,8 @@ class EntityIssueHandler(SyncHandler):
                             and current_sg["id"] == sg_user["id"]
                         ):
                             self._logger.debug(
-                                "Removing user %s from Shotgun assignment" % (sg_user)
+                                "Removing user %s from Flow Production Tracking assignment"
+                                % (sg_user)
                             )
                             del current_sg_assignment[i]
                             # Note: we're assuming there is no duplicates in the
@@ -948,7 +1015,7 @@ class EntityIssueHandler(SyncHandler):
                         break
                 else:
                     self._logger.debug(
-                        "Adding user %s to Shotgun assignment %s"
+                        "Adding user %s to Flow Production Tracking assignment %s"
                         % (sg_user, current_sg_assignment)
                     )
                     current_sg_assignment.append(sg_user)
@@ -963,7 +1030,8 @@ class EntityIssueHandler(SyncHandler):
                         and current_sg_assignment["id"] == sg_user["id"]
                     ):
                         self._logger.debug(
-                            "Removing user %s from Shotgun assignment" % (sg_user)
+                            "Removing user %s from Flow Production Tracking assignment"
+                            % (sg_user)
                         )
                         current_sg_assignment = None
 
@@ -983,16 +1051,16 @@ class EntityIssueHandler(SyncHandler):
         self, shotgun_field, user_id, jira_user=None, raise_on_missing_user=True
     ):
         """
-        Resolve the ShotGrid user associated to the JIRA user passed in.
+        Resolve the Flow Production Tracking user associated to the JIRA user passed in.
 
         This method should be called against a JIRA local server.
 
-        :param str shotgun_field: Field to sync the value to in ShotGrid.
+        :param str shotgun_field: Field to sync the value to in Flow Production Tracking.
         :param str user_id: Value of the to or from of a JIRA changelog.
         :param dict jira_user: Value of the user section of the webhook payload.
         :param bool raise_on_missing_user: Indicate how to handle unknown users.
 
-        :returns: A ShotGrid user entity dictionary.
+        :returns: A Flow Production Tracking user entity dictionary.
         :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.
         """
         if jira_user is not None:
@@ -1013,12 +1081,12 @@ class EntityIssueHandler(SyncHandler):
                 raise InvalidJiraValue(
                     shotgun_field,
                     jira_user,
-                    "Unable to find a Shotgun user with email address %s"
+                    "Unable to find a Flow Production Tracking user with email address %s"
                     % (emailAddress),
                 )
             else:
                 self._logger.debug(
-                    "Unable to find a Shotgun user with email address %s"
+                    "Unable to find a Flow Production Tracking user with email address %s"
                     % (emailAddress)
                 )
         return sg_user
@@ -1027,16 +1095,16 @@ class EntityIssueHandler(SyncHandler):
         self, shotgun_field, user_id, jira_user=None, raise_on_missing_user=True
     ):
         """
-        Resolve the ShotGrid user associated to the JIRA user passed in.
+        Resolve the Flow Production Tracking user associated to the JIRA user passed in.
 
         This method should be called against a JIRA Cloud server.
 
-        :param str shotgun_field: Field to sync the value to in ShotGrid.
+        :param str shotgun_field: Field to sync the value to in Flow Production Tracking.
         :param str user_id: Value of the to or from of a JIRA changelog.
         :param dict jira_user: User resource, typically the assignee field on an issue. Can be None
         :param bool raise_on_missing_user: Indicate how to handle unknown users.
 
-        :returns: A ShotGrid user entity dictionary.
+        :returns: A Flow Production Tracking user entity dictionary.
         :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.
         """
         # If the jira_user has been passed in, just use the accountId!
@@ -1074,10 +1142,12 @@ class EntityIssueHandler(SyncHandler):
                 raise InvalidJiraValue(
                     shotgun_field,
                     jira_user,
-                    "Unable to find a Shotgun user with JIRA accountId %s" % (user_id),
+                    "Unable to find a Flow Production Tracking user with JIRA accountId %s"
+                    % (user_id),
                 )
             else:
                 self._logger.debug(
-                    "Unable to find a Shotgun user with JIRA accountId %s" % (user_id)
+                    "Unable to find a Flow Production Tracking user with JIRA accountId %s"
+                    % (user_id)
                 )
         return sg_user

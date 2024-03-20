@@ -19,7 +19,7 @@ from .entity_issue_handler import EntityIssueHandler
 
 class TaskIssueHandler(EntityIssueHandler):
     """
-    Sync a ShotGrid Task as a Jira Issue.
+    Sync a Flow Production Tracking Task as a Jira Issue.
     """
 
     # Define the mapping between Shotgun Task fields and Jira Issue fields
@@ -35,14 +35,14 @@ class TaskIssueHandler(EntityIssueHandler):
     @property
     def _sg_jira_status_mapping(self):
         """
-        Return a dictionary where keys are ShotGrid status short codes and values
+        Return a dictionary where keys are Flow Production Tracking status short codes and values
         Jira Issue status names.
         """
         return TASK_ISSUE_STATUS_MAPPING
 
     @property
     def _supported_shotgun_fields_for_jira_event(self):
-        """"
+        """ "
         Return the list of fields this handler can process for a Jira event.
 
         :returns: A list of strings.
@@ -55,7 +55,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def setup(self):
         """
-        Check the Jira and ShotGrid site, ensure that the sync can safely happen.
+        Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field(
@@ -66,14 +66,14 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
-        Return the list of ShotGrid fields that this handler can process for a
-        ShotGrid to Jira event.
+        Return the list of Flow Production Tracking fields that this handler can process for a
+        Flow Production Tracking to Jira event.
         """
         return list(self.__TASK_FIELDS_MAPPING.keys())
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given ShotGrid Entity.
+        Accept or reject the given event for the given Flow Production Tracking Entity.
 
         :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
@@ -108,10 +108,10 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given ShotGrid event for the given ShotGrid Entity
+        Process the given Flow Production Tracking event for the given Flow Production Tracking Entity
 
-        :param str entity_type: The ShotGrid Entity type to sync.
-        :param int entity_id: The id of the ShotGrid Entity to sync.
+        :param str entity_type: The Flow Production Tracking Entity type to sync.
+        :param int entity_id: The id of the Flow Production Tracking Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
@@ -152,14 +152,22 @@ class TaskIssueHandler(EntityIssueHandler):
             self._logger.debug(
                 "Skipping Shotgun event for %s (%d). Entity's Project %s "
                 "is not linked to a Jira Project. Event: %s"
-                % (entity_type, entity_id, sg_entity["project"], event,)
+                % (
+                    entity_type,
+                    entity_id,
+                    sg_entity["project"],
+                    event,
+                )
             )
             return False
         jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
             self._logger.warning(
                 "Unable to find a Jira Project %s for Shotgun Project %s"
-                % (jira_project_key, sg_entity["project"],)
+                % (
+                    jira_project_key,
+                    sg_entity["project"],
+                )
             )
             return False
 
@@ -230,7 +238,8 @@ class TaskIssueHandler(EntityIssueHandler):
             # requiring a user lookup. But this could be handled by caching
             # retrieved users
             self._sync_shotgun_fields_to_jira(
-                sg_entity, jira_issue,
+                sg_entity,
+                jira_issue,
             )
             return True
 
@@ -262,7 +271,11 @@ class TaskIssueHandler(EntityIssueHandler):
         except InvalidShotgunValue as e:
             self._logger.warning(
                 "Unable to update Jira %s %s: %s"
-                % (jira_issue.fields.issuetype.name, jira_issue.key, e,)
+                % (
+                    jira_issue.fields.issuetype.name,
+                    jira_issue.key,
+                    e,
+                )
             )
             self._logger.debug("%s" % e, exc_info=True)
             return False
@@ -286,7 +299,9 @@ class TaskIssueHandler(EntityIssueHandler):
             )
         if sg_field == "addressings_cc":
             self._sync_shotgun_cced_changes_to_jira(
-                jira_issue, event["meta"]["added"], event["meta"]["removed"],
+                jira_issue,
+                event["meta"]["added"],
+                event["meta"]["removed"],
             )
             return True
         return False
@@ -295,11 +310,11 @@ class TaskIssueHandler(EntityIssueHandler):
         self, shotgun_entity_type, shotgun_field
     ):
         """
-        Returns the Jira Issue field id to use to sync the given ShotGrid Entity
+        Returns the Jira Issue field id to use to sync the given Flow Production Tracking Entity
         type field.
 
-        :param str shotgun_entity_type: A ShotGrid Entity type, e.g. 'Task'.
-        :param str shotgun_field: A ShotGrid Entity field name, e.g. 'sg_status_list'.
+        :param str shotgun_entity_type: A Flow Production Tracking Entity type, e.g. 'Task'.
+        :param str shotgun_field: A Flow Production Tracking Entity field name, e.g. 'sg_status_list'.
         :returns: A string or `None`.
         """
         if shotgun_entity_type != "Task":
@@ -308,7 +323,7 @@ class TaskIssueHandler(EntityIssueHandler):
 
     def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
         """
-        Returns the ShotGrid field name to use to sync the given Jira Issue field.
+        Returns the Flow Production Tracking field name to use to sync the given Jira Issue field.
 
         :param str jira_field_id: A Jira Issue field id, e.g. 'summary'.
         :returns: A string or `None`.
@@ -319,14 +334,14 @@ class TaskIssueHandler(EntityIssueHandler):
         self, sg_entity, jira_issue, exclude_shotgun_fields=None
     ):
         """
-        Update the given Jira Issue with values from the given ShotGrid Entity.
+        Update the given Jira Issue with values from the given Flow Production Tracking Entity.
 
-        An optional list of ShotGrid fields can be provided to exclude them from
+        An optional list of Flow Production Tracking fields can be provided to exclude them from
         the sync.
 
-        :param sg_entity: A ShotGrid Entity dictionary.
+        :param sg_entity: A Flow Production Tracking Entity dictionary.
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param exclude_shotgun_fields: An optional list of ShotGrid field names which
+        :param exclude_shotgun_fields: An optional list of Flow Production Tracking field names which
                                        shouldn't be synced.
         """
 
@@ -393,5 +408,7 @@ class TaskIssueHandler(EntityIssueHandler):
             and sg_entity["addressings_cc"]
         ):
             self._sync_shotgun_cced_changes_to_jira(
-                jira_issue, sg_entity["addressings_cc"], [],
+                jira_issue,
+                sg_entity["addressings_cc"],
+                [],
             )

@@ -7,7 +7,7 @@
 # this software in either electronic or hard copy form.
 #
 """
-ShotGrid Jira sync settings
+Flow Production Tracking Jira sync settings
 """
 import os
 import sys
@@ -68,7 +68,11 @@ LOGGING = {
 # Sync settings. Keys are settings name.
 
 # Add the ./ folder to the Python path so test syncers can be loaded by unit tests
-sys.path.append(os.path.abspath(os.path.dirname(__file__),))
+sys.path.append(
+    os.path.abspath(
+        os.path.dirname(__file__),
+    )
+)
 
 # Add the ../../examples folder to the Python path so example syncers can be loaded by unit tests
 sys.path.append(

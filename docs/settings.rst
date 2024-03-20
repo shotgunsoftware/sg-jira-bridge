@@ -12,9 +12,9 @@ Authentication
 **************
 Credentials are retrieved by default from environment variables:
 
-- ``SGJIRA_SG_SITE``: the ShotGrid site url
-- ``SGJIRA_SG_SCRIPT_NAME``: a ShotGrid script user name
-- ``SGJIRA_SG_SCRIPT_KEY``: the ShotGrid script user Application Key
+- ``SGJIRA_SG_SITE``: the Flow Production Tracking site url
+- ``SGJIRA_SG_SCRIPT_NAME``: a Flow Production Tracking script user name
+- ``SGJIRA_SG_SCRIPT_KEY``: the Flow Production Tracking script user Application Key
 - ``SGJIRA_JIRA_SITE``: the Jira server url
 - ``SGJIRA_JIRA_USER``: the system name of the Jira user used to
   connect for the sync.  This is usually your email address you
@@ -41,7 +41,7 @@ in a ``.env`` file.
 
 ::
 
-    # ShotGrid credentials
+    # Flow Production Tracking credentials
     SGJIRA_SG_SITE='https://mysite.shotgrid.autodesk.com'
     SGJIRA_SG_SCRIPT_NAME='sg-jira-bridge'
     SGJIRA_SG_SCRIPT_KEY='01234567@abcdef0123456789'
@@ -53,7 +53,7 @@ in a ``.env`` file.
 
 Logging
 *******
-The SG-Jira-Bridge uses standard Python logging. The logging configuration is
+The PTR-Jira-Bridge uses standard Python logging. The logging configuration is
 stored in a ``LOGGING`` *dict* using the standard :mod:`logging.config` format.
 
 
@@ -76,7 +76,7 @@ The sync settings are stored in a ``SYNC`` *dict* in the format:
 
 Each key is a settings name that contains a dictionary containing the syncer
 and the settings to use. The key is the settings name used when composing the
-URL for SG Jira Bridge. For example,
+URL for Flow Production Tracking Jira Bridge. For example,
 ``http://localhost:9090/sg2jira/my_settings`` uses the settings named
 ``my_settings``.
 

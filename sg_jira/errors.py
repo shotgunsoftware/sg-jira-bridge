@@ -14,8 +14,8 @@ class InvalidSyncValue(ValueError):
 
     def __init__(self, field, value, *args, **kwargs):
         """
-        :param str field: The Jira or SG field for which the exception was raised.
-        :param value: The Jira or SG value for which the exception was raised.
+        :param str field: The Jira or PTR field for which the exception was raised.
+        :param value: The Jira or PTR value for which the exception was raised.
         """
         super(InvalidSyncValue, self).__init__(*args, **kwargs)
         self._field = field
@@ -38,7 +38,7 @@ class InvalidSyncValue(ValueError):
 
 class InvalidShotgunValue(InvalidSyncValue):
     """
-    An exception raised when a ShotGrid value can't be translated to a valid
+    An exception raised when a Flow Production Tracking value can't be translated to a valid
     Jira value for a given field.
     """
 
@@ -48,7 +48,7 @@ class InvalidShotgunValue(InvalidSyncValue):
 class InvalidJiraValue(InvalidSyncValue):
     """
     An exception raised when a Jira value can't be translated to a valid
-    ShotGrid value for a given field.
+    Flow Production Tracking value for a given field.
     """
 
     pass
