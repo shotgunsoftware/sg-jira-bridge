@@ -18,7 +18,7 @@ class TestHierarchySyncer(TestCase):
 
     def test_jira_cloud_accound_regex(self):
         """
-        Test syncing links from SG to Jira.
+        Test syncing links from PTR to Jira.
         """
         # These are the two formats we're aware of for account id's in JIRA.
         self.assertIsNotNone(

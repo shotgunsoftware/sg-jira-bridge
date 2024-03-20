@@ -13,7 +13,7 @@ from test_base import TestBase
 from test_sync_base import ExtMockgun
 
 
-# Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
+# Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
 class TestShotgunSession(TestBase):
@@ -23,7 +23,7 @@ class TestShotgunSession(TestBase):
         """Test setup."""
         super(TestShotgunSession, self).setUp()
 
-        # Set up the FPT database
+        # Set up the PTR database
         self.set_sg_mock_schema(
             os.path.join(
                 self._fixtures_path,
@@ -70,7 +70,7 @@ class TestShotgunSession(TestBase):
         }
 
     def _get_sg_session(self, mocked_sg):
-        """Return a Shotgun session object."""
+        """Return a PTR session object."""
         mocked_sg.return_value = ExtMockgun(
             "https://mocked.my.com",
             "Ford Prefect",

@@ -12,7 +12,7 @@ from .asset_issue_handler import AssetIssueHandler
 
 class AssetHierarchySyncer(Syncer):
     """
-    Syncer example which mimics a simple ShotGrid Asset/Task hierarchy in Jira .
+    Syncer example which mimics a simple Flow Production Tracking Asset/Task hierarchy in Jira .
     - Assets are synced as Jira Stories.
     - Tasks are synced as Jira Issues, with a dependency to the Asset Story.
 

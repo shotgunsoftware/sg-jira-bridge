@@ -75,7 +75,8 @@ def run_tests():
     """
     parser = argparse.ArgumentParser(description="run tests")
     parser.add_argument(
-        "--xmlout", help="Output directory for xml reports",
+        "--xmlout",
+        help="Output directory for xml reports",
     )
     parser.add_argument(
         "--print-env",

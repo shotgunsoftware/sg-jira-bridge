@@ -18,13 +18,13 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 """
-A ShotGrid event daemon plugin which sends all events to the SG/Jira bridge.
+A Flow Production Tracking event daemon plugin which sends all events to the PTR/Jira bridge.
 
-ShotGrid Projects are associated with a Jira sync server by specifying an url in the
+Flow Production Tracking Projects are associated with a Jira sync server by specifying an url in the
 custom `sg_jira_sync_url` field.
 """
 
-# These events potentially modify the SG schema
+# These events potentially modify the PTR schema
 SCHEMA_CHANGE_EVENT_TYPES = [
     "Shotgun_DisplayColumn_New",
     "Shotgun_DisplayColumn_Change",
@@ -39,10 +39,10 @@ def registerCallbacks(reg):
     """
     Register all necessary or appropriate callbacks for this plugin.
 
-    ShotGrid credentials are retrieved from the `SGDAEMON_SGJIRA_NAME` and `SGDAEMON_SGJIRA_KEY`
+    Flow Production Tracking credentials are retrieved from the `SGDAEMON_SGJIRA_NAME` and `SGDAEMON_SGJIRA_KEY`
     environment variables.
 
-    :param reg: A ShotGrid Event Daemon Registrar instance.
+    :param reg: A Flow Production Tracking Event Daemon Registrar instance.
     """
     # Narrow down the list of events we pass to the bridge
     event_filter = {
@@ -83,10 +83,10 @@ def process_event(sg, logger, event, dispatch_routes):
     """
     A callback which posts Jira sync requests.
 
-    :param sg: ShotGrid API handle.
+    :param sg: Flow Production Tracking API handle.
     :param logger: Logger instance.
-    :param event: A ShotGrid EventLogEntry entity dictionary.
-    :param dispatch_routes: A dictionary where keys are SG Project ids and values urls.
+    :param event: A Flow Production Tracking EventLogEntry entity dictionary.
+    :param dispatch_routes: A dictionary where keys are PTR Project ids and values urls.
     """
     logger.debug("Processing %s" % event)
     if event.get("event_type") in SCHEMA_CHANGE_EVENT_TYPES:
@@ -182,10 +182,10 @@ def _get_dispatch_route(sg, logger, project, dispatch_routes):
     """
     Return the sg-jira-bridge sync url for the given Project.
 
-    :param sg: ShotGrid API handle.
+    :param sg: Flow Production Tracking API handle.
     :param logger: Logger instance.
-    :param list project: A ShotGrid Project entity dictionary.
-    :param dict dispatch_routes: A mapping of SG Project ids to sync urls.
+    :param list project: A Flow Production Tracking Project entity dictionary.
+    :param dict dispatch_routes: A mapping of PTR Project ids to sync urls.
     :returns: Sync url as a string or ``None``.
     """
     # Shotgun requests are costly so we cache Projects dispatch routes and re-use
@@ -223,15 +223,15 @@ def _get_dispatch_route(sg, logger, project, dispatch_routes):
 
 def _get_project_sync_url(sg_field_value, logger):
     """
-    Return sync url from ShotGrid File/Link field.
+    Return sync url from Flow Production Tracking File/Link field.
 
-    :param sg_field_value: ShotGrid File/Link field value as a dict or ``None``.
+    :param sg_field_value: Flow Production Tracking File/Link field value as a dict or ``None``.
     :param logger: Logger instance.
     :returns: URL for sync as a str or ``None``.
     """
     # We expect a File/Link field with a web link, something like:
     # {
-    #    'name': 'SG Jira Bridge',
+    #    'name': 'PTR Jira Bridge',
     #    'url': 'http://localhost:9090',
     #    'content_type': None,
     #    'type': 'Attachment',
@@ -262,7 +262,7 @@ def _reset_bridge(server_url, logger):
     """
     Reset the Jira bridge
 
-    :param str server_url: Sync URL of the SG Jira Bridge.
+    :param str server_url: Sync URL of the PTR Jira Bridge.
     :param logger: Logger instance.
     """
     # The url is for the sync and contains a direction and settings name.

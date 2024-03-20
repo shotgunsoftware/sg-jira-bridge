@@ -55,7 +55,7 @@ SG_TASKS = [
         SHOTGUN_SYNC_IN_JIRA_FIELD: True,
     },
 ]
-# Faked SG event meta data
+# Faked PTR event meta data
 SG_EVENT_META = {
     "attribute_name": "sg_status_list",
     "entity_id": 11793,
@@ -318,7 +318,7 @@ JIRA_COMMENT_EVENT = {
 @mock.patch("shotgun_api3.Shotgun")
 class TestJiraSyncer(TestSyncBase):
     """
-    Test syncing from ShotGrid to Jira.
+    Test syncing from Flow Production Tracking to Jira.
     """
 
     def test_bad_syncer(self, mocked_sg):
@@ -364,7 +364,7 @@ class TestJiraSyncer(TestSyncBase):
     @mock.patch("sg_jira.Bridge.current_shotgun_user", new_callable=mock.PropertyMock)
     def test_shotgun_event_accept(self, mocked_cur_user, mocked_sg):
         """
-        Test syncer accepts the right ShotGrid events.
+        Test syncer accepts the right Flow Production Tracking events.
         """
         mocked_cur_user.return_value = {"type": "ApiUser", "id": 1}
         syncer, bridge = self._get_syncer(mocked_sg)
@@ -449,7 +449,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_project_match(self, mocked_sg):
         """
-        Test matching a Project between ShotGrid and Jira, handling Jira
+        Test matching a Project between Flow Production Tracking and Jira, handling Jira
         create meta data and creating an Issue.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
@@ -537,7 +537,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_shotgun_assignee(self, mocked_sg):
         """
-        Test matching ShotGrid assignment to Jira.
+        Test matching Flow Production Tracking assignment to Jira.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
@@ -723,11 +723,11 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_shotgun_tag(self, mocked_sg):
         """
-        Test matching ShotGrid tags to Jira labels.
+        Test matching Flow Production Tracking tags to Jira labels.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         bridge.jira.set_projects([JIRA_PROJECT])
-        # We validate the Issue syncs back to the same SG entity.
+        # We validate the Issue syncs back to the same PTR entity.
         issue = bridge.jira.create_issue(
             {JIRA_ISSUE_SG_TYPE_FIELD: "Task", JIRA_ISSUE_SG_ID_FIELD: 3}
         )
@@ -813,19 +813,19 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_hosted_jira_assignment(self, mocked_sg):
         """
-        Test syncing Jira Cloud assignment to ShotGrid
+        Test syncing Jira Cloud assignment to Flow Production Tracking
         """
         self._test_jira_assignment(mocked_sg, is_jira_cloud=True)
 
     def test_local_jira_assignment(self, mocked_sg):
         """
-        Test syncing Jira Cloud assignment to ShotGrid
+        Test syncing Jira Cloud assignment to Flow Production Tracking
         """
         self._test_jira_assignment(mocked_sg, is_jira_cloud=False)
 
     def _test_jira_assignment(self, mocked_sg, is_jira_cloud):
         """
-        Test syncing JIRA assignment to ShotGrid.
+        Test syncing JIRA assignment to Flow Production Tracking.
         """
         # Force JIRA cloud or not on the session, which will impact how the
         # webhook data is interpreted.
@@ -893,7 +893,12 @@ class TestJiraSyncer(TestSyncBase):
         jira_event = dict(JIRA_EVENT)
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_UNASSIGNEE_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         # The matching assignment should have been removed
         self.assertEqual(
@@ -904,7 +909,12 @@ class TestJiraSyncer(TestSyncBase):
         )
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_ASSIGNEE_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         # The assignment should have been set
         self.assertEqual(
@@ -926,7 +936,12 @@ class TestJiraSyncer(TestSyncBase):
             )["task_assignees"],
         )
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         # The unknown user should have been preserved
         self.assertEqual(
@@ -948,7 +963,12 @@ class TestJiraSyncer(TestSyncBase):
             )["task_assignees"],
         )
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         # the known user should have been removed and the new assignee added
         self.assertEqual(
@@ -960,7 +980,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_jira_labels(self, mocked_sg):
         """
-        Test syncing Jira labels to ShotGrid
+        Test syncing Jira labels to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
@@ -985,7 +1005,12 @@ class TestJiraSyncer(TestSyncBase):
         jira_event = dict(JIRA_EVENT)
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_UNLABEL_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             [],
@@ -995,7 +1020,12 @@ class TestJiraSyncer(TestSyncBase):
         )
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_LABEL_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             [{"id": 2, "type": "Tag"}],
@@ -1024,7 +1054,12 @@ class TestJiraSyncer(TestSyncBase):
             )["tags"],
         )
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         # Existing tag should have been preserved, the known one added.
         self.assertEqual(
@@ -1036,7 +1071,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_jira_status(self, mocked_sg):
         """
-        Test syncing Jira status to ShotGrid
+        Test syncing Jira status to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
@@ -1062,7 +1097,12 @@ class TestJiraSyncer(TestSyncBase):
         jira_event = dict(JIRA_EVENT)
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_STATUS_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             "hld",
@@ -1073,7 +1113,12 @@ class TestJiraSyncer(TestSyncBase):
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_STATUS_CHANGE_2]}
         # Udpate with a status unknown in Shotgun
         self.assertFalse(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
 
     @mock.patch("shotgun_api3.lib.mockgun.Shotgun._validate_entity_data")
@@ -1109,13 +1154,18 @@ class TestJiraSyncer(TestSyncBase):
                 sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
             )["due_date"],
         )
-        
+
         # Prepare the JIRA payload
         jira_event = dict(JIRA_EVENT)
         jira_event["issue"]["fields"]["duedate"] = DUE_DATE
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             "2024-03-30",
@@ -1157,13 +1207,18 @@ class TestJiraSyncer(TestSyncBase):
                 sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
             )["due_date"],
         )
-        
+
         # Prepare a JIRA payload without `fieldId` property
         jira_event = dict(JIRA_EVENT)
         jira_event["issue"]["fields"]["duedate"] = DUE_DATE
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE_2]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             "2024-03-30",
@@ -1174,7 +1229,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_jira_2_shotgun(self, mocked_sg):
         """
-        Test syncing from Jira to ShotGrid
+        Test syncing from Jira to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         # Syncing without the target entities shouldn't cause problems
@@ -1184,7 +1239,12 @@ class TestJiraSyncer(TestSyncBase):
             [], bridge.shotgun.find(sg_entity_type, [["id", "is", sg_entity_id]])
         )
         self.assertFalse(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", JIRA_EVENT,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                JIRA_EVENT,
+            )
         )
         # No new entity should be created
         self.assertEqual(
@@ -1202,14 +1262,19 @@ class TestJiraSyncer(TestSyncBase):
             },
         )
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", JIRA_EVENT,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                JIRA_EVENT,
+            )
         )
 
     def test_unicode(self, mocked_sg):
         """
         Test unicode values are correclty handled.
         """
-        unicode_string = u"No Sync unicode_îéö_😀"
+        unicode_string = "No Sync unicode_îéö_😀"
         encoded_string = six.ensure_str(unicode_string)
         syncer, bridge = self._get_syncer(mocked_sg)
         # Faked Jira project
@@ -1222,7 +1287,8 @@ class TestJiraSyncer(TestSyncBase):
             SHOTGUN_JIRA_ID_FIELD: JIRA_PROJECT_KEY,
         }
         self.add_to_sg_mock_db(
-            bridge.shotgun, sg_project,
+            bridge.shotgun,
+            sg_project,
         )
         sg_user = {
             "status": "act",
@@ -1233,7 +1299,8 @@ class TestJiraSyncer(TestSyncBase):
             "email": JIRA_USER["emailAddress"],
         }
         self.add_to_sg_mock_db(
-            bridge.shotgun, [sg_project, sg_user],
+            bridge.shotgun,
+            [sg_project, sg_user],
         )
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
         sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
@@ -1267,7 +1334,12 @@ class TestJiraSyncer(TestSyncBase):
             },
         )
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", JIRA_EVENT,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                JIRA_EVENT,
+            )
         )
         jira_event = dict(JIRA_EVENT)
         jira_event["changelog"] = {
@@ -1295,7 +1367,12 @@ class TestJiraSyncer(TestSyncBase):
         }
 
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         # Retrieve the updated Task and check it
         updated_task = bridge.shotgun.find_one(
@@ -1310,7 +1387,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_jira_comment(self, mocked_sg):
         """
-        Test syncing Comments from Jira to SG.
+        Test syncing Comments from Jira to PTR.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
 
@@ -1343,8 +1420,8 @@ class TestJiraSyncer(TestSyncBase):
 
         jira_comment_event = dict(JIRA_COMMENT_EVENT)
 
-        expected_sg_title = u"Updated Title"
-        expected_sg_content = u"updated content\nand updated more here."
+        expected_sg_title = "Updated Title"
+        expected_sg_content = "updated content\nand updated more here."
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
             expected_sg_title,
             expected_sg_content,
@@ -1354,47 +1431,62 @@ class TestJiraSyncer(TestSyncBase):
         # ---------------------
         self.assertTrue(
             bridge.sync_in_shotgun(
-                "task_issue", "Issue", "FAKED-01", jira_comment_event,
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
             )
         )
-        # SG Note subject and content matches
+        # PTR Note subject and content matches
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], ["subject", "content"],
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
         )
         self.assertEqual(updated_note["subject"], expected_sg_title)
         self.assertEqual(updated_note["content"], expected_sg_content)
 
         # jira body with {} chars that should not trip up things
-        expected_sg_title = u"Updated Title"
-        expected_sg_content = u"}{foo\nand updated more here."
+        expected_sg_title = "Updated Title"
+        expected_sg_content = "}{foo\nand updated more here."
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
             expected_sg_title,
             expected_sg_content,
         )
         self.assertTrue(
             bridge.sync_in_shotgun(
-                "task_issue", "Issue", "FAKED-01", jira_comment_event,
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
             )
         )
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], ["subject", "content"],
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
         )
         self.assertEqual(updated_note["subject"], expected_sg_title)
         self.assertEqual(updated_note["content"], expected_sg_content)
 
         # Ill formatted {panel} should be rejected
-        bad_sg_title = u"Upda{panel:title=bad title}ted Title"
+        bad_sg_title = "Upda{panel:title=bad title}ted Title"
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
             bad_sg_title,
             expected_sg_content,
         )
         self.assertFalse(
             bridge.sync_in_shotgun(
-                "task_issue", "Issue", "FAKED-01", jira_comment_event,
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
             )
         )
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], ["subject", "content"],
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
         )
         # Shouldn't have changed
         self.assertEqual(updated_note["subject"], expected_sg_title)
@@ -1402,8 +1494,8 @@ class TestJiraSyncer(TestSyncBase):
 
         # unicode
         # ---------------------
-        expected_sg_title_unicode = u"Üñïçœdé Title 😬"
-        expected_sg_content_unicode = u"Üñïçœdé content 😬\nyay"
+        expected_sg_title_unicode = "Üñïçœdé Title 😬"
+        expected_sg_content_unicode = "Üñïçœdé content 😬\nyay"
         jira_comment_event["comment"]["body"] = COMMENT_BODY_TEMPLATE % (
             expected_sg_title_unicode,
             expected_sg_content_unicode,
@@ -1411,12 +1503,17 @@ class TestJiraSyncer(TestSyncBase):
         # unicode Update succeeds
         self.assertTrue(
             bridge.sync_in_shotgun(
-                "task_issue", "Issue", "FAKED-01", jira_comment_event,
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
             )
         )
-        # unicode SG Note subject and content matches
+        # unicode PTR Note subject and content matches
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], ["subject", "content"],
+            "Note",
+            [["id", "is", 1]],
+            ["subject", "content"],
         )
         self.assertEqual(updated_note["subject"], expected_sg_title_unicode)
         self.assertEqual(updated_note["content"], expected_sg_content_unicode)
@@ -1427,7 +1524,10 @@ class TestJiraSyncer(TestSyncBase):
         jira_comment_event["comment"]["body"] = "Wrong format for Comment body"
         self.assertFalse(
             bridge.sync_in_shotgun(
-                "task_issue", "Issue", "FAKED-01", jira_comment_event,
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
             )
         )
 
@@ -1435,14 +1535,20 @@ class TestJiraSyncer(TestSyncBase):
         jira_comment_event["webhookEvent"] = "comment_created"
         self.assertFalse(
             bridge.sync_in_shotgun(
-                "task_issue", "Issue", "FAKED-01", jira_comment_event,
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
             )
         )
         # delete Comment doesn't sync
         jira_comment_event["webhookEvent"] = "comment_deleted"
         self.assertFalse(
             bridge.sync_in_shotgun(
-                "task_issue", "Issue", "FAKED-01", jira_comment_event,
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_comment_event,
             )
         )
 
@@ -1452,7 +1558,7 @@ class TestJiraSyncer(TestSyncBase):
 
     def test_shotgun_note(self, mocked_sg):
         """
-        Test syncing a Note from SG to Jira.
+        Test syncing a Note from PTR to Jira.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         # Faked Jira project
@@ -1501,7 +1607,9 @@ class TestJiraSyncer(TestSyncBase):
             },
         )
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], [SHOTGUN_JIRA_ID_FIELD],
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
         )
         self.assertIsNone(updated_note[SHOTGUN_JIRA_ID_FIELD])
 
@@ -1525,7 +1633,9 @@ class TestJiraSyncer(TestSyncBase):
             },
         )
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], [SHOTGUN_JIRA_ID_FIELD],
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
         )
         self.assertIsNone(updated_note[SHOTGUN_JIRA_ID_FIELD])
 
@@ -1553,7 +1663,9 @@ class TestJiraSyncer(TestSyncBase):
             },
         )
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], [SHOTGUN_JIRA_ID_FIELD],
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
         )
         self.assertEqual(updated_note[SHOTGUN_JIRA_ID_FIELD], "%s/1" % issue.key)
 
@@ -1577,7 +1689,9 @@ class TestJiraSyncer(TestSyncBase):
             },
         )
         updated_note = bridge.shotgun.find_one(
-            "Note", [["id", "is", 1]], [SHOTGUN_JIRA_ID_FIELD],
+            "Note",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD],
         )
         self.assertIsNone(updated_note[SHOTGUN_JIRA_ID_FIELD])
 
@@ -1654,9 +1768,9 @@ class TestJiraSyncer(TestSyncBase):
     def test_mismatched_sg_jira_ids(self, mocked_sg):
         """
         Test we correctly catch when the Jira Issue is linked to
-        a different SG entity from the one trying to sync to it and
+        a different PTR entity from the one trying to sync to it and
         don't sync it.
-        This will also be the case for catching when SG entities are
+        This will also be the case for catching when PTR entities are
         duplicated if unique values aren't enforced on the Jira Key field.
         """
         syncer, bridge = self._get_syncer(mocked_sg)
@@ -1679,7 +1793,7 @@ class TestJiraSyncer(TestSyncBase):
         self.add_to_sg_mock_db(bridge.shotgun, SG_TASKS + [synced_task])
 
         # make sure Task is not synced to Issue that is linked to a different
-        # SG entity
+        # PTR entity
         event = {
             "user": {"type": "HumanUser", "id": 1},
             "project": {"type": "Project", "id": 2},

@@ -39,13 +39,17 @@ class TestSyncBase(TestBase):
 
     def _get_mocked_sg_handle(self):
         """
-        Return a mocked SG handle.
+        Return a mocked PTR handle.
         """
-        return ExtMockgun("https://mocked.my.com", "Ford Prefect", "xxxxxxxxxx",)
+        return ExtMockgun(
+            "https://mocked.my.com",
+            "Ford Prefect",
+            "xxxxxxxxxx",
+        )
 
     def _get_syncer(self, mocked_sg, name="task_issue"):
         """
-        Helper to get a syncer and a bridge with a mocked ShotGrid.
+        Helper to get a syncer and a bridge with a mocked Flow Production Tracking.
 
         :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.
@@ -63,7 +67,11 @@ class TestSyncBase(TestBase):
         """
         super(TestSyncBase, self).setUp()
         self.set_sg_mock_schema(
-            os.path.join(self._fixtures_path, "schemas", "sg-jira",)
+            os.path.join(
+                self._fixtures_path,
+                "schemas",
+                "sg-jira",
+            )
         )
 
         self.mock_jira_session_bases()

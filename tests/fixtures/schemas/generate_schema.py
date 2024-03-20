@@ -6,7 +6,7 @@
 #
 
 DESCRIPTION = """
-A script to generate ShotGrid schema for Mockgun.
+A script to generate Flow Production Tracking schema for Mockgun.
 """
 import argparse
 import os
@@ -19,10 +19,14 @@ from shotgun_api3.lib import mockgun
 def main():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
-        "--path", help="Output directory path for schema files.", required=True,
+        "--path",
+        help="Output directory path for schema files.",
+        required=True,
     )
     parser.add_argument(
-        "--shotgun", help="A SG site url, a script name and its key", required=True,
+        "--shotgun",
+        help="A PTR site url, a script name and its key",
+        required=True,
     )
     args = parser.parse_args()
 

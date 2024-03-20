@@ -15,7 +15,7 @@ https://github.com/shotgunsoftware/python-api/archive/v3.3.5.zip
 # Allows defining env vars in a .env file that can be loaded at runtime
 python-dotenv==0.13.0
 #
-# List of Python packages needed by the SG Jira Bridge event trigger
+# List of Python packages needed by the PTR Jira Bridge event trigger
 #
 
 # Requests

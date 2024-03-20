@@ -42,7 +42,7 @@ jobs:
 
   - script: |
       python tests/run_tests.py --xmlout test-results
-    displayName: Test SG Jira
+    displayName: Test PTR Jira
     env: { 'LANG': 'en_US.UTF-8' }
 
   - task: PublishTestResults@2

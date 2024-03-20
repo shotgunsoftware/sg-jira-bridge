@@ -44,7 +44,7 @@ class TestHierarchySyncer(TestSyncBase):
 
     def test_shotgun_links_sync(self, mocked_sg):
         """
-        Test syncing links from SG to Jira.
+        Test syncing links from PTR to Jira.
         """
         syncer, bridge = self._get_syncer(mocked_sg, name="asset_hierarchy")
         bridge.jira.set_projects([JIRA_PROJECT])
@@ -104,7 +104,7 @@ class TestHierarchySyncer(TestSyncBase):
 
         # make sure we're setting the Jira URL and it's what we expect
         self.assertIsNotNone(updated_asset[SHOTGUN_JIRA_URL_FIELD])
-        expected_url = {u"name": u"View in Jira", u"url": issue.permalink()}
+        expected_url = {"name": "View in Jira", "url": issue.permalink()}
         self.assertEqual(updated_asset[SHOTGUN_JIRA_URL_FIELD], expected_url)
 
         # Should return False because the link is already there (no update)

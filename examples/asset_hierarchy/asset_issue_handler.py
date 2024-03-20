@@ -20,7 +20,7 @@ from sg_jira.errors import InvalidShotgunValue
 
 class AssetIssueHandler(EntityIssueHandler):
     """
-    A handler which syncs a ShotGrid Asset as a Jira Issue.
+    A handler which syncs a Flow Production Tracking Asset as a Jira Issue.
     Need to update process_shotgun_event to add create Story functions.
     """
 
@@ -40,7 +40,7 @@ class AssetIssueHandler(EntityIssueHandler):
     def _shotgun_asset_fields(self):
         """
         Return the list of fields to ask for when retrieving an Asset from
-        ShotGrid.
+        Flow Production Tracking.
         """
         return [
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
@@ -51,7 +51,7 @@ class AssetIssueHandler(EntityIssueHandler):
     @property
     def _sg_jira_status_mapping(self):
         """
-        Return a dictionary where keys are ShotGrid status short codes and values
+        Return a dictionary where keys are Flow Production Tracking status short codes and values
         are Jira Issue status names.
         """
         return ASSET_ISSUE_STATUS_MAPPING
@@ -71,8 +71,8 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def _supported_shotgun_fields_for_shotgun_event(self):
         """
-        Return the list of ShotGrid fields that this handler can process for a
-        ShotGrid to Jira event.
+        Return the list of Flow Production Tracking fields that this handler can process for a
+        Flow Production Tracking to Jira event.
         """
         return list(self.__ASSET_FIELDS_MAPPING.keys())
 
@@ -80,11 +80,11 @@ class AssetIssueHandler(EntityIssueHandler):
         self, shotgun_entity_type, shotgun_field
     ):
         """
-        Returns the Jira Issue field id to use to sync the given ShotGrid Entity
+        Returns the Jira Issue field id to use to sync the given Flow Production Tracking Entity
         type field.
 
-        :param str shotgun_entity_type: A ShotGrid Entity type, e.g. 'Task'.
-        :param str shotgun_field: A ShotGrid Entity field name, e.g. 'sg_status_list'.
+        :param str shotgun_entity_type: A Flow Production Tracking Entity type, e.g. 'Task'.
+        :param str shotgun_field: A Flow Production Tracking Entity field name, e.g. 'sg_status_list'.
         :returns: A string or ``None``.
         """
         if shotgun_entity_type != "Asset":
@@ -93,7 +93,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def _get_shotgun_entity_field_for_issue_field(self, jira_field_id):
         """
-        Returns the ShotGrid field name to use to sync the given Jira Issue field.
+        Returns the Flow Production Tracking field name to use to sync the given Jira Issue field.
 
         :param str jira_field_id: A Jira Issue field id, e.g. 'summary'.
         :returns: A string or ``None``.
@@ -102,10 +102,10 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def _sync_asset_to_jira(self, shotgun_asset, event_meta=None):
         """
-        Update an existing Jira Issue from the ShotGrid Asset fields.
+        Update an existing Jira Issue from the Flow Production Tracking Asset fields.
 
-        :param shotgun_asset: A ShotGrid Asset dictionary.
-        :param event_meta: A ShotGrid Event meta data dictionary or ``None``.
+        :param shotgun_asset: A Flow Production Tracking Asset dictionary.
+        :param event_meta: A Flow Production Tracking Event meta data dictionary or ``None``.
         :returns: ``True`` if a Jira Issue was updated, ``False`` otherwise.
         """
         jira_issue_key = shotgun_asset[SHOTGUN_JIRA_ID_FIELD]
@@ -134,7 +134,12 @@ class AssetIssueHandler(EntityIssueHandler):
         except InvalidShotgunValue as e:
             self._logger.warning(
                 "Unable to update Jira %s %s for event %s: %s"
-                % (jira_issue.fields.issuetype.name, jira_issue.key, event_meta, e,)
+                % (
+                    jira_issue.fields.issuetype.name,
+                    jira_issue.key,
+                    event_meta,
+                    e,
+                )
             )
             self._logger.debug("%s" % e, exc_info=True)
             return False
@@ -180,12 +185,12 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def _sync_asset_tasks_change_to_jira(self, shotgun_asset, added, removed):
         """
-        Update Jira with tasks changes for the given ShotGrid Asset.
+        Update Jira with tasks changes for the given Flow Production Tracking Asset.
 
-        :param shotgun_asset: A ShotGrid Asset dictionary.
-        :param added: A list of ShotGrid Task dictionaries which were added to
+        :param shotgun_asset: A Flow Production Tracking Asset dictionary.
+        :param added: A list of Flow Production Tracking Task dictionaries which were added to
                       the given Asset.
-        :param removed: A list of ShotGrid Task dictionaries which were removed from
+        :param removed: A list of Flow Production Tracking Task dictionaries which were removed from
                         the given Asset.
         :returns: ``True`` if the given changes could be processed sucessfully,
                   ``False`` otherwise.
@@ -276,7 +281,10 @@ class AssetIssueHandler(EntityIssueHandler):
                 if not jira_project:
                     self._logger.warning(
                         "Unable to find Jira Project %s for Shotgun Project %s."
-                        % (jira_project_key, shotgun_asset["project"],)
+                        % (
+                            jira_project_key,
+                            shotgun_asset["project"],
+                        )
                     )
                     return False
 
@@ -322,7 +330,10 @@ class AssetIssueHandler(EntityIssueHandler):
                         outwardIssue=jira_issue.key,
                         comment={
                             "body": "Linking %s to %s"
-                            % (shotgun_asset["code"], sg_task["content"],),
+                            % (
+                                shotgun_asset["code"],
+                                sg_task["content"],
+                            ),
                         },
                     )
                     updated = True
@@ -338,14 +349,14 @@ class AssetIssueHandler(EntityIssueHandler):
         self, sg_entity, jira_issue, exclude_shotgun_fields=None
     ):
         """
-        Update the given Jira Issue with values from the given ShotGrid Entity.
+        Update the given Jira Issue with values from the given Flow Production Tracking Entity.
 
-        An optional list of ShotGrid fields can be provided to exclude them from
+        An optional list of Flow Production Tracking fields can be provided to exclude them from
         the sync.
 
-        :param sg_entity: A ShotGrid Entity dictionary.
+        :param sg_entity: A Flow Production Tracking Entity dictionary.
         :param jira_issue: A :class:`jira.Issue` instance.
-        :param exclude_shotgun_fields: An optional list of ShotGrid field names which
+        :param exclude_shotgun_fields: An optional list of Flow Production Tracking field names which
                                        shouldn't be synced.
         """
 
@@ -417,9 +428,9 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def _sync_shotgun_task_asset_to_jira(self, shotgun_task):
         """
-        Sync the Asset attached to the given ShotGrid Task to Jira.
+        Sync the Asset attached to the given Flow Production Tracking Task to Jira.
 
-        :param shotgun_task: A ShotGrid Task dictionary.
+        :param shotgun_task: A Flow Production Tracking Task dictionary.
         :returns: ``True`` if any update happened, ``False`` otherwise.
         """
         # Retrieve the Asset linked to the Task, if any
@@ -451,7 +462,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def setup(self):
         """
-        Check the Jira and ShotGrid site, ensure that the sync can safely happen.
+        Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen.
         This can be used as well to cache any value which is slow to retrieve.
         """
         self._shotgun.assert_field(
@@ -461,7 +472,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given ShotGrid Entity.
+        Accept or reject the given event for the given Flow Production Tracking Entity.
 
         :returns: ``True`` if the event is accepted for processing, ``False`` otherwise.
         """
@@ -483,10 +494,10 @@ class AssetIssueHandler(EntityIssueHandler):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given ShotGrid event for the given ShotGrid Entity
+        Process the given Flow Production Tracking event for the given Flow Production Tracking Entity
 
-        :param str entity_type: The ShotGrid Entity type to sync.
-        :param int entity_id: The id of the ShotGrid Entity to sync.
+        :param str entity_type: The Flow Production Tracking Entity type to sync.
+        :param int entity_id: The id of the Flow Production Tracking Entity to sync.
         :param event: A dictionary with the event meta data for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
@@ -528,7 +539,7 @@ class AssetIssueHandler(EntityIssueHandler):
         jira_project_key = sg_entity["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
         if not jira_project_key:
             self._logger.debug(
-                "Skipping ShotGrid event for %s (%d). Entity's Project %s "
+                "Skipping Flow Production Tracking event for %s (%d). Entity's Project %s "
                 "is not linked to a Jira Project. Event: %s"
                 % (
                     entity_type,
@@ -541,7 +552,7 @@ class AssetIssueHandler(EntityIssueHandler):
         jira_project = self.get_jira_project(jira_project_key)
         if not jira_project:
             self._logger.warning(
-                "Unable to find a Jira Project %s for ShotGrid Project %s"
+                "Unable to find a Jira Project %s for Flow Production Tracking Project %s"
                 % (
                     jira_project_key,
                     sg_entity["project"],

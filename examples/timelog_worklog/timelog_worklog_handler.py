@@ -20,16 +20,16 @@ from sg_jira.constants import (
 class TimelogWorklogHandler(SyncHandler):
     """
     A handler which syncs a Flow Production Tracking Timelog as a Jira Worklog.
-    The sync works in both way (from FPT to Jira and from Jira to FPT)
+    The sync works in both way (from PTR to Jira and from Jira to PTR)
     and handle creation, update and deletion.
     """
 
     # Define the mapping between Flow Production Tracking Timelog fields and Jira Worklog fields
     __TIMELOG_FIELDS_MAPPING = TIMELOG_FIELDS_MAPPING
 
-    # Define the name of the Jira custom field used to store FPT TimeLogs assignee
+    # Define the name of the Jira custom field used to store PTR TimeLogs assignee
     # Because the Jira Api doesn't support worklog assignation, we need to find a
-    # workaround to store the FPT TimeLog assignee
+    # workaround to store the PTR TimeLog assignee
     __JIRA_SHOTGUN_TIMELOG_FIELD = "Shotgun TimeLogs"
 
     # Define the name of the attribute used to track when a Timelog is retired from Flow Production Tracking
@@ -57,7 +57,7 @@ class TimelogWorklogHandler(SyncHandler):
 
     @property
     def _sg_timelog_fields(self):
-        """All the required fields when querying for FPT TimeLogs"""
+        """All the required fields when querying for PTR TimeLogs"""
         return [
             "created_by",
             "project",
@@ -69,7 +69,7 @@ class TimelogWorklogHandler(SyncHandler):
 
     @property
     def _sg_task_fields(self):
-        """All the required fields when querying for FPT Task"""
+        """All the required fields when querying for PTR Task"""
         return [
             "project",
             "project.Project.%s" % SHOTGUN_JIRA_ID_FIELD,
@@ -104,8 +104,8 @@ class TimelogWorklogHandler(SyncHandler):
         """
         # By convention, we might have `None` as values in our mapping dictionary
         # meaning that we handle a specific Jira field but there is not a direct
-        # mapping to an FPT field and a special logic must be implemented
-        # and called to perform the update to FPT.
+        # mapping to an PTR field and a special logic must be implemented
+        # and called to perform the update to PTR.
         return [field for field in self.__TIMELOG_FIELDS_MAPPING.values() if field]
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
@@ -135,14 +135,14 @@ class TimelogWorklogHandler(SyncHandler):
         # the event, and then calls `TaskIssueHandler.process_shotgun_event` and,
         # only if this was successful, `TimelogWorklogHandler.process_shotgun_event`.
 
-        # in case the option sync the timelog deletion from FPT to Jira is set to True, we need to
+        # in case the option sync the timelog deletion from PTR to Jira is set to True, we need to
         # add the retirement field to the list of supported fields
         supported_shotgun_fields = self._supported_shotgun_fields_for_shotgun_event()
         if self.__sync_jira_worklog_deletion:
             supported_shotgun_fields.append(self.__SG_RETIREMENT_FIELD)
         if field not in supported_shotgun_fields:
             self._logger.debug(
-                "Rejecting Flow Production Tracking event for unsupported FPT field %s: %s"
+                "Rejecting Flow Production Tracking event for unsupported PTR field %s: %s"
                 % (field, event)
             )
             return False
@@ -157,7 +157,7 @@ class TimelogWorklogHandler(SyncHandler):
         )
         if not sg_timelog:
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event for unfounded FPT entity {entity_type}: {entity_id}"
+                f"Rejecting Flow Production Tracking event for unfounded PTR entity {entity_type}: {entity_id}"
             )
             return False
         if not sg_timelog.get(
@@ -169,14 +169,14 @@ class TimelogWorklogHandler(SyncHandler):
             )
             return False
 
-        # When an Entity is created in FPT, a unique event is generated for
+        # When an Entity is created in PTR, a unique event is generated for
         # each field value set in the creation of the Entity. These events
         # have an additional "in_create" key in the metadata, identifying them
         # as events from the initial create event.
         #
         # When the bridge processes the first event, it loads all of the Entity
-        # field values from FPT and creates the Jira Issue with those
-        # values. So the remaining FPT events with the "in_create"
+        # field values from PTR and creates the Jira Issue with those
+        # values. So the remaining PTR events with the "in_create"
         # metadata key can be ignored since we've already handled all of
         # those field updates.
 
@@ -194,10 +194,10 @@ class TimelogWorklogHandler(SyncHandler):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given Flow Production Tracking event for the given FPT Entity
+        Process the given Flow Production Tracking event for the given PTR Entity
 
-        :param str entity_type: The FPT Entity type to sync.
-        :param int entity_id: The id of the FPT Entity to sync.
+        :param str entity_type: The PTR Entity type to sync.
+        :param int entity_id: The id of the PTR Entity to sync.
         :param event: A dictionary with the event for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
@@ -226,7 +226,7 @@ class TimelogWorklogHandler(SyncHandler):
             )
             return False
 
-        # In that case, we want to remove the associated Jira Worklog when a Timelog is removed from FPT
+        # In that case, we want to remove the associated Jira Worklog when a Timelog is removed from PTR
         if (
             shotgun_field == self.__SG_RETIREMENT_FIELD
             and self.__sync_jira_worklog_deletion
@@ -295,14 +295,14 @@ class TimelogWorklogHandler(SyncHandler):
             return False
 
         # rejecting the worklog created event if it has been created by the Jira Bridge user
-        # that means that the timelog was created from FPT and synced to Jira
+        # that means that the timelog was created from PTR and synced to Jira
         if webhook_event == "worklog_created":
             if jira_worklog["author"]["accountId"] == self._jira.myself()["accountId"]:
                 self._logger.debug("Rejecting event created by the bridge user.")
                 return False
 
         # rejecting the worklog updated event if it has been updated by the Jira Bridge user
-        # that means that the timelog was updated from FPT
+        # that means that the timelog was updated from PTR
         if webhook_event == "worklog_updated":
             if (
                 jira_worklog["updateAuthor"]["accountId"]
@@ -352,7 +352,7 @@ class TimelogWorklogHandler(SyncHandler):
             )
             return False
 
-        # get the FPT Task associated to the Jira Issue
+        # get the PTR Task associated to the Jira Issue
         sg_tasks = self._shotgun.find(
             "Task",
             [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
@@ -394,8 +394,8 @@ class TimelogWorklogHandler(SyncHandler):
         else:
 
             # Because there are some limitations in the Jira API regarding the worklog assignation,
-            # we need to store the FPT TimeLog user in a custom field to be able to keep a mapping
-            # between the FPT Timelog assignee and the Jira Worklog assignee
+            # we need to store the PTR TimeLog user in a custom field to be able to keep a mapping
+            # between the PTR Timelog assignee and the Jira Worklog assignee
             sg_user = self._get_sg_user_from_jira_worklog(
                 jira_issue, jira_worklog["id"]
             )
@@ -443,7 +443,7 @@ class TimelogWorklogHandler(SyncHandler):
 
         updated = False
 
-        # start by syncing the FPT timelogs to Jira
+        # start by syncing the PTR timelogs to Jira
         sg_task = self._shotgun.consolidate_entity(sg_task, fields=self._sg_task_fields)
 
         # get all the timelogs linked to the task
@@ -501,7 +501,7 @@ class TimelogWorklogHandler(SyncHandler):
         """
         Add a Flow Production TimeLog to Jira
 
-        :param sg_timelog: An FPT TimeLog dictionary.
+        :param sg_timelog: An PTR TimeLog dictionary.
         :returns: `True` if any update happened, `False` otherwise.
         """
 
@@ -522,13 +522,13 @@ class TimelogWorklogHandler(SyncHandler):
             jira_project_key = sg_task["project.Project.%s" % SHOTGUN_JIRA_ID_FIELD]
             if not jira_project_key:
                 self._logger.debug(
-                    f"Unable to find Jira Project ID for FPT Task {sg_task}"
+                    f"Unable to find Jira Project ID for PTR Task {sg_task}"
                 )
                 return False
             jira_project = self.get_jira_project(jira_project_key)
             if not jira_project:
                 self._logger.debug(
-                    f"Unable to find a Jira Project {jira_project_key} for FPT Project {sg_task['project']}"
+                    f"Unable to find a Jira Project {jira_project_key} for PTR Project {sg_task['project']}"
                 )
                 return False
 
@@ -536,7 +536,7 @@ class TimelogWorklogHandler(SyncHandler):
             jira_issue = self.get_jira_issue(sg_task[SHOTGUN_JIRA_ID_FIELD])
             if not jira_issue:
                 self._logger.debug(
-                    f"Unable to find Jira Issue {sg_task[SHOTGUN_JIRA_ID_FIELD]} for FPT Task {sg_task}"
+                    f"Unable to find Jira Issue {sg_task[SHOTGUN_JIRA_ID_FIELD]} for PTR Task {sg_task}"
                 )
                 return False
 
@@ -579,7 +579,7 @@ class TimelogWorklogHandler(SyncHandler):
 
                 timelog_key = "%s/%s" % (jira_issue_key, jira_worklog_id)
                 self._logger.info(
-                    f"Updating FPT TimeLog ({sg_timelog['id']}) with Jira worklog key {timelog_key}"
+                    f"Updating PTR TimeLog ({sg_timelog['id']}) with Jira worklog key {timelog_key}"
                 )
                 self._shotgun.update(
                     sg_timelog["type"],
@@ -595,7 +595,7 @@ class TimelogWorklogHandler(SyncHandler):
         """
         Remove a TimeLog from Jira
 
-        :param sg_timelog: An FPT TimeLog dictionary.
+        :param sg_timelog: An PTR TimeLog dictionary.
         :param update_sg: Boolean to indicate if we want to update Flow Production Tracking after the deletion
         :returns: `True` if any update happened, `False` otherwise.
         """
@@ -643,7 +643,7 @@ class TimelogWorklogHandler(SyncHandler):
 
     def _parse_timelog_jira_key(self, sg_timelog):
         """
-        Parse the Jira key value set in the given FPT TimeLog and return the Jira
+        Parse the Jira key value set in the given PTR TimeLog and return the Jira
         Issue key and the Jira Worklog id it refers to, if it is not empty.
 
         :returns: A tuple with a Jira Issue key and a Jira worklog id, or
@@ -688,7 +688,7 @@ class TimelogWorklogHandler(SyncHandler):
         if not jira_project:
             self._logger.debug(
                 f"Couldn't sync timelog content: unable to find a Jira Project {jira_project_key} for "
-                f"FPT Project {sg_timelog['project']}"
+                f"PTR Project {sg_timelog['project']}"
             )
             return False
 
@@ -772,7 +772,7 @@ class TimelogWorklogHandler(SyncHandler):
 
         if not self.__jira_sg_timelog_field:
             self._logger.debug(
-                f"Couldn't set FPT TimeLog assignee: missing Jira field {self.__JIRA_SHOTGUN_TIMELOG_FIELD}"
+                f"Couldn't set PTR TimeLog assignee: missing Jira field {self.__JIRA_SHOTGUN_TIMELOG_FIELD}"
             )
             return
 
@@ -787,7 +787,7 @@ class TimelogWorklogHandler(SyncHandler):
 
     def _remove_sg_user_from_jira_worklog(self, jira_issue, jira_worklog_id):
         """
-        Helper method to remove an FPT Timelog assignee from the Jira custom field used to store them.
+        Helper method to remove an PTR Timelog assignee from the Jira custom field used to store them.
 
         :param jira_issue: The Jira issue the worklog is tied to.
         :param jira_worklog_id: Id of the Jira worklog.
@@ -795,7 +795,7 @@ class TimelogWorklogHandler(SyncHandler):
 
         if not self.__jira_sg_timelog_field:
             self._logger.debug(
-                f"Couldn't remove FPT TimeLog assignee: missing Jira field {self.__JIRA_SHOTGUN_TIMELOG_FIELD}"
+                f"Couldn't remove PTR TimeLog assignee: missing Jira field {self.__JIRA_SHOTGUN_TIMELOG_FIELD}"
             )
             return
 
@@ -819,7 +819,7 @@ class TimelogWorklogHandler(SyncHandler):
 
         if not self.__jira_sg_timelog_field:
             self._logger.debug(
-                f"Couldn't get FPT TimeLog assignee: missing Jira field {self.__JIRA_SHOTGUN_TIMELOG_FIELD}"
+                f"Couldn't get PTR TimeLog assignee: missing Jira field {self.__JIRA_SHOTGUN_TIMELOG_FIELD}"
             )
             return None
 

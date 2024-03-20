@@ -20,8 +20,8 @@ class ShotgunSession(object):
     Wraps a :class:`shotgun_api3.shotgun.Shotgun` instance and provide some helpers and
     session caches.
 
-    Ensures all the values we get from ShotGrid are unicode and not utf-8 encoded
-    strings. Utf-8 encodes unicode values before sending them to ShotGrid.
+    Ensures all the values we get from Flow Production Tracking are unicode and not utf-8 encoded
+    strings. Utf-8 encodes unicode values before sending them to Flow Production Tracking.
     """
 
     # The list of Shotgun methods we need to wrap.
@@ -75,29 +75,29 @@ class ShotgunSession(object):
     @property
     def current_user(self):
         """
-        Return the ShotGrid user used for the connection.
+        Return the Flow Production Tracking user used for the connection.
 
-        :returns: A ShotGrid record dictionary with an `id` key and a `type` key.
+        :returns: A Flow Production Tracking record dictionary with an `id` key and a `type` key.
         """
         return self._shotgun_user
 
     def setup(self):
         """
-        Check the ShotGrid site and cache site level values.
+        Check the Flow Production Tracking site and cache site level values.
 
-        :raises RuntimeError: if the ShotGrid site was not correctly configured to
+        :raises RuntimeError: if the Flow Production Tracking site was not correctly configured to
                  be used with this bridge.
         """
         self.assert_field("Project", SHOTGUN_JIRA_ID_FIELD, "text", check_unique=True)
 
     def assert_field(self, entity_type, field_name, field_type, check_unique=False):
         """
-        Check if the given field with the given type exists for the given ShotGrid
+        Check if the given field with the given type exists for the given Flow Production Tracking
         Entity type.
 
-        :param str entity_type: A ShotGrid Entity type.
-        :param str field_name: A ShotGrid field name, e.g. 'sg_my_precious'.
-        :param str field_type: A ShotGrid field type, e.g. 'text'.
+        :param str entity_type: A Flow Production Tracking Entity type.
+        :param str field_name: A Flow Production Tracking field name, e.g. 'sg_my_precious'.
+        :param str field_type: A Flow Production Tracking field type, e.g. 'text'.
         :param bool check_unique: When ``True``, check the specified field
             is configured to only accept unique values. Default is ``False``.
         :raises RuntimeError: if the field does not exist or does not have the
@@ -127,14 +127,14 @@ class ShotgunSession(object):
 
     def get_field_schema(self, entity_type, field_name):
         """
-        Return the ShotGrid schema for the given Entity field.
+        Return the Flow Production Tracking schema for the given Entity field.
 
-        .. note:: ShotGrid schemas are cached and the bridge needs to be restarted
-                  if schemas are changed in ShotGrid.
+        .. note:: Flow Production Tracking schemas are cached and the bridge needs to be restarted
+                  if schemas are changed in Flow Production Tracking.
 
-        :param str entity_type: A ShotGrid Entity type.
-        :param str field_name: A ShotGrid field name, e.g. 'sg_my_precious'.
-        :returns: The ShotGrid schema for the given field as a dictionary or `None`.
+        :param str entity_type: A Flow Production Tracking Entity type.
+        :param str field_name: A Flow Production Tracking field name, e.g. 'sg_my_precious'.
+        :returns: The Flow Production Tracking schema for the given field as a dictionary or `None`.
         """
         if entity_type not in self._shotgun_schemas:
             self._shotgun_schemas[entity_type] = self._shotgun.schema_field_read(
@@ -145,10 +145,10 @@ class ShotgunSession(object):
 
     def clear_cached_field_schema(self, entity_type=None):
         """
-        Clear all cached ShotGrid schema or just the cached schema for the given
-        ShotGrid Entity type.
+        Clear all cached Flow Production Tracking schema or just the cached schema for the given
+        Flow Production Tracking Entity type.
 
-        :param str entity_type: A ShotGrid Entity type or None.
+        :param str entity_type: A Flow Production Tracking Entity type or None.
         """
         if entity_type:
             logger.debug("Clearing cached Shotgun schema for %s" % entity_type)
@@ -161,7 +161,7 @@ class ShotgunSession(object):
     @staticmethod
     def get_entity_name_field(entity_type):
         """
-        Return the ShotGrid name field to use for the specified entity type.
+        Return the Flow Production Tracking name field to use for the specified entity type.
 
         :param str entity_type: The entity type to get the name field for.
         :returns: The name field for the specified entity type.
@@ -171,11 +171,11 @@ class ShotgunSession(object):
 
     def is_project_entity(self, entity_type):
         """
-        Return `True` if the given ShotGrid Entity type is a project Entity,
+        Return `True` if the given Flow Production Tracking Entity type is a project Entity,
         that is an Entity linked to a Project, `False` if it is a non-project
         Entity.
 
-        :param str entity_type: A ShotGrid Entity type.
+        :param str entity_type: A Flow Production Tracking Entity type.
         """
         if entity_type not in self._shotgun_schemas:
             self._shotgun_schemas[entity_type] = self._shotgun.schema_field_read(
@@ -193,14 +193,14 @@ class ShotgunSession(object):
 
     def consolidate_entity(self, shotgun_entity, fields=None, retired_only=False):
         """
-        Consolidate the given ShotGrid Entity: collect additional field values,
+        Consolidate the given Flow Production Tracking Entity: collect additional field values,
         ensure the Entity name is available under a "name" key.
 
-        :param shotgun_entity: A ShotGrid Entity dictionary with at least its id
+        :param shotgun_entity: A Flow Production Tracking Entity dictionary with at least its id
                                and its type.
         :param fields: An optional list of fields to add to the query.
         :param retired_only: An optional boolean indicating if the entity we're consolidating has been retired.
-        :returns: The consolidated ShotGrid Entity or `None` if it can't be retrieved.
+        :returns: The consolidated Flow Production Tracking Entity or `None` if it can't be retrieved.
         """
 
         # Define the fields we need to handle the Entity type.
@@ -248,15 +248,15 @@ class ShotgunSession(object):
 
     def match_entity_by_name(self, name, entity_types, shotgun_project):
         """
-        Retrieve a ShotGrid Entity with the given name from the given list of
+        Retrieve a Flow Production Tracking Entity with the given name from the given list of
         Entity types.
 
-        Project ShotGrid Entities are restricted to the given ShotGrid Project.
+        Project Flow Production Tracking Entities are restricted to the given Flow Production Tracking Project.
 
         :param str name: A name to match.
-        :param entity_types: A list of ShotGrid Entity types to consider.
-        :param shotgun_project: A ShotGrid Project dictionary.
-        :return: A ShotGrid Entity dictionary or `None`.
+        :param entity_types: A list of Flow Production Tracking Entity types to consider.
+        :param shotgun_project: A Flow Production Tracking Project dictionary.
+        :return: A Flow Production Tracking Entity dictionary or `None`.
         """
         for entity_type in entity_types:
             name_field = self.get_entity_name_field(entity_type)
@@ -276,9 +276,9 @@ class ShotgunSession(object):
 
     def get_entity_page_url(self, shotgun_entity):
         """
-        Return the ShotGrid page url for the given Entity.
+        Return the Flow Production Tracking page url for the given Entity.
 
-        :param shotgun_entity: A ShotGrid Entity dictionary with at least a 'type'
+        :param shotgun_entity: A Flow Production Tracking Entity dictionary with at least a 'type'
                                key and an 'id' key.
         """
         return "%s/detail/%s/%d" % (
@@ -289,7 +289,7 @@ class ShotgunSession(object):
 
     def _get_wrapped_shotgun_method(self, method_name):
         """
-        Return a wrapped ShotGrid method which encodes all parameters and decodes
+        Return a wrapped Flow Production Tracking method which encodes all parameters and decodes
         the result before returning it.
 
         :param str method_name: A :class:`~shotgun_api3.shotgun.Shotgun` method name.
@@ -308,7 +308,7 @@ class ShotgunSession(object):
         """
         Called when an attribute can't be found on this class instance.
 
-        Check if the name is one of the ShotGrid method names we need to wrap,
+        Check if the name is one of the Flow Production Tracking method names we need to wrap,
         return a wrapped method if it is the case.
         Return the :class:`shotgun_api3.shotgun.Shotgun` attribute otherwise.
 

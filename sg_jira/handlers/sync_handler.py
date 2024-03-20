@@ -15,9 +15,9 @@ from ..errors import InvalidJiraValue
 
 class SyncHandler(object):
     """
-    Base class to handle a particular sync between ShotGrid and Jira.
+    Base class to handle a particular sync between Flow Production Tracking and Jira.
 
-    Handlers typically handle syncing values between a ShotGrid Entity type and
+    Handlers typically handle syncing values between a Flow Production Tracking Entity type and
     a Jira resource and are owned by a :class:`~sg_jira.Syncer` instance.
 
     This base class defines the interface all handlers should support and
@@ -74,8 +74,8 @@ class SyncHandler(object):
     def _sg_jira_status_mapping(self):
         """
         Needs to be re-implemented in deriving classes and return a dictionary
-        where keys are ShotGrid status short codes and values are Jira status
-        names, or any string value which should be mapped to ShotGrid status.
+        where keys are Flow Production Tracking status short codes and values are Jira status
+        names, or any string value which should be mapped to Flow Production Tracking status.
         """
         raise NotImplementedError
 
@@ -206,7 +206,7 @@ class SyncHandler(object):
     def setup(self):
         """
         This method can be re-implemented in deriving classes to Check the Jira
-        and ShotGrid site, ensure that the sync can safely happen and cache any
+        and Flow Production Tracking site, ensure that the sync can safely happen and cache any
         value which is slow to retrieve.
 
         This base implementation does nothing.
@@ -215,7 +215,7 @@ class SyncHandler(object):
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
-        Accept or reject the given event for the given ShotGrid Entity.
+        Accept or reject the given event for the given Flow Production Tracking Entity.
 
         Must be re-implemented in deriving classes.
 
@@ -225,12 +225,12 @@ class SyncHandler(object):
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
-        Process the given ShotGrid event for the given ShotGrid Entity
+        Process the given Flow Production Tracking event for the given Flow Production Tracking Entity
 
         Must be re-implemented in deriving classes.
 
-        :param str entity_type: The ShotGrid Entity type to sync.
-        :param int entity_id: The id of the ShotGrid Entity to sync.
+        :param str entity_type: The Flow Production Tracking Entity type to sync.
+        :param int entity_id: The id of the Flow Production Tracking Entity to sync.
         :param event: A dictionary with the event for the change.
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
@@ -273,10 +273,10 @@ class SyncHandler(object):
         jira_value,
     ):
         """
-        Return a ShotGrid value suitable to update the given ShotGrid Entity field
+        Return a Flow Production Tracking value suitable to update the given Flow Production Tracking Entity field
         from the given Jira change.
 
-        The following ShotGrid field types are supported by this method:
+        The following Flow Production Tracking field types are supported by this method:
         - text
         - list
         - status_list
@@ -286,15 +286,15 @@ class SyncHandler(object):
         - number
         - checkbox
 
-        :param str shotgun_entity: A ShotGrid Entity dictionary as retrieved from
-                                   ShotGrid.
-        :param str shotgun_field: The ShotGrid Entity field to get a value for.
-        :param shotgun_field_schema: The ShotGrid Entity field schema.
+        :param str shotgun_entity: A Flow Production Tracking Entity dictionary as retrieved from
+                                   Flow Production Tracking.
+        :param str shotgun_field: The Flow Production Tracking Entity field to get a value for.
+        :param shotgun_field_schema: The Flow Production Tracking Entity field schema.
         :param change: A Jira event changelog dictionary with 'fromString',
                        'toString', 'from' and 'to' keys.
         :param jira_value: The full current Jira value.
-        :raises RuntimeError: if the ShotGrid Entity can't be retrieved from ShotGrid.
-        :raises ValueError: for unsupported ShotGrid data types.
+        :raises RuntimeError: if the Flow Production Tracking Entity can't be retrieved from Flow Production Tracking.
+        :raises ValueError: for unsupported Flow Production Tracking data types.
         """
         data_type = shotgun_field_schema["data_type"]["value"]
         if data_type == "text":
@@ -383,7 +383,7 @@ class SyncHandler(object):
                     )
                 )
                 for i, sg_value in enumerate(list(current_sg_value)):
-                    # Match the SG entity name, because this is retrieved
+                    # Match the PTR entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
                     # even if the linked Entities use another field to store their
                     # name e.g. "code"
@@ -409,7 +409,7 @@ class SyncHandler(object):
                     )
                 )
                 for sg_value in current_sg_value:
-                    # Match the SG entity name, because this is retrieved
+                    # Match the PTR entity name, because this is retrieved
                     # from the entity holding the list, we do have a "name" key
                     # even if the linked Entities use another field to store their
                     # name e.g. "code"

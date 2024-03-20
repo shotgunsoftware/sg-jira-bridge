@@ -60,7 +60,11 @@ class JiraSession(jira.client.JIRA):
             if e.status_code == 401:
                 raise RuntimeError(
                     "Unable to connect to %s (error code %d), "
-                    "please check your credentials" % (jira_site, e.status_code,)
+                    "please check your credentials"
+                    % (
+                        jira_site,
+                        e.status_code,
+                    )
                 )
             raise RuntimeError(
                 "Unable to connect to %s. See the log for details." % jira_site
@@ -117,7 +121,7 @@ class JiraSession(jira.client.JIRA):
             raise RuntimeError(
                 "Missing required custom Jira field %s" % JIRA_SHOTGUN_URL_FIELD
             )
-        
+
     def _name_is_shotgun_field(self, field_name):
         return field_name.lower() in [
             JIRA_SHOTGUN_TYPE_FIELD.lower(),
@@ -145,31 +149,31 @@ class JiraSession(jira.client.JIRA):
     @property
     def jira_shotgun_type_field(self):
         """
-        Return the id of the Jira field used to store the type of a linked ShotGrid
+        Return the id of the Jira field used to store the type of a linked Flow Production Tracking
         Entity.
 
-        Two custom fields are used in Jira to store a reference to a ShotGrid
-        Entity: its ShotGrid Entity type and id. This method returns the id of
-        the Jira field used to store the ShotGrid type.
+        Two custom fields are used in Jira to store a reference to a Flow Production Tracking
+        Entity: its Flow Production Tracking Entity type and id. This method returns the id of
+        the Jira field used to store the Flow Production Tracking type.
         """
         return self._jira_shotgun_type_field
 
     @property
     def jira_shotgun_id_field(self):
         """
-        Return the id of the Jira field used to store the id of a linked ShotGrid
+        Return the id of the Jira field used to store the id of a linked Flow Production Tracking
         Entity.
 
-        Two custom fields are used in Jira to store a reference to a ShotGrid
-        Entity: its ShotGrid Entity type and id. This method returns the id of
-        the Jira field used to store the ShotGrid id.
+        Two custom fields are used in Jira to store a reference to a Flow Production Tracking
+        Entity: its Flow Production Tracking Entity type and id. This method returns the id of
+        the Jira field used to store the Flow Production Tracking id.
         """
         return self._jira_shotgun_id_field
 
     @property
     def jira_shotgun_url_field(self):
         """
-        Return the id of the Jira field used to store the url of a linked ShotGrid
+        Return the id of the Jira field used to store the url of a linked Flow Production Tracking
         Entity.
         """
         return self._jira_shotgun_url_field
@@ -220,7 +224,10 @@ class JiraSession(jira.client.JIRA):
 
         logger.debug(
             "Sanitized Jira value for %s is %s"
-            % (jira_field_schema["name"], jira_value,)
+            % (
+                jira_field_schema["name"],
+                jira_value,
+            )
         )
         return jira_value
 
@@ -370,10 +377,7 @@ class JiraSession(jira.client.JIRA):
         uemail = user_email.lower()
         start_idx = 0
         logger.debug("Querying all assignable users starting at #%d" % start_idx)
-        jira_users = search_method(
-            startAt=start_idx,
-            **search_params
-        )
+        jira_users = search_method(startAt=start_idx, **search_params)
         while jira_users:
             for jira_user in jira_users:
                 if (
@@ -390,22 +394,25 @@ class JiraSession(jira.client.JIRA):
                 logger.debug(
                     "Querying all assignable users starting at #%d" % start_idx
                 )
-                jira_users = search_method(
-                    startAt=start_idx,
-                    **search_params
-                )
+                jira_users = search_method(startAt=start_idx, **search_params)
                 logger.debug("Found %s users" % (len(jira_users)))
 
         if not jira_assignee:
             if jira_issue:
                 logger.warning(
                     "Unable to find a Jira user with email %s for Issue %s"
-                    % (user_email, jira_issue,)
+                    % (
+                        user_email,
+                        jira_issue,
+                    )
                 )
             else:
                 logger.warning(
                     "Unable to find a Jira user with email %s for Project %s"
-                    % (user_email, jira_project,)
+                    % (
+                        user_email,
+                        jira_project,
+                    )
                 )
 
         logger.debug("Found Jira Assignee %s" % jira_assignee)
@@ -438,7 +445,11 @@ class JiraSession(jira.client.JIRA):
             if tra["to"]["name"] == jira_status_name:
                 logger.debug(
                     "Found transition for Jira Issue %s to %s: %s"
-                    % (jira_issue, jira_status_name, tra,)
+                    % (
+                        jira_issue,
+                        jira_status_name,
+                        tra,
+                    )
                 )
                 # Iterate over any fields for transition and find required fields
                 # that don't have a default value. Set the value using our defaults.
@@ -547,9 +558,14 @@ class JiraSession(jira.client.JIRA):
                 )
                 raise RuntimeError(
                     "Unable to retrieve create meta data for Project %s Issue type %s."
-                    % (jira_project, jira_issue_type.id,)
+                    % (
+                        jira_project,
+                        jira_issue_type.id,
+                    )
                 )
-            fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0]["fields"]
+            fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0][
+                "fields"
+            ]
         else:
             # createmeta is not supported on Jira Server 9 and Python client 3.5.0
             # Instead, we'll use the new createmeta_issuetypes and createmeta_fieldtypes methods
@@ -568,7 +584,10 @@ class JiraSession(jira.client.JIRA):
                 )
                 raise RuntimeError(
                     "Unable to retrieve create meta data for Project %s Issue type %s."
-                    % (jira_project, jira_issue_type.id,)
+                    % (
+                        jira_project,
+                        jira_issue_type.id,
+                    )
                 )
             # Get the field types because createmeta_issuetypes doesn't expand the fields
             create_meta_data_fieldtypes = self.createmeta_fieldtypes(
@@ -582,7 +601,10 @@ class JiraSession(jira.client.JIRA):
                 )
                 raise RuntimeError(
                     "Unable to retrieve create meta data for Project %s Issue type %s."
-                    % (jira_project, jira_issue_type.id,)
+                    % (
+                        jira_project,
+                        jira_issue_type.id,
+                    )
                 )
             # Convert response to be backwards compatible
             fields_createmeta = {
@@ -607,7 +629,10 @@ class JiraSession(jira.client.JIRA):
         if missing:
             raise ValueError(
                 "Unable to create Jira %s Issue. The following required data is missing: %s"
-                % (data["issuetype"]["name"], missing,)
+                % (
+                    data["issuetype"]["name"],
+                    missing,
+                )
             )
         # Check if we're trying to set any value which can't be set and validate
         # empty values.

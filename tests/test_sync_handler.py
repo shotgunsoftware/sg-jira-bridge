@@ -12,7 +12,7 @@ from mock_jira import JIRA_USER, JIRA_PROJECT, JIRA_PROJECT_KEY
 from test_sync_base import TestSyncBase
 
 
-# Mock Shotgun with mockgun, this works only if the code uses shotgun_api3.Shotgun
+# Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
 class TestSyncHandler(TestSyncBase):
@@ -123,7 +123,7 @@ class TestSyncHandler(TestSyncBase):
 
         handler = self._get_handler(mocked_sg)
 
-        # add the faked FPT user
+        # add the faked PTR user
         self.add_to_sg_mock_db(handler._shotgun, self.user)
 
         return handler.get_sg_user(user_id, jira_user)
