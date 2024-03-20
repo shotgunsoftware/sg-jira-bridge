@@ -58,6 +58,7 @@ class TestService(unittest.TestCase):
                 args=(
                     pid_f.name,
                     9090,
+                    "localhost",
                     os.path.join(self._fixtures_path, "settings.py"),
                 ),
             )

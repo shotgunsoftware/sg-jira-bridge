@@ -135,6 +135,24 @@ JIRA_STATUS_CHANGE_2 = {
     "fieldId": "status",
 }
 
+JIRA_DUEDATE_CHANGE = {
+    "from": "2024-03-05",
+    "to": "2024-03-30",
+    "fromString": "2024-03-05 00:00:00.0",
+    "field": "duedate",
+    "toString": "2024-03-30 00:00:00.0",
+    "fieldtype": "jira",
+    "fieldId": "duedate",
+}
+
+JIRA_DUEDATE_CHANGE_2 = {
+    "from": "2024-03-05",
+    "to": "2024-03-30",
+    "fromString": "2024-03-05 00:00:00.0",
+    "field": "duedate",
+    "toString": "2024-03-30 00:00:00.0",
+    "fieldtype": "jira",
+}
 
 JIRA_ISSUE_FIELDS = {
     "assignee": JIRA_USER,
@@ -1056,6 +1074,102 @@ class TestJiraSyncer(TestSyncBase):
         # Udpate with a status unknown in Shotgun
         self.assertFalse(
             bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+        )
+
+    @mock.patch("shotgun_api3.lib.mockgun.Shotgun._validate_entity_data")
+    def test_jira_duedate(self, mocked_validate_fn, mocked_sg):
+        """
+        Test syncing Jira Due Date to ShotGrid
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
+        sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
+
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        self.add_to_sg_mock_db(
+            bridge.shotgun,
+            {
+                "type": sg_entity_type,
+                "id": sg_entity_id,
+                "content": "%s (%d)" % (sg_entity_type, sg_entity_id),
+                "project": SG_PROJECTS[0],
+            },
+        )
+
+        # Mockgun validates all data types. In this case it checks if due_date is a date.
+        # However, we don't need it to be a Python date type since ShotGrid accepts date strings.
+        mocked_validate_fn.return_value = None
+
+        # Prepare the "server" data
+        DUE_DATE = "2024-03-05"
+        bridge.shotgun.update(sg_entity_type, sg_entity_id, {"due_date": DUE_DATE})
+        self.assertEqual(
+            DUE_DATE,
+            bridge.shotgun.find_one(
+                sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
+            )["due_date"],
+        )
+        
+        # Prepare the JIRA payload
+        jira_event = dict(JIRA_EVENT)
+        jira_event["issue"]["fields"]["duedate"] = DUE_DATE
+        jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE]}
+        self.assertTrue(
+            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+        )
+        self.assertEqual(
+            "2024-03-30",
+            bridge.shotgun.find_one(
+                sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
+            )["due_date"],
+        )
+
+    @mock.patch("shotgun_api3.lib.mockgun.Shotgun._validate_entity_data")
+    def test_jira_duedate_without_fieldId(self, mocked_validate_fn, mocked_sg):
+        """
+        Test syncing Jira Due Date to ShotGrid
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
+        sg_entity_type = JIRA_EVENT["issue"]["fields"]["customfield_11502"]
+
+        self.add_to_sg_mock_db(bridge.shotgun, SG_PROJECTS)
+        self.add_to_sg_mock_db(
+            bridge.shotgun,
+            {
+                "type": sg_entity_type,
+                "id": sg_entity_id,
+                "content": "%s (%d)" % (sg_entity_type, sg_entity_id),
+                "project": SG_PROJECTS[0],
+            },
+        )
+
+        # Mockgun validates all data types. In this case it checks if due_date is a date.
+        # However, we don't need it to be a Python date type since ShotGrid accepts date strings.
+        mocked_validate_fn.return_value = None
+
+        # Prepare the "server" data
+        DUE_DATE = "2024-03-05"
+        bridge.shotgun.update(sg_entity_type, sg_entity_id, {"due_date": DUE_DATE})
+        self.assertEqual(
+            DUE_DATE,
+            bridge.shotgun.find_one(
+                sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
+            )["due_date"],
+        )
+        
+        # Prepare a JIRA payload without `fieldId` property
+        jira_event = dict(JIRA_EVENT)
+        jira_event["issue"]["fields"]["duedate"] = DUE_DATE
+        jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE_2]}
+        self.assertTrue(
+            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+        )
+        self.assertEqual(
+            "2024-03-30",
+            bridge.shotgun.find_one(
+                sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
+            )["due_date"],
         )
 
     def test_jira_2_shotgun(self, mocked_sg):
