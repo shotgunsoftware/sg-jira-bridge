@@ -1,6 +1,8 @@
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.10%20%7C%203.9%20%7C%203.7-blue.svg)](https://www.python.org/)
+[![Reference Documentation](http://img.shields.io/badge/doc-reference-blue.svg)](http://developers.shotgridsoftware.com/sg-jira-bridge)
+[![Build Status](https://dev.azure.com/shotgun-ecosystem/ShotGrid%20Jira%20Bridge/_apis/build/status/shotgunsoftware.sg-jira-bridge?branchName=master)](https://dev.azure.com/shotgun-ecosystem/ShotGrid%20Jira%20Bridge/_build/latest?definitionId=119&branchName=master)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Linting](https://img.shields.io/badge/PEP8%20by-Hound%20CI-a873d1.svg)](https://houndci.com)
-[![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/)
 
 # ShotGrid Jira Bridge
 
@@ -8,7 +10,7 @@ ShotGrid Jira Bridge is a simple synchronization setup between ShotGrid and Jira
 
 By extending the base syncer and sync handlers you can quickly build custom workflows to connect your ShotGrid and Jira sites. Details like entity types, hierarchy, issue types, fields, statuses, and logic can all be custom defined to match your studio's workflow.
 
-![alt text](https://developer.shotgridsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
+![alt text](https://developers.shotgridsoftware.com/sg-jira-bridge/_images/sg_jira_bridge_workflow.png "SG Jira Bridge Overview")
 
 # Components
 
@@ -20,11 +22,11 @@ By extending the base syncer and sync handlers you can quickly build custom work
 
 # Documentation
 
-Full documentation is available at https://developer.shotgridsoftware.com/sg-jira-bridge
+Full documentation is available at https://developers.shotgridsoftware.com/sg-jira-bridge
 
 # Requirements
 
-- Python 3.9
+- Python >= 3.9
 - A [ShotGrid](https://shotgridsoftware.com) site
 - A [Jira](https://www.atlassian.com/software/jira) site
 
