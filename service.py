@@ -60,12 +60,13 @@ def status(pid_file):
     return pid
 
 
-def start(pid_file, port_number, settings, log_file=None):
+def start(pid_file, port_number, listen_address, settings, log_file=None):
     """
     Start the service.
 
     :param str pid_file: Full path to the pid file used by the service.
     :param int port_number: The port number for the web app to listen on.
+    :param int listen_address: The IPv4 address that the server binds to.
     :param str settings: Full path to settings file for the web app.
     :param str log_file: An optional log file to use for the daemon output. By
                          default the daemon uses a syslog handler.
@@ -87,7 +88,9 @@ def start(pid_file, port_number, settings, log_file=None):
         try:
             import webapp
 
-            webapp.run_server(port=port_number, settings=settings)
+            webapp.run_server(
+                port=port_number, listen_address=listen_address, settings=settings
+            )
         except Exception as e:
             logger.exception(e)
         logger.warning("bye")
@@ -152,6 +155,11 @@ def main():
         default=9090,
         help="The port number to listen on.",
     )
+    parser.add_argument(
+        "--listen_address",
+        default="127.0.0.1",
+        help="The IPv4 address that the server binds to. Use 0.0.0.0 to bind on all network interfaces.",
+    )
     parser.add_argument("--settings", help="Full path to settings file.", required=True)
     parser.add_argument(
         "action",
@@ -164,6 +172,7 @@ def main():
         start(
             args.pid_file,
             args.port,
+            args.listen_address,
             os.path.abspath(args.settings),
             args.log_file,
         )
@@ -180,6 +189,7 @@ def main():
         start(
             args.pid_file,
             args.port,
+            args.listen_address,
             os.path.abspath(args.settings),
             args.log_file,
         )
