@@ -51,6 +51,7 @@ def registerCallbacks(reg):
         "Shotgun_Ticket_Change": ["*"],
         "Shotgun_Project_Change": ["*"],
         "Shotgun_Asset_Change": ["*"],  # Needed by the Asset/Task example.
+        "Shotgun_TimeLog_Change": ["*"],  # Needed by the Timelog/Task example.
         # These events require a reset of the bridge to ensure our cached schema
         # is up to date.
         "Shotgun_DisplayColumn_New": ["*"],
@@ -169,7 +170,10 @@ def process_event(sg, logger, event, dispatch_routes):
     )
     logger.debug("Posting event %s to %s" % (payload["meta"], sync_url))
     # Post application/json request
-    response = requests.post(sync_url, json=payload,)
+    response = requests.post(
+        sync_url,
+        json=payload,
+    )
     response.raise_for_status()
     logger.debug("Event successfully processed.")
 

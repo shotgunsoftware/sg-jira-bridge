@@ -112,6 +112,18 @@ SYNC = {
             "task_issue_type": "Task",
         },
     },
+    "timelog": {
+        # The syncer class to use
+        "syncer": "timelog_worklog.TimelogWorklogSyncer",
+        # And its specific settings which are passed to its __init__ method
+        "settings": {
+            "issue_type": "Task",
+            # If True, when a worklog is deleted in Jira it will also be deleted in Flow Production Tracking
+            "sync_sg_timelog_deletion": True,
+            # If True, when a timelog is deleted in Flow Production Tracking, it will also be deleted in Jira
+            "sync_jira_worklog_deletion": True,
+        },
+    },
     "test": {
         # Example of a custom syncer with an additional parameter to define
         # a log level.

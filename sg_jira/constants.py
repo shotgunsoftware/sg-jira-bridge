@@ -50,7 +50,7 @@ SG_ENTITY_SPECIAL_NAME_FIELDS = {
     "Tag": "name",
     "Ticket": "title",
     "ApiUser": "name",
-    "TimeLog": "description"
+    "TimeLog": "description",
 }
 
 # Jira search methods use some paging
@@ -115,6 +115,15 @@ ASSET_FIELDS_MAPPING = {
     "created_by": "reporter",
     "tasks": None,
     "sg_status_list": "status",
+}
+
+# Define the mapping between ShotGrid TimeLog and Jira Worklog fields
+TIMELOG_FIELDS_MAPPING = {
+    "user": "author",
+    "date": "started",
+    "duration": "timeSpent",
+    "description": "comment",
+    "entity": None,
 }
 
 # The type of Issue link to use when linking a Task Issue to the Issue
