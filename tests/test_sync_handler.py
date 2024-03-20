@@ -9,6 +9,7 @@ import mock
 
 from sg_jira.handlers import SyncHandler
 from mock_jira import JIRA_USER, JIRA_PROJECT, JIRA_PROJECT_KEY
+from mock_shotgun import SG_USER
 from test_sync_base import TestSyncBase
 
 
@@ -17,21 +18,6 @@ from test_sync_base import TestSyncBase
 @mock.patch("shotgun_api3.Shotgun")
 class TestSyncHandler(TestSyncBase):
     """SyncHandler test class"""
-
-    def setUp(self):
-        """Test setup."""
-
-        super(TestSyncHandler, self).setUp()
-
-        # Mock up some data
-        self.user = {
-            "id": 1,
-            "type": "HumanUser",
-            "login": "ford.prefect",
-            "email": JIRA_USER["emailAddress"],
-            "name": "Ford Prefect",
-            "sg_jira_account_id": JIRA_USER["accountId"],
-        }
 
     def _get_handler(self, mocked_sg):
         """Helper method to get the handler"""
@@ -77,36 +63,36 @@ class TestSyncHandler(TestSyncBase):
         sg_user = self._test_get_sg_user(
             mocked_sg, JIRA_USER["accountId"], is_jira_cloud=True, jira_user=JIRA_USER
         )
-        self.assertEqual(sg_user["id"], self.user["id"])
-        self.assertEqual(sg_user["email"], self.user["email"])
-        self.assertEqual(sg_user["name"], self.user["name"])
+        self.assertEqual(sg_user["id"], SG_USER["id"])
+        self.assertEqual(sg_user["email"], SG_USER["email"])
+        self.assertEqual(sg_user["name"], SG_USER["name"])
 
     def test_get_sg_user_from_jira_server_user(self, mocked_sg):
         """"""
         sg_user = self._test_get_sg_user(
             mocked_sg, JIRA_USER["name"], is_jira_cloud=False, jira_user=JIRA_USER
         )
-        self.assertEqual(sg_user["id"], self.user["id"])
-        self.assertEqual(sg_user["email"], self.user["email"])
-        self.assertEqual(sg_user["name"], self.user["name"])
+        self.assertEqual(sg_user["id"], SG_USER["id"])
+        self.assertEqual(sg_user["email"], SG_USER["email"])
+        self.assertEqual(sg_user["name"], SG_USER["name"])
 
     def test_get_sg_user_without_jira_cloud_user(self, mocked_sg):
         """"""
         sg_user = self._test_get_sg_user(
             mocked_sg, JIRA_USER["accountId"], is_jira_cloud=True
         )
-        self.assertEqual(sg_user["id"], self.user["id"])
-        self.assertEqual(sg_user["email"], self.user["email"])
-        self.assertEqual(sg_user["name"], self.user["name"])
+        self.assertEqual(sg_user["id"], SG_USER["id"])
+        self.assertEqual(sg_user["email"], SG_USER["email"])
+        self.assertEqual(sg_user["name"], SG_USER["name"])
 
     def test_get_sg_user_without_jira_server_user(self, mocked_sg):
         """"""
         sg_user = self._test_get_sg_user(
             mocked_sg, JIRA_USER["name"], is_jira_cloud=False
         )
-        self.assertEqual(sg_user["id"], self.user["id"])
-        self.assertEqual(sg_user["email"], self.user["email"])
-        self.assertEqual(sg_user["name"], self.user["name"])
+        self.assertEqual(sg_user["id"], SG_USER["id"])
+        self.assertEqual(sg_user["email"], SG_USER["email"])
+        self.assertEqual(sg_user["name"], SG_USER["name"])
 
     def _test_get_sg_user(self, mocked_sg, user_id, is_jira_cloud=True, jira_user=None):
         """"""
@@ -124,6 +110,6 @@ class TestSyncHandler(TestSyncBase):
         handler = self._get_handler(mocked_sg)
 
         # add the faked PTR user
-        self.add_to_sg_mock_db(handler._shotgun, self.user)
+        self.add_to_sg_mock_db(handler._shotgun, SG_USER)
 
         return handler.get_sg_user(user_id, jira_user)
