@@ -390,6 +390,7 @@ class TimelogWorklogHandler(SyncHandler):
                 f"Deleting Flow Production Tracking TimeLog ({sg_timelogs[0]['id']})"
             )
             self._shotgun.delete("TimeLog", sg_timelogs[0]["id"])
+            self._remove_sg_user_from_jira_worklog(jira_issue, jira_worklog["id"])
 
         else:
 
