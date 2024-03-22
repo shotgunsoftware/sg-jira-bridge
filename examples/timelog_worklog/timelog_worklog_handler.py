@@ -409,7 +409,7 @@ class TimelogWorklogHandler(SyncHandler):
                 "description": jira_worklog.get("comment", "New JIRA Timelog"),
                 "user": sg_user,
                 "date": worklog_started_date,
-                "duration": jira_worklog["timeSpentSeconds"] / 60,
+                "duration": int(jira_worklog["timeSpentSeconds"] / 60),
                 "entity": sg_tasks[0],
                 "project": sg_tasks[0]["project"],
                 SHOTGUN_JIRA_ID_FIELD: sg_jira_key,
