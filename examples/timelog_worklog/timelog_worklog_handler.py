@@ -483,7 +483,7 @@ class TimelogWorklogHandler(SyncHandler):
                 "description": jira_worklog.comment,
                 "user": sg_user,
                 "date": worklog_started_date,
-                "duration": jira_worklog.timeSpentSeconds / 60,
+                "duration": int(jira_worklog.timeSpentSeconds / 60),
                 "entity": sg_task,
                 "project": sg_task["project"],
                 SHOTGUN_JIRA_ID_FIELD: sg_jira_key,
