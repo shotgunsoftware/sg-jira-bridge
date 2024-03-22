@@ -7,7 +7,7 @@
 
 import copy
 from jira.resources import Project as JiraProject
-from jira.resources import IssueType, Issue, User, Comment, IssueLink
+from jira.resources import IssueType, Issue, User, Comment, IssueLink, Worklog
 from jira import JIRAError
 
 # Faked Jira Project, Issue, change log and event
@@ -35,7 +35,7 @@ JIRA_USER = {
 }
 
 JIRA_USER_2 = {
-    "accountId": "12343456778",
+    "accountId": "5b6a25ab7c14b729f2208297",
     "active": True,
     "displayName": "Sync Sync",
     "emailAddress": "syncsync.@foo.com",
@@ -381,6 +381,10 @@ class MockedSession(object):
 
 
 class MockedIssue(Issue):
+    def __init__(self, *args, **kwargs):
+        super(MockedIssue, self).__init__(*args, **kwargs)
+        self._worklogs = []
+
     def update(self, fields, *args, **kwargs):
         raw = self.raw
         raw["fields"].update(fields)
@@ -395,6 +399,19 @@ class MockedComment(Comment):
 
     def delete(self):
         pass
+
+
+class MockedWorklog(Worklog):
+    def update(self, *args, **kwargs):
+        """Mocked Jira method to update a worklog"""
+        raw = self.raw
+        for k in kwargs:
+            raw[k] = kwargs[k]
+        self._parse_raw(raw)
+
+    def delete(self, *args, **kwargs):
+        """Mocked Jira method to delete a worklog"""
+        self.issue._worklogs.remove(self)
 
 
 class MockedJira(object):
@@ -846,6 +863,21 @@ class MockedJira(object):
                     "customId": 10300,
                     "type": "string",
                     "custom": "com.atlassian.jira.plugin.system.customfieldtypes:url",
+                },
+            },
+            {
+                "name": "Shotgun TimeLogs",
+                "searchable": True,
+                "navigable": True,
+                "custom": True,
+                "key": "customfield_11517",
+                "clauseNames": ["cf[11517]", "Shotgun TimeLogs"],
+                "orderable": True,
+                "id": "customfield_11517",
+                "schema": {
+                    "customId": 11517,
+                    "type": "string",
+                    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
                 },
             },
             {
@@ -1623,6 +1655,28 @@ class MockedJira(object):
         return MockedComment(
             None, None, raw={"issue": issue, "body": "Totally faked", "id": 1}
         )
+
+    def add_worklog(self, issue, *args, **kwargs):
+        """Mocked Jira method to add a worklog"""
+        raw = {"issue": issue, "id": str(len(issue._worklogs) + 1)}
+        for k in kwargs:
+            raw[k] = kwargs[k]
+        worklog = MockedWorklog(None, None, raw=raw)
+        issue._worklogs.append(worklog)
+        return worklog
+
+    def worklog(self, issue_key, worklog_key):
+        """Mocked Jira method to retrieve a worklog associated with an issue"""
+        issue = self.issue(issue_key)
+        for w in issue._worklogs:
+            if w.id == worklog_key:
+                return w
+        return None
+
+    def worklogs(self, issue_key):
+        """Mocked Jira method to retrieve all the worklogs associated with an issue"""
+        issue = self.issue(issue_key)
+        return issue._worklogs
 
     def transitions(self, *args, **kwargs):
         """

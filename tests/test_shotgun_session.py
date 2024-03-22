@@ -11,7 +11,7 @@ import os
 import sg_jira
 from test_base import TestBase
 from test_sync_base import ExtMockgun
-from mock_shotgun import SG_USER, SG_ASSET, SG_TASK, SG_RETIRED_TASK
+from mock_shotgun import SG_USER, SG_ASSET, SG_TASK, SG_RETIRED_TIMELOG
 
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
@@ -108,22 +108,22 @@ class TestShotgunSession(TestBase):
 
         sg_session = self._get_sg_session(mocked_sg)
 
-        self.add_to_sg_mock_db(sg_session, SG_RETIRED_TASK)
-        consolidated_task = sg_session.consolidate_entity(
-            {"type": SG_RETIRED_TASK["type"], "id": SG_RETIRED_TASK["id"]},
+        self.add_to_sg_mock_db(sg_session, SG_RETIRED_TIMELOG)
+        consolidated_timelog = sg_session.consolidate_entity(
+            {"type": SG_RETIRED_TIMELOG["type"], "id": SG_RETIRED_TIMELOG["id"]},
             retired_only=True,
         )
 
-        self.assertEqual(consolidated_task["content"], SG_RETIRED_TASK["content"])
+        self.assertEqual(consolidated_timelog["id"], SG_RETIRED_TIMELOG["id"])
 
     def test_consolidate_retired_entity_2(self, mocked_sg):
         """Test the retired entity consolidation (missing flag)"""
 
         sg_session = self._get_sg_session(mocked_sg)
 
-        self.add_to_sg_mock_db(sg_session, SG_RETIRED_TASK)
-        consolidated_task = sg_session.consolidate_entity(
-            {"type": SG_RETIRED_TASK["type"], "id": SG_RETIRED_TASK["id"]},
+        self.add_to_sg_mock_db(sg_session, SG_RETIRED_TIMELOG)
+        consolidated_timelog = sg_session.consolidate_entity(
+            {"type": SG_RETIRED_TIMELOG["type"], "id": SG_RETIRED_TIMELOG["id"]},
         )
 
-        self.assertEqual(consolidated_task, None)
+        self.assertEqual(consolidated_timelog, None)

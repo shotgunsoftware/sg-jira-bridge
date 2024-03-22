@@ -17,8 +17,17 @@ SG_USER = {
     "type": "HumanUser",
     "login": "ford.prefect",
     "email": mock_jira.JIRA_USER["emailAddress"],
-    "name": "Ford Prefect",
+    "name": mock_jira.JIRA_USER["displayName"],
     "sg_jira_account_id": mock_jira.JIRA_USER["accountId"],
+}
+
+SG_USER_2 = {
+    "id": 2,
+    "type": "HumanUser",
+    "login": "sync-sync",
+    "email": mock_jira.JIRA_USER_2["emailAddress"],
+    "name": mock_jira.JIRA_USER_2["displayName"],
+    "sg_jira_account_id": mock_jira.JIRA_USER_2["accountId"],
 }
 
 SG_PROJECT = {
@@ -44,12 +53,23 @@ SG_TASK = {
     "description": "Task Description",
 }
 
-SG_RETIRED_TASK = {
-    "type": "Task",
-    "id": 2,
-    "content": "Task 2",
+SG_TIMELOG = {
+    "type": "TimeLog",
+    "id": 1,
+    "description": "Timelog 1",
+    "user": SG_USER,
+    "date": "2024-03-15",
+    "duration": 480,
     "project": SG_PROJECT,
-    "task_assignees": [SG_USER],
-    "description": "Task Description",
+}
+
+SG_RETIRED_TIMELOG = {
+    "type": "TimeLog",
+    "id": 2,
+    "description": "Timelog 2",
+    "user": SG_USER,
+    "date": "2024-03-15",
+    "duration": 480,
+    "project": SG_PROJECT,
     "__retired": True,
 }
