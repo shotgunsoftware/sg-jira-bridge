@@ -115,7 +115,7 @@ Jira Webhook
 |              | | The ``<url_for_sg_jira_bridge>`` is the host name or IP address of the computer you   |
 |              | | will be launching ``webapp.py`` or ``service.py`` from.                               |
 +--------------+-----------------------------------------------------------------------------------------+
-Description  | "Webhook that syncs Jira data with Flow Production Tracking using the Jira Bridge"
+| Description  | "Webhook that syncs Jira data with Flow Production Tracking using the Jira Bridge"      |
 +--------------+-----------------------------------------------------------------------------------------+
 | JQL          | ``project = "Your Project Name"``                                                       |
 +--------------+-----------------------------------------------------------------------------------------+
