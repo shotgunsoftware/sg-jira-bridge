@@ -158,7 +158,7 @@ class AssetIssueHandler(EntityIssueHandler):
             return self._sync_shotgun_status_to_jira(
                 jira_issue,
                 shotgun_status,
-                "Updated from Shotgun %s(%d) moving to %s"
+                "Updated from Flow Production Tracking %s(%d) moving to %s"
                 % (shotgun_asset["type"], shotgun_asset["id"], shotgun_status),
             )
 
@@ -203,7 +203,7 @@ class AssetIssueHandler(EntityIssueHandler):
             jira_issue = self.get_jira_issue(jira_issue_key)
             if not jira_issue:
                 self._logger.warning(
-                    "Unable to find Jira Issue %s for Shotgun Asset %s"
+                    "Unable to find Jira Issue %s for Flow Production Tracking Asset %s"
                     % (jira_issue_key, shotgun_asset)
                 )
                 # Better to stop processing.
@@ -280,7 +280,7 @@ class AssetIssueHandler(EntityIssueHandler):
                 jira_project = self.get_jira_project(jira_project_key)
                 if not jira_project:
                     self._logger.warning(
-                        "Unable to find Jira Project %s for Shotgun Project %s."
+                        "Unable to find Jira Project %s for Flow Production Tracking Project %s."
                         % (
                             jira_project_key,
                             shotgun_asset["project"],
@@ -395,7 +395,7 @@ class AssetIssueHandler(EntityIssueHandler):
                     issue_data[jira_field] = jira_value
             except InvalidShotgunValue as e:
                 self._logger.warning(
-                    "Unable to update Jira %s %s %s field from Shotgun value %s: %s"
+                    "Unable to update Jira %s %s %s field from Flow Production Tracking value %s: %s"
                     % (
                         jira_issue.fields.issuetype.name,
                         jira_issue.key,
@@ -422,7 +422,7 @@ class AssetIssueHandler(EntityIssueHandler):
             self._sync_shotgun_status_to_jira(
                 jira_issue,
                 sg_entity["sg_status_list"],
-                "Updated from Shotgun %s(%d) moving to %s"
+                "Updated from Flow Production Tracking %s(%d) moving to %s"
                 % (sg_entity["type"], sg_entity["id"], sg_entity["sg_status_list"]),
             )
 
@@ -485,7 +485,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
         if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
-                "Rejecting Shotgun event with unsupported Shotgun field %s: %s"
+                "Rejecting Flow Production Tracking event with unsupported Flow Production Tracking field %s: %s"
                 % (field, event)
             )
             return False
@@ -524,14 +524,16 @@ class AssetIssueHandler(EntityIssueHandler):
         )
         if not sg_entity:
             self._logger.warning(
-                "Unable to find Shotgun %s (%s)." % (entity_type, entity_id)
+                "Unable to find Flow Production Tracking %s (%s)."
+                % (entity_type, entity_id)
             )
             return False
 
         # Explicit sync: check if the "Sync in Jira" checkbox is on.
         if not sg_entity[SHOTGUN_SYNC_IN_JIRA_FIELD]:
             self._logger.debug(
-                "Not syncing Shotgun entity %s. 'Sync in Jira' is off" % sg_entity,
+                "Not syncing Flow Production Tracking entity %s. 'Sync in Jira' is off"
+                % sg_entity,
             )
             return False
 
@@ -575,7 +577,7 @@ class AssetIssueHandler(EntityIssueHandler):
         # been created.
         if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
             self._logger.debug(
-                "Rejecting Shotgun event for %s.%s field update during "
+                "Rejecting Flow Production Tracking event for %s.%s field update during "
                 "create. Issue was already created in Jira: %s"
                 % (sg_entity["type"], shotgun_field, event)
             )
@@ -633,7 +635,7 @@ class AssetIssueHandler(EntityIssueHandler):
 
         # Otherwise, handle the attribute change
         self._logger.info(
-            "Syncing Shotgun %s.%s (%d) to Jira %s %s"
+            "Syncing Flow Production Tracking %s.%s (%d) to Jira %s %s"
             % (
                 entity_type,
                 sg_field,
@@ -642,7 +644,7 @@ class AssetIssueHandler(EntityIssueHandler):
                 jira_issue.key,
             )
         )
-        self._logger.debug("Shotgun event: %s" % event)
+        self._logger.debug("Flow Production Tracking event: %s" % event)
 
         # Update existing synced Issue (if any) Issue dependencies
         # Note: deleting a Task does not seem to trigger an Asset.tasks change?
