@@ -45,9 +45,9 @@ Required Fields
 The following fields must be created in Flow Production Tracking for each of the
 following entity types:
 
-===========  =========  ================  ====================================  ======================
+===========  =========  ================  ====================================  ============================
 Entity Type  Data Type  Display Name      Description                           Field Name (auto-generated)
-===========  =========  ================  ====================================  ======================
+===========  =========  ================  ====================================  ============================
 Project      File/Link  Jira Sync URL     URL of PTR Jira Bridge (see below)    ``sg_jira_sync_url``
 Project      Text       Jira Key          Synced Project Key value in Jira      ``sg_jira_key``
 Task         Text       Jira Key          Synced Issue Key value in Jira        ``sg_jira_key``
@@ -55,7 +55,7 @@ Task         Checkbox   Sync In Jira      Enable/Disable syncing for this Task  
 Task         File/Link  Jira URL          Link to synced Issue in Jira          ``sg_jira_url``
 Note         Text       Jira Key          Synced Issue Key/Comment ID in Jira   ``sg_jira_key``
 HumanUser    Text       Jira Account Id   Synced Account Id in Jira.            ``sg_jira_account_id``
-===========  =========  ================  ====================================  ======================
+===========  =========  ================  ====================================  ============================
 
 .. note::
     - All ``Jira Key`` fields must be configured with the "*Ensure unique
@@ -92,11 +92,11 @@ The following fields must be created in Jira and made available in Boards:
 +--------------+------+-----------------------------------------------------------------------+
 | Field Name   | Type | Description                                                           |
 +==============+======+=======================================================================+
-| Shotgun Type | Text | Stores the associated Flow Production Tracking Entity type                            |
+| Shotgun Type | Text | Stores the associated Flow Production Tracking Entity type            |
 +--------------+------+-----------------------------------------------------------------------+
-| Shotgun ID   | Text | Stores the associated Flow Production Tracking Entity ID                              |
+| Shotgun ID   | Text | Stores the associated Flow Production Tracking Entity ID              |
 +--------------+------+-----------------------------------------------------------------------+
-| Shotgun URL  | Text | Stores a link to the detail page for the associated entity in Flow Production Tracking|
+| Shotgun URL  | Text | Stores a link to the detail page for the associated entity in PTR     |
 +--------------+------+-----------------------------------------------------------------------+
 
 Jira Webhook
