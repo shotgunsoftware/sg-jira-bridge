@@ -33,6 +33,8 @@ class TestShotgunSession(TestBase):
             )
         )
 
+        self.mock_jira_session_bases()
+
     def _get_sg_session(self, mocked_sg):
         """Return a PTR session object."""
         mocked_sg.return_value = ExtMockgun(
