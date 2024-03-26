@@ -1154,13 +1154,18 @@ class TestJiraSyncer(TestSyncBase):
                 sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
             )["due_date"],
         )
-        
+
         # Prepare the JIRA payload
         jira_event = dict(JIRA_EVENT)
         jira_event["issue"]["fields"]["duedate"] = DUE_DATE
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             "2024-03-30",
@@ -1202,13 +1207,18 @@ class TestJiraSyncer(TestSyncBase):
                 sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
             )["due_date"],
         )
-        
+
         # Prepare a JIRA payload without `fieldId` property
         jira_event = dict(JIRA_EVENT)
         jira_event["issue"]["fields"]["duedate"] = DUE_DATE
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE_2]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             "2024-03-30",

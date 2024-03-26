@@ -72,7 +72,8 @@ class TestBase(unittest.TestCase):
             eid = entity["id"]
 
             # special retired flag for mockgun
-            entity["__retired"] = False
+            if "__retired" not in entity:
+                entity["__retired"] = False
             # set a created by
             entity["created_by"] = {"type": "HumanUser", "id": 1}
             # turn any dicts into proper type/id/name refs

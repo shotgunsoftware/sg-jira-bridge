@@ -191,7 +191,7 @@ class ShotgunSession(object):
         # standard field.
         return True
 
-    def consolidate_entity(self, shotgun_entity, fields=None):
+    def consolidate_entity(self, shotgun_entity, fields=None, retired_only=False):
         """
         Consolidate the given Flow Production Tracking Entity: collect additional field values,
         ensure the Entity name is available under a "name" key.
@@ -199,6 +199,7 @@ class ShotgunSession(object):
         :param shotgun_entity: A Flow Production Tracking Entity dictionary with at least its id
                                and its type.
         :param fields: An optional list of fields to add to the query.
+        :param retired_only: An optional boolean indicating if the entity we're consolidating has been retired.
         :returns: The consolidated Flow Production Tracking Entity or `None` if it can't be retrieved.
         """
 
@@ -227,6 +228,7 @@ class ShotgunSession(object):
                 shotgun_entity["type"],
                 [["id", "is", shotgun_entity["id"]]],
                 missing + list(shotgun_entity.keys()),
+                retired_only=retired_only,
             )
             if not consolidated:
                 logger.warning(

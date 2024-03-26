@@ -191,22 +191,10 @@ class EntityIssueHandler(SyncHandler):
         created_by = sg_entity["created_by"]
         if created_by["type"] == "HumanUser":
             user = self._shotgun.consolidate_entity(created_by)
-            if user:
-                user_email = user["email"]
-                jira_user = self._jira.find_jira_user(
-                    user_email,
-                    jira_project=jira_project,
-                )
-                # If we found a Jira user, use his name as the reporter name,
-                # otherwise use the reporter name retrieved from the user used
-                # to run the bridge.
+            if user and user.get("email"):
+                jira_user = self.get_jira_user(user["email"], jira_project)
                 if jira_user:
-                    # Jira Cloud no longer supports the name field and Jira server does not support
-                    # accountId. So we need different behaviour based on the type of Jira we're using
-                    if self._jira.is_jira_cloud:
-                        reporter = {"accountId": jira_user.accountId}
-                    else:
-                        reporter = {"name": jira_user.name}
+                    reporter = jira_user
         else:
             self._logger.debug(
                 "Ignoring created_by '%s' since it's not a HumanUser." % created_by
