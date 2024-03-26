@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Debugging &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>Debugging &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -72,10 +72,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#common-issues">Common Issues</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#runtimeerror-maximum-recursion-depth-exceeded">RuntimeError: maximum recursion depth exceeded</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#not-seeing-changes-sync">Not Seeing Changes Sync</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sg-jira-bridge-webapp-isn-t-responding">SG Jira Bridge Webapp Isn’t Responding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#shotgrid-changes-aren-t-syncing-to-jira">ShotGrid changes aren’t syncing to Jira</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#jira-changes-aren-t-syncing-to-shotgrid">Jira changes aren’t syncing to ShotGrid</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#value-can-t-be-translated-to-a-shotgrid-jira-value">Value can’t be translated to a ShotGrid/Jira value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flow-production-tracking-jira-bridge-webapp-isn-t-responding">Flow Production Tracking Jira Bridge Webapp Isn’t Responding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flow-production-tracking-changes-aren-t-syncing-to-jira">Flow Production Tracking changes aren’t syncing to Jira</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jira-changes-aren-t-syncing-to-flow-production-tracking">Jira changes aren’t syncing to Flow Production Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#value-can-t-be-translated-to-a-flow-production-tracking-jira-value">Value can’t be translated to a Flow Production Tracking/Jira value</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#time-tracking-original-estimate-is-required">Time Tracking: Original Estimate is Required</a></li>
 </ul>
 </li>
@@ -105,10 +105,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -149,10 +149,10 @@
 <h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h1>
 <section id="logging">
 <h2>Logging<a class="headerlink" href="#logging" title="Permalink to this heading"></a></h2>
-<p>The SG-Jira-Bridge uses standard Python logging. The logging configuration is
+<p>The PTR-Jira-Bridge uses standard Python logging. The logging configuration is
 stored in a <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> <em>dict</em> in the <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file and uses the
 standard <a class="reference external" href="https://docs.python.org/3.9/library/logging.config.html#module-logging.config" title="(in Python v3.9)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging.config</span></code></a> format.</p>
-<p>By default the SG Jira Bridge logs <code class="docutils literal notranslate"><span class="pre">INFO</span></code> messages and above which provide
+<p>By default the Flow Production Tracking Jira Bridge logs <code class="docutils literal notranslate"><span class="pre">INFO</span></code> messages and above which provide
 a good amount of detail to audit what is happening with each request.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -248,10 +248,10 @@ you to specify the hostname you wish to use.</p>
 <section id="runtimeerror-maximum-recursion-depth-exceeded">
 <h3>RuntimeError: maximum recursion depth exceeded<a class="headerlink" href="#runtimeerror-maximum-recursion-depth-exceeded" title="Permalink to this heading"></a></h3>
 <p>If you are seeing this error in your logs when trying to start the web service,
-you may be using an old version the ShotGrid Jira Bridge and need to update.</p>
+you may be using an old version the Flow Production Tracking Jira Bridge and need to update.</p>
 <p>Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
 Jira client library to generate this error. Updating to the latest version of
-ShotGrid Jira Bridge transitions the authentication to use Basic Auth.</p>
+Flow Production Tracking Jira Bridge transitions the authentication to use Basic Auth.</p>
 <p>You will need to generate an API token and use this as your user secret (password).
 User passwords are no longer supported by Jira Cloud. See
 <a class="reference external" href="https://confluence.atlassian.com/x/Vo71Nw">https://confluence.atlassian.com/x/Vo71Nw</a> for information on how to generate a
@@ -262,19 +262,19 @@ passwords and does not support API tokens.</p>
 </section>
 <section id="not-seeing-changes-sync">
 <h3>Not Seeing Changes Sync<a class="headerlink" href="#not-seeing-changes-sync" title="Permalink to this heading"></a></h3>
-<p>When you make a change in ShotGrid or Jira, the bridge evaluates whether the
+<p>When you make a change in Flow Production Tracking or Jira, the bridge evaluates whether the
 change should be synced to to the target site, tries to convert the value to an
 acceptable value in the target site, and then submits the change.</p>
 <p>If you’re not seeing your changes sync across, there are a few things you can
 check.</p>
 </section>
-<section id="sg-jira-bridge-webapp-isn-t-responding">
-<h3>SG Jira Bridge Webapp Isn’t Responding<a class="headerlink" href="#sg-jira-bridge-webapp-isn-t-responding" title="Permalink to this heading"></a></h3>
+<section id="flow-production-tracking-jira-bridge-webapp-isn-t-responding">
+<h3>Flow Production Tracking Jira Bridge Webapp Isn’t Responding<a class="headerlink" href="#flow-production-tracking-jira-bridge-webapp-isn-t-responding" title="Permalink to this heading"></a></h3>
 <p>You can check to see if the Bridge is running by issuing a GET request for the
 sync URL in your browser. Copy the URL you have entered in the
-<strong>Jira Sync URL</strong> field in your ShotGrid Project and enter it in your browser.
+<strong>Jira Sync URL</strong> field in your Flow Production Tracking Project and enter it in your browser.
 You should see a message that says something like:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ShotGrid</span> <span class="n">to</span> <span class="n">Jira</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Flow</span> <span class="n">Production</span> <span class="n">Tracking</span> <span class="n">to</span> <span class="n">Jira</span>
 <span class="n">Syncing</span> <span class="k">with</span> <span class="n">default</span> <span class="n">settings</span><span class="o">.</span>
 </pre></div>
 </div>
@@ -291,47 +291,47 @@ correct. The URL should look like:</p>
 </div>
 <p>For example: <code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code></p>
 </section>
-<section id="shotgrid-changes-aren-t-syncing-to-jira">
-<h3>ShotGrid changes aren’t syncing to Jira<a class="headerlink" href="#shotgrid-changes-aren-t-syncing-to-jira" title="Permalink to this heading"></a></h3>
+<section id="flow-production-tracking-changes-aren-t-syncing-to-jira">
+<h3>Flow Production Tracking changes aren’t syncing to Jira<a class="headerlink" href="#flow-production-tracking-changes-aren-t-syncing-to-jira" title="Permalink to this heading"></a></h3>
 <p>The first place to check is in the shotgunEvents log files to see if the
-trigger was run and issued a successful call to the SG Jira Bridge.</p>
-<p>Next, check the logs for the SG Jira Bridge and see if the request was
+trigger was run and issued a successful call to the Flow Production Tracking Jira Bridge.</p>
+<p>Next, check the logs for the Flow Production Tracking Jira Bridge and see if the request was
 received and processed successfully. The logs should make this very apparent.</p>
 <p>If you don’t see any errors, make sure your Syncer and SyncHandler are
 accepting the event for processing.</p>
 <p>Other things to check:</p>
 <ul class="simple">
-<li><p>Is your ShotGrid Project configured to sync to Jira?</p></li>
+<li><p>Is your Flow Production Tracking Project configured to sync to Jira?</p></li>
 <li><p>Is the Entity type configured to sync to Jira?</p></li>
 <li><p>Does the Entity that generated the event enabled for syncing (the <strong>Sync In
 Jira</strong> checkbox field is checked)?</p></li>
 </ul>
 </section>
-<section id="jira-changes-aren-t-syncing-to-shotgrid">
-<h3>Jira changes aren’t syncing to ShotGrid<a class="headerlink" href="#jira-changes-aren-t-syncing-to-shotgrid" title="Permalink to this heading"></a></h3>
-<p>Check the logs for the SG Jira Bridge and see if the request from Jira was
+<section id="jira-changes-aren-t-syncing-to-flow-production-tracking">
+<h3>Jira changes aren’t syncing to Flow Production Tracking<a class="headerlink" href="#jira-changes-aren-t-syncing-to-flow-production-tracking" title="Permalink to this heading"></a></h3>
+<p>Check the logs for the Flow Production Tracking Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.</p>
-<p>If SG Jira Bridge is not receiving the request:</p>
+<p>If Flow Production Tracking Jira Bridge is not receiving the request:</p>
 <ul class="simple">
 <li><p>Check that your Jira Webhook is setup and configured correctly. If you’re
 using a local Jira instance, you can also check the logs to see if the
 webhook fired.</p></li>
-<li><p>Make sure your SG Jira Bridge is accessible from your Jira server. If you
-are using a Jira Cloud instance and SG Jira Bridge is running inside a
+<li><p>Make sure your Flow Production Tracking Jira Bridge is accessible from your Jira server. If you
+are using a Jira Cloud instance and Flow Production Tracking Jira Bridge is running inside a
 firewalled environment, you’ll need to open up access to the application
-or move SG Jira Bridge into some sort of DMZ setup.</p></li>
+or move Flow Production Tracking Jira Bridge into some sort of DMZ setup.</p></li>
 </ul>
 </section>
-<section id="value-can-t-be-translated-to-a-shotgrid-jira-value">
-<h3>Value can’t be translated to a ShotGrid/Jira value<a class="headerlink" href="#value-can-t-be-translated-to-a-shotgrid-jira-value" title="Permalink to this heading"></a></h3>
-<p>If you change a status in ShotGrid or Jira and there’s no matching status value
+<section id="value-can-t-be-translated-to-a-flow-production-tracking-jira-value">
+<h3>Value can’t be translated to a Flow Production Tracking/Jira value<a class="headerlink" href="#value-can-t-be-translated-to-a-flow-production-tracking-jira-value" title="Permalink to this heading"></a></h3>
+<p>If you change a status in Flow Production Tracking or Jira and there’s no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2019</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">11</span> <span class="mi">15</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">09</span><span class="p">,</span><span class="mi">517</span> <span class="n">WARNING</span> <span class="p">[</span><span class="n">entity_issue_handler</span><span class="p">]</span> <span class="n">Unable</span> <span class="n">to</span> <span class="n">find</span> <span class="n">a</span> <span class="n">matching</span> <span class="n">Jira</span> <span class="n">status</span> <span class="k">for</span> <span class="n">ShotGrid</span> <span class="n">status</span> <span class="s1">&#39;na&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2019</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">11</span> <span class="mi">15</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">09</span><span class="p">,</span><span class="mi">517</span> <span class="n">WARNING</span> <span class="p">[</span><span class="n">entity_issue_handler</span><span class="p">]</span> <span class="n">Unable</span> <span class="n">to</span> <span class="n">find</span> <span class="n">a</span> <span class="n">matching</span> <span class="n">Jira</span> <span class="n">status</span> <span class="k">for</span> <span class="n">Flow</span> <span class="n">Production</span> <span class="n">Tracking</span> <span class="n">status</span> <span class="s1">&#39;na&#39;</span>
 </pre></div>
 </div>
 <p>In this case, there is no Jira status defined in the handlers to match with
-the <code class="docutils literal notranslate"><span class="pre">na</span></code> status in ShotGrid. Your handler defines a
+the <code class="docutils literal notranslate"><span class="pre">na</span></code> status in Flow Production Tracking. Your handler defines a
 <code class="docutils literal notranslate"><span class="pre">_sg_jira_status_mapping()</span></code> property that returns the status mapping.
 You can see there’s no <code class="docutils literal notranslate"><span class="pre">na</span></code> status here:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">return</span> <span class="p">{</span>
@@ -373,7 +373,7 @@ this error should be resolved.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

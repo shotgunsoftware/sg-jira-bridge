@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.bridge &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>sg_jira.bridge &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -28,7 +28,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -84,10 +84,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -155,9 +155,9 @@
 
 <div class="viewcode-block" id="Bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge">[docs]</a><span class="k">class</span> <span class="nc">Bridge</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A bridge between ShotGrid and Jira.</span>
+<span class="sd">    A bridge between Flow Production Tracking and Jira.</span>
 
-<span class="sd">    The bridge handles connections to the ShotGrid and Jira servers and dispatches</span>
+<span class="sd">    The bridge handles connections to the Flow Production Tracking and Jira servers and dispatches</span>
 <span class="sd">    sync events.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -173,7 +173,7 @@
         <span class="n">sg_http_proxy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Instatiate a new bridge between the given SG site and Jira site.</span>
+<span class="sd">        Instatiate a new bridge between the given PTR site and Jira site.</span>
 
 <span class="sd">        .. note::</span>
 <span class="sd">            Jira Cloud requires the use of an API token and will not work with</span>
@@ -181,21 +181,21 @@
 <span class="sd">            for information on how to generate a token.</span>
 <span class="sd">            Jira Server will use PAT so please provide empty string as `SGJIRA_JIRA_USER`.</span>
 
-<span class="sd">        :param str sg_site: A ShotGrid site url.</span>
-<span class="sd">        :param str sg_script: A ShotGrid script user name.</span>
-<span class="sd">        :param str sg_script_key: The script user key for the ShotGrid script.</span>
+<span class="sd">        :param str sg_site: A Flow Production Tracking URL.</span>
+<span class="sd">        :param str sg_script: A Flow Production Tracking script user name.</span>
+<span class="sd">        :param str sg_script_key: The script user key for the Flow Production Tracking script.</span>
 <span class="sd">        :param str jira_site: A Jira site url.</span>
 <span class="sd">        :param str jira_user: A Jira user name, either his email address or short</span>
 <span class="sd">                              name.</span>
 <span class="sd">        :param str jira_secret: The Jira user password or API key.</span>
 <span class="sd">        :param sync_settings: A dictionary where keys are settings names.</span>
-<span class="sd">        :param str sg_http_proxy: Optional, a http proxy to use for the ShotGrid</span>
+<span class="sd">        :param str sg_http_proxy: Optional, a http proxy to use for the Flow Production Tracking</span>
 <span class="sd">                                  connection, or None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Bridge</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="c1"># The bridge webserver is multithreaded, which means we need to</span>
-        <span class="c1"># track Shotgun connections via the API per thread. The SG Python</span>
+        <span class="c1"># track Shotgun connections via the API per thread. The PTR Python</span>
         <span class="c1"># API is not threadsafe, and using a single, global connection</span>
         <span class="c1"># across all threads will lead to some weird behavior.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_SG_CACHED_CONNECTIONS</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">local</span><span class="p">()</span>
@@ -333,9 +333,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Jira settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
 
-        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;secret&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="p">]</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;secret&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
         <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Missing Jira setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
@@ -372,9 +370,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current_shotgun_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the ShotGrid user used for the connection.</span>
+<span class="sd">        Return the Flow Production Tracking user used for the connection.</span>
 
-<span class="sd">        :returns: A ShotGrid record dictionary with an `id` key and a `type` key.</span>
+<span class="sd">        :returns: A Flow Production Tracking record dictionary with an `id` key and a `type` key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">current_user</span>
 
@@ -464,11 +462,11 @@
 
 <div class="viewcode-block" id="Bridge.sync_in_jira"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.sync_in_jira">[docs]</a>    <span class="k">def</span> <span class="nf">sync_in_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sync the given ShotGrid Entity to Jira.</span>
+<span class="sd">        Sync the given Flow Production Tracking Entity to Jira.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
-<span class="sd">        :param str entity_type: The ShotGrid Entity type to sync.</span>
-<span class="sd">        :param int entity_id: The id of the ShotGrid Entity to sync.</span>
+<span class="sd">        :param str entity_type: The Flow Production Tracking Entity type to sync.</span>
+<span class="sd">        :param int entity_id: The id of the Flow Production Tracking Entity to sync.</span>
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
 <span class="sd">        :returns: True if the Entity was actually synced in Jira, False if</span>
 <span class="sd">                  syncing was skipped for any reason.</span>
@@ -498,13 +496,13 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sync the given Jira Resource to ShotGrid.</span>
+<span class="sd">        Sync the given Jira Resource to Flow Production Tracking.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
 <span class="sd">        :param str resource_type: The type of Jira resource sync, e.g. Issue.</span>
 <span class="sd">        :param str resource_id: The id of the Jira resource to sync.</span>
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
-<span class="sd">        :returns: True if the resource was actually synced in ShotGrid, False if</span>
+<span class="sd">        :returns: True if the resource was actually synced in Flow Production Tracking, False if</span>
 <span class="sd">                  syncing was skipped for any reason.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">synced</span> <span class="o">=</span> <span class="kc">False</span>
@@ -530,7 +528,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

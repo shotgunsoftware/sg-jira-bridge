@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>Settings &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -95,10 +95,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -145,9 +145,9 @@ The settings file contains three main sections:</p>
 <h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this heading"></a></h2>
 <p>Credentials are retrieved by default from environment variables:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SITE</span></code>: the ShotGrid site url</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_NAME</span></code>: a ShotGrid script user name</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_KEY</span></code>: the ShotGrid script user Application Key</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SITE</span></code>: the Flow Production Tracking site url</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_NAME</span></code>: a Flow Production Tracking script user name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SG_SCRIPT_KEY</span></code>: the Flow Production Tracking script user Application Key</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_SITE</span></code>: the Jira server url</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_JIRA_USER</span></code>: the system name of the Jira user used to
 connect for the sync.  This is usually your email address you
@@ -169,7 +169,7 @@ API tokens.</p>
 <p>You may set these in your environment or by installing
 <a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a> and defining these
 in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># ShotGrid credentials</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Flow Production Tracking credentials</span>
 <span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgrid.autodesk.com&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">&#39;sg-jira-bridge&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>
@@ -183,7 +183,7 @@ in a <code class="docutils literal notranslate"><span class="pre">.env</span></c
 </section>
 <section id="logging">
 <h2>Logging<a class="headerlink" href="#logging" title="Permalink to this heading"></a></h2>
-<p>The SG-Jira-Bridge uses standard Python logging. The logging configuration is
+<p>The PTR-Jira-Bridge uses standard Python logging. The logging configuration is
 stored in a <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> <em>dict</em> using the standard <a class="reference external" href="https://docs.python.org/3.9/library/logging.config.html#module-logging.config" title="(in Python v3.9)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging.config</span></code></a> format.</p>
 </section>
 <section id="sync-settings">
@@ -203,7 +203,7 @@ stored in a <code class="docutils literal notranslate"><span class="pre">LOGGING
 </div>
 <p>Each key is a settings name that contains a dictionary containing the syncer
 and the settings to use. The key is the settings name used when composing the
-URL for SG Jira Bridge. For example,
+URL for Flow Production Tracking Jira Bridge. For example,
 <code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/my_settings</span></code> uses the settings named
 <code class="docutils literal notranslate"><span class="pre">my_settings</span></code>.</p>
 <ul class="simple">
@@ -293,7 +293,7 @@ overly simplified example might look something like this:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

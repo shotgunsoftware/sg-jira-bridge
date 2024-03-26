@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.handlers.enable_syncing_handler &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>sg_jira.handlers.enable_syncing_handler &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -28,7 +28,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -84,10 +84,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -141,7 +141,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A handler which combines multiple handlers to start syncing Tasks and Entities</span>
 <span class="sd">    linked to them when a Task &quot;Sync In Jira&quot; (sg_sync_in_jira) checkbox field</span>
-<span class="sd">    is changed in ShotGrid.</span>
+<span class="sd">    is changed in Flow Production Tracking.</span>
 
 <span class="sd">    A full sync is performed each time the checkbox is turned on. This allows</span>
 <span class="sd">    to manually force a re-sync if needed by just setting off the checkbox, and</span>
@@ -158,7 +158,7 @@
 <span class="sd">        Events will be sent to secondary handlers for processing only if the</span>
 <span class="sd">        primary handler was able to successfully process them.</span>
 
-<span class="sd">        This allows to control from the primary handler if a ShotGrid Entity should</span>
+<span class="sd">        This allows to control from the primary handler if a Flow Production Tracking Entity should</span>
 <span class="sd">        be synced or not, and then automatically start syncing secondary Entities</span>
 <span class="sd">        which are linked to this primary Entity, e.g. Notes on a Task, without</span>
 <span class="sd">        having to explicitely enable syncing for the linked Entities.</span>
@@ -177,7 +177,7 @@
 
 <div class="viewcode-block" id="EnableSyncingHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check the Jira and ShotGrid site, ensure that the sync can safely happen.</span>
+<span class="sd">        Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen.</span>
 <span class="sd">        This can be used as well to cache any value which is slow to retrieve.</span>
 
 <span class="sd">        Run all handlers setup.</span>
@@ -188,7 +188,7 @@
 
 <div class="viewcode-block" id="EnableSyncingHandler.accept_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Accept or reject the given event for the given ShotGrid Entity.</span>
+<span class="sd">        Accept or reject the given event for the given Flow Production Tracking Entity.</span>
 
 <span class="sd">        :returns: `True` if the event is accepted for processing, `False` otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -206,10 +206,10 @@
 
 <div class="viewcode-block" id="EnableSyncingHandler.process_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EnableSyncingHandler.process_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Process the given ShotGrid event for the given ShotGrid Entity</span>
+<span class="sd">        Process the given Flow Production Tracking event for the given Flow Production Tracking Entity</span>
 
-<span class="sd">        :param str entity_type: The ShotGrid Entity type to sync.</span>
-<span class="sd">        :param int entity_id: The id of the ShotGrid Entity to sync.</span>
+<span class="sd">        :param str entity_type: The Flow Production Tracking Entity type to sync.</span>
+<span class="sd">        :param int entity_id: The id of the Flow Production Tracking Entity to sync.</span>
 <span class="sd">        :param event: A dictionary with the event for the change.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Run the primary handler, stop processing if the primary handler</span>
@@ -219,7 +219,9 @@
             <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_primary_handler</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primary_handler</span><span class="o">.</span><span class="n">process_shotgun_event</span><span class="p">(</span>
-            <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span>
+            <span class="n">entity_type</span><span class="p">,</span>
+            <span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">event</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -230,7 +232,9 @@
                 <span class="o">%</span> <span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">handler</span><span class="o">.</span><span class="n">process_shotgun_event</span><span class="p">(</span>
-                <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span>
+                <span class="n">entity_type</span><span class="p">,</span>
+                <span class="n">entity_id</span><span class="p">,</span>
+                <span class="n">event</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
@@ -255,7 +259,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

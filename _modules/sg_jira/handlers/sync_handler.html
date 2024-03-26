@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -28,7 +28,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -84,10 +84,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -142,9 +142,9 @@
 
 <div class="viewcode-block" id="SyncHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler">[docs]</a><span class="k">class</span> <span class="nc">SyncHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class to handle a particular sync between ShotGrid and Jira.</span>
+<span class="sd">    Base class to handle a particular sync between Flow Production Tracking and Jira.</span>
 
-<span class="sd">    Handlers typically handle syncing values between a ShotGrid Entity type and</span>
+<span class="sd">    Handlers typically handle syncing values between a Flow Production Tracking Entity type and</span>
 <span class="sd">    a Jira resource and are owned by a :class:`~sg_jira.Syncer` instance.</span>
 
 <span class="sd">    This base class defines the interface all handlers should support and</span>
@@ -191,8 +191,8 @@
     <span class="k">def</span> <span class="nf">_sg_jira_status_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Needs to be re-implemented in deriving classes and return a dictionary</span>
-<span class="sd">        where keys are ShotGrid status short codes and values are Jira status</span>
-<span class="sd">        names, or any string value which should be mapped to ShotGrid status.</span>
+<span class="sd">        where keys are Flow Production Tracking status short codes and values are Jira status</span>
+<span class="sd">        names, or any string value which should be mapped to Flow Production Tracking status.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
@@ -234,7 +234,7 @@
 <div class="viewcode-block" id="SyncHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method can be re-implemented in deriving classes to Check the Jira</span>
-<span class="sd">        and ShotGrid site, ensure that the sync can safely happen and cache any</span>
+<span class="sd">        and Flow Production Tracking site, ensure that the sync can safely happen and cache any</span>
 <span class="sd">        value which is slow to retrieve.</span>
 
 <span class="sd">        This base implementation does nothing.</span>
@@ -243,7 +243,7 @@
 
 <div class="viewcode-block" id="SyncHandler.accept_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.accept_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Accept or reject the given event for the given ShotGrid Entity.</span>
+<span class="sd">        Accept or reject the given event for the given Flow Production Tracking Entity.</span>
 
 <span class="sd">        Must be re-implemented in deriving classes.</span>
 
@@ -253,12 +253,12 @@
 
 <div class="viewcode-block" id="SyncHandler.process_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.process_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Process the given ShotGrid event for the given ShotGrid Entity</span>
+<span class="sd">        Process the given Flow Production Tracking event for the given Flow Production Tracking Entity</span>
 
 <span class="sd">        Must be re-implemented in deriving classes.</span>
 
-<span class="sd">        :param str entity_type: The ShotGrid Entity type to sync.</span>
-<span class="sd">        :param int entity_id: The id of the ShotGrid Entity to sync.</span>
+<span class="sd">        :param str entity_type: The Flow Production Tracking Entity type to sync.</span>
+<span class="sd">        :param int entity_id: The id of the Flow Production Tracking Entity to sync.</span>
 <span class="sd">        :param event: A dictionary with the event for the change.</span>
 <span class="sd">        :returns: True if the event was successfully processed, False if the</span>
 <span class="sd">                  sync didn&#39;t happen for any reason.</span>
@@ -293,13 +293,18 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
     <span class="k">def</span> <span class="nf">_get_shotgun_value_from_jira_change</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">shotgun_field_schema</span><span class="p">,</span> <span class="n">change</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">shotgun_entity</span><span class="p">,</span>
+        <span class="n">shotgun_field</span><span class="p">,</span>
+        <span class="n">shotgun_field_schema</span><span class="p">,</span>
+        <span class="n">change</span><span class="p">,</span>
+        <span class="n">jira_value</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a ShotGrid value suitable to update the given ShotGrid Entity field</span>
+<span class="sd">        Return a Flow Production Tracking value suitable to update the given Flow Production Tracking Entity field</span>
 <span class="sd">        from the given Jira change.</span>
 
-<span class="sd">        The following ShotGrid field types are supported by this method:</span>
+<span class="sd">        The following Flow Production Tracking field types are supported by this method:</span>
 <span class="sd">        - text</span>
 <span class="sd">        - list</span>
 <span class="sd">        - status_list</span>
@@ -309,15 +314,15 @@
 <span class="sd">        - number</span>
 <span class="sd">        - checkbox</span>
 
-<span class="sd">        :param str shotgun_entity: A ShotGrid Entity dictionary as retrieved from</span>
-<span class="sd">                                   ShotGrid.</span>
-<span class="sd">        :param str shotgun_field: The ShotGrid Entity field to get a value for.</span>
-<span class="sd">        :param shotgun_field_schema: The ShotGrid Entity field schema.</span>
+<span class="sd">        :param str shotgun_entity: A Flow Production Tracking Entity dictionary as retrieved from</span>
+<span class="sd">                                   Flow Production Tracking.</span>
+<span class="sd">        :param str shotgun_field: The Flow Production Tracking Entity field to get a value for.</span>
+<span class="sd">        :param shotgun_field_schema: The Flow Production Tracking Entity field schema.</span>
 <span class="sd">        :param change: A Jira event changelog dictionary with &#39;fromString&#39;,</span>
 <span class="sd">                       &#39;toString&#39;, &#39;from&#39; and &#39;to&#39; keys.</span>
 <span class="sd">        :param jira_value: The full current Jira value.</span>
-<span class="sd">        :raises RuntimeError: if the ShotGrid Entity can&#39;t be retrieved from ShotGrid.</span>
-<span class="sd">        :raises ValueError: for unsupported ShotGrid data types.</span>
+<span class="sd">        :raises RuntimeError: if the Flow Production Tracking Entity can&#39;t be retrieved from Flow Production Tracking.</span>
+<span class="sd">        :raises ValueError: for unsupported Flow Production Tracking data types.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data_type</span> <span class="o">=</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span>
@@ -399,34 +404,50 @@
                 <span class="c1"># copy of the list so we can delete entries while iterating</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Trying to remove </span><span class="si">%s</span><span class="s2"> from Shotgun </span><span class="si">%s</span><span class="s2"> value </span><span class="si">%s</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">removed</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">removed</span><span class="p">,</span>
+                        <span class="n">shotgun_field</span><span class="p">,</span>
+                        <span class="n">current_sg_value</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sg_value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">current_sg_value</span><span class="p">)):</span>
-                    <span class="c1"># Match the SG entity name, because this is retrieved</span>
+                    <span class="c1"># Match the PTR entity name, because this is retrieved</span>
                     <span class="c1"># from the entity holding the list, we do have a &quot;name&quot; key</span>
                     <span class="c1"># even if the linked Entities use another field to store their</span>
                     <span class="c1"># name e.g. &quot;code&quot;</span>
                     <span class="k">if</span> <span class="n">removed</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                             <span class="s2">&quot;Removing </span><span class="si">%s</span><span class="s2"> from Shotgun value </span><span class="si">%s</span><span class="s2"> since Jira &quot;</span>
-                            <span class="s2">&quot;removed </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sg_value</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,</span> <span class="n">removed</span><span class="p">,)</span>
+                            <span class="s2">&quot;removed </span><span class="si">%s</span><span class="s2"> &quot;</span>
+                            <span class="o">%</span> <span class="p">(</span>
+                                <span class="n">sg_value</span><span class="p">,</span>
+                                <span class="n">current_sg_value</span><span class="p">,</span>
+                                <span class="n">removed</span><span class="p">,</span>
+                            <span class="p">)</span>
                         <span class="p">)</span>
                         <span class="k">del</span> <span class="n">current_sg_value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">added</span> <span class="ow">in</span> <span class="n">added_list</span><span class="p">:</span>
                 <span class="c1"># Check if the value is already there</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Trying to add </span><span class="si">%s</span><span class="s2"> to Shotgun </span><span class="si">%s</span><span class="s2"> value </span><span class="si">%s</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">added</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">added</span><span class="p">,</span>
+                        <span class="n">shotgun_field</span><span class="p">,</span>
+                        <span class="n">current_sg_value</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">sg_value</span> <span class="ow">in</span> <span class="n">current_sg_value</span><span class="p">:</span>
-                    <span class="c1"># Match the SG entity name, because this is retrieved</span>
+                    <span class="c1"># Match the PTR entity name, because this is retrieved</span>
                     <span class="c1"># from the entity holding the list, we do have a &quot;name&quot; key</span>
                     <span class="c1"># even if the linked Entities use another field to store their</span>
                     <span class="c1"># name e.g. &quot;code&quot;</span>
                     <span class="k">if</span> <span class="n">added</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                             <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is already in current Shotgun value: </span><span class="si">%s</span><span class="s2">&quot;</span>
-                            <span class="o">%</span> <span class="p">(</span><span class="n">added</span><span class="p">,</span> <span class="n">sg_value</span><span class="p">,)</span>
+                            <span class="o">%</span> <span class="p">(</span>
+                                <span class="n">added</span><span class="p">,</span>
+                                <span class="n">sg_value</span><span class="p">,</span>
+                            <span class="p">)</span>
                         <span class="p">)</span>
                         <span class="k">break</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -438,7 +459,12 @@
                     <span class="k">if</span> <span class="n">sg_value</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                             <span class="s2">&quot;Adding </span><span class="si">%s</span><span class="s2"> to Shotgun value </span><span class="si">%s</span><span class="s2"> since Jira &quot;</span>
-                            <span class="s2">&quot;added </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sg_value</span><span class="p">,</span> <span class="n">current_sg_value</span><span class="p">,</span> <span class="n">added</span><span class="p">,)</span>
+                            <span class="s2">&quot;added </span><span class="si">%s</span><span class="s2">&quot;</span>
+                            <span class="o">%</span> <span class="p">(</span>
+                                <span class="n">sg_value</span><span class="p">,</span>
+                                <span class="n">current_sg_value</span><span class="p">,</span>
+                                <span class="n">added</span><span class="p">,</span>
+                            <span class="p">)</span>
                         <span class="p">)</span>
                         <span class="n">current_sg_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sg_value</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
@@ -462,7 +488,8 @@
                 <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Unable to parse Jira value </span><span class="si">%s</span><span class="s2"> as a date: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
                 <span class="c1"># Log the original error with a traceback for debug purpose</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="n">message</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">message</span><span class="p">,</span>
+                    <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="c1"># Notify the caller that the value is not right</span>
                 <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span><span class="n">shotgun_field</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
@@ -480,7 +507,8 @@
                 <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Jira value </span><span class="si">%s</span><span class="s2"> is not a valid integer: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
                 <span class="c1"># Log the original error with a traceback for debug purpose</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="n">message</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">message</span><span class="p">,</span>
+                    <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="c1"># Notify the caller that the value is not right</span>
                 <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span><span class="n">shotgun_field</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
@@ -501,7 +529,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

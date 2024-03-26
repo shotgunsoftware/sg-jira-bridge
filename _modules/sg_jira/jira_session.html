@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -28,7 +28,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -84,10 +84,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -188,7 +188,11 @@
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="s2">&quot;Unable to connect to </span><span class="si">%s</span><span class="s2"> (error code </span><span class="si">%d</span><span class="s2">), &quot;</span>
-                    <span class="s2">&quot;please check your credentials&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">status_code</span><span class="p">,)</span>
+                    <span class="s2">&quot;please check your credentials&quot;</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_site</span><span class="p">,</span>
+                        <span class="n">e</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Unable to connect to </span><span class="si">%s</span><span class="s2">. See the log for details.&quot;</span> <span class="o">%</span> <span class="n">jira_site</span>
@@ -219,7 +223,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Build a mapping from Jira field names to their id for fast lookup.</span>
         <span class="k">for</span> <span class="n">jira_field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span><span class="p">[</span><span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_is_shotgun_field</span><span class="p">(</span><span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]):</span>
+                <span class="n">field_name</span> <span class="o">=</span> <span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">field_name</span> <span class="o">=</span> <span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_field</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_type_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_issue_field_id</span><span class="p">(</span>
             <span class="n">JIRA_SHOTGUN_TYPE_FIELD</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="p">)</span>
@@ -241,6 +249,13 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Missing required custom Jira field </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">JIRA_SHOTGUN_URL_FIELD</span>
             <span class="p">)</span></div>
+        
+    <span class="k">def</span> <span class="nf">_name_is_shotgun_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">field_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">JIRA_SHOTGUN_TYPE_FIELD</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="n">JIRA_SHOTGUN_ID_FIELD</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="n">JIRA_SHOTGUN_URL_FIELD</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+        <span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_jira_cloud</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -262,31 +277,31 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">jira_shotgun_type_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the id of the Jira field used to store the type of a linked ShotGrid</span>
+<span class="sd">        Return the id of the Jira field used to store the type of a linked Flow Production Tracking</span>
 <span class="sd">        Entity.</span>
 
-<span class="sd">        Two custom fields are used in Jira to store a reference to a ShotGrid</span>
-<span class="sd">        Entity: its ShotGrid Entity type and id. This method returns the id of</span>
-<span class="sd">        the Jira field used to store the ShotGrid type.</span>
+<span class="sd">        Two custom fields are used in Jira to store a reference to a Flow Production Tracking</span>
+<span class="sd">        Entity: its Flow Production Tracking Entity type and id. This method returns the id of</span>
+<span class="sd">        the Jira field used to store the Flow Production Tracking type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_type_field</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">jira_shotgun_id_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the id of the Jira field used to store the id of a linked ShotGrid</span>
+<span class="sd">        Return the id of the Jira field used to store the id of a linked Flow Production Tracking</span>
 <span class="sd">        Entity.</span>
 
-<span class="sd">        Two custom fields are used in Jira to store a reference to a ShotGrid</span>
-<span class="sd">        Entity: its ShotGrid Entity type and id. This method returns the id of</span>
-<span class="sd">        the Jira field used to store the ShotGrid id.</span>
+<span class="sd">        Two custom fields are used in Jira to store a reference to a Flow Production Tracking</span>
+<span class="sd">        Entity: its Flow Production Tracking Entity type and id. This method returns the id of</span>
+<span class="sd">        the Jira field used to store the Flow Production Tracking id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_id_field</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">jira_shotgun_url_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the id of the Jira field used to store the url of a linked ShotGrid</span>
+<span class="sd">        Return the id of the Jira field used to store the url of a linked Flow Production Tracking</span>
 <span class="sd">        Entity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_url_field</span>
@@ -337,7 +352,10 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Sanitized Jira value for </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span>
-            <span class="o">%</span> <span class="p">(</span><span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">jira_value</span><span class="p">,)</span>
+            <span class="o">%</span> <span class="p">(</span>
+                <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                <span class="n">jira_value</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">jira_value</span></div>
 
@@ -487,10 +505,7 @@
         <span class="n">uemail</span> <span class="o">=</span> <span class="n">user_email</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="n">start_idx</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Querying all assignable users starting at #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">start_idx</span><span class="p">)</span>
-        <span class="n">jira_users</span> <span class="o">=</span> <span class="n">search_method</span><span class="p">(</span>
-            <span class="n">startAt</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">search_params</span>
-        <span class="p">)</span>
+        <span class="n">jira_users</span> <span class="o">=</span> <span class="n">search_method</span><span class="p">(</span><span class="n">startAt</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span> <span class="o">**</span><span class="n">search_params</span><span class="p">)</span>
         <span class="k">while</span> <span class="n">jira_users</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">jira_user</span> <span class="ow">in</span> <span class="n">jira_users</span><span class="p">:</span>
                 <span class="k">if</span> <span class="p">(</span>
@@ -507,22 +522,25 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Querying all assignable users starting at #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">start_idx</span>
                 <span class="p">)</span>
-                <span class="n">jira_users</span> <span class="o">=</span> <span class="n">search_method</span><span class="p">(</span>
-                    <span class="n">startAt</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">search_params</span>
-                <span class="p">)</span>
+                <span class="n">jira_users</span> <span class="o">=</span> <span class="n">search_method</span><span class="p">(</span><span class="n">startAt</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span> <span class="o">**</span><span class="n">search_params</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">%s</span><span class="s2"> users&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">jira_users</span><span class="p">)))</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_assignee</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">jira_issue</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;Unable to find a Jira user with email </span><span class="si">%s</span><span class="s2"> for Issue </span><span class="si">%s</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">user_email</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">user_email</span><span class="p">,</span>
+                        <span class="n">jira_issue</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;Unable to find a Jira user with email </span><span class="si">%s</span><span class="s2"> for Project </span><span class="si">%s</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">user_email</span><span class="p">,</span>
+                        <span class="n">jira_project</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found Jira Assignee </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jira_assignee</span><span class="p">)</span>
@@ -555,7 +573,11 @@
             <span class="k">if</span> <span class="n">tra</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">jira_status_name</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Found transition for Jira Issue </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_status_name</span><span class="p">,</span> <span class="n">tra</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_issue</span><span class="p">,</span>
+                        <span class="n">jira_status_name</span><span class="p">,</span>
+                        <span class="n">tra</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="c1"># Iterate over any fields for transition and find required fields</span>
                 <span class="c1"># that don&#39;t have a default value. Set the value using our defaults.</span>
@@ -664,9 +686,14 @@
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="s2">&quot;Unable to retrieve create meta data for Project </span><span class="si">%s</span><span class="s2"> Issue type </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">jira_project</span><span class="p">,</span> <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_project</span><span class="p">,</span>
+                        <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
-            <span class="n">fields_createmeta</span> <span class="o">=</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;issuetypes&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span>
+            <span class="n">fields_createmeta</span> <span class="o">=</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;issuetypes&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span>
+                <span class="s2">&quot;fields&quot;</span>
+            <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># createmeta is not supported on Jira Server 9 and Python client 3.5.0</span>
             <span class="c1"># Instead, we&#39;ll use the new createmeta_issuetypes and createmeta_fieldtypes methods</span>
@@ -685,7 +712,10 @@
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="s2">&quot;Unable to retrieve create meta data for Project </span><span class="si">%s</span><span class="s2"> Issue type </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">jira_project</span><span class="p">,</span> <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_project</span><span class="p">,</span>
+                        <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
             <span class="c1"># Get the field types because createmeta_issuetypes doesn&#39;t expand the fields</span>
             <span class="n">create_meta_data_fieldtypes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createmeta_fieldtypes</span><span class="p">(</span>
@@ -699,7 +729,10 @@
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="s2">&quot;Unable to retrieve create meta data for Project </span><span class="si">%s</span><span class="s2"> Issue type </span><span class="si">%s</span><span class="s2">.&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">jira_project</span><span class="p">,</span> <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">jira_project</span><span class="p">,</span>
+                        <span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
             <span class="c1"># Convert response to be backwards compatible</span>
             <span class="n">fields_createmeta</span> <span class="o">=</span> <span class="p">{</span>
@@ -724,7 +757,10 @@
         <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Unable to create Jira </span><span class="si">%s</span><span class="s2"> Issue. The following required data is missing: </span><span class="si">%s</span><span class="s2">&quot;</span>
-                <span class="o">%</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;issuetype&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">missing</span><span class="p">,)</span>
+                <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;issuetype&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                    <span class="n">missing</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
         <span class="c1"># Check if we&#39;re trying to set any value which can&#39;t be set and validate</span>
         <span class="c1"># empty values.</span>
@@ -793,7 +829,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

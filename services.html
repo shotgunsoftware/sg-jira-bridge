@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installing as a Service &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>Installing as a Service &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -99,10 +99,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -141,7 +141,7 @@
              
   <section id="installing-as-a-service">
 <h1>Installing as a Service<a class="headerlink" href="#installing-as-a-service" title="Permalink to this heading"></a></h1>
-<p>ShotGrid Jira Bridge can be run as a service on MacOS/Linux and Windows.</p>
+<p>Flow Production Tracking Jira Bridge can be run as a service on MacOS/Linux and Windows.</p>
 <section id="macos-and-linux">
 <h2>MacOS and Linux<a class="headerlink" href="#macos-and-linux" title="Permalink to this heading"></a></h2>
 <p>On MacOS and Linux, the <code class="docutils literal notranslate"><span class="pre">service.py</span></code> script can be used with systemd. It
@@ -167,14 +167,14 @@ default the daemon uses a syslog handler.</p></li>
 <section id="windows">
 <h2>Windows<a class="headerlink" href="#windows" title="Permalink to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">win_service.py</span></code> script can be installed to allow the Service Manager
-to control ShotGrid Jira Bridge.</p>
+to control Flow Production Tracking Jira Bridge.</p>
 <section id="environment-variables">
 <h3>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this heading"></a></h3>
 <p>Environment variables are used to specify the settings and port parameters.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_SETTINGS_FILE</span></code>: Full path to settings file for the web app. If not
 provided, the app will look for a <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file in the root of the
-ShotGrid Jira Bridge directory (where it exists in the default structure).</p></li>
+Flow Production Tracking Jira Bridge directory (where it exists in the default structure).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SGJIRA_PORT_NUMBER</span></code>: The port number for the web app to listen on.
 Defaults to <code class="docutils literal notranslate"><span class="pre">9090</span></code>.</p></li>
 </ul>
@@ -196,7 +196,7 @@ run after the installation in order to allow it to manage services:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
-<p>Then you can control ShotGrid Jira Bridge via the Service Manager app or using:</p>
+<p>Then you can control Flow Production Tracking Jira Bridge via the Service Manager app or using:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">win_service</span><span class="o">.</span><span class="n">py</span> <span class="n">start</span><span class="o">|</span><span class="n">stop</span><span class="o">|</span><span class="n">restart</span>
 </pre></div>
 </div>
@@ -219,7 +219,7 @@ run after the installation in order to allow it to manage services:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

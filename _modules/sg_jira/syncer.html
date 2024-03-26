@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.syncer &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>sg_jira.syncer &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -28,7 +28,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -84,10 +84,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -138,7 +138,7 @@
 
 <div class="viewcode-block" id="Syncer"><a class="viewcode-back" href="../../developer.html#sg_jira.Syncer">[docs]</a><span class="k">class</span> <span class="nc">Syncer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A class handling syncing between ShotGrid and Jira.</span>
+<span class="sd">    A class handling syncing between Flow Production Tracking and Jira.</span>
 
 <span class="sd">    All Syncers should define a list of :class:`~handlers.SyncHandler` which should reject</span>
 <span class="sd">    or accept and process events.</span>
@@ -189,7 +189,7 @@
 
 <div class="viewcode-block" id="Syncer.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.Syncer.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check the Jira and ShotGrid site, ensure that the sync can safely happen</span>
+<span class="sd">        Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen</span>
 <span class="sd">        and cache any value which is slow to retrieve.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -211,7 +211,7 @@
 
 <div class="viewcode-block" id="Syncer.accept_shotgun_event"><a class="viewcode-back" href="../../developer.html#sg_jira.Syncer.accept_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Accept or reject the given event for the given ShotGrid Entity.</span>
+<span class="sd">        Accept or reject the given event for the given Flow Production Tracking Entity.</span>
 
 <span class="sd">        :returns: A :class:`~handlers.SyncHandler` instance if the event is accepted for</span>
 <span class="sd">                  processing, `None` otherwise.</span>
@@ -270,7 +270,11 @@
                 <span class="k">return</span> <span class="n">handler</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Event </span><span class="si">%s</span><span class="s2"> was rejected by all handlers </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">handlers</span><span class="p">,)</span>
+            <span class="s2">&quot;Event </span><span class="si">%s</span><span class="s2"> was rejected by all handlers </span><span class="si">%s</span><span class="s2">&quot;</span>
+            <span class="o">%</span> <span class="p">(</span>
+                <span class="n">event</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">handlers</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -293,7 +297,10 @@
             <span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Rejecting event </span><span class="si">%s</span><span class="s2"> triggered by us (</span><span class="si">%s</span><span class="s2">)&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;accountId&quot;</span><span class="p">],)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">event</span><span class="p">,</span>
+                        <span class="n">user</span><span class="p">[</span><span class="s2">&quot;accountId&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
@@ -309,7 +316,11 @@
                 <span class="ow">and</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">bridge</span><span class="o">.</span><span class="n">current_jira_username</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">&quot;Rejecting event </span><span class="si">%s</span><span class="s2"> triggered by us (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],)</span>
+                    <span class="s2">&quot;Rejecting event </span><span class="si">%s</span><span class="s2"> triggered by us (</span><span class="si">%s</span><span class="s2">)&quot;</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">event</span><span class="p">,</span>
+                        <span class="n">user</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
@@ -323,7 +334,10 @@
             <span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Rejecting event </span><span class="si">%s</span><span class="s2"> triggered by us (</span><span class="si">%s</span><span class="s2">)&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">],)</span>
+                    <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">event</span><span class="p">,</span>
+                        <span class="n">user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
@@ -340,7 +354,11 @@
                 <span class="k">return</span> <span class="n">handler</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Event </span><span class="si">%s</span><span class="s2"> was rejected by all handlers </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">handlers</span><span class="p">,)</span>
+            <span class="s2">&quot;Event </span><span class="si">%s</span><span class="s2"> was rejected by all handlers </span><span class="si">%s</span><span class="s2">&quot;</span>
+            <span class="o">%</span> <span class="p">(</span>
+                <span class="n">event</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">handlers</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div></div>
 </pre></div>
@@ -352,7 +370,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

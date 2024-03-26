@@ -3,11 +3,11 @@ Debugging
 
 Logging
 =======
-The SG-Jira-Bridge uses standard Python logging. The logging configuration is
+The PTR-Jira-Bridge uses standard Python logging. The logging configuration is
 stored in a ``LOGGING`` *dict* in the ``settings.py`` file and uses the
 standard :mod:`logging.config` format.
 
-By default the SG Jira Bridge logs ``INFO`` messages and above which provide
+By default the Flow Production Tracking Jira Bridge logs ``INFO`` messages and above which provide
 a good amount of detail to audit what is happening with each request.
 
 .. warning::
@@ -107,11 +107,11 @@ Common Issues
 RuntimeError: maximum recursion depth exceeded
 ----------------------------------------------
 If you are seeing this error in your logs when trying to start the web service,
-you may be using an old version the ShotGrid Jira Bridge and need to update.
+you may be using an old version the Flow Production Tracking Jira Bridge and need to update.
 
 Atlassian deprecated cookie-based authentication on Jira Cloud which causes the
 Jira client library to generate this error. Updating to the latest version of
-ShotGrid Jira Bridge transitions the authentication to use Basic Auth.
+Flow Production Tracking Jira Bridge transitions the authentication to use Basic Auth.
 
 You will need to generate an API token and use this as your user secret (password).
 User passwords are no longer supported by Jira Cloud. See
@@ -125,21 +125,21 @@ For more information, see: https://developer.atlassian.com/cloud/jira/platform/j
 
 Not Seeing Changes Sync
 -----------------------
-When you make a change in ShotGrid or Jira, the bridge evaluates whether the
+When you make a change in Flow Production Tracking or Jira, the bridge evaluates whether the
 change should be synced to to the target site, tries to convert the value to an
 acceptable value in the target site, and then submits the change.
 
 If you're not seeing your changes sync across, there are a few things you can
 check.
 
-SG Jira Bridge Webapp Isn't Responding
---------------------------------------
+Flow Production Tracking Jira Bridge Webapp Isn't Responding
+------------------------------------------------------------
 You can check to see if the Bridge is running by issuing a GET request for the
 sync URL in your browser. Copy the URL you have entered in the
-**Jira Sync URL** field in your ShotGrid Project and enter it in your browser.
+**Jira Sync URL** field in your Flow Production Tracking Project and enter it in your browser.
 You should see a message that says something like::
 
-    ShotGrid to Jira
+    Flow Production Tracking to Jira
     Syncing with default settings.
 
 If there is no connection:
@@ -155,12 +155,12 @@ correct. The URL should look like::
 
 For example: ``http://localhost:9090/sg2jira/my_settings``
 
-ShotGrid changes aren't syncing to Jira
----------------------------------------
+Flow Production Tracking changes aren't syncing to Jira
+-------------------------------------------------------
 The first place to check is in the shotgunEvents log files to see if the
-trigger was run and issued a successful call to the SG Jira Bridge.
+trigger was run and issued a successful call to the Flow Production Tracking Jira Bridge.
 
-Next, check the logs for the SG Jira Bridge and see if the request was
+Next, check the logs for the Flow Production Tracking Jira Bridge and see if the request was
 received and processed successfully. The logs should make this very apparent.
 
 If you don't see any errors, make sure your Syncer and SyncHandler are
@@ -168,37 +168,37 @@ accepting the event for processing.
 
 Other things to check:
 
-- Is your ShotGrid Project configured to sync to Jira?
+- Is your Flow Production Tracking Project configured to sync to Jira?
 - Is the Entity type configured to sync to Jira?
 - Does the Entity that generated the event enabled for syncing (the **Sync In
   Jira** checkbox field is checked)?
 
-Jira changes aren't syncing to ShotGrid
----------------------------------------
-Check the logs for the SG Jira Bridge and see if the request from Jira was
+Jira changes aren't syncing to Flow Production Tracking
+-------------------------------------------------------
+Check the logs for the Flow Production Tracking Jira Bridge and see if the request from Jira was
 received and processed successfully. The logs should make this very apparent.
 
-If SG Jira Bridge is not receiving the request:
+If Flow Production Tracking Jira Bridge is not receiving the request:
 
 - Check that your Jira Webhook is setup and configured correctly. If you're
   using a local Jira instance, you can also check the logs to see if the
   webhook fired.
-- Make sure your SG Jira Bridge is accessible from your Jira server. If you
-  are using a Jira Cloud instance and SG Jira Bridge is running inside a
+- Make sure your Flow Production Tracking Jira Bridge is accessible from your Jira server. If you
+  are using a Jira Cloud instance and Flow Production Tracking Jira Bridge is running inside a
   firewalled environment, you'll need to open up access to the application
-  or move SG Jira Bridge into some sort of DMZ setup.
+  or move Flow Production Tracking Jira Bridge into some sort of DMZ setup.
 
 
-Value can't be translated to a ShotGrid/Jira value
---------------------------------------------------
-If you change a status in ShotGrid or Jira and there's no matching status value
+Value can't be translated to a Flow Production Tracking/Jira value
+------------------------------------------------------------------
+If you change a status in Flow Production Tracking or Jira and there's no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs::
 
-    2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for ShotGrid status 'na'
+    2019-03-11 15:59:09,517 WARNING [entity_issue_handler] Unable to find a matching Jira status for Flow Production Tracking status 'na'
 
 In this case, there is no Jira status defined in the handlers to match with
-the ``na`` status in ShotGrid. Your handler defines a
+the ``na`` status in Flow Production Tracking. Your handler defines a
 ``_sg_jira_status_mapping()`` property that returns the status mapping.
 You can see there's no ``na`` status here::
 

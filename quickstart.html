@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>Quick Start &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -64,9 +64,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getting-the-code">Getting the Code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#a-note-about-jira-servers-hosted-by-atlassian">A note about Jira servers hosted by Atlassian</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-shotgrid">Setting up ShotGrid</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-flow-production-tracking">Setting up Flow Production Tracking</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#required-fields">Required Fields</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#configure-your-shotgrid-project">Configure your ShotGrid Project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configure-your-flow-production-tracking-project">Configure your Flow Production Tracking Project</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#setting-up-jira">Setting up Jira</a><ul>
@@ -76,7 +76,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#setting-up-your-config-and-env">Setting Up Your Config and Env</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#sg-jira-bridge">SG Jira Bridge</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#flow-production-tracking-jira-bridge">Flow Production Tracking Jira Bridge</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#installing-required-modules">Installing Required Modules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#settings">Settings</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#authentication">Authentication</a></li>
@@ -84,16 +84,16 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#shotgunevents">shotgunEvents</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id2">Installing Required Modules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#enable-the-sg-jira-trigger">Enable the SG Jira Trigger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enable-the-ptr-jira-trigger">Enable the PTR Jira Trigger</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id5">Authentication</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#define-a-mapping-between-jira-and-shotgrid-status-names">Define a Mapping Between Jira and ShotGrid Status Names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#define-a-mapping-between-jira-and-flow-production-tracking-status-names">Define a Mapping Between Jira and Flow Production Tracking Status Names</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#starting-everything-up">Starting Everything Up</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#match-shotgrid-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only">Match ShotGrid users with Jira users (for Jira servers hosted by Atlassian only)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#start-sg-jira-bridge">Start SG Jira Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#match-flow-production-tracking-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only">Match Flow Production Tracking users with Jira users (for Jira servers hosted by Atlassian only)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start-flow-production-tracking-jira-bridge">Start Flow Production Tracking Jira Bridge</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#start-shotgunevents">Start shotgunEvents</a></li>
 </ul>
 </li>
@@ -126,10 +126,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -173,7 +173,7 @@
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>Python 3.9</p></li>
-<li><p>A ShotGrid site</p></li>
+<li><p>A Flow Production Tracking site</p></li>
 <li><p>A Jira site</p></li>
 </ul>
 </section>
@@ -181,7 +181,7 @@
 <h2>Getting the Code<a class="headerlink" href="#getting-the-code" title="Permalink to this heading"></a></h2>
 <p>The quickest way to get the code required is by cloning the Github repos</p>
 <ul class="simple">
-<li><p>SG Jira Bridge: <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge">https://github.com/shotgunsoftware/sg-jira-bridge</a></p></li>
+<li><p>Flow Production Tracking Jira Bridge: <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge">https://github.com/shotgunsoftware/sg-jira-bridge</a></p></li>
 <li><p>shotgunEvents: <a class="reference external" href="https://github.com/shotgunsoftware/shotgunEvents">https://github.com/shotgunsoftware/shotgunEvents</a></p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/path/to/put/this
@@ -195,15 +195,15 @@ $<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span
 <p>In April 2019, Atlassian put a new set of rules around accessing user data
 due to the the European GDPR regulation. Since then, email addresses of Jira
 users are no longer accessible.</p>
-<p>As the ShotGrid Jira bridge relies on this information to pair ShotGrid users
+<p>As the Flow Production Tracking Jira bridge relies on this information to pair Flow Production Tracking users
 with Jira users, some extra steps will be required to configure the Jira
 bridge. This quickstart page will alert you when these extra steps are needed.</p>
 </section>
-<section id="setting-up-shotgrid">
-<h2>Setting up ShotGrid<a class="headerlink" href="#setting-up-shotgrid" title="Permalink to this heading"></a></h2>
+<section id="setting-up-flow-production-tracking">
+<h2>Setting up Flow Production Tracking<a class="headerlink" href="#setting-up-flow-production-tracking" title="Permalink to this heading"></a></h2>
 <section id="required-fields">
 <h3>Required Fields<a class="headerlink" href="#required-fields" title="Permalink to this heading"></a></h3>
-<p>The following fields must be created in ShotGrid for each of the
+<p>The following fields must be created in Flow Production Tracking for each of the
 following entity types:</p>
 <table class="docutils align-default">
 <thead>
@@ -218,7 +218,7 @@ following entity types:</p>
 <tr class="row-even"><td><p>Project</p></td>
 <td><p>File/Link</p></td>
 <td><p>Jira Sync URL</p></td>
-<td><p>URL of SG Jira Bridge (see below)</p></td>
+<td><p>URL of PTR Jira Bridge (see below)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sg_jira_sync_url</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Project</p></td>
@@ -272,9 +272,9 @@ Jira server is hosted by Atlassian.</p></li>
 </ul>
 </div>
 </section>
-<section id="configure-your-shotgrid-project">
-<h3>Configure your ShotGrid Project<a class="headerlink" href="#configure-your-shotgrid-project" title="Permalink to this heading"></a></h3>
-<p>Configure your ShotGrid Project entity with your Jira Sync Settings:</p>
+<section id="configure-your-flow-production-tracking-project">
+<h3>Configure your Flow Production Tracking Project<a class="headerlink" href="#configure-your-flow-production-tracking-project" title="Permalink to this heading"></a></h3>
+<p>Configure your Flow Production Tracking Project entity with your Jira Sync Settings:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -285,7 +285,7 @@ Jira server is hosted by Atlassian.</p></li>
 <tbody>
 <tr class="row-even"><td><p>Jira Sync URL</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">http://localhost:9090/sg2jira/default</span></code></p></td>
-<td><p>The address where you’ll run the SG
+<td><p>The address where you’ll run the PTR
 Jira Bridge webserver</p></td>
 </tr>
 <tr class="row-odd"><td><p>Jira Key</p></td>
@@ -312,15 +312,15 @@ you’re syncing (eg <code class="docutils literal notranslate"><span class="pre
 <tbody>
 <tr class="row-even"><td><p>Shotgun Type</p></td>
 <td><p>Text</p></td>
-<td><p>Stores the associated ShotGrid Entity type</p></td>
+<td><p>Stores the associated Flow Production Tracking Entity type</p></td>
 </tr>
 <tr class="row-odd"><td><p>Shotgun ID</p></td>
 <td><p>Text</p></td>
-<td><p>Stores the associated ShotGrid Entity ID</p></td>
+<td><p>Stores the associated Flow Production Tracking Entity ID</p></td>
 </tr>
 <tr class="row-even"><td><p>Shotgun URL</p></td>
 <td><p>Text</p></td>
-<td><p>Stores a link to the detail page for the associated entity in ShotGrid</p></td>
+<td><p>Stores a link to the detail page for the associated entity in PTR</p></td>
 </tr>
 </tbody>
 </table>
@@ -340,7 +340,7 @@ you’re syncing (eg <code class="docutils literal notranslate"><span class="pre
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Name</p></td>
-<td><p>“SG Jira Bridge Test”</p></td>
+<td><p>“Flow Production Tracking Jira Bridge Test”</p></td>
 </tr>
 <tr class="row-odd"><td><p>URL</p></td>
 <td><div class="line-block">
@@ -351,7 +351,7 @@ you’re syncing (eg <code class="docutils literal notranslate"><span class="pre
 </td>
 </tr>
 <tr class="row-even"><td><p>Description</p></td>
-<td><p>“Webhook that syncs Jira data with ShotGrid using the SG Jira Bridge”</p></td>
+<td><p>“Webhook that syncs Jira data with Flow Production Tracking using the Jira Bridge”</p></td>
 </tr>
 <tr class="row-odd"><td><p>JQL</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">project</span> <span class="pre">=</span> <span class="pre">&quot;Your</span> <span class="pre">Project</span> <span class="pre">Name&quot;</span></code></p></td>
@@ -398,15 +398,15 @@ the following:</p>
 </section>
 <section id="setting-up-your-config-and-env">
 <h2>Setting Up Your Config and Env<a class="headerlink" href="#setting-up-your-config-and-env" title="Permalink to this heading"></a></h2>
-<p>There are two different pieces to setting up the ShotGrid Jira Bridge. There’s the bridge itself
-(<code class="docutils literal notranslate"><span class="pre">sg-jira-bridge</span></code>), which handles all of the syncing of data between ShotGrid and Jira. Then
-there’s the ShotGrid Event Daemon (<code class="docutils literal notranslate"><span class="pre">shotgunEvents</span></code>), which handles dispatching supported ShotGrid
+<p>There are two different pieces to setting up the Flow Production Tracking Jira Bridge. There’s the bridge itself
+(<code class="docutils literal notranslate"><span class="pre">sg-jira-bridge</span></code>), which handles all of the syncing of data between Flow Production Tracking and Jira. Then
+there’s the Flow Production Tracking Event Daemon (<code class="docutils literal notranslate"><span class="pre">shotgunEvents</span></code>), which handles dispatching supported Flow Production Tracking
 events to the bridge.</p>
 <p>Since they are installed in different locations and each setup has different python module
 requirements, the instructions below describe how to setup an environment for each of them
 separately.</p>
-<section id="sg-jira-bridge">
-<h3>SG Jira Bridge<a class="headerlink" href="#sg-jira-bridge" title="Permalink to this heading"></a></h3>
+<section id="flow-production-tracking-jira-bridge">
+<h3>Flow Production Tracking Jira Bridge<a class="headerlink" href="#flow-production-tracking-jira-bridge" title="Permalink to this heading"></a></h3>
 <section id="installing-required-modules">
 <h4>Installing Required Modules<a class="headerlink" href="#installing-required-modules" title="Permalink to this heading"></a></h4>
 <p>We recommend <a class="reference external" href="https://docs.python-guide.org/dev/virtualenvs/">setting up a virtual environment</a>.
@@ -444,7 +444,7 @@ the default settings are fine as-is.</p>
 <p>Credentials are retrieved from environment variables. You may set these in your
 environment or use <a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a>
 and define these in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># ShotGrid credentials</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Flow Production Tracking credentials</span>
 <span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgrid.autodesk.com&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">&#39;sg-jira-bridge&#39;</span>
 <span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>  <span class="c1"># replace with your api key</span>
@@ -470,16 +470,16 @@ make sure <cite>SGJIRA_JIRA_SITE</cite> is the REST API base URL.</p>
 will need to be the designated user account, with appropriate
 permissions, that will control the sync updates. Note that the user should
 not be your personal user account, as the bridge will ignore and not sync
-to ShotGrid any events triggered in Jira by that user. This ensures that
+to Flow Production Tracking any events triggered in Jira by that user. This ensures that
 the bridge will not end up in a “ping pong” state, where it bounces the
-same event back-and-forth between Jira and ShotGrid. As such, you will need
+same event back-and-forth between Jira and Flow Production Tracking. As such, you will need
 to create a dedicated user account in Jira for use with the bridge.</p>
 </div>
 </section>
 </section>
 <section id="shotgunevents">
 <h3>shotgunEvents<a class="headerlink" href="#shotgunevents" title="Permalink to this heading"></a></h3>
-<p>Details for configuring the ShotGrid Event Daemon are available on the
+<p>Details for configuring the Flow Production Tracking Event Daemon are available on the
 <a class="reference external" href="https://github.com/shotgunsoftware/shotgunEvents/wiki">shotgunEvents wiki</a></p>
 <section id="id2">
 <h4>Installing Required Modules<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h4>
@@ -501,9 +501,9 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 </pre></div>
 </div>
 </section>
-<section id="enable-the-sg-jira-trigger">
-<h4>Enable the SG Jira Trigger<a class="headerlink" href="#enable-the-sg-jira-trigger" title="Permalink to this heading"></a></h4>
-<p>Add the path to the SG Jira Bridge <code class="docutils literal notranslate"><span class="pre">sg_jira_event_trigger.py</span></code> file to the
+<section id="enable-the-ptr-jira-trigger">
+<h4>Enable the PTR Jira Trigger<a class="headerlink" href="#enable-the-ptr-jira-trigger" title="Permalink to this heading"></a></h4>
+<p>Add the path to the Flow Production Tracking Jira Bridge <code class="docutils literal notranslate"><span class="pre">sg_jira_event_trigger.py</span></code> file to the
 shotgunEvents conf file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
 <span class="p">[</span><span class="n">plugins</span><span class="p">]</span>
@@ -518,7 +518,7 @@ shotgunEvents conf file:</p>
 </section>
 <section id="id5">
 <h4>Authentication<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h4>
-<p>The trigger uses the following environment variables to retrieve ShotGrid
+<p>The trigger uses the following environment variables to retrieve Flow Production Tracking
 credentials:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sg_jira_event_trigger.py credentials</span>
 <span class="n">SGDAEMON_SGJIRA_NAME</span><span class="o">=</span><span class="s1">&#39;sg_jira_event_trigger&#39;</span>
@@ -527,20 +527,20 @@ credentials:</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The trigger uses it’s own authentication to ShotGrid, independent of the
-auth used in the SG Jira Bridge Server and the main shotgunEvents settings.
-We highly recommend you add an additional Script User in ShotGrid solely
+<p>The trigger uses it’s own authentication to Flow Production Tracking, independent of the
+auth used in the Flow Production Tracking Jira Bridge Server and the main shotgunEvents settings.
+We highly recommend you add an additional Script User in Flow Production Tracking solely
 for this trigger.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you are using sg-jira-bridge v0.2.2 or later, these environment variables can also be defined in the <code class="docutils literal notranslate"><span class="pre">.env</span></code>
-file from the SG Jira Bridge section</p>
+file from the Flow Production Tracking Jira Bridge section</p>
 </div>
 </section>
-<section id="define-a-mapping-between-jira-and-shotgrid-status-names">
-<h4>Define a Mapping Between Jira and ShotGrid Status Names<a class="headerlink" href="#define-a-mapping-between-jira-and-shotgrid-status-names" title="Permalink to this heading"></a></h4>
-<p>The bridge needs to know how to map a status in ShotGrid to a status in Jira and vice versa. Your status names likely
+<section id="define-a-mapping-between-jira-and-flow-production-tracking-status-names">
+<h4>Define a Mapping Between Jira and Flow Production Tracking Status Names<a class="headerlink" href="#define-a-mapping-between-jira-and-flow-production-tracking-status-names" title="Permalink to this heading"></a></h4>
+<p>The bridge needs to know how to map a status in Flow Production Tracking to a status in Jira and vice versa. Your status names likely
 differ from the default ones. Make sure the values in
 <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge/blob/v0.4.0b2/sg_jira/constants.py#L90/">TASK_ISSUE_STATUS_MAPPING</a>
 match the names used in your workflow:</p>
@@ -556,23 +556,23 @@ match the names used in your workflow:</p>
 </section>
 <section id="starting-everything-up">
 <h2>Starting Everything Up<a class="headerlink" href="#starting-everything-up" title="Permalink to this heading"></a></h2>
-<section id="match-shotgrid-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only">
-<h3>Match ShotGrid users with Jira users (for Jira servers hosted by Atlassian only)<a class="headerlink" href="#match-shotgrid-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only" title="Permalink to this heading"></a></h3>
+<section id="match-flow-production-tracking-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only">
+<h3>Match Flow Production Tracking users with Jira users (for Jira servers hosted by Atlassian only)<a class="headerlink" href="#match-flow-production-tracking-users-with-jira-users-for-jira-servers-hosted-by-atlassian-only" title="Permalink to this heading"></a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>update_shotgun_users.py<span class="w"> </span>--settings<span class="w"> </span>&lt;path<span class="w"> </span>to<span class="w"> </span>your<span class="w"> </span>settings.py&gt;<span class="w"> </span>--project<span class="w"> </span>&lt;id<span class="w"> </span>of<span class="w"> </span>your<span class="w"> </span>project&gt;
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For every user found in ShotGrid, the script will search for a Jira user with
-the same email address. If you have multiple users in ShotGrid with
+<p>For every user found in Flow Production Tracking, the script will search for a Jira user with
+the same email address. If you have multiple users in Flow Production Tracking with
 the same email address, only the first one, i.e. the one with the lowest id,
 will be associated with a Jira account.</p>
-<p>If you wish to change the ShotGrid user associated with a Jira account, e.g. the
-script associated the first ShotGrid user with an account when you actually wanted
+<p>If you wish to change the Flow Production Tracking user associated with a Jira account, e.g. the
+script associated the first Flow Production Tracking user with an account when you actually wanted
 the second one, you can take the account id from the <code class="docutils literal notranslate"><span class="pre">HumanUser.sg_jira_account_id</span></code>
 field from one user and copy it to another user and then clear the original user’s
 account id.</p>
-<p>If new users are added to Jira and ShotGrid, run this script again and the new user
+<p>If new users are added to Jira and Flow Production Tracking, run this script again and the new user
 accounts will be paired. Existing pairings will be left as they were.</p>
 </div>
 <div class="admonition note">
@@ -582,11 +582,11 @@ that can be assigned on issues for a given Jira project. If all
 your Jira users can access any Jira project, the value for the <code class="docutils literal notranslate"><span class="pre">--project</span></code>
 argument can be any project id. If you have restrictions, you will need to
 run this script once per project so that all your Jira users can be discovered
-and paired with a ShotGrid user.</p>
+and paired with a Flow Production Tracking user.</p>
 </div>
 </section>
-<section id="start-sg-jira-bridge">
-<h3>Start SG Jira Bridge<a class="headerlink" href="#start-sg-jira-bridge" title="Permalink to this heading"></a></h3>
+<section id="start-flow-production-tracking-jira-bridge">
+<h3>Start Flow Production Tracking Jira Bridge<a class="headerlink" href="#start-flow-production-tracking-jira-bridge" title="Permalink to this heading"></a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>webapp.py<span class="w"> </span>--settings<span class="w"> </span>&lt;path<span class="w"> </span>to<span class="w"> </span>your<span class="w"> </span>settings.py&gt;<span class="w"> </span>--port<span class="w"> </span><span class="m">9090</span>
 </pre></div>
 </div>
@@ -608,20 +608,20 @@ start it with <code class="docutils literal notranslate"><span class="pre">./sho
 <h2>Testing It Out<a class="headerlink" href="#testing-it-out" title="Permalink to this heading"></a></h2>
 <p>Once everything is running you’re ready to test it!</p>
 <ul class="simple">
-<li><p>Create an Asset in ShotGrid with a TaskTemplate appied.</p></li>
+<li><p>Create an Asset in Flow Production Tracking with a TaskTemplate appied.</p></li>
 <li><p>Toggle the <strong>Sync In Jira</strong> checkbox <code class="docutils literal notranslate"><span class="pre">on</span></code> for one of the Tasks.</p></li>
 <li><p>Navigate to your Jira site to see the Issue created for that Task.</p></li>
-<li><p>Change the status in Jira to see the status change in ShotGrid.</p></li>
+<li><p>Change the status in Jira to see the status change in Flow Production Tracking.</p></li>
 </ul>
-<p>If things don’t seem to be working, check the output from SG Jira Bridge and
+<p>If things don’t seem to be working, check the output from Flow Production Tracking Jira Bridge and
 shotgunEvents in your terminal window for log messages.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For any synced entity, ShotGrid stores the associated Jira key in the
+<p>For any synced entity, Flow Production Tracking stores the associated Jira key in the
 <code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code> field which will update automatically when you initially
-sync the Task. Jira stores the associated ShotGrid Entity type and ID in
+sync the Task. Jira stores the associated Flow Production Tracking Entity type and ID in
 the <strong>Shotgun Type</strong> and <strong>Shotgun ID</strong> fields as well as a link to the
-entity in ShotGrid in the <strong>Shotgun URL</strong> field. This is a good indicator
+entity in Flow Production Tracking in the <strong>Shotgun URL</strong> field. This is a good indicator
 that things are working correctly.</p>
 </div>
 <div class="admonition note">
@@ -643,7 +643,7 @@ were introduced. Beta versions of sg-jira-bridge will be available soon.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    

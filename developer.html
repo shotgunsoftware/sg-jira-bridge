@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Resources &mdash; sg-jira-bridge v0.4.1 documentation</title>
+  <title>Developer Resources &mdash; sg-jira-bridge v0.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -78,7 +78,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#api">API</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#connections-to-shotgrid-and-jira">Connections to ShotGrid and Jira</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#connections-to-flow-production-tracking-and-jira">Connections to Flow Production Tracking and Jira</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#shotgunsession">ShotgunSession</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#jirasession">JiraSession</a></li>
 </ul>
@@ -139,10 +139,10 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.4.1.<br>
+    <b>sg-jira-bridge</b> v0.5.0.<br>
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
 
@@ -183,12 +183,13 @@
 <h1>Developer Resources<a class="headerlink" href="#developer-resources" title="Permalink to this heading"></a></h1>
 <section id="customizing-the-workflow">
 <h2>Customizing the Workflow<a class="headerlink" href="#customizing-the-workflow" title="Permalink to this heading"></a></h2>
-<p>SG Jira Bridge is structured so that studios can tailor the workflow to
-meet their specific needs. Because both ShotGrid and Jira are highly
-customizable, exposing a handful of settings would not be sufficient.
-Therefore, the bridge has been structured to allow subclassing the
-various components that control syncing and handling events in order
-to give full control over the logic of what is being done.</p>
+<p>Flow Production Tracking Jira Bridge is structured so that studios can
+tailor the workflow to meet their specific needs. Because both
+Flow Production Tracking and Jira are highly customizable, exposing
+a handful of settings would not be sufficient. Therefore, the bridge
+has been structured to allow subclassing the various components that
+control syncing and handling events in order to give full control over
+the logic of what is being done.</p>
 <section id="structure-overview">
 <h3>Structure Overview<a class="headerlink" href="#structure-overview" title="Permalink to this heading"></a></h3>
 <img alt="_images/sg_jira_bridge_classes.png" src="_images/sg_jira_bridge_classes.png" />
@@ -196,9 +197,9 @@ to give full control over the logic of what is being done.</p>
 <section id="bridge">
 <h3>Bridge<a class="headerlink" href="#bridge" title="Permalink to this heading"></a></h3>
 <p>The <a class="reference internal" href="#sg_jira.Bridge" title="sg_jira.Bridge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bridge</span></code></a> is the main class for the sync. It handles the
-connections to both ShotGrid and Jira, manages sync settings
+connections to both Flow Production Tracking and Jira, manages sync settings
 from the <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file, and initiates the calls to sync
-in ShotGrid and Jira.</p>
+in Flow Production Tracking and Jira.</p>
 <p>This class is intended to be used as-is without requiring customization
 since the details of the workflow logic are defined in the <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a>
 and <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>. When creating a new instance
@@ -208,12 +209,12 @@ factory method and pass in the full path to the settings file.</p>
 <section id="syncers">
 <h3>Syncers<a class="headerlink" href="#syncers" title="Permalink to this heading"></a></h3>
 <p>The <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> is in charge of initially determining whether to accept or
-reject events from ShotGrid and Jira for syncing. This is done with the
+reject events from Flow Production Tracking and Jira for syncing. This is done with the
 <a class="reference internal" href="#sg_jira.Syncer.accept_shotgun_event" title="sg_jira.Syncer.accept_shotgun_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_shotgun_event()</span></code></a> and <a class="reference internal" href="#sg_jira.Syncer.accept_jira_event" title="sg_jira.Syncer.accept_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_jira_event()</span></code></a>
 methods. It performs initial basic checks on
 the event to determine if it should immediately be rejected without needing
 to ask the handlers. These checks should be completely independent of the
-implementation details of the handlers. For example, a ShotGrid event can
+implementation details of the handlers. For example, a Flow Production Tracking event can
 be inspected to ensure it has the basic required fields in an event like the
 <code class="docutils literal notranslate"><span class="pre">meta</span></code> and <code class="docutils literal notranslate"><span class="pre">project</span></code> keys. Without either of these keys in the event,
 no handlers could process the event anyway.</p>
@@ -237,7 +238,7 @@ well, to pass on to Handlers:</p>
 
 <span class="k">class</span> <span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Sync ShotGrid Tasks as Jira Issues.</span>
+<span class="sd">    Sync Flow Production Tracking Tasks as Jira Issues.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -275,7 +276,7 @@ well, to pass on to Handlers:</p>
 <section id="sync-handlers">
 <h3>Sync Handlers<a class="headerlink" href="#sync-handlers" title="Permalink to this heading"></a></h3>
 <p>A <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> holds the logic for syncing values between a
-ShotGrid Entity type and a Jira resource and is owned by a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a>
+Flow Production Tracking Entity type and a Jira resource and is owned by a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a>
 instance. The base class defines the interface all handlers should support
 and provides a set of helper methods useful for implementations.</p>
 <p>The following methods must be overridden from the <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> base class:</p>
@@ -292,7 +293,7 @@ and provides a set of helper methods useful for implementations.</p>
 <section id="setup">
 <h4>Setup<a class="headerlink" href="#setup" title="Permalink to this heading"></a></h4>
 <p>When a syncer is first loaded, it calls <code class="docutils literal notranslate"><span class="pre">setup()</span></code> on each
-<a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>. This can be used to check the Jira and ShotGrid
+<a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>. This can be used to check the Jira and Flow Production Tracking
 sites for specific conditions or setup requirements, ensuring that the sync can
 safely happen.</p>
 <p>Additionally, this can be used to cache value(s) from either site if there are
@@ -308,13 +309,13 @@ themselves. Each <a class="reference internal" href="#sg_jira.handlers.SyncHandl
 <a class="reference internal" href="#sg_jira.handlers.SyncHandler.accept_jira_event" title="sg_jira.handlers.SyncHandler.accept_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">accept_jira_event()</span></code></a> which overrides the
 <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> base class. This is where the more specific logic for accepting
 or rejecting an event can occur. Checks for things like whether the event is
-for a ShotGrid Entity type or Jira resource type that the handler cares about
-are appropriate. Or for example, you may wish to check a ShotGrid event to see
+for a Flow Production Tracking Entity type or Jira resource type that the handler cares about
+are appropriate. Or for example, you may wish to check a Flow Production Tracking event to see
 if the Task field that was changed, is one that is supported by your handler.</p>
 <p>The goal of these methods is to quickly determine whether to process the event
 <em>given the information provided</em>. <strong>Queries are expensive</strong>. If after checking
 all of the given event info, there are still more questions to answer that
-require making additional queries to ShotGrid or Jira, it is perfectly
+require making additional queries to Flow Production Tracking or Jira, it is perfectly
 fine for these to be done in the
 <a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_shotgun_event" title="sg_jira.handlers.SyncHandler.process_shotgun_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_shotgun_event()</span></code></a> or
 <a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_jira_event" title="sg_jira.handlers.SyncHandler.process_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_jira_event()</span></code></a> methods later.</p>
@@ -324,7 +325,7 @@ fine for these to be done in the
 <p><a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_shotgun_event" title="sg_jira.handlers.SyncHandler.process_shotgun_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_shotgun_event()</span></code></a> and
 <a class="reference internal" href="#sg_jira.handlers.SyncHandler.process_jira_event" title="sg_jira.handlers.SyncHandler.process_jira_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_jira_event()</span></code></a> process the event data,
 perform any additional validation required to determine whether to continue
-with the sync (which may include additional queries to Jira and/or ShotGrid),
+with the sync (which may include additional queries to Jira and/or Flow Production Tracking),
 and then do the actual update.</p>
 <p>Once the event itself has been validated fully, the actual data that has
 changed is validated and converted to a format appropriate for the recipient
@@ -337,7 +338,7 @@ not processed for any reason it returns <code class="docutils literal notranslat
 <h4>EntityIssueHandler<a class="headerlink" href="#entityissuehandler" title="Permalink to this heading"></a></h4>
 <p>In addition to the base <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>, there is also a
 <a class="reference internal" href="#sg_jira.handlers.EntityIssueHandler" title="sg_jira.handlers.EntityIssueHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityIssueHandler</span></code></a> which serves as a base class for handlers
-that sync between a ShotGrid Entity type and a Jira Issue resource. Since this
+that sync between a Flow Production Tracking Entity type and a Jira Issue resource. Since this
 is probably how a majority of workflows will work, it is provided to add an
 additional level of convenience.</p>
 <p>It inherits from <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>. When using
@@ -354,26 +355,26 @@ must be overridden <em>in addition to the ones required by</em>
 </section>
 <section id="api">
 <h2>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h2>
-<section id="connections-to-shotgrid-and-jira">
-<h3>Connections to ShotGrid and Jira<a class="headerlink" href="#connections-to-shotgrid-and-jira" title="Permalink to this heading"></a></h3>
-<p>These classes manage the specific connections to ShotGrid and Jira.</p>
+<section id="connections-to-flow-production-tracking-and-jira">
+<h3>Connections to Flow Production Tracking and Jira<a class="headerlink" href="#connections-to-flow-production-tracking-and-jira" title="Permalink to this heading"></a></h3>
+<p>These classes manage the specific connections to Flow Production Tracking and Jira.</p>
 <section id="shotgunsession">
 <h4>ShotgunSession<a class="headerlink" href="#shotgunsession" title="Permalink to this heading"></a></h4>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.shotgun_session.</span></span><span class="sig-name descname"><span class="pre">ShotgunSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition"></a></dt>
-<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.4.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
-<p>Ensures all the values we get from ShotGrid are unicode and not utf-8 encoded
-strings. Utf-8 encodes unicode values before sending them to ShotGrid.</p>
-<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.4.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
+<p>Ensures all the values we get from Flow Production Tracking are unicode and not utf-8 encoded
+strings. Utf-8 encodes unicode values before sending them to Flow Production Tracking.</p>
+<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.current_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_user</span></span><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition"></a></dt>
-<dd><p>Return the ShotGrid user used for the connection.</p>
+<dd><p>Return the Flow Production Tracking user used for the connection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A ShotGrid record dictionary with an <cite>id</cite> key and a <cite>type</cite> key.</p>
+<dd class="field-odd"><p>A Flow Production Tracking record dictionary with an <cite>id</cite> key and a <cite>type</cite> key.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -381,10 +382,10 @@ strings. Utf-8 encodes unicode values before sending them to ShotGrid.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.setup">
 <span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.setup" title="Permalink to this definition"></a></dt>
-<dd><p>Check the ShotGrid site and cache site level values.</p>
+<dd><p>Check the Flow Production Tracking site and cache site level values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the ShotGrid site was not correctly configured to
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the Flow Production Tracking site was not correctly configured to
 be used with this bridge.</p>
 </dd>
 </dl>
@@ -393,14 +394,14 @@ be used with this bridge.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.assert_field">
 <span class="sig-name descname"><span class="pre">assert_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.assert_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.assert_field" title="Permalink to this definition"></a></dt>
-<dd><p>Check if the given field with the given type exists for the given ShotGrid
+<dd><p>Check if the given field with the given type exists for the given Flow Production Tracking
 Entity type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type.</p></li>
-<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</p></li>
-<li><p><strong>field_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid field type, e.g. ‘text’.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking Entity type.</p></li>
+<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking field name, e.g. ‘sg_my_precious’.</p></li>
+<li><p><strong>field_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking field type, e.g. ‘text’.</p></li>
 <li><p><strong>check_unique</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, check the specified field
 is configured to only accept unique values. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
@@ -415,21 +416,21 @@ expected type.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.get_field_schema">
 <span class="sig-name descname"><span class="pre">get_field_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.get_field_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.get_field_schema" title="Permalink to this definition"></a></dt>
-<dd><p>Return the ShotGrid schema for the given Entity field.</p>
+<dd><p>Return the Flow Production Tracking schema for the given Entity field.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>ShotGrid schemas are cached and the bridge needs to be restarted
-if schemas are changed in ShotGrid.</p>
+<p>Flow Production Tracking schemas are cached and the bridge needs to be restarted
+if schemas are changed in Flow Production Tracking.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type.</p></li>
-<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid field name, e.g. ‘sg_my_precious’.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking Entity type.</p></li>
+<li><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking field name, e.g. ‘sg_my_precious’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The ShotGrid schema for the given field as a dictionary or <cite>None</cite>.</p>
+<dd class="field-even"><p>The Flow Production Tracking schema for the given field as a dictionary or <cite>None</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -437,11 +438,11 @@ if schemas are changed in ShotGrid.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema">
 <span class="sig-name descname"><span class="pre">clear_cached_field_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.clear_cached_field_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema" title="Permalink to this definition"></a></dt>
-<dd><p>Clear all cached ShotGrid schema or just the cached schema for the given
-ShotGrid Entity type.</p>
+<dd><p>Clear all cached Flow Production Tracking schema or just the cached schema for the given
+Flow Production Tracking Entity type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type or None.</p>
+<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking Entity type or None.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -449,7 +450,7 @@ ShotGrid Entity type.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.get_entity_name_field">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_entity_name_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.get_entity_name_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.get_entity_name_field" title="Permalink to this definition"></a></dt>
-<dd><p>Return the ShotGrid name field to use for the specified entity type.</p>
+<dd><p>Return the Flow Production Tracking name field to use for the specified entity type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The entity type to get the name field for.</p>
@@ -463,12 +464,12 @@ ShotGrid Entity type.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.is_project_entity">
 <span class="sig-name descname"><span class="pre">is_project_entity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.is_project_entity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.is_project_entity" title="Permalink to this definition"></a></dt>
-<dd><p>Return <cite>True</cite> if the given ShotGrid Entity type is a project Entity,
+<dd><p>Return <cite>True</cite> if the given Flow Production Tracking Entity type is a project Entity,
 that is an Entity linked to a Project, <cite>False</cite> if it is a non-project
 Entity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid Entity type.</p>
+<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking Entity type.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -476,18 +477,18 @@ Entity.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.consolidate_entity">
 <span class="sig-name descname"><span class="pre">consolidate_entity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shotgun_entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.consolidate_entity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.consolidate_entity" title="Permalink to this definition"></a></dt>
-<dd><p>Consolidate the given ShotGrid Entity: collect additional field values,
+<dd><p>Consolidate the given Flow Production Tracking Entity: collect additional field values,
 ensure the Entity name is available under a “name” key.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>shotgun_entity</strong> – A ShotGrid Entity dictionary with at least its id
+<li><p><strong>shotgun_entity</strong> – A Flow Production Tracking Entity dictionary with at least its id
 and its type.</p></li>
 <li><p><strong>fields</strong> – An optional list of fields to add to the query.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The consolidated ShotGrid Entity or <cite>None</cite> if it can’t be retrieved.</p>
+<dd class="field-even"><p>The consolidated Flow Production Tracking Entity or <cite>None</cite> if it can’t be retrieved.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -495,19 +496,19 @@ and its type.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.match_entity_by_name">
 <span class="sig-name descname"><span class="pre">match_entity_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shotgun_project</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.match_entity_by_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.match_entity_by_name" title="Permalink to this definition"></a></dt>
-<dd><p>Retrieve a ShotGrid Entity with the given name from the given list of
+<dd><p>Retrieve a Flow Production Tracking Entity with the given name from the given list of
 Entity types.</p>
-<p>Project ShotGrid Entities are restricted to the given ShotGrid Project.</p>
+<p>Project Flow Production Tracking Entities are restricted to the given Flow Production Tracking Project.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A name to match.</p></li>
-<li><p><strong>entity_types</strong> – A list of ShotGrid Entity types to consider.</p></li>
-<li><p><strong>shotgun_project</strong> – A ShotGrid Project dictionary.</p></li>
+<li><p><strong>entity_types</strong> – A list of Flow Production Tracking Entity types to consider.</p></li>
+<li><p><strong>shotgun_project</strong> – A Flow Production Tracking Project dictionary.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A ShotGrid Entity dictionary or <cite>None</cite>.</p>
+<dd class="field-even"><p>A Flow Production Tracking Entity dictionary or <cite>None</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -515,10 +516,10 @@ Entity types.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.get_entity_page_url">
 <span class="sig-name descname"><span class="pre">get_entity_page_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shotgun_entity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.get_entity_page_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.get_entity_page_url" title="Permalink to this definition"></a></dt>
-<dd><p>Return the ShotGrid page url for the given Entity.</p>
+<dd><p>Return the Flow Production Tracking page url for the given Entity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>shotgun_entity</strong> – A ShotGrid Entity dictionary with at least a ‘type’
+<dd class="field-odd"><p><strong>shotgun_entity</strong> – A Flow Production Tracking Entity dictionary with at least a ‘type’
 key and an ‘id’ key.</p>
 </dd>
 </dl>
@@ -595,27 +596,27 @@ be used with this bridge.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.jira_shotgun_type_field">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jira_shotgun_type_field</span></span><a class="headerlink" href="#sg_jira.jira_session.JiraSession.jira_shotgun_type_field" title="Permalink to this definition"></a></dt>
-<dd><p>Return the id of the Jira field used to store the type of a linked ShotGrid
+<dd><p>Return the id of the Jira field used to store the type of a linked Flow Production Tracking
 Entity.</p>
-<p>Two custom fields are used in Jira to store a reference to a ShotGrid
-Entity: its ShotGrid Entity type and id. This method returns the id of
-the Jira field used to store the ShotGrid type.</p>
+<p>Two custom fields are used in Jira to store a reference to a Flow Production Tracking
+Entity: its Flow Production Tracking Entity type and id. This method returns the id of
+the Jira field used to store the Flow Production Tracking type.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.jira_shotgun_id_field">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jira_shotgun_id_field</span></span><a class="headerlink" href="#sg_jira.jira_session.JiraSession.jira_shotgun_id_field" title="Permalink to this definition"></a></dt>
-<dd><p>Return the id of the Jira field used to store the id of a linked ShotGrid
+<dd><p>Return the id of the Jira field used to store the id of a linked Flow Production Tracking
 Entity.</p>
-<p>Two custom fields are used in Jira to store a reference to a ShotGrid
-Entity: its ShotGrid Entity type and id. This method returns the id of
-the Jira field used to store the ShotGrid id.</p>
+<p>Two custom fields are used in Jira to store a reference to a Flow Production Tracking
+Entity: its Flow Production Tracking Entity type and id. This method returns the id of
+the Jira field used to store the Flow Production Tracking id.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.jira_shotgun_url_field">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jira_shotgun_url_field</span></span><a class="headerlink" href="#sg_jira.jira_session.JiraSession.jira_shotgun_url_field" title="Permalink to this definition"></a></dt>
-<dd><p>Return the id of the Jira field used to store the url of a linked ShotGrid
+<dd><p>Return the id of the Jira field used to store the url of a linked Flow Production Tracking
 Entity.</p>
 </dd></dl>
 
@@ -761,15 +762,15 @@ given Issue.</p>
 </section>
 <section id="id1">
 <h3>Bridge<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
-<p>This is the main class that holds handles to both ShotGrid and Jira
+<p>This is the main class that holds handles to both Flow Production Tracking and Jira
 and handles dispatching events to both sites.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.Bridge">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.</span></span><span class="sig-name descname"><span class="pre">Bridge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sg_site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_script</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_script_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_http_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Bridge" title="Permalink to this definition"></a></dt>
-<dd><p>A bridge between ShotGrid and Jira.</p>
-<p>The bridge handles connections to the ShotGrid and Jira servers and dispatches
+<dd><p>A bridge between Flow Production Tracking and Jira.</p>
+<p>The bridge handles connections to the Flow Production Tracking and Jira servers and dispatches
 sync events.</p>
-<p>Instatiate a new bridge between the given SG site and Jira site.</p>
+<p>Instatiate a new bridge between the given PTR site and Jira site.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Jira Cloud requires the use of an API token and will not work with
@@ -780,15 +781,15 @@ Jira Server will use PAT so please provide empty string as <cite>SGJIRA_JIRA_USE
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid site url.</p></li>
-<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid script user name.</p></li>
-<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The script user key for the ShotGrid script.</p></li>
+<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking URL.</p></li>
+<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking script user name.</p></li>
+<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The script user key for the Flow Production Tracking script.</p></li>
 <li><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira site url.</p></li>
 <li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira user name, either his email address or short
 name.</p></li>
 <li><p><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira user password or API key.</p></li>
 <li><p><strong>sync_settings</strong> – A dictionary where keys are settings names.</p></li>
-<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
+<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Optional, a http proxy to use for the Flow Production Tracking
 connection, or None.</p></li>
 </ul>
 </dd>
@@ -796,7 +797,7 @@ connection, or None.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.Bridge.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sg_site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_script</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_script_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_http_proxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Bridge.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>Instatiate a new bridge between the given SG site and Jira site.</p>
+<dd><p>Instatiate a new bridge between the given PTR site and Jira site.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Jira Cloud requires the use of an API token and will not work with
@@ -807,15 +808,15 @@ Jira Server will use PAT so please provide empty string as <cite>SGJIRA_JIRA_USE
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid site url.</p></li>
-<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A ShotGrid script user name.</p></li>
-<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The script user key for the ShotGrid script.</p></li>
+<li><p><strong>sg_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking URL.</p></li>
+<li><p><strong>sg_script</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking script user name.</p></li>
+<li><p><strong>sg_script_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The script user key for the Flow Production Tracking script.</p></li>
 <li><p><strong>jira_site</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira site url.</p></li>
 <li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira user name, either his email address or short
 name.</p></li>
 <li><p><strong>jira_secret</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira user password or API key.</p></li>
 <li><p><strong>sync_settings</strong> – A dictionary where keys are settings names.</p></li>
-<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Optional, a http proxy to use for the ShotGrid
+<li><p><strong>sg_http_proxy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Optional, a http proxy to use for the Flow Production Tracking
 connection, or None.</p></li>
 </ul>
 </dd>
@@ -864,10 +865,10 @@ with <code class="docutils literal notranslate"><span class="pre">.py</span></co
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.Bridge.current_shotgun_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_shotgun_user</span></span><a class="headerlink" href="#sg_jira.Bridge.current_shotgun_user" title="Permalink to this definition"></a></dt>
-<dd><p>Return the ShotGrid user used for the connection.</p>
+<dd><p>Return the Flow Production Tracking user used for the connection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A ShotGrid record dictionary with an <cite>id</cite> key and a <cite>type</cite> key.</p>
+<dd class="field-odd"><p>A Flow Production Tracking record dictionary with an <cite>id</cite> key and a <cite>type</cite> key.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -924,13 +925,13 @@ before returning it to ensure we return the exact value (eg.
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.Bridge.sync_in_jira">
 <span class="sig-name descname"><span class="pre">sync_in_jira</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.sync_in_jira"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Bridge.sync_in_jira" title="Permalink to this definition"></a></dt>
-<dd><p>Sync the given ShotGrid Entity to Jira.</p>
+<dd><p>Sync the given Flow Production Tracking Entity to Jira.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>settings_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the settings to use for this sync.</p></li>
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Flow Production Tracking Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the Flow Production Tracking Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event meta data for the change.</p></li>
 </ul>
 </dd>
@@ -944,7 +945,7 @@ syncing was skipped for any reason.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.Bridge.sync_in_shotgun">
 <span class="sig-name descname"><span class="pre">sync_in_shotgun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/bridge.html#Bridge.sync_in_shotgun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Bridge.sync_in_shotgun" title="Permalink to this definition"></a></dt>
-<dd><p>Sync the given Jira Resource to ShotGrid.</p>
+<dd><p>Sync the given Jira Resource to Flow Production Tracking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -955,7 +956,7 @@ syncing was skipped for any reason.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>True if the resource was actually synced in ShotGrid, False if
+<dd class="field-even"><p>True if the resource was actually synced in Flow Production Tracking, False if
 syncing was skipped for any reason.</p>
 </dd>
 </dl>
@@ -967,7 +968,7 @@ syncing was skipped for any reason.</p>
 <section id="id2">
 <h3>Syncers<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
 <p>Base class in charge of initially determining whether to accept events
-from ShotGrid and Jira for syncing. If accepted, it then passes on
+from Flow Production Tracking and Jira for syncing. If accepted, it then passes on
 the event to a Handler to process the event.</p>
 <p>This must be subclassed to implement a list of Handlers to dispatch
 events to. Additional parameters can be accepted as well to pass on
@@ -978,7 +979,7 @@ to Handlers.</p>
 
 <span class="k">class</span> <span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Sync ShotGrid Tasks as Jira Issues.</span>
+<span class="sd">    Sync Flow Production Tracking Tasks as Jira Issues.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1017,7 +1018,7 @@ to Handlers.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.Syncer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.</span></span><span class="sig-name descname"><span class="pre">Syncer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Syncer" title="Permalink to this definition"></a></dt>
-<dd><p>A class handling syncing between ShotGrid and Jira.</p>
+<dd><p>A class handling syncing between Flow Production Tracking and Jira.</p>
 <p>All Syncers should define a list of <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> which should reject
 or accept and process events.</p>
 <p>Instatiate a new syncer for the given bridge.</p>
@@ -1071,7 +1072,7 @@ or accept and process events.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.Syncer.setup">
 <span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Syncer.setup" title="Permalink to this definition"></a></dt>
-<dd><p>Check the Jira and ShotGrid site, ensure that the sync can safely happen
+<dd><p>Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen
 and cache any value which is slow to retrieve.</p>
 </dd></dl>
 
@@ -1089,7 +1090,7 @@ and cache any value which is slow to retrieve.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.Syncer.accept_shotgun_event">
 <span class="sig-name descname"><span class="pre">accept_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.accept_shotgun_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Syncer.accept_shotgun_event" title="Permalink to this definition"></a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
+<dd><p>Accept or reject the given event for the given Flow Production Tracking Entity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> instance if the event is accepted for
@@ -1123,8 +1124,8 @@ processing, <cite>None</cite> otherwise.</p>
 </section>
 <section id="synchandlers">
 <h3>SyncHandlers<a class="headerlink" href="#synchandlers" title="Permalink to this heading"></a></h3>
-<p>Base class that handles a particular sync instance between ShotGrid and Jira.</p>
-<p>Handlers hold the main logic for syncing values between a ShotGrid Entity type
+<p>Base class that handles a particular sync instance between Flow Production Tracking and Jira.</p>
+<p>Handlers hold the main logic for syncing values between a Flow Production Tracking Entity type
 and a Jira resource. They are owned by a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.
 This base class defines the interface all handlers should support and
 provides helpers methods useful to all implementations.</p>
@@ -1133,8 +1134,8 @@ provides helpers methods useful to all implementations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.handlers.SyncHandler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.handlers.</span></span><span class="sig-name descname"><span class="pre">SyncHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syncer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler" title="Permalink to this definition"></a></dt>
-<dd><p>Base class to handle a particular sync between ShotGrid and Jira.</p>
-<p>Handlers typically handle syncing values between a ShotGrid Entity type and
+<dd><p>Base class to handle a particular sync between Flow Production Tracking and Jira.</p>
+<p>Handlers typically handle syncing values between a Flow Production Tracking Entity type and
 a Jira resource and are owned by a <a class="reference internal" href="#sg_jira.Syncer" title="sg_jira.Syncer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Syncer</span></code></a> instance.</p>
 <p>This base class defines the interface all handlers should support and
 provides some helpers which can be useful to all handlers.</p>
@@ -1187,7 +1188,7 @@ provides some helpers which can be useful to all handlers.</p>
 <dt class="sig sig-object py" id="sg_jira.handlers.SyncHandler.setup">
 <span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.setup" title="Permalink to this definition"></a></dt>
 <dd><p>This method can be re-implemented in deriving classes to Check the Jira
-and ShotGrid site, ensure that the sync can safely happen and cache any
+and Flow Production Tracking site, ensure that the sync can safely happen and cache any
 value which is slow to retrieve.</p>
 <p>This base implementation does nothing.</p>
 </dd></dl>
@@ -1195,7 +1196,7 @@ value which is slow to retrieve.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.SyncHandler.accept_shotgun_event">
 <span class="sig-name descname"><span class="pre">accept_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.accept_shotgun_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.accept_shotgun_event" title="Permalink to this definition"></a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
+<dd><p>Accept or reject the given event for the given Flow Production Tracking Entity.</p>
 <p>Must be re-implemented in deriving classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1207,13 +1208,13 @@ value which is slow to retrieve.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.SyncHandler.process_shotgun_event">
 <span class="sig-name descname"><span class="pre">process_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.process_shotgun_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.process_shotgun_event" title="Permalink to this definition"></a></dt>
-<dd><p>Process the given ShotGrid event for the given ShotGrid Entity</p>
+<dd><p>Process the given Flow Production Tracking event for the given Flow Production Tracking Entity</p>
 <p>Must be re-implemented in deriving classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Flow Production Tracking Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the Flow Production Tracking Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event for the change.</p></li>
 </ul>
 </dd>
@@ -1268,13 +1269,13 @@ sync didn’t happen for any reason.</p>
 </section>
 <section id="id3">
 <h4>EntityIssueHandler<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h4>
-<p>Base class for syncing ShotGrid Entities and Jira Issues. This inherits from
+<p>Base class for syncing Flow Production Tracking Entities and Jira Issues. This inherits from
 <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.handlers.EntityIssueHandler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.handlers.</span></span><span class="sig-name descname"><span class="pre">EntityIssueHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syncer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issue_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/entity_issue_handler.html#EntityIssueHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.sync_handler.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a></p>
-<p>Base class for handlers syncing a ShotGrid Entity to a Jira Issue.</p>
+<p>Base class for handlers syncing a Flow Production Tracking Entity to a Jira Issue.</p>
 <p>Instantiate an Entity Issue handler for the given syncer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1338,7 +1339,7 @@ sync didn’t happen for any reason.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.EntityIssueHandler.accept_shotgun_event">
 <span class="sig-name descname"><span class="pre">accept_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.accept_shotgun_event" title="Permalink to this definition"></a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
+<dd><p>Accept or reject the given event for the given Flow Production Tracking Entity.</p>
 <p>Must be re-implemented in deriving classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1378,13 +1379,13 @@ sync didn’t happen for any reason.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.EntityIssueHandler.process_shotgun_event">
 <span class="sig-name descname"><span class="pre">process_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.process_shotgun_event" title="Permalink to this definition"></a></dt>
-<dd><p>Process the given ShotGrid event for the given ShotGrid Entity</p>
+<dd><p>Process the given Flow Production Tracking event for the given Flow Production Tracking Entity</p>
 <p>Must be re-implemented in deriving classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Flow Production Tracking Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the Flow Production Tracking Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event for the change.</p></li>
 </ul>
 </dd>
@@ -1399,7 +1400,7 @@ sync didn’t happen for any reason.</p>
 <dt class="sig sig-object py" id="sg_jira.handlers.EntityIssueHandler.setup">
 <span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.setup" title="Permalink to this definition"></a></dt>
 <dd><p>This method can be re-implemented in deriving classes to Check the Jira
-and ShotGrid site, ensure that the sync can safely happen and cache any
+and Flow Production Tracking site, ensure that the sync can safely happen and cache any
 value which is slow to retrieve.</p>
 <p>This base implementation does nothing.</p>
 </dd></dl>
@@ -1409,8 +1410,8 @@ value which is slow to retrieve.</p>
 </section>
 <section id="enablesyncinghandler">
 <h4>EnableSyncingHandler<a class="headerlink" href="#enablesyncinghandler" title="Permalink to this heading"></a></h4>
-<p>A handler that controls the initial sync for a ShotGrid Task and Jira Issue when
-the “Sync In Jira” checkbox is toggled in ShotGrid. It combines multiple
+<p>A handler that controls the initial sync for a Flow Production Tracking Task and Jira Issue when
+the “Sync In Jira” checkbox is toggled in Flow Production Tracking. It combines multiple
 handlers to begin the syncing process by performing a full sync each time the
 checkbox is toggled on. This allows one to manually force a re-sync if needed
 by just toggling the checkbox off and then on again.</p>
@@ -1420,7 +1421,7 @@ by just toggling the checkbox off and then on again.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.handlers.</span></span><span class="sig-name descname"><span class="pre">EnableSyncingHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syncer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handlers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler" title="Permalink to this definition"></a></dt>
 <dd><p>A handler which combines multiple handlers to start syncing Tasks and Entities
 linked to them when a Task “Sync In Jira” (sg_sync_in_jira) checkbox field
-is changed in ShotGrid.</p>
+is changed in Flow Production Tracking.</p>
 <p>A full sync is performed each time the checkbox is turned on. This allows
 to manually force a re-sync if needed by just setting off the checkbox, and
 then back to on.</p>
@@ -1429,7 +1430,7 @@ then back to on.</p>
 others are assumed to be secondary handlers.</p>
 <p>Events will be sent to secondary handlers for processing only if the
 primary handler was able to successfully process them.</p>
-<p>This allows to control from the primary handler if a ShotGrid Entity should
+<p>This allows to control from the primary handler if a Flow Production Tracking Entity should
 be synced or not, and then automatically start syncing secondary Entities
 which are linked to this primary Entity, e.g. Notes on a Task, without
 having to explicitely enable syncing for the linked Entities.</p>
@@ -1451,7 +1452,7 @@ handler, but they need to be able to process them.</p>
 others are assumed to be secondary handlers.</p>
 <p>Events will be sent to secondary handlers for processing only if the
 primary handler was able to successfully process them.</p>
-<p>This allows to control from the primary handler if a ShotGrid Entity should
+<p>This allows to control from the primary handler if a Flow Production Tracking Entity should
 be synced or not, and then automatically start syncing secondary Entities
 which are linked to this primary Entity, e.g. Notes on a Task, without
 having to explicitely enable syncing for the linked Entities.</p>
@@ -1470,7 +1471,7 @@ handler, but they need to be able to process them.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.EnableSyncingHandler.setup">
 <span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.setup" title="Permalink to this definition"></a></dt>
-<dd><p>Check the Jira and ShotGrid site, ensure that the sync can safely happen.
+<dd><p>Check the Jira and Flow Production Tracking site, ensure that the sync can safely happen.
 This can be used as well to cache any value which is slow to retrieve.</p>
 <p>Run all handlers setup.</p>
 </dd></dl>
@@ -1478,7 +1479,7 @@ This can be used as well to cache any value which is slow to retrieve.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event">
 <span class="sig-name descname"><span class="pre">accept_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.accept_shotgun_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event" title="Permalink to this definition"></a></dt>
-<dd><p>Accept or reject the given event for the given ShotGrid Entity.</p>
+<dd><p>Accept or reject the given event for the given Flow Production Tracking Entity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><cite>True</cite> if the event is accepted for processing, <cite>False</cite> otherwise.</p>
@@ -1489,12 +1490,12 @@ This can be used as well to cache any value which is slow to retrieve.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.EnableSyncingHandler.process_shotgun_event">
 <span class="sig-name descname"><span class="pre">process_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/enable_syncing_handler.html#EnableSyncingHandler.process_shotgun_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.process_shotgun_event" title="Permalink to this definition"></a></dt>
-<dd><p>Process the given ShotGrid event for the given ShotGrid Entity</p>
+<dd><p>Process the given Flow Production Tracking event for the given Flow Production Tracking Entity</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The ShotGrid Entity type to sync.</p></li>
-<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the ShotGrid Entity to sync.</p></li>
+<li><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Flow Production Tracking Entity type to sync.</p></li>
+<li><p><strong>entity_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The id of the Flow Production Tracking Entity to sync.</p></li>
 <li><p><strong>event</strong> – A dictionary with the event for the change.</p></li>
 </ul>
 </dd>
@@ -1625,8 +1626,8 @@ value for a given field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
-<li><p><strong>value</strong> – The Jira or SG value for which the exception was raised.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or PTR field for which the exception was raised.</p></li>
+<li><p><strong>value</strong> – The Jira or PTR value for which the exception was raised.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1654,13 +1655,13 @@ set self.__traceback__ to tb and return self.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="sg_jira.errors.InvalidShotgunValue">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.errors.</span></span><span class="sig-name descname"><span class="pre">InvalidShotgunValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/errors.html#InvalidShotgunValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.errors.InvalidShotgunValue" title="Permalink to this definition"></a></dt>
-<dd><p>An exception raised when a ShotGrid value can’t be translated to a valid
+<dd><p>An exception raised when a Flow Production Tracking value can’t be translated to a valid
 Jira value for a given field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
-<li><p><strong>value</strong> – The Jira or SG value for which the exception was raised.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or PTR field for which the exception was raised.</p></li>
+<li><p><strong>value</strong> – The Jira or PTR value for which the exception was raised.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1689,12 +1690,12 @@ set self.__traceback__ to tb and return self.</p>
 <dt class="sig sig-object py" id="sg_jira.errors.InvalidJiraValue">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.errors.</span></span><span class="sig-name descname"><span class="pre">InvalidJiraValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/errors.html#InvalidJiraValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.errors.InvalidJiraValue" title="Permalink to this definition"></a></dt>
 <dd><p>An exception raised when a Jira value can’t be translated to a valid
-ShotGrid value for a given field.</p>
+Flow Production Tracking value for a given field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or SG field for which the exception was raised.</p></li>
-<li><p><strong>value</strong> – The Jira or SG value for which the exception was raised.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The Jira or PTR field for which the exception was raised.</p></li>
+<li><p><strong>value</strong> – The Jira or PTR value for which the exception was raised.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1752,7 +1753,7 @@ for the continuous integration and run the following validations:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    
