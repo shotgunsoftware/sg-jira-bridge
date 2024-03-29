@@ -35,6 +35,12 @@ class TimelogWorklogHandler(SyncHandler):
     # Define the name of the attribute used to track when a Timelog is retired from Flow Production Tracking
     __SG_RETIREMENT_FIELD = "retirement_date"
 
+    # Define the format of the Jira dates
+    __JIRA_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
+
+    # Define the format of the Flow Production Tracking dates
+    __SG_DATE_FORMAT = "%Y-%m-%d"
+
     def __init__(self, syncer, sync_sg_timelog_deletion, sync_jira_worklog_deletion):
         """
         Instantiate a handler for the given syncer.
@@ -404,8 +410,8 @@ class TimelogWorklogHandler(SyncHandler):
                 sg_user = self.get_sg_user(jira_worklog["author"]["accountId"])
 
             worklog_started_date = datetime.datetime.strptime(
-                jira_worklog["started"], "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).strftime("%Y-%m-%d")
+                jira_worklog["started"], self.__JIRA_DATE_FORMAT
+            ).strftime(self.__SG_DATE_FORMAT)
             sg_data = {
                 "description": jira_worklog.get("comment", "New JIRA Timelog"),
                 "user": sg_user,
@@ -478,8 +484,8 @@ class TimelogWorklogHandler(SyncHandler):
                 sg_user = self.get_sg_user(jira_worklog.author.accountId)
 
             worklog_started_date = datetime.datetime.strptime(
-                jira_worklog.started, "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).strftime("%Y-%m-%d")
+                jira_worklog.started, self.__JIRA_DATE_FORMAT
+            ).strftime(self.__SG_DATE_FORMAT)
             sg_data = {
                 "description": jira_worklog.comment,
                 "user": sg_user,
@@ -555,7 +561,7 @@ class TimelogWorklogHandler(SyncHandler):
             started_date = None
             if sg_timelog.get("date"):
                 started_date = datetime.datetime.strptime(
-                    sg_timelog["date"], "%Y-%m-%d"
+                    sg_timelog["date"], self.__SG_DATE_FORMAT
                 )
 
             jira_worklog = self._jira.add_worklog(
@@ -717,9 +723,11 @@ class TimelogWorklogHandler(SyncHandler):
             # we need to format the started date
             started_date = None
             if sg_timelog.get("date"):
+                jira_formatted_date = self.__JIRA_DATE_FORMAT.replace("%f", "000")
+                jira_formatted_date = jira_formatted_date.replace("%z", "+0000")
                 started_date = datetime.datetime.strptime(
-                    sg_timelog["date"], "%Y-%m-%d"
-                ).strftime("%Y-%m-%dT%H:%M:%S.000+0000")
+                    sg_timelog["date"], self.__SG_DATE_FORMAT
+                ).strftime(jira_formatted_date)
 
             jira_worklog.update(
                 timeSpentSeconds=sg_timelog["duration"] * 60,
