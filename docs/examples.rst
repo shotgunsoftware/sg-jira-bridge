@@ -55,6 +55,8 @@ be created in Jira.
     Due to Jira API limitation, it is not possible right now to set the Worklog assignee.
     In order to keep a track of the PTR TimeLog assignee, they are stored as JSON data in a
     custom field on the Jira Issue.
+    Please, look at the :ref:`Jira Workaround`
+    section if you want to have more information.
 
 When a Worklog is created in Jira, an associated Timelog will be created in Flow Production Tracking.
 The user who created the worklog in Jira will be used as the Timelog assignee as soon as an associated
@@ -168,6 +170,7 @@ on the Jira Issue entity that need to be created.
     a character length limitation. This is why we are using a ``TextField`` field.
     Unfortunately, this type of field doesn't have a ``read-only`` property.
 
+.. _Jira Workaround:
 Jira API Limitations & Workaround
 =================================
 
