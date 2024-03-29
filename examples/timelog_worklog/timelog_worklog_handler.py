@@ -20,8 +20,8 @@ from sg_jira.constants import (
 class TimelogWorklogHandler(SyncHandler):
     """
     A handler which syncs a Flow Production Tracking Timelog as a Jira Worklog.
-    The sync works in both way (from PTR to Jira and from Jira to PTR)
-    and handle creation, update and deletion.
+    The sync works both ways (from PTR to Jira and from Jira to PTR)
+    and handles creation, updating and deletion.
     """
 
     # Define the mapping between Flow Production Tracking Timelog fields and Jira Worklog fields
