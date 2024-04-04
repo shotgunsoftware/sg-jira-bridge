@@ -13,18 +13,6 @@ import sg_jira
 from test_base import TestBase
 
 
-class ExtMockgun(mockgun.Shotgun):
-    """
-    Add missing mocked methods to mockgun.Shotgun
-    """
-
-    def add_user_agent(*args, **kwargs):
-        pass
-
-    def set_session_uuid(*args, **kwargs):
-        pass
-
-
 class TestSyncBase(TestBase):
     """
     Base class for syncing tests.
@@ -37,16 +25,6 @@ class TestSyncBase(TestBase):
     All test methods will have an extra mocked_sg parameter.
     """
 
-    def _get_mocked_sg_handle(self):
-        """
-        Return a mocked PTR handle.
-        """
-        return ExtMockgun(
-            "https://mocked.my.com",
-            "Ford Prefect",
-            "xxxxxxxxxx",
-        )
-
     def _get_syncer(self, mocked_sg, name="task_issue"):
         """
         Helper to get a syncer and a bridge with a mocked Flow Production Tracking.
@@ -54,7 +32,11 @@ class TestSyncBase(TestBase):
         :param mocked_sg: Mocked shotgun_api3.Shotgun.
         :parma str name: A syncer name.
         """
-        mocked_sg.return_value = self._get_mocked_sg_handle()
+        mocked_sg.return_value = mockgun.Shotgun(
+            "https://mocked.my.com",
+            "Ford Prefect",
+            "xxxxxxxxxx",
+        )
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
         )
