@@ -9,8 +9,8 @@ import mock
 import os
 
 import sg_jira
+from shotgun_api3.lib import mockgun
 from test_base import TestBase
-from test_sync_base import ExtMockgun
 from mock_shotgun import SG_USER, SG_ASSET, SG_TASK, SG_RETIRED_TIMELOG
 
 
@@ -37,7 +37,7 @@ class TestShotgunSession(TestBase):
 
     def _get_sg_session(self, mocked_sg):
         """Return a PTR session object."""
-        mocked_sg.return_value = ExtMockgun(
+        mocked_sg.return_value = mockgun.Shotgun(
             "https://mocked.my.com",
             "Ford Prefect",
             "xxxxxxxxxx",
