@@ -388,7 +388,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 entity_key = payload.get("entity_id")
             if not entity_type or not entity_key:
                 raise SgJiraBridgeBadRequestError(
-                    "Invalid request payload %s, unable to retrieve a Flow Production Tracking Entity type and its id."
+                    "Invalid request payload %s, unable to retrieve a Shotgun Entity type and its id."
                     % payload
                 )
             # We could have a str or int here depending on how it was sent.
@@ -398,7 +398,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 # log the original exception before we obfuscate it
                 logger.debug(e, exc_info=True)
                 raise SgJiraBridgeBadRequestError(
-                    "Invalid Flow Production Tracking %s id %s, it must be a number."
+                    "Invalid Shotgun %s id %s, it must be a number."
                     % (
                         entity_type,
                         entity_key,
