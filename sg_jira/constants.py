@@ -117,7 +117,7 @@ ASSET_FIELDS_MAPPING = {
     "sg_status_list": "status",
 }
 
-# Define the mapping between ShotGrid TimeLog and Jira Worklog fields
+# Define the mapping between Flow Production Tracking TimeLog and Jira Worklog fields
 TIMELOG_FIELDS_MAPPING = {
     "user": "author",
     "date": "started",

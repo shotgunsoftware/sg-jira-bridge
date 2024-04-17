@@ -145,12 +145,12 @@ class SyncHandler(object):
 
     def get_sg_user(self, user_id, jira_user=None):
         """
-        Resolve the ShotGrid user associated to the JIRA user passed in.
+        Resolve the Flow Production Tracking user associated to the JIRA user passed in.
 
         :param str user_id: Value of the to or from of a JIRA changelog.
         :param dict jira_user: User resource, typically the assignee field on an issue. Can be None
 
-        :returns: A ShotGrid user entity dictionary or None
+        :returns: A FPTR user entity dictionary or None
         """
 
         # Due to GDPR, some changes were done to JIRA Cloud which complicates

@@ -37,7 +37,7 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
     logger.info("Locating JIRA project %s" % project_key)
     project = jira.project(project_key)
 
-    logger.info("Retrieving all Shotgun users")
+    logger.info("Retrieving all Flow Production Tracking users")
     users = sg.find(
         "HumanUser",
         # User's without email or with TBD (test users) should not be considered.
@@ -52,7 +52,7 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
     # the same email can be used for multiple users. So if an email has been mapped
     # to an account id, we'll skip all users with that email when matching.
     # This would allow an admin to run the script once, then move some JIRA account ids
-    # from  one Shotgun account to another that has the same email and run the script
+    # from one FPTR account to another that has the same email and run the script
     # again without invalidating their work.
     mapped_emails = {
         user["email"] for user in users if user["sg_jira_account_id"] is not None
@@ -78,10 +78,10 @@ def sync_jira_users_into_shotgun(sg, jira, project_key):
         if jira_user is None:
             continue
 
-        # A JIRA user was found, so let's update Shotgun with it's accountId!
+        # A JIRA user was found, so let's update FPTR with it's accountId!
         sg.update("HumanUser", user["id"], {"sg_jira_account_id": jira_user.accountId})
         logger.info(
-            "Shotgun user '{}' ('{}') has been matched to a JIRA user with the same email.".format(
+            "Flow Production Tracking user '{}' ('{}') has been matched to a JIRA user with the same email.".format(
                 user["login"], user["email"]
             )
         )
@@ -99,12 +99,12 @@ def _get_settings():
     """
     # Parse the commend line
     parser = argparse.ArgumentParser(
-        description="Matches Shotgun users with JIRA users for JIRA Cloud.",
+        description="Matches Flow Production Tracking users with JIRA users for JIRA Cloud.",
         epilog=(
-            "This script will match the first Shotgun user with a given email with the "
-            "associated JIRA user. If for some reason there are multiple Shotgun users "
-            "with the same email, you can go back in Shotgun and reassign the "
-            "sg_jira_account_id value to the right Shotgun user."
+            "This script will match the first Flow Production Tracking user with a given email with the "
+            "associated JIRA user. If for some reason there are multiple Flow Production Tracking users "
+            "with the same email, you can go back in Flow Production Tracking and reassign the "
+            "sg_jira_account_id value to the right Flow Production Tracking user."
         ),
     )
     parser.add_argument("--settings", help="Full path to settings file.", required=True)
@@ -112,7 +112,7 @@ def _get_settings():
     parser.add_argument(
         "--project",
         type=str,
-        help="The key of a JIRA project that will be synced with Shotgun.",
+        help="The key of a JIRA project that will be synced with Flow Production Tracking.",
     )
     args = parser.parse_args()
 

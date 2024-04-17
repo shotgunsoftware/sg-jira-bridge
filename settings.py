@@ -22,12 +22,12 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # fmt: off
-# Shotgun site and credentials
+# Flow Production Tracking site and credentials
 SHOTGUN = {
     "site": os.environ.get("SGJIRA_SG_SITE"),
     "script_name": os.environ.get("SGJIRA_SG_SCRIPT_NAME"),
     "script_key": os.environ.get("SGJIRA_SG_SCRIPT_KEY"),
-    "http_proxy": None,  # If set, the Shotgun connection is done through this proxy.
+    "http_proxy": None,  # If set, the Flow Production Tracking connection is done through this proxy.
 }
 # Jira site and credentials, the user name needs to be an email address or
 # the user login name, e.g. ford_escort for "Ford Escort".
