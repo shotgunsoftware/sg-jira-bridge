@@ -1,7 +1,7 @@
 Examples
 ########
 
-Flow Production Tracking Jira Bridge comes with several examples than can be found in
+Flow Production Tracking Jira Bridge comes with several examples that can be found in
 the `examples <https://github.com/shotgunsoftware/sg-jira-bridge/tree/master/examples>`_ folder.
 
 These examples can be loaded if the `examples` directory is added to the PYTHONPATH in the
