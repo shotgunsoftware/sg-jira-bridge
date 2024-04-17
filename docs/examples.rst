@@ -151,12 +151,12 @@ on the Jira Issue entity.
 +------------------+-----------+--------------------------------------------------------------+
 | Field Name       | Type      | Description                                                  |
 +==================+===========+==============================================================+
-| Shotgun TimeLogs | TextField | Stores the Flow Production Tracking Timelog assignees        |
+| Shotgun TimeLogs | Paragraph | Stores the Flow Production Tracking Timelog assignees        |
 +------------------+-----------+--------------------------------------------------------------+
 
 .. note::
     Since this custom field stores JSON data, using the typical ``Text`` field type presents
-    character length limitation issues. The ``TextField`` field type is required instead, but it's important to note that it is editable and doesn't  have a ``read-only`` property.
+    character length limitation issues. The ``Paragraph`` field type is required instead, but it's important to note that it is editable and doesn't  have a ``read-only`` property.
 
 .. _Jira Workaround:
 Jira API Limitations & Workarounds
