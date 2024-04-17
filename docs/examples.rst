@@ -158,6 +158,12 @@ on the Jira Issue entity.
     Since this custom field stores JSON data, using the typical ``Text`` field type presents
     character length limitation issues. The ``Paragraph`` field type is required instead, but it's important to note that it is editable and doesn't  have a ``read-only`` property.
 
+You also need to make sure that the following events are enabled in the :ref:`Jira Webhook` settings:
+
+* **Worklog:** created
+* **Worklog:** updated
+* **Worklog:** deleted
+
 .. _Jira Workaround:
 Jira API Limitations & Workarounds
 =================================
