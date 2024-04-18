@@ -165,8 +165,9 @@ You also need to make sure that the following events are enabled in the :ref:`Ji
 * **Worklog:** deleted
 
 .. _Jira Workaround:
+
 Jira API Limitations & Workarounds
-=================================
+==================================
 
 Due to some Jira API limitations, it is not currently possible to set or update the Jira Worklog assignees.
 To track Flow Production Tracking Timelog assignees, we have implemented a generic solution

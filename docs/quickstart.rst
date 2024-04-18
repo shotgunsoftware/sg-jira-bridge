@@ -100,6 +100,7 @@ The following fields must be created in Jira and made available in Boards:
 +--------------+------+-----------------------------------------------------------------------+
 
 .. _Jira Webhook:
+
 Jira Webhook
 ============
 
@@ -266,7 +267,7 @@ Ensure you have `virtualenv <https://pypi.org/project/virtualenv/>`_ installed i
     pip install -r /path/to/sg-jira-bridge/triggers/requirements.txt
 
 Enable the PTR Jira Trigger
---------------------------
+---------------------------
 Add the path to the Flow Production Tracking Jira Bridge ``sg_jira_event_trigger.py`` file to the
 shotgunEvents conf file::
 
