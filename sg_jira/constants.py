@@ -117,6 +117,15 @@ ASSET_FIELDS_MAPPING = {
     "sg_status_list": "status",
 }
 
+# Define the mapping between Flow Production Tracking TimeLog and Jira Worklog fields
+TIMELOG_FIELDS_MAPPING = {
+    "user": "author",
+    "date": "started",
+    "duration": "timeSpent",
+    "description": "comment",
+    "entity": None,
+}
+
 # The type of Issue link to use when linking a Task Issue to the Issue
 # representing the Asset.
 JIRA_PARENT_LINK_TYPE = "relates to"

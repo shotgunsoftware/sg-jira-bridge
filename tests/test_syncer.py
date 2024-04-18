@@ -1124,7 +1124,7 @@ class TestJiraSyncer(TestSyncBase):
     @mock.patch("shotgun_api3.lib.mockgun.Shotgun._validate_entity_data")
     def test_jira_duedate(self, mocked_validate_fn, mocked_sg):
         """
-        Test syncing Jira Due Date to ShotGrid
+        Test syncing Jira Due Date to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
@@ -1142,7 +1142,7 @@ class TestJiraSyncer(TestSyncBase):
         )
 
         # Mockgun validates all data types. In this case it checks if due_date is a date.
-        # However, we don't need it to be a Python date type since ShotGrid accepts date strings.
+        # However, we don't need it to be a Python date type since FPTR accepts date strings.
         mocked_validate_fn.return_value = None
 
         # Prepare the "server" data
@@ -1154,13 +1154,18 @@ class TestJiraSyncer(TestSyncBase):
                 sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
             )["due_date"],
         )
-        
+
         # Prepare the JIRA payload
         jira_event = dict(JIRA_EVENT)
         jira_event["issue"]["fields"]["duedate"] = DUE_DATE
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             "2024-03-30",
@@ -1172,7 +1177,7 @@ class TestJiraSyncer(TestSyncBase):
     @mock.patch("shotgun_api3.lib.mockgun.Shotgun._validate_entity_data")
     def test_jira_duedate_without_fieldId(self, mocked_validate_fn, mocked_sg):
         """
-        Test syncing Jira Due Date to ShotGrid
+        Test syncing Jira Due Date to Flow Production Tracking
         """
         syncer, bridge = self._get_syncer(mocked_sg)
         sg_entity_id = int(JIRA_EVENT["issue"]["fields"]["customfield_11501"])
@@ -1190,7 +1195,7 @@ class TestJiraSyncer(TestSyncBase):
         )
 
         # Mockgun validates all data types. In this case it checks if due_date is a date.
-        # However, we don't need it to be a Python date type since ShotGrid accepts date strings.
+        # However, we don't need it to be a Python date type since FPTR accepts date strings.
         mocked_validate_fn.return_value = None
 
         # Prepare the "server" data
@@ -1202,13 +1207,18 @@ class TestJiraSyncer(TestSyncBase):
                 sg_entity_type, [["id", "is", sg_entity_id]], ["due_date"]
             )["due_date"],
         )
-        
+
         # Prepare a JIRA payload without `fieldId` property
         jira_event = dict(JIRA_EVENT)
         jira_event["issue"]["fields"]["duedate"] = DUE_DATE
         jira_event["changelog"] = {"id": "123456", "items": [JIRA_DUEDATE_CHANGE_2]}
         self.assertTrue(
-            bridge.sync_in_shotgun("task_issue", "Issue", "FAKED-01", jira_event,)
+            bridge.sync_in_shotgun(
+                "task_issue",
+                "Issue",
+                "FAKED-01",
+                jira_event,
+            )
         )
         self.assertEqual(
             "2024-03-30",

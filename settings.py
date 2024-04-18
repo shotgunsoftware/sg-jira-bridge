@@ -22,12 +22,12 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # fmt: off
-# Shotgun site and credentials
+# Flow Production Tracking site and credentials
 SHOTGUN = {
     "site": os.environ.get("SGJIRA_SG_SITE"),
     "script_name": os.environ.get("SGJIRA_SG_SCRIPT_NAME"),
     "script_key": os.environ.get("SGJIRA_SG_SCRIPT_KEY"),
-    "http_proxy": None,  # If set, the Shotgun connection is done through this proxy.
+    "http_proxy": None,  # If set, the Flow Production Tracking connection is done through this proxy.
 }
 # Jira site and credentials, the user name needs to be an email address or
 # the user login name, e.g. ford_escort for "Ford Escort".
@@ -110,6 +110,18 @@ SYNC = {
         "settings": {
             "asset_issue_type": "Story",
             "task_issue_type": "Task",
+        },
+    },
+    "timelog": {
+        # The syncer class to use
+        "syncer": "timelog_worklog.TimelogWorklogSyncer",
+        # And its specific settings which are passed to its __init__ method
+        "settings": {
+            "issue_type": "Task",
+            # If True, when a worklog is deleted in Jira it will also be deleted in Flow Production Tracking
+            "sync_sg_timelog_deletion": True,
+            # If True, when a timelog is deleted in Flow Production Tracking, it will also be deleted in Jira
+            "sync_jira_worklog_deletion": True,
         },
     },
     "test": {

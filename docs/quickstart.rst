@@ -99,6 +99,7 @@ The following fields must be created in Jira and made available in Boards:
 | Shotgun URL  | Text | Stores a link to the detail page for the associated entity in PTR     |
 +--------------+------+-----------------------------------------------------------------------+
 
+.. _Jira Webhook:
 Jira Webhook
 ============
 

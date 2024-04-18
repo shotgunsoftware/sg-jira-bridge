@@ -6,6 +6,7 @@
 #
 
 import datetime
+import re
 
 from jira import JIRAError
 
@@ -22,6 +23,16 @@ class SyncHandler(object):
     This base class defines the interface all handlers should support and
     provides some helpers which can be useful to all handlers.
     """
+
+    # This will match JIRA accounts in the following format
+    # 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0
+    # 24 hexdecimal characters: 5b6a25ab7c14b729f2208297
+    # We're only matching the first 20 characters instead of the first 24, since the
+    # account id format isn't documented.
+    # It could in theory match a very long user name that uses hexadecimal characters
+    # only, but that would be unlikely.
+    # https://regex101.com/r/E1ysHQ/1
+    ACCOUNT_ID_RE = re.compile("^[0-9a-f:-]{20}")
 
     def __init__(self, syncer):
         """
@@ -102,6 +113,95 @@ class SyncHandler(object):
             else:
                 raise
         return jira_issue
+
+    def get_jira_user(self, user_email, jira_project):
+        """
+        Given an email address, find the associated Jira User in the given Jira Project.
+
+        :param user_email: The email address of the user we want to retrieve
+        :param jira_project: An instance of :class:`jira.resources.Project` we want to retrieve the user from
+        :returns: A :class:`jira.resources.User` instance or None.
+        """
+
+        reporter = None
+
+        jira_user = self._jira.find_jira_user(
+            user_email,
+            jira_project=jira_project,
+        )
+
+        # If we found a Jira user, use his name as the reporter name,
+        # otherwise use the reporter name retrieved from the user used
+        # to run the bridge.
+        if jira_user:
+            # Jira Cloud no longer supports the name field and Jira server does not support
+            # accountId. So we need different behaviour based on the type of Jira we're using
+            if self._jira.is_jira_cloud:
+                reporter = {"accountId": jira_user.accountId}
+            else:
+                reporter = {"name": jira_user.name}
+
+        return reporter
+
+    def get_sg_user(self, user_id, jira_user=None):
+        """
+        Resolve the Flow Production Tracking user associated to the JIRA user passed in.
+
+        :param str user_id: Value of the to or from of a JIRA changelog.
+        :param dict jira_user: User resource, typically the assignee field on an issue. Can be None
+
+        :returns: A FPTR user entity dictionary or None
+        """
+
+        # Due to GDPR, some changes were done to JIRA Cloud which complicates
+        # matching users by email. So let's use the right resolver based
+        # on the server type.
+        if self._jira.is_jira_cloud:
+
+            sg_field = "sg_jira_account_id"
+            sg_value = user_id
+
+            if jira_user is not None:
+                sg_value = jira_user["accountId"]
+
+            # jira_user is None when the user resolving code is trying to resolve the `from` user in the changelog.
+            # When this happens, we only have a user id in the `from` to indicate what the original value was.
+            #
+            # Interestingly, when the user field is updated via the JIRA API,
+            # the username is passed in instead of the account id in the `from` field, so we'll have to
+            # resolve it.
+            elif self.ACCOUNT_ID_RE.match(user_id) is None:
+                self._logger.debug(
+                    "The changelog's to/from contains a user name. accountId will be retrieved."
+                )
+                user = self._jira.user(user_id, payload="key")
+                if not user:
+                    self._logger.debug("Unable to find JIRA user %s" % user_id)
+                    return None
+                sg_value = user.accountId
+
+        else:
+
+            sg_field = "email"
+
+            if jira_user is not None:
+                sg_value = jira_user["emailAddress"]
+            elif user_id is not None:
+                sg_value = self._jira.user(user_id).emailAddress
+            else:
+                # The code that calls this method should always have a user passed in. If there is not
+                # user_id or jira_user value, we shouldn't even be calling this method in the first
+                # place!
+                raise RuntimeError("jira_user or user_id cannot be both None.")
+
+        sg_user = self._shotgun.find_one(
+            "HumanUser", [[sg_field, "is", sg_value]], ["email", "name"]
+        )
+        if not sg_user:
+            self._logger.debug(
+                "Unable to find a Shotgun user with %s %s" % (sg_field, sg_value)
+            )
+        return sg_user
 
     def setup(self):
         """
