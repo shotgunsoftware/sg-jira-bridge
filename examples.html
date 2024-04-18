@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Examples &mdash; sg-jira-bridge v0.5.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Known Issues &amp; Compatibility Notes" href="known_issues.html" />
+    <link rel="prev" title="Installing as a Service" href="services.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
+    
+        <img style='width: 191px;
+                height: 60px;
+                margin: 2px;
+                border-radius: 0px;
+                padding: 0px;'
+            src='_static/logo_sg@2x.png'/>
+    
+    </a>
+    
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sg-jira-bridge
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#timelog-syncer">TimeLog Syncer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#description">Description</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#timelog-creation">TimeLog Creation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#timelog-update">TimeLog Update</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#timelog-deletion">TimeLog Deletion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#refresh-synced-task">Refresh Synced Task</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#setting-up-flow-production-tracking">Setting up Flow Production Tracking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#setting-up-jira">Setting up Jira</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#jira-api-limitations-workarounds">Jira API Limitations &amp; Workarounds</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
+</ul>
+
+
+    <a href='genindex.html'>Alphabetic Index</a>
+
+    <div style='margin-top: 50px;
+                margin-left: 10px;
+                margin-right: 10px;
+                padding: 10px;
+                color: #b3b3b3;
+                font-size: 70%;
+                border-radius: 3px;
+                background-color: #444;
+                line-height: 18px;
+                '>
+    <style>
+        a.custom_post_menu { display: inline;
+                             padding: 0px;
+                             text-decoration: underline; }
+    </style>
+
+    <b>sg-jira-bridge</b> v0.5.2.<br>
+    
+    For more information, please visit
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
+    The code associated with this documentation can be found
+    <a class=custom_post_menu href='https://github.com/shotgunsoftware/sg-jira-bridge'>here</a>.
+
+    </div>
+    <style>
+        p.privacy_links { margin: 4px 0px;}
+    </style>
+    <p class="privacy_links"><a data-opt-in-preferences href="javascript:;">Privacy settings</a></p>
+    <p class="privacy_links"><a data-wat-linkname="manage-ccpa-settings-footer-link" href="javascript:;">Do not sell my personal information</a></p>
+    <p class="privacy_links"><a href="https://www.autodesk.com/company/legal-notices-trademarks/privacy-statement">Privacy/Cookies</a></p>
+
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sg-jira-bridge</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Examples</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h1>
+<p>Flow Production Tracking Jira Bridge comes with several examples that can be found in
+the <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge/tree/master/examples">examples</a> folder.</p>
+<p>These examples can be loaded if the <cite>examples</cite> directory is added to the PYTHONPATH in the
+<a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge/blob/master/settings.py#L95">settings.py</a> file.</p>
+<p>To set up your custom syncer, you need to correctly reference it in these two places:
+- Add its name in the <code class="docutils literal notranslate"><span class="pre">Jira</span> <span class="pre">Sync</span> <span class="pre">URL</span></code> field of your Flow Production Tracking Project
+- Add its name in the Webhook URL on the Jira side</p>
+<p>For example, this is how a syncer is defined in the <cite>settings.py</cite> file and how the urls should look like</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SYNC</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># Add the test syncer to the list of syncers, it will be available</span>
+    <span class="c1"># with the http://&lt;your server&gt;/jira2sg/test and http://&lt;your server&gt;/sg2jira/test</span>
+    <span class="c1"># urls.</span>
+    <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># Example of a custom syncer with an additional parameter to define</span>
+        <span class="c1"># a log level.</span>
+        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;example_sync.ExampleSync&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="timelog-syncer">
+<h2>TimeLog Syncer<a class="headerlink" href="#timelog-syncer" title="Permalink to this heading"></a></h2>
+<section id="description">
+<h3>Description<a class="headerlink" href="#description" title="Permalink to this heading"></a></h3>
+<p>The TimeLog syncer allows the synchronization of Flow Production Tracking TimeLogs with Jira Worklogs.
+It is working both ways: from Flow Production Tracking to Jira and vice-versa.
+It also handles TimeLog/Worklog deletions.</p>
+<section id="timelog-creation">
+<h4>TimeLog Creation<a class="headerlink" href="#timelog-creation" title="Permalink to this heading"></a></h4>
+<p>When a TimeLog is created in Flow Production Tracking, an associated Worklog will
+be created in Jira.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only Timelogs associated to a synced Task will be pushed to Jira. If a TimeLog is created
+in Flow Production Tracking but is linked to a Task that doesn’t have the <code class="docutils literal notranslate"><span class="pre">Sync</span> <span class="pre">In</span> <span class="pre">Jira</span></code> field checked,
+a Jira Worklog will _not_ be created.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Due to a Jira API limitation, it is not currently possible to set the Worklog assignee.
+Flow Production Tracking TimeLog assignees are stored as JSON data and can be trackable in a
+custom field on the Jira Issue.
+Please, look at the <a class="reference internal" href="#jira-workaround"><span class="std std-ref">Jira API Limitations &amp; Workarounds</span></a>
+section if you want to have more information.</p>
+</div>
+<p>When a Worklog is created in Jira, an associated Timelog will be created in Flow Production Tracking.
+The user who created the Worklog in Jira will be used as the Timelog assignee as soon as an associated
+user can be found in Flow Production Tracking.</p>
+</section>
+<section id="timelog-update">
+<h4>TimeLog Update<a class="headerlink" href="#timelog-update" title="Permalink to this heading"></a></h4>
+<p>When a TimeLog has an associated Jira Worklog and  is updated in Flow Production Tracking,
+the Timelog will be updated too.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Due to a Jira API limitation, it is not currently possible to set the Worklog assignee.
+So when a Timelog assignee is updated in Flow Production Tracking, the Jira Worklog
+assignee will remain unchanged. Since we are using a custom field on the Jira Issue to track
+TimeLog assignees, this Timelog field will be updated accordingly.</p>
+</div>
+<p>When a Worklog in Jira is updated and has an associated Flow Production Tracking Timelog,
+this Timelog field will be updated as well.</p>
+</section>
+<section id="timelog-deletion">
+<h4>TimeLog Deletion<a class="headerlink" href="#timelog-deletion" title="Permalink to this heading"></a></h4>
+<p>The Timelog syncer comes with two settings defined in the <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge/blob/master/settings.py">settings.py</a>
+file to manage the deletion of Timelog/Worklog in Flow Production Tracking and Jira.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;timelog&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="c1"># The syncer class to use</span>
+    <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;timelog_worklog.TimelogWorklogSyncer&quot;</span><span class="p">,</span>
+    <span class="c1"># And its specific settings which are passed to its __init__ method</span>
+    <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;issue_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span>
+        <span class="c1"># If True, when a worklog is deleted in Jira it will also be deleted in Flow Production Tracking</span>
+        <span class="s2">&quot;sync_sg_timelog_deletion&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="c1"># If True, when a timelog is deleted in Flow Production Tracking, it will also be deleted in Jira</span>
+        <span class="s2">&quot;sync_jira_worklog_deletion&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">sync_sg_timelog_deletion</span></code> is set to True and a Worklog is deleted in Jira, its associated Flow Production
+Tracking Timelog will also be deleted. If it is set to False, the Flow Production Tracking Timelog will remain unchanged.</p>
+<p>Likewise, when``sync_jira_worklog_deletion`` is set to True and a Timelog is deleted in Flow Production Tracking, its associated Jira Worklog will also be deleted. If it is set to False, the Jira worklog will remain unchanged.</p>
+</section>
+<section id="refresh-synced-task">
+<h4>Refresh Synced Task<a class="headerlink" href="#refresh-synced-task" title="Permalink to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">Sync</span> <span class="pre">In</span> <span class="pre">Jira</span></code> field on the Flow Production Tracking Task entity allows the user to control
+whether a Task is synced to a Jira Issue. Re-enabling this field on a Flow Production Tracking Task will launch a full synchronization
+of the Task and its TimeLogs.</p>
+<ul class="simple">
+<li><p>If Timelogs have been created in Flow Production Tracking when the Task sync was inactive, they will be created in Jira as new Worklogs.</p></li>
+<li><p>If a Task had Timelogs already created in Jira, they will be updated accordingly.</p></li>
+<li><p>If Timelogs have been deleted when the Task sync was inactive, they will not be deleted in Jira.</p></li>
+<li><p>If Worklogs have been created in Flow Production Tracking when the Task sync was inactive, they will be created in Flow Production Tracking as new Timelogs.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Task synchronizations start by examining the Flow Production Tracking Timelogs. Once they are created and/or updated in Jira, it will progress to pushing the remaining Jira Worklogs to Flow Production Tracking. That said, if someone modified a Worklog in Jira when the Task sync was inactive, and this is Worklog already has an associated Flow Production Tracking Timelog, the changes will not be reflected in Flow Production Tracking.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Timelog and Worklog deletions are not influenced when doing a full Task synchronizations.</p>
+</div>
+</section>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h3>
+<section id="setting-up-flow-production-tracking">
+<h4>Setting up Flow Production Tracking<a class="headerlink" href="#setting-up-flow-production-tracking" title="Permalink to this heading"></a></h4>
+<p>The following field must be created in Flow Production Tracking for each of the
+TimeLog entity types:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Entity Type</p></th>
+<th class="head"><p>Data Type</p></th>
+<th class="head"><p>Display Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Field Name (auto-generated)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>TimeLog</p></td>
+<td><p>Text</p></td>
+<td><p>Jira Key</p></td>
+<td><p>Synced Issue Key value in Jira</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sg_jira_key</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Enable the “<em>Ensure unique  value per project</em>” setting  in the Configure Field… dialog. To ensure this setting is enabled on the field, right-click the field header in list view, select <code class="docutils literal notranslate"><span class="pre">Configure</span> <span class="pre">field...</span></code>, check the “<em>Ensure unique  value per project</em>” option and update.</p>
+</div>
+</section>
+<section id="setting-up-jira">
+<h4>Setting up Jira<a class="headerlink" href="#setting-up-jira" title="Permalink to this heading"></a></h4>
+<p>Due to Jira API limitations, it is not possible to set the Jira Worklog assignee.
+To keep a track of the Flow Production Tracking Timelog assignees, create a custom field
+on the Jira Issue entity.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Shotgun TimeLogs</p></td>
+<td><p>Paragraph</p></td>
+<td><p>Stores the Flow Production Tracking Timelog assignees</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since this custom field stores JSON data, using the typical <code class="docutils literal notranslate"><span class="pre">Text</span></code> field type presents
+character length limitation issues. The <code class="docutils literal notranslate"><span class="pre">Paragraph</span></code> field type is required instead, but it’s important to note that it is editable and doesn’t  have a <code class="docutils literal notranslate"><span class="pre">read-only</span></code> property.</p>
+</div>
+<p>You also need to make sure that the following events are enabled in the <a class="reference internal" href="quickstart.html#jira-webhook"><span class="std std-ref">Jira Webhook</span></a> settings:</p>
+<ul class="simple">
+<li><p><strong>Worklog:</strong> created</p></li>
+<li><p><strong>Worklog:</strong> updated</p></li>
+<li><p><strong>Worklog:</strong> deleted</p></li>
+</ul>
+</section>
+</section>
+<section id="jira-api-limitations-workarounds">
+<span id="jira-workaround"></span><h3>Jira API Limitations &amp; Workarounds<a class="headerlink" href="#jira-api-limitations-workarounds" title="Permalink to this heading"></a></h3>
+<p>Due to some Jira API limitations, it is not currently possible to set or update the Jira Worklog assignees.
+To track Flow Production Tracking Timelog assignees, we have implemented a generic solution
+using a custom field on the Issue entity.</p>
+<p>If you would like to implement your own solution, it is possible to modify the content of the following methods in
+the Timelog syncer:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_add_sg_user_to_jira_worklog()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_remove_sg_user_from_jira_worklog()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_get_sg_user_from_jira_worklog()</span></code></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="services.html" class="btn btn-neutral float-left" title="Installing as a Service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="known_issues.html" class="btn btn-neutral float-right" title="Known Issues &amp; Compatibility Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Autodesk.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ 
+
+  <script type="text/javascript">
+    window.wafCCPAForceShow = true;
+    (function(a,b,c,d){
+      a='https://tags.tiqcdn.com/utag/autodesk/micro-basic/prod/utag.js';
+      b=document;c='script';d=b.createElement(c);d.src=a;d.type='text/java'+c;d.async=true;
+      a=b.getElementsByTagName(c)[0];a.parentNode.insertBefore(d,a);
+    })();
+  </script>
+
+
+</body>
+</html>

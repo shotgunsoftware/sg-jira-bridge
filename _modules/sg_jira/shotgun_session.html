@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.shotgun_session &mdash; sg-jira-bridge v0.5.0 documentation</title>
+  <title>sg_jira.shotgun_session &mdash; sg-jira-bridge v0.5.2 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -62,6 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -84,7 +85,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.0.<br>
+    <b>sg-jira-bridge</b> v0.5.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -319,7 +320,7 @@
         <span class="c1"># standard field.</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.consolidate_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.consolidate_entity">[docs]</a>    <span class="k">def</span> <span class="nf">consolidate_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.consolidate_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.consolidate_entity">[docs]</a>    <span class="k">def</span> <span class="nf">consolidate_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">retired_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Consolidate the given Flow Production Tracking Entity: collect additional field values,</span>
 <span class="sd">        ensure the Entity name is available under a &quot;name&quot; key.</span>
@@ -327,6 +328,7 @@
 <span class="sd">        :param shotgun_entity: A Flow Production Tracking Entity dictionary with at least its id</span>
 <span class="sd">                               and its type.</span>
 <span class="sd">        :param fields: An optional list of fields to add to the query.</span>
+<span class="sd">        :param retired_only: An optional boolean indicating if the entity we&#39;re consolidating has been retired.</span>
 <span class="sd">        :returns: The consolidated Flow Production Tracking Entity or `None` if it can&#39;t be retrieved.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -355,6 +357,7 @@
                 <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
                 <span class="p">[[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]],</span>
                 <span class="n">missing</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">shotgun_entity</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                <span class="n">retired_only</span><span class="o">=</span><span class="n">retired_only</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">consolidated</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>

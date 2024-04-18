@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.handlers.entity_issue_handler &mdash; sg-jira-bridge v0.5.0 documentation</title>
+  <title>sg_jira.handlers.entity_issue_handler &mdash; sg-jira-bridge v0.5.2 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -62,6 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -84,7 +85,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.0.<br>
+    <b>sg-jira-bridge</b> v0.5.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -319,22 +320,10 @@
         <span class="n">created_by</span> <span class="o">=</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;created_by&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">created_by</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;HumanUser&quot;</span><span class="p">:</span>
             <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span><span class="n">created_by</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
-                <span class="n">user_email</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
-                <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">find_jira_user</span><span class="p">(</span>
-                    <span class="n">user_email</span><span class="p">,</span>
-                    <span class="n">jira_project</span><span class="o">=</span><span class="n">jira_project</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="c1"># If we found a Jira user, use his name as the reporter name,</span>
-                <span class="c1"># otherwise use the reporter name retrieved from the user used</span>
-                <span class="c1"># to run the bridge.</span>
+            <span class="k">if</span> <span class="n">user</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">):</span>
+                <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_user</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span> <span class="n">jira_project</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">jira_user</span><span class="p">:</span>
-                    <span class="c1"># Jira Cloud no longer supports the name field and Jira server does not support</span>
-                    <span class="c1"># accountId. So we need different behaviour based on the type of Jira we&#39;re using</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">is_jira_cloud</span><span class="p">:</span>
-                        <span class="n">reporter</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;accountId&quot;</span><span class="p">:</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">accountId</span><span class="p">}</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">reporter</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+                    <span class="n">reporter</span> <span class="o">=</span> <span class="n">jira_user</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Ignoring created_by &#39;</span><span class="si">%s</span><span class="s2">&#39; since it&#39;s not a HumanUser.&quot;</span> <span class="o">%</span> <span class="n">created_by</span>

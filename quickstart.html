@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; sg-jira-bridge v0.5.0 documentation</title>
+  <title>Quick Start &mdash; sg-jira-bridge v0.5.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -83,9 +83,9 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#shotgunevents">shotgunEvents</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id2">Installing Required Modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Installing Required Modules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#enable-the-ptr-jira-trigger">Enable the PTR Jira Trigger</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id5">Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Authentication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#define-a-mapping-between-jira-and-flow-production-tracking-status-names">Define a Mapping Between Jira and Flow Production Tracking Status Names</a></li>
 </ul>
 </li>
@@ -104,6 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -126,7 +127,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.0.<br>
+    <b>sg-jira-bridge</b> v0.5.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -326,7 +327,7 @@ you’re syncing (eg <code class="docutils literal notranslate"><span class="pre
 </table>
 </section>
 <section id="jira-webhook">
-<h3>Jira Webhook<a class="headerlink" href="#jira-webhook" title="Permalink to this heading"></a></h3>
+<span id="id2"></span><h3>Jira Webhook<a class="headerlink" href="#jira-webhook" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p>Navigate to the Jira system settings (<em>Settings &gt; System &gt; WebHooks</em>)</p></li>
 <li><p>Click “Create Webhook”</p></li>
@@ -481,8 +482,8 @@ to create a dedicated user account in Jira for use with the bridge.</p>
 <h3>shotgunEvents<a class="headerlink" href="#shotgunevents" title="Permalink to this heading"></a></h3>
 <p>Details for configuring the Flow Production Tracking Event Daemon are available on the
 <a class="reference external" href="https://github.com/shotgunsoftware/shotgunEvents/wiki">shotgunEvents wiki</a></p>
-<section id="id2">
-<h4>Installing Required Modules<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h4>
+<section id="id3">
+<h4>Installing Required Modules<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h4>
 <p>We recommend <a class="reference external" href="https://docs.python-guide.org/dev/virtualenvs/">setting up a virtual environment</a>.
 Ensure you have <a class="reference external" href="https://pypi.org/project/virtualenv/">virtualenv</a> installed in your global Python installation.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a virtualenv</span>
@@ -516,8 +517,8 @@ shotgunEvents conf file:</p>
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h4>Authentication<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h4>
+<section id="id6">
+<h4>Authentication<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h4>
 <p>The trigger uses the following environment variables to retrieve Flow Production Tracking
 credentials:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sg_jira_event_trigger.py credentials</span>

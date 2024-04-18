@@ -25,4 +25,5 @@ is configured  in Jira for your Project.
     debugging
     developer
     services
+    examples
     known_issues

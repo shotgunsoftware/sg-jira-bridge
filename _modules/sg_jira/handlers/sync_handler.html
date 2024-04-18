@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge v0.5.0 documentation</title>
+  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge v0.5.2 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -62,6 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -84,7 +85,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.0.<br>
+    <b>sg-jira-bridge</b> v0.5.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -134,6 +135,7 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">jira</span> <span class="kn">import</span> <span class="n">JIRAError</span>
 
@@ -150,6 +152,16 @@
 <span class="sd">    This base class defines the interface all handlers should support and</span>
 <span class="sd">    provides some helpers which can be useful to all handlers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># This will match JIRA accounts in the following format</span>
+    <span class="c1"># 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0</span>
+    <span class="c1"># 24 hexdecimal characters: 5b6a25ab7c14b729f2208297</span>
+    <span class="c1"># We&#39;re only matching the first 20 characters instead of the first 24, since the</span>
+    <span class="c1"># account id format isn&#39;t documented.</span>
+    <span class="c1"># It could in theory match a very long user name that uses hexadecimal characters</span>
+    <span class="c1"># only, but that would be unlikely.</span>
+    <span class="c1"># https://regex101.com/r/E1ysHQ/1</span>
+    <span class="n">ACCOUNT_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^[0-9a-f:-]</span><span class="si">{20}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SyncHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -230,6 +242,95 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span>
         <span class="k">return</span> <span class="n">jira_issue</span></div>
+
+<div class="viewcode-block" id="SyncHandler.get_jira_user"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given an email address, find the associated Jira User in the given Jira Project.</span>
+
+<span class="sd">        :param user_email: The email address of the user we want to retrieve</span>
+<span class="sd">        :param jira_project: An instance of :class:`jira.resources.Project` we want to retrieve the user from</span>
+<span class="sd">        :returns: A :class:`jira.resources.User` instance or None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">reporter</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">find_jira_user</span><span class="p">(</span>
+            <span class="n">user_email</span><span class="p">,</span>
+            <span class="n">jira_project</span><span class="o">=</span><span class="n">jira_project</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># If we found a Jira user, use his name as the reporter name,</span>
+        <span class="c1"># otherwise use the reporter name retrieved from the user used</span>
+        <span class="c1"># to run the bridge.</span>
+        <span class="k">if</span> <span class="n">jira_user</span><span class="p">:</span>
+            <span class="c1"># Jira Cloud no longer supports the name field and Jira server does not support</span>
+            <span class="c1"># accountId. So we need different behaviour based on the type of Jira we&#39;re using</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">is_jira_cloud</span><span class="p">:</span>
+                <span class="n">reporter</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;accountId&quot;</span><span class="p">:</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">accountId</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reporter</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">reporter</span></div>
+
+<div class="viewcode-block" id="SyncHandler.get_sg_user"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_sg_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_sg_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resolve the Flow Production Tracking user associated to the JIRA user passed in.</span>
+
+<span class="sd">        :param str user_id: Value of the to or from of a JIRA changelog.</span>
+<span class="sd">        :param dict jira_user: User resource, typically the assignee field on an issue. Can be None</span>
+
+<span class="sd">        :returns: A FPTR user entity dictionary or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Due to GDPR, some changes were done to JIRA Cloud which complicates</span>
+        <span class="c1"># matching users by email. So let&#39;s use the right resolver based</span>
+        <span class="c1"># on the server type.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">is_jira_cloud</span><span class="p">:</span>
+
+            <span class="n">sg_field</span> <span class="o">=</span> <span class="s2">&quot;sg_jira_account_id&quot;</span>
+            <span class="n">sg_value</span> <span class="o">=</span> <span class="n">user_id</span>
+
+            <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sg_value</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;accountId&quot;</span><span class="p">]</span>
+
+            <span class="c1"># jira_user is None when the user resolving code is trying to resolve the `from` user in the changelog.</span>
+            <span class="c1"># When this happens, we only have a user id in the `from` to indicate what the original value was.</span>
+            <span class="c1">#</span>
+            <span class="c1"># Interestingly, when the user field is updated via the JIRA API,</span>
+            <span class="c1"># the username is passed in instead of the account id in the `from` field, so we&#39;ll have to</span>
+            <span class="c1"># resolve it.</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ACCOUNT_ID_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;The changelog&#39;s to/from contains a user name. accountId will be retrieved.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="s2">&quot;key&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Unable to find JIRA user </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="n">sg_value</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">accountId</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">sg_field</span> <span class="o">=</span> <span class="s2">&quot;email&quot;</span>
+
+            <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sg_value</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sg_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">emailAddress</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># The code that calls this method should always have a user passed in. If there is not</span>
+                <span class="c1"># user_id or jira_user value, we shouldn&#39;t even be calling this method in the first</span>
+                <span class="c1"># place!</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;jira_user or user_id cannot be both None.&quot;</span><span class="p">)</span>
+
+        <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
+            <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span> <span class="p">[[</span><span class="n">sg_field</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">sg_value</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to find a Shotgun user with </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sg_field</span><span class="p">,</span> <span class="n">sg_value</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sg_user</span></div>
 
 <div class="viewcode-block" id="SyncHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

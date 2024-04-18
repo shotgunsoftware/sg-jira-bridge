@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Resources &mdash; sg-jira-bridge v0.5.0 documentation</title>
+  <title>Developer Resources &mdash; sg-jira-bridge v0.5.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -117,6 +117,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
 
@@ -139,7 +140,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.0.<br>
+    <b>sg-jira-bridge</b> v0.5.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -363,11 +364,11 @@ must be overridden <em>in addition to the ones required by</em>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.shotgun_session.</span></span><span class="sig-name descname"><span class="pre">ShotgunSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition"></a></dt>
-<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
 <p>Ensures all the values we get from Flow Production Tracking are unicode and not utf-8 encoded
 strings. Utf-8 encodes unicode values before sending them to Flow Production Tracking.</p>
-<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
+<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.current_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_user</span></span><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition"></a></dt>
@@ -476,7 +477,7 @@ Entity.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.consolidate_entity">
-<span class="sig-name descname"><span class="pre">consolidate_entity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shotgun_entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.consolidate_entity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.consolidate_entity" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">consolidate_entity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shotgun_entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retired_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.consolidate_entity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.consolidate_entity" title="Permalink to this definition"></a></dt>
 <dd><p>Consolidate the given Flow Production Tracking Entity: collect additional field values,
 ensure the Entity name is available under a “name” key.</p>
 <dl class="field-list simple">
@@ -485,6 +486,7 @@ ensure the Entity name is available under a “name” key.</p>
 <li><p><strong>shotgun_entity</strong> – A Flow Production Tracking Entity dictionary with at least its id
 and its type.</p></li>
 <li><p><strong>fields</strong> – An optional list of fields to add to the query.</p></li>
+<li><p><strong>retired_only</strong> – An optional boolean indicating if the entity we’re consolidating has been retired.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1185,6 +1187,40 @@ provides some helpers which can be useful to all handlers.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.handlers.SyncHandler.get_jira_user">
+<span class="sig-name descname"><span class="pre">get_jira_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_email</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_project</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.get_jira_user"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.get_jira_user" title="Permalink to this definition"></a></dt>
+<dd><p>Given an email address, find the associated Jira User in the given Jira Project.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_email</strong> – The email address of the user we want to retrieve</p></li>
+<li><p><strong>jira_project</strong> – An instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> we want to retrieve the user from</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.User</span></code> instance or None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.handlers.SyncHandler.get_sg_user">
+<span class="sig-name descname"><span class="pre">get_sg_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.get_sg_user"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.get_sg_user" title="Permalink to this definition"></a></dt>
+<dd><p>Resolve the Flow Production Tracking user associated to the JIRA user passed in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Value of the to or from of a JIRA changelog.</p></li>
+<li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – User resource, typically the assignee field on an issue. Can be None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A FPTR user entity dictionary or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.SyncHandler.setup">
 <span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/handlers/sync_handler.html#SyncHandler.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.handlers.SyncHandler.setup" title="Permalink to this definition"></a></dt>
 <dd><p>This method can be re-implemented in deriving classes to Check the Jira
@@ -1377,6 +1413,40 @@ sync didn’t happen for any reason.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.handlers.EntityIssueHandler.get_jira_user">
+<span class="sig-name descname"><span class="pre">get_jira_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_email</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.get_jira_user" title="Permalink to this definition"></a></dt>
+<dd><p>Given an email address, find the associated Jira User in the given Jira Project.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_email</strong> – The email address of the user we want to retrieve</p></li>
+<li><p><strong>jira_project</strong> – An instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> we want to retrieve the user from</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.User</span></code> instance or None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.handlers.EntityIssueHandler.get_sg_user">
+<span class="sig-name descname"><span class="pre">get_sg_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.get_sg_user" title="Permalink to this definition"></a></dt>
+<dd><p>Resolve the Flow Production Tracking user associated to the JIRA user passed in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Value of the to or from of a JIRA changelog.</p></li>
+<li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – User resource, typically the assignee field on an issue. Can be None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A FPTR user entity dictionary or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.handlers.EntityIssueHandler.process_shotgun_event">
 <span class="sig-name descname"><span class="pre">process_shotgun_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EntityIssueHandler.process_shotgun_event" title="Permalink to this definition"></a></dt>
 <dd><p>Process the given Flow Production Tracking event for the given Flow Production Tracking Entity</p>
@@ -1545,6 +1615,40 @@ This can be used as well to cache any value which is slow to retrieve.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> instance or None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.handlers.EnableSyncingHandler.get_jira_user">
+<span class="sig-name descname"><span class="pre">get_jira_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_email</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.get_jira_user" title="Permalink to this definition"></a></dt>
+<dd><p>Given an email address, find the associated Jira User in the given Jira Project.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_email</strong> – The email address of the user we want to retrieve</p></li>
+<li><p><strong>jira_project</strong> – An instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Project</span></code> we want to retrieve the user from</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.User</span></code> instance or None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.handlers.EnableSyncingHandler.get_sg_user">
+<span class="sig-name descname"><span class="pre">get_sg_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jira_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.handlers.EnableSyncingHandler.get_sg_user" title="Permalink to this definition"></a></dt>
+<dd><p>Resolve the Flow Production Tracking user associated to the JIRA user passed in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Value of the to or from of a JIRA changelog.</p></li>
+<li><p><strong>jira_user</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – User resource, typically the assignee field on an issue. Can be None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A FPTR user entity dictionary or None</p>
 </dd>
 </dl>
 </dd></dl>
