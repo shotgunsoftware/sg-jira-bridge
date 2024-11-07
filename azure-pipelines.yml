@@ -25,12 +25,12 @@ jobs:
 - template: azure-pipelines/tests.yml
   parameters:
     name: Linux
-    vm_image: 'ubuntu-20.04'
+    vm_image: 'ubuntu-latest'
 - template: azure-pipelines/tests.yml
   parameters:
     name: macOS
-    vm_image: 'macOS-12'
+    vm_image: 'macOS-latest'
 - template: azure-pipelines/tests.yml
   parameters:
     name: Windows
-    vm_image: 'windows-2022'
+    vm_image: 'windows-latest'
