@@ -64,7 +64,9 @@ class ShotgunSession(object):
             **safe_kwargs
         )
 
-        self._shotgun_schemas = {}
+        self._shotgun_entities = []  # will be used to store FPT entities list
+        self._shotgun_schemas = {}  # will be used to store FPT fields by entity type
+
         # Retrieve our current login, this does not seem to be available from
         # the connection?
         self._shotgun_user = self.find_one(
@@ -89,6 +91,18 @@ class ShotgunSession(object):
                  be used with this bridge.
         """
         self.assert_field("Project", SHOTGUN_JIRA_ID_FIELD, "text", check_unique=True)
+
+    def assert_entity(self, entity_type):
+        """
+        Check if the given entity exists in Flow Production Tracking site.
+
+        :param str entity_type: A Flow Production Tracking Entity type.
+        :raises RuntimeError: if the entity does not exist.
+        """
+        if not self._shotgun_entities:
+            self._shotgun_entities = self._shotgun.schema_entity_read().keys()
+        if entity_type not in self._shotgun_entities:
+            raise RuntimeError(f"Missing {entity_type} entity type in the FPT schema.")
 
     def assert_field(self, entity_type, field_name, field_type, check_unique=False):
         """
@@ -157,6 +171,7 @@ class ShotgunSession(object):
         else:
             logger.debug("Clearing all cached Shotgun schemas")
             self._shotgun_schemas = {}
+            self._shotgun_entities = []
 
     @staticmethod
     def get_entity_name_field(entity_type):

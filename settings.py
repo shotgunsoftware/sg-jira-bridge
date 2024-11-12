@@ -54,7 +54,7 @@ LOGGING = {
         # Set web server level to WARNING so we don't hear about every request
         # If you want to see the requests in the logs, set this to INFO.
         "webapp": {
-            "level": "WARNING"
+            "level": "DEBUG"
         }
     },
     # Some formatters, mainly as examples
@@ -73,12 +73,12 @@ LOGGING = {
     "handlers": {
         # Print out any message to stdout
         "console": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "standard"
         },
         "file": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "standard",
             # this location should be updated to where you store logs
@@ -131,6 +131,27 @@ SYNC = {
         "settings": {
             "log_level": logging.DEBUG
         },
-    }
+    },
+    "entities": {
+        "syncer": "entities_sync.EntitiesSyncer",
+        "settings": {
+            "entity_mapping": [
+                {
+                    "sg_entity": "Task",
+                    "jira_issue_type": "Task",
+                    "field_mapping": [
+                        {
+                            "sg_field": {"name": "content", "type": "text"},
+                            "jira_field": "summary",
+                        },
+{
+                            "sg_field": {"name": "sg_description", "type": "text"},
+                            "jira_field": "description",
+                        }
+                    ]
+                }
+            ]
+        },
+    },
 }
 # fmt: on
