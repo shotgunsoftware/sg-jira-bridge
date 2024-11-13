@@ -16,7 +16,7 @@ class Syncer(object):
     or accept and process events.
     """
 
-    def __init__(self, name, bridge, **kwargs):
+    def __init__(self, name, bridge, hook_class, **kwargs):
         """
         Instatiate a new syncer for the given bridge.
 
@@ -29,6 +29,7 @@ class Syncer(object):
         # Set a logger per instance: this allows to filter logs with the
         # syncer name, or even have log file handlers per syncer
         self._logger = logging.getLogger(__name__).getChild(self._name)
+        self._hook = hook_class(self._bridge, self._logger)
 
     @property
     def bridge(self):
@@ -50,6 +51,11 @@ class Syncer(object):
         Return a connected Jira handle.
         """
         return self._bridge.jira
+
+    @property
+    def hook(self):
+        """"""
+        return self._hook
 
     @property
     def handlers(self):

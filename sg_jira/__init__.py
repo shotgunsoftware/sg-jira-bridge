@@ -30,3 +30,4 @@ from .bridge import Bridge
 from .syncer import Syncer
 from .jira_session import JiraSession
 from .task_issue_syncer import TaskIssueSyncer
+from .hook import JiraHook

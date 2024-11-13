@@ -134,6 +134,7 @@ SYNC = {
     },
     "entities": {
         "syncer": "entities_sync.EntitiesSyncer",
+        # "hook": "/Users/darkshot/Work/__TMP/another_folder/hook.py",
         "settings": {
             "entity_mapping": [
                 {
@@ -144,7 +145,7 @@ SYNC = {
                             "sg_field": {"name": "content", "type": "text"},
                             "jira_field": "summary",
                         },
-{
+                        {
                             "sg_field": {"name": "sg_description", "type": "text"},
                             "jira_field": "description",
                         }
