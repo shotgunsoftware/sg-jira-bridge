@@ -142,13 +142,37 @@ SYNC = {
                     "jira_issue_type": "Task",
                     "field_mapping": [
                         {
-                            "sg_field": {"name": "content", "type": "text"},
+                            "sg_field": "content",
                             "jira_field": "summary",
                         },
                         {
-                            "sg_field": {"name": "sg_description", "type": "text"},
+                            "sg_field": "sg_description",
                             "jira_field": "description",
-                        }
+                        },
+                        {
+                            "sg_field": "task_assignees",
+                            "jira_field": "assignee",
+                        },
+                        {
+                            "sg_field": "tags",
+                            "jira_field": "labels",
+                        },
+                        {
+                            "sg_field": "created_by",
+                            "jira_field": "reporter",
+                        },
+                        {
+                            "sg_field": "due_date",
+                            "jira_field": "duedate",
+                        },
+                        {
+                            "sg_field": "est_in_mins",
+                            "jira_field": "timetracking",
+                        },
+                        {
+                            "sg_field": "addressings_cc",
+                            "jira_field": "watches",
+                        },
                     ]
                 }
             ]

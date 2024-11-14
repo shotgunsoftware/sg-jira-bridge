@@ -126,7 +126,7 @@ class ShotgunSession(object):
                     field_name,
                 )
             )
-        if field["data_type"]["value"] != field_type:
+        if field_type and field["data_type"]["value"] != field_type:
             raise RuntimeError(
                 "Invalid type '%s' for Shotgun field %s.%s, it must be '%s'"
                 % (field["data_type"]["value"], entity_type, field_name, field_type)

@@ -532,7 +532,87 @@ class JiraSession(jira.client.JIRA):
         :raises ValueError: if invalid and unfixable data is provided.
         """
         jira_issue_type = self.issue_type_by_name(issue_type, project=jira_project)
-        fields_createmeta = self.get_project_issue_fields(jira_project, issue_type)
+        # Retrieve creation meta data for the project / issue type
+        # Note: there is a new simpler Project type in Jira where createmeta is not
+        # available.
+        # https://confluence.atlassian.com/jirasoftwarecloud/working-with-agility-boards-945104895.html
+        # https://community.developer.atlassian.com/t/jira-cloud-next-gen-projects-and-connect-apps/23681/14
+        # It seems a Project `simplified` key can help distinguish between old
+        # school projects and new simpler projects.
+        # TODO: cache the retrieved data to avoid multiple requests to the server
+
+        if self._is_jira_cloud or self._version < (9, 0, 0):
+            # Existing logic works for Jira Cloud or Jira Server 8 or prior.
+            create_meta_data = self.createmeta(
+                jira_project,
+                issuetypeIds=jira_issue_type.id,
+                expand="projects.issuetypes.fields",
+            )
+            # We asked for a single project / single issue type, so we can just pick
+            # the first entry, if it exists.
+            if (
+                not create_meta_data["projects"]
+                or not create_meta_data["projects"][0]["issuetypes"]
+            ):
+                logger.debug(
+                    "Create meta data for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (
+                        jira_project,
+                        jira_issue_type.id,
+                    )
+                )
+            fields_createmeta = create_meta_data["projects"][0]["issuetypes"][0][
+                "fields"
+            ]
+        else:
+            # createmeta is not supported on Jira Server 9 and Python client 3.5.0
+            # Instead, we'll use the new createmeta_issuetypes and createmeta_fieldtypes methods
+            create_meta_data = self.createmeta_issuetypes(
+                jira_project,
+            )
+            # We asked for a single project / single issue type, so we can just pick
+            # the first entry, if it exists.
+            if (
+                not create_meta_data["values"]
+                or not len(create_meta_data["values"]) > 0
+            ):
+                logger.error(
+                    "Create meta data issue types for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (
+                        jira_project,
+                        jira_issue_type.id,
+                    )
+                )
+            # Get the field types because createmeta_issuetypes doesn't expand the fields
+            create_meta_data_fieldtypes = self.createmeta_fieldtypes(
+                jira_project,
+                issueTypeId=create_meta_data["values"][0]["id"],
+            )
+            if not create_meta_data_fieldtypes["values"]:
+                logger.debug(
+                    "Create meta data field types for Project %s Issue type %s: %s"
+                    % (jira_project, jira_issue_type.id, create_meta_data_fieldtypes)
+                )
+                raise RuntimeError(
+                    "Unable to retrieve create meta data for Project %s Issue type %s."
+                    % (
+                        jira_project,
+                        jira_issue_type.id,
+                    )
+                )
+            # Convert response to be backwards compatible
+            fields_createmeta = {
+                value["fieldId"]: value
+                for value in create_meta_data_fieldtypes["values"]
+            }
 
         # Make a shallow copy so we can add/delete keys
         data = dict(data)
@@ -614,56 +694,3 @@ class JiraSession(jira.client.JIRA):
                 % (jira_issue.fields.issuetype, jira_issue.key)
             )
         return jira_edit_fields
-
-    def get_project_issue_fields(self, jira_project, issue_type):
-        """
-        Return the issue fields for the given Jira Project and issue type.
-        This is a convenience method that could be replaced once the Jira API updated to 3.8.0
-        https://jira.readthedocs.io/api.html#jira.client.JIRA.project_issue_fields
-
-        :param jira_project: A :class:`jira.resources.Project` instance.
-        :param issue_type: The target Issue type name.
-        :returns: A dictionary where keys are Jira Issue field ids and values are fields properties
-        """
-
-        jira_issue_type = self.issue_type_by_name(issue_type, project=jira_project)
-
-        if self._is_jira_cloud or self._version < (9, 0, 0):
-            # Existing logic works for Jira Cloud or Jira Server 8 or prior.
-            create_meta_data = self.createmeta(
-                jira_project,
-                issuetypeIds=jira_issue_type.id,
-                expand="projects.issuetypes.fields",
-            )
-            # We asked for a single project / single issue type, so we can just pick
-            # the first entry, if it exists.
-            if not create_meta_data["projects"] or not create_meta_data["projects"][0]["issuetypes"]:
-                raise RuntimeError(
-                    f"Unable to retrieve create meta data for Project {jira_project} Issue type {issue_type}."
-                )
-            return create_meta_data["projects"][0]["issuetypes"][0]["fields"]
-
-        else:
-            # createmeta is not supported on Jira Server 9 and Python client 3.5.0
-            # Instead, we'll use the new createmeta_issuetypes and createmeta_fieldtypes methods
-            create_meta_data = self.createmeta_issuetypes(jira_project)
-            # We asked for a single project / single issue type, so we can just pick
-            # the first entry, if it exists.
-            if not create_meta_data["values"] or not len(create_meta_data["values"]) > 0:
-                raise RuntimeError(
-                    f"Unable to retrieve create meta data for Project {jira_project} Issue type {issue_type}."
-                )
-            # Get the field types because createmeta_issuetypes doesn't expand the fields
-            create_meta_data_fieldtypes = self.createmeta_fieldtypes(
-                jira_project,
-                issueTypeId=create_meta_data["values"][0]["id"],
-            )
-            if not create_meta_data_fieldtypes["values"]:
-                raise RuntimeError(
-                    f"Unable to retrieve create meta data for Project {jira_project} Issue type {issue_type}."
-                )
-            # Convert response to be backwards compatible
-            return {
-                value["fieldId"]: value
-                for value in create_meta_data_fieldtypes["values"]
-            }
