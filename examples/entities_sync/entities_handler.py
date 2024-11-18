@@ -12,6 +12,7 @@ from sg_jira.constants import SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD,
 #  - handle specific sg entities (list for example)/jira values in the `_sync_sg_fields_to_jira` method
 #  - find a way to check if a field exist for a specific issue type when accepting SG event
 #  - handle Timelog/Note specific workflow
+#  - add a new key in the settings to specify the sync direction (only from SG to Jira, only from Jira to SG, both way)
 
 class EntitiesHandler(SyncHandler):
     """
@@ -84,6 +85,14 @@ class EntitiesHandler(SyncHandler):
                 if "jira_field" not in field_mapping.keys():
                     raise RuntimeError("Field mapping does not contain jira_field key, please check your settings.")
                 self._jira.assert_field(field_mapping["jira_field"])
+
+            # if the user has defined a status mapping, check that everything is correctly setup
+            if "status_mapping" in entity_mapping.keys():
+                if "sg_field" not in entity_mapping["status_mapping"].keys():
+                    raise RuntimeError("Status mapping does not contain sg_field key, please check your settings.")
+                if "mapping" not in entity_mapping["status_mapping"].keys():
+                    raise RuntimeError("Status mapping does not contain mapping key, please check your settings.")
+                # TODO: do we want to check that the status really exist in the two DBs
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -268,10 +277,13 @@ class EntitiesHandler(SyncHandler):
         Flow Production Tracking to Jira event.
         :returns: A list of strings.
         """
+        sg_fields = []
         for entity_mapping in self.__entity_mapping:
             if entity_mapping["sg_entity"] == entity_type:
-                return [m["sg_field"]for m in entity_mapping["field_mapping"]]
-        return []
+                sg_fields = [m["sg_field"]for m in entity_mapping["field_mapping"]]
+            if entity_mapping.get("status_mapping"):
+                sg_fields.append(entity_mapping["status_mapping"]["sg_field"])
+        return sg_fields
 
     def __sg_get_entity_fields(self, entity_type):
         """Get all the FPTR fields required when querying the database"""
@@ -299,11 +311,34 @@ class EntitiesHandler(SyncHandler):
             raise ValueError("Only jira_field or sg_field must be provided, but not both of them")
 
         entity_mapping = self.__get_sg_entity_settings(entity_type)
+
+        # special use cases for the status fields
+        if jira_field and jira_field == "status" and entity_mapping["status_mapping"]:
+            return {"sg_field": entity_mapping["status_mapping"]["sg_field"], "jira_field": "status"}
+
+        if sg_field and entity_mapping["status_mapping"] and sg_field == entity_mapping["status_mapping"]["sg_field"]:
+            return {"sg_field": sg_field, "jira_field": "status"}
+
         for f in entity_mapping["field_mapping"]:
             if jira_field and f["jira_field"] == jira_field:
                 return f
             elif sg_field and f["sg_field"] == sg_field:
                 return f
+
+    def __get_status_mapping(self, entity_type, sg_status=None, jira_status=None):
+        """"""
+        if not sg_status and not jira_status:
+            raise ValueError("sg_status or jira_status must be provided")
+
+        if sg_status and jira_status:
+            raise ValueError("Only sg_status or jira_status must be provided, but not both of them")
+
+        entity_mapping = self.__get_sg_entity_settings(entity_type)
+        for s_status, j_status in entity_mapping["status_mapping"]["mapping"].items():
+            if sg_status and sg_status == s_status:
+                return j_status
+            elif jira_status and j_status == jira_status:
+                return s_status
 
     def _get_jira_entity(self, entity_type, entity_id, jira_key):
         """Get the Jira object for the given Jira entity ID and entity type."""
@@ -438,6 +473,10 @@ class EntitiesHandler(SyncHandler):
                 self._sync_sg_watchers_to_jira(sg_entity[sg_field], jira_issue)
                 continue
 
+            if jira_field == "status":
+                self._sync_sg_status_to_jira(sg_entity[sg_field], sg_entity["type"], jira_issue)
+                continue
+
             # check that we have permission to edit this field
             if jira_field not in editable_jira_fields:
                 self._logger.warning(
@@ -525,3 +564,20 @@ class EntitiesHandler(SyncHandler):
                 self._jira.remove_watcher(jira_issue, jira_watcher.displayName)
 
         return True
+
+    def _sync_sg_status_to_jira(self, sg_value, entity_type, jira_issue):
+        """"""
+
+        jira_status = self.__get_status_mapping(entity_type, sg_status=sg_value)
+        if not jira_status:
+            self._logger.warning(
+                "Unable to find a matching Jira status for Flow Production Tracking "
+                f"status '{sg_value}'"
+            )
+            return False
+
+        return self._jira.set_jira_issue_status(
+            jira_issue,
+            jira_status,
+            f"Updated from Flow Production Tracking {entity_type} moving to {sg_value}"
+        )

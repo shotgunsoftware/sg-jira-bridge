@@ -173,7 +173,18 @@ SYNC = {
                             "sg_field": "addressings_cc",
                             "jira_field": "watches",
                         },
-                    ]
+                    ],
+                    "status_mapping": {
+                        "sg_field": "sg_status_list",
+                        "mapping": {
+                            "wtg": "To Do",
+                            "rdy": "Open",
+                            "ip": "In Progress",
+                            "fin": "Done",
+                            "hld": "Backlog",
+                            "omt": "Closed",
+                        }
+                    }
                 }
             ]
         },
