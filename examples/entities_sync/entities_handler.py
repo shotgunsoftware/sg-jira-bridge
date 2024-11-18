@@ -486,8 +486,6 @@ class EntitiesHandler(SyncHandler):
                 sync_with_errors = True
                 continue
 
-            # TODO: handle specific use cases (sg_status_list )
-
             # get the Jira value associated to the SG value as sometimes we need to perform some kind of conversion
             try:
                 if isinstance(sg_entity[sg_field], list):
