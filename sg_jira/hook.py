@@ -5,12 +5,25 @@
 # this software in either electronic or hard copy form.
 #
 
+import datetime
+import re
+
 import jira
 
-from sg_jira.errors import InvalidShotgunValue
+from sg_jira.errors import InvalidShotgunValue, InvalidJiraValue
 
 
 class JiraHook(object):
+
+    # This will match JIRA accounts in the following format
+    # 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0
+    # 24 hexdecimal characters: 5b6a25ab7c14b729f2208297
+    # We're only matching the first 20 characters instead of the first 24, since the
+    # account id format isn't documented.
+    # It could in theory match a very long user name that uses hexadecimal characters
+    # only, but that would be unlikely.
+    # https://regex101.com/r/E1ysHQ/1
+    ACCOUNT_ID_RE = re.compile("^[0-9a-f:-]{20}")
 
     def __init__(self, bridge, logger):
         """Class constructor"""
@@ -136,3 +149,92 @@ class JiraHook(object):
             )
 
         return jira_value
+
+    def get_sg_value_from_jira_value(self, jira_value, sg_project, sg_field_properties):
+        """"""
+
+        sg_field = sg_field_properties["name"]["value"]
+
+        data_type = sg_field_properties["data_type"]["value"]
+        if data_type == "text":
+            return jira_value if jira_value else ""
+
+        if data_type == "list":
+            # TODO: do we want to modify the list allowed value on the fly
+            return jira_value if jira_value else ""
+
+        if data_type in ["multi_entity", "entity"]:
+            if not jira_value:
+                return [] if data_type == "multi_entity" else None
+            # Jira field might contain a single entity and be mapped to a FPTR multi-entity field
+            if not isinstance(jira_value, list):
+                jira_value = [jira_value]
+            allowed_entities = sg_field_properties["properties"]["valid_types"]["value"]
+            sg_entities = []
+            for entity_name in jira_value:
+                if isinstance(entity_name, jira.resources.User):
+                    sg_value = self.get_sg_user_from_jira_user(entity_name)
+                else:
+                    sg_value = self._shotgun.match_entity_by_name(entity_name, allowed_entities, sg_project)
+                if not sg_value:
+                    # TODO: do we want to enable entity creation when syncing
+                    continue
+                    # for now, we only support multi-entity fields with a single allowed entity type
+                    # if len(allowed_entities) != 1:
+                    #     raise ValueError("Flow Production Tracking multi-entity field must have only one entity type defined.")
+                sg_entities.append(sg_value)
+            if data_type == "entity" and len(sg_entities) > 0:
+                return sg_entities[0]
+            return sg_entities
+
+        if data_type == "date":
+            # Jira dates are stored as string
+            if not jira_value:
+                return None
+            try:
+                # Validate the date string
+                datetime.datetime.strptime(jira_value, "%Y-%m-%d")
+            except ValueError as e:
+                # Notify the caller that the value is not right
+                raise InvalidJiraValue(
+                    sg_field,
+                    jira_value,
+                    f"Unable to parse Jira value as a date."
+                )
+            return jira_value
+
+        if data_type in ["duration", "number"]:
+            if not jira_value:
+                return None
+            elif isinstance(jira_value, jira.resources.TimeTracking):
+                return jira_value.timeSpentSeconds / 60
+            try:
+                return int(jira_value)
+            except ValueError as e:
+                raise InvalidJiraValue(
+                    sg_field,
+                    jira_value,
+                    "Unable to parse Jira value as integer"
+                )
+
+        if data_type == "checkbox":
+            return bool(jira_value)
+
+        raise ValueError(
+            f"Unable to parse Jira value: invalid FPTR data type {data_type}"
+        )
+
+    def get_sg_user_from_jira_user(self, jira_user):
+        """"""
+
+        if self._jira.is_jira_cloud:
+            sg_filters = [["sg_jira_account_id", "is", jira_user.accountId]]
+        else:
+            sg_filters = [["email", "is", jira_user.emailAddress]]
+
+        if not sg_filters:
+            raise ValueError(
+                f"Couldn't find valid FPTR filters to get the user associated to this Jira user {jira_user}"
+            )
+
+        return self._shotgun.find_one("HumanUser", sg_filters, ["email", "name"])
