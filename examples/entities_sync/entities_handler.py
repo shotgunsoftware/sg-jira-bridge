@@ -5,9 +5,11 @@
 # this software in either electronic or hard copy form.
 #
 
+import jira
+
 from sg_jira.handlers import SyncHandler
-from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD, JIRA_SHOTGUN_TYPE_FIELD,
-                               JIRA_SHOTGUN_ID_FIELD, JIRA_SYNC_IN_FPTR_FIELD)
+from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD,
+                               JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SYNC_IN_FPTR_FIELD)
 
 # TODO:
 #  - handle specific sg entities (list for example)/jira values in the `_sync_sg_fields_to_jira` method
@@ -254,9 +256,10 @@ class EntitiesHandler(SyncHandler):
         jira_project_key = sg_entity[f"project.Project.{SHOTGUN_JIRA_ID_FIELD}"]
         jira_project = self.get_jira_project(jira_project_key)
 
-        # if the entity doesn't exist, create it
+        # if the entity doesn't exist, create it and then sync all the fields
         if not jira_entity:
             jira_entity = self._create_jira_entity(sg_entity, jira_project)
+            return self._sync_sg_fields_to_jira(sg_entity, jira_entity)
 
         # in case the sync checkbox has been triggered in FPTR, we want to perform a full sync of the entity
         if sg_field == SHOTGUN_SYNC_IN_JIRA_FIELD:
@@ -475,10 +478,18 @@ class EntitiesHandler(SyncHandler):
 
         # special use cases for the status fields
         if jira_field and jira_field == "status" and entity_mapping["status_mapping"]:
-            return {"sg_field": entity_mapping["status_mapping"]["sg_field"], "jira_field": "status"}
+            return {
+                "sg_field": entity_mapping["status_mapping"]["sg_field"],
+                "jira_field": "status",
+                "sync_direction": entity_mapping["status_mapping"].get("sync_direction", "both_way")
+            }
 
         if sg_field and entity_mapping["status_mapping"] and sg_field == entity_mapping["status_mapping"]["sg_field"]:
-            return {"sg_field": sg_field, "jira_field": "status"}
+            return {
+                "sg_field": sg_field,
+                "jira_field": "status",
+                "sync_direction": entity_mapping["status_mapping"].get("sync_direction", "both_way")
+            }
 
         for f in entity_mapping["field_mapping"]:
             if jira_field and f["jira_field"] == jira_field:
@@ -573,6 +584,8 @@ class EntitiesHandler(SyncHandler):
             else:
                 summary_field = self._shotgun.get_entity_name_field(sg_entity["type"])
 
+            shotgun_url = self._shotgun.get_entity_page_url(sg_entity)
+
             self._logger.info(
                 f"Creating Jira Issue in Project {jira_project} for Flow Production Tracking {sg_entity['type']} "
                 f"{sg_entity['name']} ({sg_entity['id']})"
@@ -584,7 +597,8 @@ class EntitiesHandler(SyncHandler):
                 "description": "",
                 self._jira.jira_shotgun_id_field: str(sg_entity["id"]),
                 self._jira.jira_shotgun_type_field: sg_entity["type"],
-                # self._jira.jira_shotgun_url_field: shotgun_url,
+                self._jira.jira_shotgun_url_field: shotgun_url,
+                self.__jira_sync_in_fptr_field_id: {"value": "True"},
                 "reporter": reporter,
             }
             issue_type = self.__get_sg_entity_settings(sg_entity["type"])["jira_issue_type"]
@@ -596,17 +610,15 @@ class EntitiesHandler(SyncHandler):
 
         # update FPTR with the Jira data
         if jira_entity:
-            self._shotgun.update(
-                sg_entity["type"],
-                sg_entity["id"],
-                {
-                    SHOTGUN_JIRA_ID_FIELD: jira_entity.key,
-                    # SHOTGUN_JIRA_URL_FIELD: {
-                    #     "url": jira_issue.permalink(),
-                    #     "name": "View in Jira",
-                    # },
-                },
-            )
+            sg_data = {
+                SHOTGUN_JIRA_ID_FIELD: jira_entity.key,
+            }
+            if isinstance(jira_entity, jira.resources.Issue):
+                sg_data[SHOTGUN_JIRA_URL_FIELD] = {
+                    "url": jira_entity.permalink(),
+                    "name": "View in Jira",
+                }
+            self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
         return jira_entity
 
@@ -627,8 +639,13 @@ class EntitiesHandler(SyncHandler):
 
         for sg_field in sg_fields:
 
+            field_mapping = self.__get_field_mapping(sg_entity["type"], sg_field=sg_field)
+
+            if field_mapping.get("sync_direction") == "jira_to_sg":
+                continue
+
             # get the associated Jira field
-            jira_field = self.__get_field_mapping(sg_entity["type"], sg_field=sg_field)["jira_field"]
+            jira_field = field_mapping["jira_field"]
 
             if jira_field == "watches":
                 self._sync_sg_watchers_to_jira(sg_entity[sg_field], jira_issue)
@@ -786,8 +803,13 @@ class EntitiesHandler(SyncHandler):
 
         for jira_field in jira_fields:
 
+            field_mapping = self.__get_field_mapping(sg_entity["type"], jira_field=jira_field)
+
+            if field_mapping.get("sync_direction") == "sg_to_jira":
+                continue
+
             # get the associated FPTR field
-            sg_field = self.__get_field_mapping(sg_entity["type"], jira_field=jira_field)["sg_field"]
+            sg_field = field_mapping["sg_field"]
 
             # make sure the FPTR field is editable
             sg_field_schema = self._shotgun.get_field_schema(sg_entity["type"], sg_field)

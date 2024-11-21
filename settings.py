@@ -175,6 +175,7 @@ SYNC = {
                         },
                     ],
                     "status_mapping": {
+                        "sync_direction": "jira_to_sg",
                         "sg_field": "sg_status_list",
                         "mapping": {
                             "wtg": "To Do",
