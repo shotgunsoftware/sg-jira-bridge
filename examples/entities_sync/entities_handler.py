@@ -591,6 +591,8 @@ class EntitiesHandler(SyncHandler):
                 f"{sg_entity['name']} ({sg_entity['id']})"
             )
 
+            entity_settings = self.__get_sg_entity_settings(sg_entity["type"])
+            sync_in_fptr = "False" if entity_settings.get("sync_direction", "both_way") == "sg_to_jira" else "True"
             data = {
                 "project": jira_project.raw,
                 "summary": sg_entity[summary_field].replace("\n", "").replace("\r", ""),
@@ -598,13 +600,12 @@ class EntitiesHandler(SyncHandler):
                 self._jira.jira_shotgun_id_field: str(sg_entity["id"]),
                 self._jira.jira_shotgun_type_field: sg_entity["type"],
                 self._jira.jira_shotgun_url_field: shotgun_url,
-                self.__jira_sync_in_fptr_field_id: {"value": "True"},
+                self.__jira_sync_in_fptr_field_id: {"value": sync_in_fptr},
                 "reporter": reporter,
             }
-            issue_type = self.__get_sg_entity_settings(sg_entity["type"])["jira_issue_type"]
             jira_entity = self._jira.create_issue_from_data(
                 jira_project,
-                issue_type,
+                entity_settings["jira_issue_type"],
                 data,
             )
 
@@ -771,10 +772,12 @@ class EntitiesHandler(SyncHandler):
             jira_name_field = "summary"
 
         sg_project = self._shotgun.find_one("Project", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.fields.project.key]])
+        sync_in_jira = False if entity_mapping.get("sync_direction", "both_way") == "jira_to_sg" else True
 
         sg_data = {
             sg_entity_name_field: getattr(jira_issue.fields, jira_name_field),
             SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+            SHOTGUN_SYNC_IN_JIRA_FIELD: sync_in_jira,
             "project": sg_project
         }
 
