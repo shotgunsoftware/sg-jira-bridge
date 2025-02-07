@@ -16,6 +16,8 @@ from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD
 #  - handle specific sg entities (list for example)/jira values in the `_sync_sg_fields_to_jira` method
 #  - find a way to check if a field exist for a specific issue type when accepting SG event
 #  - handle Timelog/Note specific workflow
+#  - handle Jira Comments/FPTR Notes deletion
+#  - take into account the sync flag when creating/updating Notes/Comments
 
 class EntitiesHandler(SyncHandler):
     """
