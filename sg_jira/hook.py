@@ -25,6 +25,18 @@ class JiraHook(object):
     # https://regex101.com/r/E1ysHQ/1
     ACCOUNT_ID_RE = re.compile("^[0-9a-f:-]{20}")
 
+    # Template used to build Jira comments body from a Note.
+    COMMENT_BODY_TEMPLATE = """
+    {panel:title=%s}
+    _Note created from FPTR by %s_
+    %s
+    {panel}
+    """
+
+    # Associated regex used to get FPTR Note information from Jira comment body
+    # JIRA_COMMENT_REGEX = r"{panel:title=([^\}]*)\}\n_Note created from FPTR by ([\s\w]+)_\n(.*)\n\{panel\}"
+    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*([\s\w]+)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+
     def __init__(self, bridge, logger):
         """Class constructor"""
         super(JiraHook, self).__init__()
@@ -238,3 +250,53 @@ class JiraHook(object):
             )
 
         return self._shotgun.find_one("HumanUser", sg_filters, ["email", "name"])
+
+    def compose_jira_comment_body(self, sg_note):
+        """"""
+        return self.COMMENT_BODY_TEMPLATE % (
+            sg_note["subject"],
+            sg_note["user"]["name"],
+            sg_note["content"],
+        )
+
+    def compose_sg_note(self, jira_comment_body):
+        """"""
+        result = re.search(self.JIRA_COMMENT_REGEX, jira_comment_body, flags=re.S)
+
+        # We can't reliably determine what the Note should contain
+        if not result:
+            raise InvalidJiraValue(
+                "content",
+                jira_comment_body,
+                "Invalid Jira Comment body format. Unable to parse FPTR "
+                "subject and content from '%s'" % jira_comment_body
+            )
+
+        author = result.group(2).strip()
+        # we need to make sure the author is associated with a current FPTR user
+        sg_user = self._shotgun.find_one(
+            "HumanUser",
+            [["name", "is", author]]
+        )
+        if not sg_user:
+            raise InvalidJiraValue(
+                "content",
+                jira_comment_body,
+                f"Invalid Jira Comment panel formatting. Unable to parse FPTR "
+                "author from '%s'" % author,
+            )
+
+        subject = result.group(1).strip()
+        # if we have any { or } in the title reject the value as it is likely
+        # to be an ill-formed panel block.
+        if re.search(r"[\{\}]", subject):
+            raise InvalidJiraValue(
+                "content",
+                jira_comment_body,
+                f"Invalid Jira Comment panel formatting. Unable to parse FPTR "
+                "subject from '%s'" % subject,
+            )
+        content = result.group(3).strip()
+
+        return subject, content, sg_user
+

@@ -173,6 +173,10 @@ SYNC = {
                             "sg_field": "addressings_cc",
                             "jira_field": "watches",
                         },
+                        {
+                            "sg_field": "open_notes",
+                            "jira_field": "comment",
+                        },
                     ],
                     "status_mapping": {
                         "sync_direction": "jira_to_sg",
@@ -186,8 +190,11 @@ SYNC = {
                             "omt": "Closed",
                         }
                     }
-                }
-            ]
+                },
+                {
+                    "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
+                },
+            ],
         },
     },
 }

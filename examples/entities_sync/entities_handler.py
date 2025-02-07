@@ -7,6 +7,7 @@
 
 import jira
 
+from sg_jira.errors import InvalidJiraValue
 from sg_jira.handlers import SyncHandler
 from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD,
                                JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SYNC_IN_FPTR_FIELD)
@@ -15,7 +16,6 @@ from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD
 #  - handle specific sg entities (list for example)/jira values in the `_sync_sg_fields_to_jira` method
 #  - find a way to check if a field exist for a specific issue type when accepting SG event
 #  - handle Timelog/Note specific workflow
-#  - add a new key in the settings to specify the sync direction (only from SG to Jira, only from Jira to SG, both way)
 
 class EntitiesHandler(SyncHandler):
     """
@@ -23,6 +23,7 @@ class EntitiesHandler(SyncHandler):
     """
 
     __ENTITIES_NOT_FLAGGED_AS_SYNCED = ["Note", "TimeLog"]
+    __NOTE_SG_FIELDS = ["subject", "content", "user"]
 
     def __init__(self, syncer, entity_mapping):
         """
@@ -73,46 +74,46 @@ class EntitiesHandler(SyncHandler):
                     "checkbox"
                 )
 
-            # check that the field mapping has been defined in the settings
-            if "field_mapping" not in entity_mapping.keys():
-                raise RuntimeError("Entity mapping does not contain field_mapping key, please check your settings.")
+                # check that the field mapping has been defined in the settings
+                if "field_mapping" not in entity_mapping.keys():
+                    raise RuntimeError("Entity mapping does not contain field_mapping key, please check your settings.")
 
-            for field_mapping in entity_mapping["field_mapping"]:
+                for field_mapping in entity_mapping["field_mapping"]:
 
-                # check that the FPTR field has correctly been setup and exist in the FPTR schema
-                if "sg_field" not in field_mapping.keys():
-                    raise RuntimeError("Field mapping does not contain sg_field key, please check your settings.")
-                self._shotgun.assert_field(
-                    entity_mapping["sg_entity"],
-                    field_mapping["sg_field"],
-                    None
-                )
-
-                # check that the Jira field exist
-                if "jira_field" not in field_mapping.keys():
-                    raise RuntimeError("Field mapping does not contain jira_field key, please check your settings.")
-                self._jira.assert_field(field_mapping["jira_field"])
-
-                # special use case for the Jira assignee field
-                # it should only be mapped to a FPTR entity/multi-entity HumanUser field
-                if field_mapping["jira_field"] == "assignee":
-                    sg_field_schema = self._shotgun.get_field_schema(
+                    # check that the FPTR field has correctly been setup and exist in the FPTR schema
+                    if "sg_field" not in field_mapping.keys():
+                        raise RuntimeError("Field mapping does not contain sg_field key, please check your settings.")
+                    self._shotgun.assert_field(
                         entity_mapping["sg_entity"],
-                        field_mapping["sg_field"]
+                        field_mapping["sg_field"],
+                        None
                     )
-                    data_type = sg_field_schema["data_type"]["value"]
-                    if data_type not in ["multi_entity", "entity"]:
-                        raise ValueError(
-                            f"{data_type} field type is not valid for Flow Production Tracking "
-                            f"{entity_mapping['sg_entity']}.{field_mapping['sg_field']} assignments. Expected "
-                            "entity or multi_entity."
+
+                    # check that the Jira field exist
+                    if "jira_field" not in field_mapping.keys():
+                        raise RuntimeError("Field mapping does not contain jira_field key, please check your settings.")
+                    self._jira.assert_field(field_mapping["jira_field"])
+
+                    # special use case for the Jira assignee field
+                    # it should only be mapped to a FPTR entity/multi-entity HumanUser field
+                    if field_mapping["jira_field"] == "assignee":
+                        sg_field_schema = self._shotgun.get_field_schema(
+                            entity_mapping["sg_entity"],
+                            field_mapping["sg_field"]
                         )
-                    sg_valid_types = sg_field_schema["properties"]["valid_types"]["value"]
-                    if "HumanUser" not in sg_valid_types:
-                        raise ValueError(
-                            f"Flow Production Tracking {entity_mapping['sg_entity']}.{field_mapping['sg_field']} "
-                            f"assignment field must accept HumanUser entities but only accepts {sg_valid_types}"
-                        )
+                        data_type = sg_field_schema["data_type"]["value"]
+                        if data_type not in ["multi_entity", "entity"]:
+                            raise ValueError(
+                                f"{data_type} field type is not valid for Flow Production Tracking "
+                                f"{entity_mapping['sg_entity']}.{field_mapping['sg_field']} assignments. Expected "
+                                "entity or multi_entity."
+                            )
+                        sg_valid_types = sg_field_schema["properties"]["valid_types"]["value"]
+                        if "HumanUser" not in sg_valid_types:
+                            raise ValueError(
+                                f"Flow Production Tracking {entity_mapping['sg_entity']}.{field_mapping['sg_field']} "
+                                f"assignment field must accept HumanUser entities but only accepts {sg_valid_types}"
+                            )
 
             # if the user has defined a status mapping, check that everything is correctly setup
             if "status_mapping" in entity_mapping.keys():
@@ -187,7 +188,9 @@ class EntitiesHandler(SyncHandler):
         # We use the Jira id field value to check if we're processing the first
         # event. If it exists with in_create, we know the entity has already
         # been created.
-        if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
+        # Special use cases: when a new Note is added to a Task, the "in_create" flag
+        # will be propagated to the Task entity as well while it can be an existing Task
+        if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create") and field not in ["open_notes"] :
             self._logger.debug(
                 f"Rejecting Flow Production Tracking event for {entity_type}.{field} field update during "
                 f"create. Entity was already created in Jira: {event}"
@@ -258,6 +261,9 @@ class EntitiesHandler(SyncHandler):
 
         # if the entity doesn't exist, create it and then sync all the fields
         if not jira_entity:
+            # here, we are assuming that these entities will be created at an upper level
+            if sg_entity["type"] in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+                return True
             jira_entity = self._create_jira_entity(sg_entity, jira_project)
             return self._sync_sg_fields_to_jira(sg_entity, jira_entity)
 
@@ -298,11 +304,6 @@ class EntitiesHandler(SyncHandler):
             self._logger.debug(f"Rejecting event with an unsupported webhook event '{webhook_event}': {event}")
             return False
 
-        changelog = event.get("changelog")
-        if not changelog:
-            self._logger.debug(f"Rejecting Jira event without a changelog: {event}")
-            return False
-
         fields = jira_issue.get("fields")
         if not fields:
             self._logger.debug(f"Rejecting Jira event without issue fields: {event}")
@@ -313,32 +314,6 @@ class EntitiesHandler(SyncHandler):
             self._logger.debug(f"Rejecting Jira event without a project: {event}")
             return False
 
-        issue_type = fields.get("issuetype")
-        if not issue_type:
-            self._logger.debug(f"Rejecting Jira event without an issue type: {event}")
-            return False
-
-        # check that the issue type has been defined in the settings
-        if issue_type["name"] not in self._supported_jira_issue_types_for_jira_event():
-            self._logger.debug(f"Rejecting Jira event for unsupported issue type {issue_type}: {event}")
-            return False
-
-        # check that the required Jira fields has been enabled for the current project and issue type
-        required_fields = [JIRA_SYNC_IN_FPTR_FIELD]
-        for rf in required_fields:
-            jira_field_id = self._jira.get_jira_issue_field_id(rf.lower())
-            if jira_field_id not in fields.keys():
-                self._logger.debug(
-                    f"Rejecting Jira event because Jira field {rf} ({jira_field_id}) has not "
-                    f"been enabled for Jira Project {jira_project['key']} and Issue Type {issue_type['name']}."
-                )
-                return False
-
-        # check that the Issue is flagged as synced
-        if not fields.get(self.__jira_sync_in_fptr_field_id):
-            self._logger.debug(f"Rejecting Jira event because Jira Issue {jira_issue['key']} has not been flagged as synced.")
-            return False
-
         # check that the Jira project is associated to a FPTR project
         sg_project = self._shotgun.find_one("Project", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_project["key"]]])
         if not sg_project:
@@ -347,6 +322,45 @@ class EntitiesHandler(SyncHandler):
                 f"Flow Production Tracking project."
             )
             return False
+
+        if "comment" in webhook_event:
+            jira_comment = event.get("comment")
+            if not jira_comment:
+                self._logger.debug(f"Rejecting Jira event without a comment: {event}")
+                return False
+
+        else:
+
+            changelog = event.get("changelog")
+            if not changelog:
+                self._logger.debug(f"Rejecting Jira event without a changelog: {event}")
+                return False
+
+            issue_type = fields.get("issuetype")
+            if not issue_type:
+                self._logger.debug(f"Rejecting Jira event without an issue type: {event}")
+                return False
+
+            # check that the issue type has been defined in the settings
+            if issue_type["name"] not in self._supported_jira_issue_types_for_jira_event():
+                self._logger.debug(f"Rejecting Jira event for unsupported issue type {issue_type}: {event}")
+                return False
+
+            # check that the required Jira fields has been enabled for the current project and issue type
+            required_fields = [JIRA_SYNC_IN_FPTR_FIELD]
+            for rf in required_fields:
+                jira_field_id = self._jira.get_jira_issue_field_id(rf.lower())
+                if jira_field_id not in fields.keys():
+                    self._logger.debug(
+                        f"Rejecting Jira event because Jira field {rf} ({jira_field_id}) has not "
+                        f"been enabled for Jira Project {jira_project['key']} and Issue Type {issue_type['name']}."
+                    )
+                    return False
+
+            # check that the Issue is flagged as synced
+            if not fields.get(self.__jira_sync_in_fptr_field_id):
+                self._logger.debug(f"Rejecting Jira event because Jira Issue {jira_issue['key']} has not been flagged as synced.")
+                return False
 
         return True
 
@@ -359,6 +373,12 @@ class EntitiesHandler(SyncHandler):
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
         """
+
+
+        webhook_event = event["webhookEvent"]
+
+        if "comment" in  webhook_event:
+            return self._sync_jira_comment_to_sg(event)
 
         jira_issue = self._jira.issue(event["issue"]["key"])
 
@@ -411,6 +431,10 @@ class EntitiesHandler(SyncHandler):
         Flow Production Tracking to Jira event.
         :returns: A list of strings.
         """
+
+        if entity_type == "Note":
+            return self.__NOTE_SG_FIELDS
+
         sg_fields = []
         for entity_mapping in self.__entity_mapping:
             if entity_mapping["sg_entity"] == entity_type:
@@ -424,8 +448,8 @@ class EntitiesHandler(SyncHandler):
         return [
             "jira:issue_created",
             "jira:issue_updated",
-            "jira:comment_created",
-            "jira:comment_updated",
+            # "comment_created",
+            "comment_updated",
             "jira:worklog_created",
             "jira:worklog_updated",
         ]
@@ -516,9 +540,9 @@ class EntitiesHandler(SyncHandler):
         """Get the Jira object for the given Jira entity ID and entity type."""
 
         # we need to manage special entities like Note/Comment and TimeLog/Worklog apart
-        # TODO: implement the logic for the Notes
         if entity_type == "Note":
-            return
+            jira_issue_key, jira_comment_id = self.__parse_jira_key_from_sg_entity(entity_type, jira_key)
+            return self._get_jira_issue_comment(jira_issue_key, jira_comment_id)
 
         # TODO: implement the logic for the Timelogs
         elif entity_type == "TimeLog":
@@ -623,11 +647,17 @@ class EntitiesHandler(SyncHandler):
 
         return jira_entity
 
-    def _sync_sg_fields_to_jira(self, sg_entity, jira_issue, field_name=None):
+    def _sync_sg_fields_to_jira(self, sg_entity, jira_entity, field_name=None):
         """"""
 
         jira_fields = {}
         sync_with_errors = False
+
+        # Notes have a special behavior
+        if sg_entity["type"] == "Note":
+            comment_body = self._hook.compose_jira_comment_body(sg_entity)
+            jira_entity.update(body=comment_body)
+            return True
 
         # if no field name is supplied, that means we want to sync all the fields so get them
         if not field_name:
@@ -636,7 +666,7 @@ class EntitiesHandler(SyncHandler):
             sg_fields = [field_name]
 
         # query Jira to get all the editable fields for the current issue type
-        editable_jira_fields = self._jira.get_jira_issue_edit_meta(jira_issue)
+        editable_jira_fields = self._jira.get_jira_issue_edit_meta(jira_entity)
 
         for sg_field in sg_fields:
 
@@ -649,18 +679,22 @@ class EntitiesHandler(SyncHandler):
             jira_field = field_mapping["jira_field"]
 
             if jira_field == "watches":
-                self._sync_sg_watchers_to_jira(sg_entity[sg_field], jira_issue)
+                self._sync_sg_watchers_to_jira(sg_entity[sg_field], jira_entity)
                 continue
 
             if jira_field == "status":
-                self._sync_sg_status_to_jira(sg_entity[sg_field], sg_entity["type"], jira_issue)
+                self._sync_sg_status_to_jira(sg_entity[sg_field], sg_entity["type"], jira_entity)
+                continue
+
+            if jira_field == "comment":
+                self._sync_sg_notes_to_jira(sg_entity[sg_field], sg_entity["type"], jira_entity)
                 continue
 
             # check that we have permission to edit this field
             if jira_field not in editable_jira_fields:
                 self._logger.warning(
                     f"Not syncing Flow Production Tracking {sg_entity['type']}.{sg_field} to Jira. "
-                    f"Target Jira {jira_issue.fields.issuetype}.{jira_field} field is not editable"
+                    f"Target Jira {jira_entity.fields.issuetype}.{jira_field} field is not editable"
                 )
                 sync_with_errors = True
                 continue
@@ -670,14 +704,14 @@ class EntitiesHandler(SyncHandler):
                 if isinstance(sg_entity[sg_field], list):
                     jira_value = self._hook.get_jira_value_from_sg_list(
                         sg_entity[sg_field],
-                        jira_issue,
+                        jira_entity,
                         jira_field,
                         editable_jira_fields[jira_field]
                     )
                 else:
                     jira_value = self._hook.get_jira_value_from_sg_value(
                         sg_entity[sg_field],
-                        jira_issue,
+                        jira_entity,
                         jira_field,
                         editable_jira_fields[jira_field]
                     )
@@ -702,7 +736,7 @@ class EntitiesHandler(SyncHandler):
             jira_fields[jira_field] = jira_value
 
         if jira_fields:
-            jira_issue.update(fields=jira_fields)
+            jira_entity.update(fields=jira_fields)
 
         return sync_with_errors
 
@@ -759,6 +793,43 @@ class EntitiesHandler(SyncHandler):
             f"Updated from Flow Production Tracking {entity_type} moving to {sg_value}"
         )
 
+    def _sync_sg_notes_to_jira(self, sg_value, entity_type, jira_issue):
+        """"""
+
+        sg_fields = ["subject", "content", "user", SHOTGUN_JIRA_ID_FIELD]
+
+        for n in sg_value:
+
+            jira_comment = None
+            sg_note = self._shotgun.consolidate_entity(
+                {"type": n["type"], "id": n["id"]},
+                sg_fields
+            )
+
+            # the note doesn't have an associated Jira ID, we need to create the comment in Jira
+            if not sg_note[SHOTGUN_JIRA_ID_FIELD]:
+                self._logger.debug(f"Adding FPTR Note ({sg_note['id']}) as comment for Jira issue {jira_issue}")
+                jira_comment = self._create_jira_comment(jira_issue, sg_note)
+
+            else:
+                jira_issue_key, jira_comment_id = self.__parse_jira_key_from_sg_entity(sg_note["type"], sg_note[SHOTGUN_JIRA_ID_FIELD])
+                if jira_issue_key != jira_issue.key:
+                    self._logger.debug(
+                        f"FPTR Note ({sg_note['id']}) is already associated with Jira issue {jira_issue_key}, "
+                        f"skipping its update."
+                    )
+                    continue
+
+                jira_comment = self._get_jira_issue_comment(jira_issue_key, jira_comment_id)
+                if not jira_comment:
+                    self._logger.debug(
+                        f"FPTR Note ({sg_note['id']}) was associated with Jira comment ({jira_comment_id}) on Jira Issue "
+                        f"{jira_issue_key} which no longer exists. A new comment will be created."
+                    )
+                    jira_comment = self._create_jira_comment(jira_issue, sg_note)
+
+        # TODO: remove the Jira comments that do no longer exist in FPTR
+
     def _create_sg_entity(self, jira_issue):
         """"""
 
@@ -791,6 +862,53 @@ class EntitiesHandler(SyncHandler):
         jira_issue.update(fields=jira_fields)
 
         return sg_entity
+
+    def _sync_jira_comment_to_sg(self, event):
+        """"""
+
+        sg_jira_key = "%s/%s" % (event["issue"]["key"], event["comment"]["id"])
+        sg_notes = self._shotgun.find(
+            "Note",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", sg_jira_key]],
+            fields=["subject", "tasks"],
+        )
+
+        # If we have more than one Note with the same key, we don't want to
+        # create more mess.
+        if len(sg_notes) > 1:
+            self._logger.warning(
+                f"Unable to process Jira Comment {event} event. More than one Note "
+                f"exists in Shotgun with Jira key {sg_jira_key}: {sg_notes}"
+            )
+            return False
+
+        # TODO: We don't know if the Issue this comment is for, is currently
+        #       synced to Shotgun. We need to load it first to properly check
+        #       if this is a warning or debug level message, but that's
+        #       expensive. Keeping it at debug for now.
+        if not sg_notes:
+            self._logger.debug(
+                f"Unable to process Jira Comment {event} event. Unable to find a Shotgun "
+                f"Note with Jira key {sg_jira_key}"
+            )
+            return False
+
+        # We have a single Note
+        # TODO: Check that the Task the Note is linked to has syncing enabled.
+        #       Otherwise syncing could be turned off for the Task but this
+        #       will still sync the Note.
+
+        sg_data = {}
+        try:
+            sg_data["subject"], sg_data["content"], sg_data["user"] = self._hook.compose_sg_note(event["comment"]["body"])
+        except InvalidJiraValue as e:
+            self._logger.warning(f"Unable to process Jira Comment {event} event. {e}")
+            return False
+
+        self._logger.debug(f"Updating FPTR Note ({sg_notes[0]['id']}) (jira_key {sg_jira_key}) with data {sg_data}")
+
+        self._shotgun.update("Note", sg_notes[0]["id"], sg_data)
+        return True
 
     def _sync_jira_fields_to_sg(self, jira_issue, sg_entity, jira_fields=None):
         """"""
@@ -852,3 +970,61 @@ class EntitiesHandler(SyncHandler):
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
         return sync_with_errors
+
+    def _create_jira_comment(self, jira_issue, sg_note):
+        """"""
+
+        jira_comment = self._jira.add_comment(
+            jira_issue,
+            self._hook.compose_jira_comment_body(sg_note),
+            visibility=None,  # TODO: check if Note properties should drive this
+            is_internal=False,
+        )
+        # update the FPTR Note with the comment ID
+        comment_key = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self._shotgun.update(
+            sg_note["type"],
+            sg_note["id"],
+            {SHOTGUN_JIRA_ID_FIELD: comment_key}
+        )
+
+        return jira_comment
+
+    def _get_jira_issue_comment(self, jira_issue_key, jira_comment_id):
+        """
+        Retrieve the Jira comment with the given id attached to the given Issue.
+
+        .. note:: Jira comments can't live without being attached to an Issue,
+                  so we use a "<Issue key>/<Comment id>" key to reference a
+                  particular comment.
+
+        :param str jira_issue_key: A Jira Issue key.
+        :param str jira_comment_id: A Jira Comment id.
+        :returns: A :class:`jira.Comment` instance or None.
+        """
+        jira_comment = None
+        try:
+            jira_comment = self._jira.comment(jira_issue_key, jira_comment_id)
+        except jira.JIRAError as e:
+            # Jira raises a 404 error if it can't find the Comment: catch the
+            # error and keep the None value
+            if e.status_code == 404:
+                pass
+            else:
+                raise
+        return jira_comment
+
+    @staticmethod
+    def __parse_jira_key_from_sg_entity(sg_entity_type, jira_key):
+        """"""
+
+        if sg_entity_type not in ["Note"]:
+            return jira_key, None
+
+        parts = jira_key.split("/")
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            raise ValueError(
+                f"Invalid Jira key {jira_key}, it must be in the format "
+                "'<jira issue key>/<jira entity id>'"
+            )
+        return parts[0], parts[1]
