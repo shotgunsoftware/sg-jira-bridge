@@ -7,7 +7,7 @@
 
 jobs:
 
-- job: flake8 & pre-commit
+- job: Code Style Validation
   pool:
     vmImage: 'ubuntu-20.04'
 
@@ -31,4 +31,4 @@ jobs:
     displayName: Update pre-commit hook versions
 
   - bash: pre-commit run --all
-    displayName: Validate code
+    displayName: Validate code with pre-commit
