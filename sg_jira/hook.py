@@ -33,9 +33,20 @@ class JiraHook(object):
     {panel}
     """
 
+    WORKLOG_BODY_TEMPLATE = """
+    _Worklog created from FPTR by %s_
+    %s
+    """
+
     # Associated regex used to get FPTR Note information from Jira comment body
     # JIRA_COMMENT_REGEX = r"{panel:title=([^\}]*)\}\n_Note created from FPTR by ([\s\w]+)_\n(.*)\n\{panel\}"
     JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*([\s\w]+)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+
+    # Define the format of the Flow Production Tracking dates
+    SG_DATE_FORMAT = "%Y-%m-%d"
+
+    # Define the format of the Jira dates
+    JIRA_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 
     def __init__(self, bridge, logger):
         """Class constructor"""
@@ -51,10 +62,19 @@ class JiraHook(object):
     def _jira(self):
         return self._bridge.jira
 
-    def get_jira_value_from_sg_value(self, sg_value, jira_issue, jira_field, jira_field_properties, skip_array_check=False):
+    def get_jira_value_from_sg_value(self, sg_value, jira_entity, jira_field, jira_field_properties, skip_array_check=False):
         """"""
 
         self._logger.debug(f"Getting Jira value for Flow Production Tracking value {sg_value}")
+
+        # if we're facing some custom use cases (FPTR TimeLog vs Jira Worklog for example)
+        # we want to force the returned value
+        if isinstance(jira_entity, jira.resources.Worklog):
+            if jira_field == "timeSpentSeconds":
+                return sg_value * 60
+            if jira_field == "started":
+                return self.format_jira_date(sg_value)
+            return sg_value
 
         jira_field_type = jira_field_properties["schema"]["type"]
         is_array = jira_field_properties["schema"]["type"] == "array"
@@ -76,7 +96,7 @@ class JiraHook(object):
                     return None
             else:
                 email_address = jira_value
-            jira_value = self._jira.find_jira_assignee_for_issue(email_address, jira_issue.fields.project, jira_issue)
+            jira_value = self._jira.find_jira_assignee_for_issue(email_address, jira_entity.fields.project, jira_entity)
 
         elif jira_field == "labels":
             if isinstance(jira_value, dict):
@@ -299,4 +319,19 @@ class JiraHook(object):
         content = result.group(3).strip()
 
         return subject, content, sg_user
+
+    def compose_jira_worklog_comment(self, sg_timelog):
+        """"""
+        return self.WORKLOG_BODY_TEMPLATE % (
+            sg_timelog["user"]["name"],
+            sg_timelog.get("description", ""),
+        )
+
+    def format_jira_date(self, sg_date):
+        """"""
+        jira_formatted_date = self.JIRA_DATE_FORMAT.replace("%f", "000")
+        jira_formatted_date = jira_formatted_date.replace("%z", "+0000")
+        return datetime.datetime.strptime(sg_date, self.SG_DATE_FORMAT).strftime(jira_formatted_date)
+
+
 

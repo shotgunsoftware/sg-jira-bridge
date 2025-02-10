@@ -173,10 +173,6 @@ SYNC = {
                             "sg_field": "addressings_cc",
                             "jira_field": "watches",
                         },
-                        {
-                            "sg_field": "open_notes",
-                            "jira_field": "comment",
-                        },
                     ],
                     "status_mapping": {
                         "sync_direction": "jira_to_sg",
@@ -193,7 +189,26 @@ SYNC = {
                 },
                 {
                     "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
+                    "sync_deletion_direction": "jira_to_sg",
                 },
+                {
+                    "sg_entity": "TimeLog",
+                    "sync_deletion_direction": "both_way",
+                    "field_mapping": [
+                        {
+                            "sg_field": "date",
+                            "jira_field": "started",
+                        },
+                        {
+                            "sg_field": "duration",
+                            "jira_field": "timeSpentSeconds",
+                        },
+                        {
+                            "sg_field": "description",
+                            "jira_field": "comment",
+                        },
+                    ]
+                }
             ],
         },
     },
