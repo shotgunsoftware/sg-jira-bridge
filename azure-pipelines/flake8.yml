@@ -7,7 +7,8 @@
 
 jobs:
 
-- job: Code Style Validation
+- job: code_style_validation
+  displayName: Code Style Validation
   pool:
     vmImage: 'ubuntu-20.04'
 
