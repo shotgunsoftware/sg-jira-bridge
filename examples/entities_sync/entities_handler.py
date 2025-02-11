@@ -5,6 +5,7 @@
 # this software in either electronic or hard copy form.
 #
 import datetime
+import re
 
 import jira
 
@@ -379,7 +380,9 @@ class EntitiesHandler(SyncHandler):
         :returns: True if the event is accepted for processing, False otherwise.
         """
 
-        # TODO: handle worklog workflow
+        sync_settings = None
+
+        self._logger.debug(f"Checking Jira event...\n {event}")
 
         if resource_type.lower() != "issue":
             self._logger.debug(
@@ -388,75 +391,102 @@ class EntitiesHandler(SyncHandler):
             )
             return False
 
-        # Check the event payload and reject the event if we don't have what we
-        # expect
-        jira_issue = event.get("issue")
-        if not jira_issue:
-            self._logger.debug(f"Rejecting Jira event without an issue: {event}")
-            return False
-
         webhook_event = event.get("webhookEvent")
         if not webhook_event or webhook_event not in self._supported_jira_webhook_events():
-            self._logger.debug(f"Rejecting event with an unsupported webhook event '{webhook_event}': {event}")
+            self._logger.debug(f"Rejecting Jira event with an unsupported webhook event '{webhook_event}'.")
             return False
 
-        fields = jira_issue.get("fields")
-        if not fields:
-            self._logger.debug(f"Rejecting Jira event without issue fields: {event}")
+        webhook_entity, webhook_action = self.__parse_jira_webhook_event(webhook_event)
+
+        jira_entity = event.get(webhook_entity)
+        if not jira_entity:
+            self._logger.debug(f"Rejecting Jira event without a {webhook_entity}.")
             return False
 
-        jira_project = fields.get("project")
-        if not jira_project:
-            self._logger.debug(f"Rejecting Jira event without a project: {event}")
-            return False
+        if webhook_entity in ["comment", "worklog"]:
 
-        # check that the Jira project is associated to a FPTR project
-        sg_project = self._shotgun.find_one("Project", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_project["key"]]])
-        if not sg_project:
-            self._logger.debug(
-                f"Rejecting Jira event because the Jira Project {jira_project['key']} doesn't have an associated "
-                f"Flow Production Tracking project."
-            )
-            return False
+            sg_entity_type = "Note" if webhook_entity == "comment" else "TimeLog"
 
-        if "comment" in webhook_event:
-            jira_comment = event.get("comment")
-            if not jira_comment:
-                self._logger.debug(f"Rejecting Jira event without a comment: {event}")
+            if webhook_action == "created":
+                if jira_entity["author"]["accountId"] == self._jira.myself()["accountId"]:
+                    self._logger.debug("Rejecting Jira event created by the bridge user.")
+                    return False
+
+            elif webhook_action == "updated":
+                if jira_entity["updateAuthor"]["accountId"] == self._jira.myself()["accountId"]:
+                    self._logger.debug("Rejecting Jira event updated by the bridge user.")
+                    return False
+
+            sync_settings = self.__get_sg_entity_settings(sg_entity_type)
+
+            # make sure we can get the associated jira issue
+            jira_issue_key = jira_entity.get("issueId")
+            if not jira_issue_key:
+                self._logger.debug("Rejecting Jira event without an associated issue.")
                 return False
+            jira_issue = self.get_jira_issue(jira_issue_key)
 
         else:
 
             changelog = event.get("changelog")
             if not changelog:
-                self._logger.debug(f"Rejecting Jira event without a changelog: {event}")
+                self._logger.debug(f"Rejecting Jira event without a changelog.")
                 return False
 
-            issue_type = fields.get("issuetype")
-            if not issue_type:
-                self._logger.debug(f"Rejecting Jira event without an issue type: {event}")
+            jira_issue = self.get_jira_issue(jira_entity["id"])
+
+        # check that the issue type has been defined in the settings
+        if jira_issue.fields.issuetype.name not in self._supported_jira_issue_types_for_jira_event():
+            self._logger.debug(f"Rejecting Jira event for unsupported issue type {jira_issue.fields.issuetype.name}")
+            return False
+
+        if not sync_settings:
+            sync_settings = self.__get_jira_issue_type_settings(jira_issue.fields.issuetype.name)
+        if sync_settings.get("sync_direction", "both_way") == "sg_to_jira":
+            self._logger.debug(
+                f"Rejecting Jira event. The sync direction setting is configured to only sync from FPTR to Jira."
+            )
+            return False
+
+        if webhook_action == "deleted":
+            if sync_settings.get("sync_deletion_direction") in [None, "sg_to_jira"]:
+                self._logger.debug(
+                    f"Rejecting Jira event as deletion is disabled for Jira {webhook_entity}."
+                )
                 return False
 
-            # check that the issue type has been defined in the settings
-            if issue_type["name"] not in self._supported_jira_issue_types_for_jira_event():
-                self._logger.debug(f"Rejecting Jira event for unsupported issue type {issue_type}: {event}")
-                return False
+        if not jira_issue.fields.project:
+            self._logger.debug(f"Rejecting Jira event without a project.")
+            return False
 
-            # check that the required Jira fields has been enabled for the current project and issue type
-            required_fields = [JIRA_SYNC_IN_FPTR_FIELD]
-            for rf in required_fields:
-                jira_field_id = self._jira.get_jira_issue_field_id(rf.lower())
-                if jira_field_id not in fields.keys():
-                    self._logger.debug(
+        # check that the Jira project is associated to a FPTR project
+        sg_project = self._shotgun.find_one("Project", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.fields.project.key]])
+        if not sg_project:
+            self._logger.debug(
+                f"Rejecting Jira event because the Jira Project {jira_issue.fields.project.key} doesn't have an associated "
+                f"Flow Production Tracking project."
+            )
+            return False
+
+        # check that the required Jira fields has been enabled for the current project and issue type
+        required_fields = [JIRA_SYNC_IN_FPTR_FIELD]
+        for rf in required_fields:
+            jira_field_id = self._jira.get_jira_issue_field_id(rf.lower())
+            try:
+                jira_issue.get_field(jira_field_id)
+            except AttributeError:
+                self._logger.debug(
                         f"Rejecting Jira event because Jira field {rf} ({jira_field_id}) has not "
-                        f"been enabled for Jira Project {jira_project['key']} and Issue Type {issue_type['name']}."
+                        f"been enabled for Jira Project {jira_issue.fields.project} and Issue Type {jira_issue.fields.issuetype.name}."
                     )
-                    return False
-
-            # check that the Issue is flagged as synced
-            if not fields.get(self.__jira_sync_in_fptr_field_id):
-                self._logger.debug(f"Rejecting Jira event because Jira Issue {jira_issue['key']} has not been flagged as synced.")
                 return False
+
+        # check that the Issue is flagged as synced
+        if not self.__can_sync_to_fptr(jira_issue):
+            self._logger.debug(f"Rejecting Jira event because Jira Issue {jira_entity['key']} has not been flagged as synced.")
+            return False
+
+        self._logger.debug("Jira event successfully accepted!")
 
         return True
 
@@ -470,48 +500,48 @@ class EntitiesHandler(SyncHandler):
                   sync didn't happen for any reason.
         """
 
+        self._logger.debug(f"Processing Jira event...\n {event}")
 
         webhook_event = event["webhookEvent"]
-
-        if "comment" in  webhook_event:
-            return self._sync_jira_comment_to_sg(event)
-
         jira_issue = self._jira.issue(event["issue"]["key"])
+        supported_jira_fields = []
 
-        sg_type = getattr(jira_issue.fields, self._jira.jira_shotgun_type_field)
-        sg_id = getattr(jira_issue.fields, self._jira.jira_shotgun_id_field)
-        if sg_id and not sg_id.isdigit():
-            raise ValueError(f"Invalid Flow Production Tracking id {sg_id}, it must be an integer")
-
-        # if we have FPTR information, check that the entity exists in FPTR
-        sg_entity = None
-        if sg_id and sg_type:
-            sg_entity = self._shotgun.consolidate_entity({"type": sg_type, "id": int(sg_id)})
-            if not sg_entity:
-                self._logger.info(f"Invalid Flow Production Tracking entity {sg_type} ({sg_id}))")
-                return False
+        webhook_entity, webhook_action = self.__parse_jira_webhook_event(webhook_event)
+        if webhook_entity == "issue":
+            sg_entity = self._sync_jira_issue_to_sg(jira_issue)
+            supported_jira_fields = (self._supported_jira_fields_for_jira_event(jira_issue.fields.issuetype.name) +
+                                     [self.__jira_sync_in_fptr_field_id])
+        else:
+            # jira_entity_key = "%s/%s" % (event[webhook_entity]["issueId"], event[webhook_entity]["id"])
+            # sg_entity_type = "Note" if webhook_entity == "comment" else "TimeLog"
+            # sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_entity_key, sg_entity_type. webhook_action)
+            return False
 
         if not sg_entity:
-            sg_entity = self._create_sg_entity(jira_issue)
+            self._logger.debug(f"Error happened while processing Jira event: couldn't get FPTR associated entity.")
+            return False
 
         jira_fields = []
-        supported_jira_fields = (self._supported_jira_fields_for_jira_event(jira_issue.fields.issuetype.name) +
-                                 [self.__jira_sync_in_fptr_field_id])
-        for change in event["changelog"]["items"]:
-            # Depending on the Jira server version, we can get the Jira field id
-            # in the change payload or just the field name.
-            # If we don't have the field id, retrieve it from our internal mapping.
-            jira_field_id = change.get("fieldId") or self._jira.get_jira_issue_field_id(change["field"])
-            if jira_field_id not in supported_jira_fields:
-                self._logger.debug( f"Rejecting Jira event for unsupported field {jira_field_id}: {event}")
-                continue
-            jira_fields.append(jira_field_id)
+        if "changelog" in event:
+            for change in event["changelog"]["items"]:
+                # Depending on the Jira server version, we can get the Jira field id
+                # in the change payload or just the field name.
+                # If we don't have the field id, retrieve it from our internal mapping.
+                jira_field_id = change.get("fieldId") or self._jira.get_jira_issue_field_id(change["field"])
+                if jira_field_id not in supported_jira_fields:
+                    self._logger.debug(f"Error happened while processing Jira event: unsupported field {jira_field_id}")
+                    continue
+                jira_fields.append(jira_field_id)
+        else:
+            # we don't have a changelog, that means we're facing worklog/comment update so we want to sync everything
+            jira_fields.append(self.__jira_sync_in_fptr_field_id)
 
         if self.__jira_sync_in_fptr_field_id in jira_fields:
             return self._sync_jira_fields_to_sg(jira_issue, sg_entity)
 
+        self._logger.debug(f"[DEBUG BARBARA] sg_entity: {sg_entity}")
+        self._logger.debug(f"[DEBUG BARBARA] jira_fields: {jira_fields}")
         return self._sync_jira_fields_to_sg(jira_issue, sg_entity, jira_fields)
-
 
     def _supported_shotgun_entities_for_shotgun_event(self):
         """
@@ -556,14 +586,33 @@ class EntitiesHandler(SyncHandler):
 
     def _supported_jira_issue_types_for_jira_event(self):
         """"""
-        return [m["jira_issue_type"] for m in self.__entity_mapping]
+        jira_issue_types = []
+        for em in self.__entity_mapping:
+            if em.get("jira_issue_type"):
+                jira_issue_types.append(em["jira_issue_type"])
+        return jira_issue_types
 
-    def _supported_jira_fields_for_jira_event(self, issue_type):
+    def _supported_jira_fields_for_jira_event(self, jira_entity_type):
         """"""
+
         jira_fields = []
-        for entity_mapping in self.__entity_mapping:
-            if entity_mapping["jira_issue_type"] == issue_type:
-                jira_fields = [m["jira_field"]for m in entity_mapping["field_mapping"]]
+
+        # Jira comments
+        if jira_entity_type == "Comment":
+            return self.__get_sg_entity_settings("TimeLog")
+
+        # Jira worklogs
+        elif jira_entity_type == "Worklog":
+            return self.__get_sg_entity_settings("TimeLog")
+
+        # Jira issues
+        else:
+            for entity_mapping in self.__entity_mapping:
+                if entity_mapping.get("jira_issue_type") == jira_entity_type:
+                    jira_fields = [m["jira_field"]for m in entity_mapping["field_mapping"]]
+                if entity_mapping.get("status_mapping"):
+                    jira_fields.append("status")
+
         return jira_fields
 
     def __sg_get_entity_fields(self, entity_type):
@@ -586,7 +635,7 @@ class EntitiesHandler(SyncHandler):
     def __get_jira_issue_type_settings(self, issue_type):
         """"""
         for entity_mapping in self.__entity_mapping:
-            if entity_mapping["jira_issue_type"] == issue_type:
+            if entity_mapping.get("jira_issue_type") == issue_type:
                 return entity_mapping
         return None
 
@@ -994,36 +1043,66 @@ class EntitiesHandler(SyncHandler):
 
         return sync_with_error
 
-    def _create_sg_entity(self, jira_issue):
+    def _sync_jira_issue_to_sg(self, jira_issue):
         """"""
 
         entity_mapping = self.__get_jira_issue_type_settings(jira_issue.fields.issuetype.name)
+        sg_entity_type = entity_mapping.get("sg_entity")
 
-        sg_entity_name_field = self._shotgun.get_entity_name_field(entity_mapping["sg_entity"])
-        jira_name_field = self.__get_field_mapping(entity_mapping["sg_entity"], sg_field=sg_entity_name_field)
-        if jira_name_field:
-            jira_name_field = jira_name_field["jira_field"]
-        else:
-            jira_name_field = "summary"
+        sg_entity = self._shotgun.find_one(
+            sg_entity_type,
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
+            self.__sg_get_entity_fields(sg_entity_type),
+        )
 
-        sg_project = self._shotgun.find_one("Project", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.fields.project.key]])
-        sync_in_jira = False if entity_mapping.get("sync_direction", "both_way") == "jira_to_sg" else True
+        if not sg_entity:
 
-        sg_data = {
-            sg_entity_name_field: getattr(jira_issue.fields, jira_name_field),
-            SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
-            SHOTGUN_SYNC_IN_JIRA_FIELD: sync_in_jira,
-            "project": sg_project
-        }
+            # if some FPTR data was previously associated to the Jira issue but we cannot found the FPTR entity
+            # that means something has happened
+            sg_type = getattr(jira_issue.fields, self._jira.jira_shotgun_type_field)
+            sg_id = getattr(jira_issue.fields, self._jira.jira_shotgun_id_field)
+            if sg_type or sg_id:
+                self._logger.debug(
+                    f"Error happened while processing Jira event: Jira Issue {jira_issue.key} is already synced "
+                    f"to a FPTR {sg_type} ({sg_id}) entity that couldn't be found in FPTR."
+                )
+                return False
 
-        sg_entity = self._shotgun.create(entity_mapping["sg_entity"], sg_data)
+            # otherwise, we want to create the FPTR entity
+            sg_entity_name_field = self._shotgun.get_entity_name_field(sg_entity_type)
+            jira_name_field = self.__get_field_mapping(sg_entity_type, sg_field=sg_entity_name_field)
+            if jira_name_field:
+                jira_name_field = jira_name_field["jira_field"]
+            else:
+                jira_name_field = "summary"
 
-        # update Jira with the FPTR entity data
-        jira_fields = {
-            self._jira.jira_shotgun_type_field: sg_entity["type"],
-            self._jira.jira_shotgun_id_field: str(sg_entity["id"])
-        }
-        jira_issue.update(fields=jira_fields)
+            sg_project = self._shotgun.find_one(
+                "Project",
+                [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.fields.project.key]]
+            )
+
+            sync_in_jira = False if entity_mapping.get("sync_direction", "both_way") == "jira_to_sg" else True
+
+            sg_data = {
+                "project": sg_project,
+                sg_entity_name_field: getattr(jira_issue.fields, jira_name_field),
+                SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+                SHOTGUN_JIRA_URL_FIELD: {
+                    "url": jira_issue.permalink(),
+                    "name": "View in Jira",
+                },
+                SHOTGUN_SYNC_IN_JIRA_FIELD: sync_in_jira
+            }
+
+            sg_entity = self._shotgun.create(sg_entity_type, sg_data)
+
+            # update Jira with the FPTR entity data
+            jira_fields = {
+                self._jira.jira_shotgun_type_field: sg_entity["type"],
+                self._jira.jira_shotgun_id_field: str(sg_entity["id"]),
+                self._jira.jira_shotgun_url_field: self._shotgun.get_entity_page_url(sg_entity)
+            }
+            jira_issue.update(fields=jira_fields)
 
         return sg_entity
 
@@ -1074,6 +1153,70 @@ class EntitiesHandler(SyncHandler):
         self._shotgun.update("Note", sg_notes[0]["id"], sg_data)
         return True
 
+    def _sync_jira_entity_to_sg(self, jira_issue, jira_entity_key, sg_entity_type, webhook_action):
+        """"""
+
+        # first, check that the Jira entity we're tryinc to sync is associated to a Jira Issue already synced in FPTR
+
+        entity_mapping = self.__get_jira_issue_type_settings(jira_issue.fields.issuetype.name)
+        sg_linked_entity_type = entity_mapping.get("sg_entity")
+
+        # get the PTR entity associated to the Jira Issue
+        sg_linked_entities = self._shotgun.find(
+            sg_linked_entity_type,
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
+            fields=self.__sg_get_entity_fields(sg_linked_entity_type),
+        )
+
+        if len(sg_linked_entities) > 1:
+            self._logger.debug(
+                f"Error happened while processing Jira event: more than one {sg_entity_type} "
+                f"exists in Flow Production Tracking with Jira key {jira_issue.key}."
+            )
+            return False
+
+        elif len(sg_linked_entities) == 0:
+            self._logger.debug(
+                f"Error happened while processing Jira event: couldn't find any {sg_entity_type} "
+                f"in Flow Production Tracking with Jira key {jira_issue.key}"
+            )
+            return False
+
+        if not sg_linked_entities[0][SHOTGUN_SYNC_IN_JIRA_FIELD]:
+            self._logger.debug(
+                f"Error happened while processing Jira event: The associated Flow "
+                f"Production Tracking {sg_entity_type} is not flagged to be synced."
+            )
+            return False
+
+        # now, check for the entity itself
+
+        sg_jira_key = "%s/%s" % (jira_issue.key, jira_entity_key)
+
+        sg_entities = self._shotgun.find(
+            sg_entity_type,
+            [[SHOTGUN_JIRA_ID_FIELD, "is", sg_jira_key]],
+            self.__sg_get_entity_fields(sg_entity_type)
+        )
+
+        if len(sg_entities) > 1:
+            self._logger.debug(
+                f"Error happened while processing Jira event: more than one {sg_entity_type} "
+                f"exists in Flow Production Tracking with Jira key {sg_jira_key}."
+            )
+            return False
+
+        if len(sg_entities) == 0:
+            if webhook_action == "deleted":
+                self._logger.debug(
+                    f"Error happened while processing Jira event: couldn't find any {sg_entity_type} "
+                            f"in Flow Production Tracking with Jira key {sg_jira_key}"
+                )
+                return False
+
+            # TODO: we need to create the FPTR entity and create the entity
+
+
     def _sync_jira_fields_to_sg(self, jira_issue, sg_entity, jira_fields=None):
         """"""
 
@@ -1081,7 +1224,7 @@ class EntitiesHandler(SyncHandler):
 
         issue_type = jira_issue.fields.issuetype.name
 
-        if not jira_fields:
+        if jira_fields is None:
             jira_fields = self._supported_jira_fields_for_jira_event(issue_type)
 
         sg_data = {}
@@ -1109,13 +1252,14 @@ class EntitiesHandler(SyncHandler):
             jira_value = getattr(jira_issue.fields, jira_field)
             sg_value = None
 
-            # TODO: manage Jira watchers
             if jira_field == "watches":
-                continue
+                sg_value = []
+                for w in self._jira.watchers(jira_issue).watchers:
+                    sg_user = self._hook.get_sg_user_from_jira_user(w)
+                    sg_value.append(sg_user)
 
-            # TODO: manage SG status field
-            elif sg_field_schema["data_type"]["value"] == "status_list":
-                sg_value = self.__get_status_mapping(sg_entity["type"], jira_status=jira_value) if jira_value else None
+            elif jira_field == "status":
+                sg_value = self.__get_status_mapping(sg_entity["type"], jira_status=str(jira_value)) if jira_value else None
 
             else:
                 try:
@@ -1225,3 +1369,19 @@ class EntitiesHandler(SyncHandler):
 
         return False
 
+    def __can_sync_to_fptr(self, jira_issue):
+        """"""
+
+        jira_field = jira_issue.get_field(self.__jira_sync_in_fptr_field_id)
+        if not jira_field:
+            return False
+        return True if jira_field.value == "True" else False
+
+    @staticmethod
+    def __parse_jira_webhook_event(webhook_event):
+        """"""
+
+        result = re.search(r"([\w]+)_([\w]+)", webhook_event)
+        if not result:
+            return None, None
+        return result.group(1), result.group(2)

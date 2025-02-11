@@ -40,7 +40,7 @@ class JiraHook(object):
 
     # Associated regex used to get FPTR Note information from Jira comment body
     # JIRA_COMMENT_REGEX = r"{panel:title=([^\}]*)\}\n_Note created from FPTR by ([\s\w]+)_\n(.*)\n\{panel\}"
-    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*([\s\w]+)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
 
     # Define the format of the Flow Production Tracking dates
     SG_DATE_FORMAT = "%Y-%m-%d"
@@ -269,7 +269,7 @@ class JiraHook(object):
                 f"Couldn't find valid FPTR filters to get the user associated to this Jira user {jira_user}"
             )
 
-        return self._shotgun.find_one("HumanUser", sg_filters, ["email", "name"])
+        return self._shotgun.find_one("HumanUser", sg_filters, ["id" , "email", "name"])
 
     def compose_jira_comment_body(self, sg_note):
         """"""

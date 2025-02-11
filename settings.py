@@ -189,6 +189,7 @@ SYNC = {
                 },
                 {
                     "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
+                    "sync_direction": "sg_to_jira",
                     "sync_deletion_direction": "jira_to_sg",
                 },
                 {
