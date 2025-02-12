@@ -7,7 +7,8 @@
 
 jobs:
 
-- job: flake8
+- job: code_style_validation
+  displayName: Code Style Validation
   pool:
     vmImage: 'ubuntu-20.04'
 
@@ -20,8 +21,15 @@ jobs:
 
   - script: |
       pip install --upgrade pip setuptools wheel
-      pip install -r requirements.txt -r tests/requirements.txt flake8
+      pip install --upgrade -r requirements.txt -r tests/requirements.txt \
+        flake8 pre-commit
     displayName: Install dependencies
 
   - script: flake8 .
     displayName: 'Run flake8'
+
+  - bash: pre-commit autoupdate
+    displayName: Update pre-commit hook versions
+
+  - bash: pre-commit run --all
+    displayName: Validate code with pre-commit
