@@ -133,7 +133,7 @@ SYNC = {
         },
     },
     "entities": {
-        "syncer": "entities_sync.EntitiesSyncer",
+        "syncer": "sg_jira.EntitiesGenericSyncer",
         # "hook": "/Users/darkshot/Work/__TMP/another_folder/hook.py",
         "settings": {
             "entity_mapping": [

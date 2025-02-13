@@ -25,7 +25,7 @@ from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD
 #  - improve logging (level/message)
 #  - ensure mandatory fields for Jira entity creation (eg: started + duration for TimeLogs)
 
-class EntitiesHandler(SyncHandler):
+class EntitiesGenericHandler(SyncHandler):
     """
     A handler which syncs a Flow Production Tracking Entities as a Jira Entities.
     """
@@ -43,7 +43,7 @@ class EntitiesHandler(SyncHandler):
         Instantiate a handler for the given syncer.
         :param syncer: A :class:`~sg_jira.Syncer` instance.
         """
-        super(EntitiesHandler, self).__init__(syncer)
+        super(EntitiesGenericHandler, self).__init__(syncer)
         self.__entity_mapping = entity_mapping
 
     def setup(self):
