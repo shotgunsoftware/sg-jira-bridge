@@ -173,6 +173,10 @@ SYNC = {
                             "sg_field": "addressings_cc",
                             "jira_field": "watches",
                         },
+                        {
+                            "sg_field": "sg_epic",
+                            "jira_field": "parent",
+                        },
                     ],
                     "status_mapping": {
                         "sync_direction": "jira_to_sg",
@@ -209,6 +213,40 @@ SYNC = {
                             "jira_field": "comment",
                         },
                     ]
+                },
+                # {
+                #     "sg_entity": "CustomEntity02",
+                #     "jira_issue_type": "MFL",
+                #     "field_mapping": [
+                #         {
+                #             "sg_field": "code",
+                #             "jira_field": "summary",
+                #         },
+                #         {
+                #             "sg_field": "description",
+                #             "jira_field": "description",
+                #         }
+                #     ],
+                # },
+                # {
+                #     "sg_entity": "CustomEntity03",
+                #     "jira_issue_type": "LOQ",
+                #     "field_mapping": [
+                #         {
+                #             "sg_field": "code",
+                #             "jira_field": "summary",
+                #         },
+                #     ]
+                # }
+                {
+                    "sg_entity": "CustomEntity04",
+                    "jira_issue_type": "Epic",
+                    "field_mapping": [
+                        {
+                            "sg_field": "code",
+                            "jira_field": "summary",
+                        },
+                    ],
                 }
             ],
         },

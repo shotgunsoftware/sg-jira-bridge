@@ -79,7 +79,7 @@ class EntitiesHandler(SyncHandler):
                     raise RuntimeError(
                         "Entity mapping does not contain jira_issue_type key, please check your settings."
                     )
-                self._jira.issue_type_by_name(entity_mapping["jira_issue_type"])
+                # self._jira.issue_type_by_name(entity_mapping["jira_issue_type"])
 
                 self._shotgun.assert_field(
                     entity_mapping["sg_entity"],
@@ -137,6 +137,8 @@ class EntitiesHandler(SyncHandler):
                 if "mapping" not in entity_mapping["status_mapping"].keys():
                     raise RuntimeError("Status mapping does not contain mapping key, please check your settings.")
                 # TODO: do we want to check that the status really exist in the two DBs
+
+            # TODO: add checks for hierarchy
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -524,6 +526,9 @@ class EntitiesHandler(SyncHandler):
         jira_fields = []
         if "changelog" in event:
             for change in event["changelog"]["items"]:
+                # special use case for parenting association
+                if change.get("field") == "IssueParentAssociation":
+                    jira_fields.append("parent")
                 # Depending on the Jira server version, we can get the Jira field id
                 # in the change payload or just the field name.
                 # If we don't have the field id, retrieve it from our internal mapping.
@@ -539,8 +544,6 @@ class EntitiesHandler(SyncHandler):
         if self.__jira_sync_in_fptr_field_id in jira_fields:
             return self._sync_jira_fields_to_sg(jira_issue, sg_entity)
 
-        self._logger.debug(f"[DEBUG BARBARA] sg_entity: {sg_entity}")
-        self._logger.debug(f"[DEBUG BARBARA] jira_fields: {jira_fields}")
         return self._sync_jira_fields_to_sg(jira_issue, sg_entity, jira_fields)
 
     def _supported_shotgun_entities_for_shotgun_event(self):
@@ -900,6 +903,10 @@ class EntitiesHandler(SyncHandler):
                 self._sync_sg_status_to_jira(sg_entity[sg_field], sg_entity["type"], jira_entity)
                 continue
 
+            if jira_field == "parent":
+                self._sync_hierarchy_to_jira(sg_entity[sg_field], jira_entity)
+                continue
+
             # check that we have permission to edit this field
             if sg_entity["type"] not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED and jira_field not in editable_jira_fields:
                 self._logger.warning(
@@ -1042,6 +1049,44 @@ class EntitiesHandler(SyncHandler):
         # TODO: do we want to sync with reciprocity in JIRA?
 
         return sync_with_error
+
+    def _sync_hierarchy_to_jira(self, sg_parent_entity, jira_issue):
+        """"""
+
+        jira_parent = None
+
+        if sg_parent_entity:
+
+            # make sure the entity linked to the current FPTR entity is also synced to Jira and already exist
+            entity_mapping = self.__get_sg_entity_settings(sg_parent_entity["type"])
+            if not entity_mapping:
+                self._logger.debug(
+                    f"Couldn't find entity mapping for {sg_parent_entity['type']} in the settings. Skipping hierarchy syncing."
+                )
+                return False
+
+            sg_parent_entity = self._shotgun.consolidate_entity(
+                sg_parent_entity,
+                [SHOTGUN_JIRA_ID_FIELD]
+            )
+            if not sg_parent_entity.get(SHOTGUN_JIRA_ID_FIELD):
+                self._logger.debug(
+                    f"Couldn't find Jira Key for parent entity {sg_parent_entity['type']} ({sg_parent_entity['id']}). Skipping hierarchy syncing."
+                )
+                return False
+
+            jira_parent_issue = self._jira.issue(sg_parent_entity[SHOTGUN_JIRA_ID_FIELD])
+            if not jira_parent_issue:
+                self._logger.debug(
+                    f"Couldn't find Jira Issue associated to Jira Key ({sg_parent_entity[SHOTGUN_JIRA_ID_FIELD]}). Skipping hierarchy syncing."
+                )
+                return False
+            jira_parent = {"key": jira_parent_issue.key}
+
+        jira_issue.update(fields={"parent": jira_parent})
+
+        return True
+
 
     def _sync_jira_issue_to_sg(self, jira_issue):
         """"""
@@ -1249,7 +1294,13 @@ class EntitiesHandler(SyncHandler):
                 sync_with_errors = True
                 continue
 
-            jira_value = getattr(jira_issue.fields, jira_field)
+            try:
+                jira_value = getattr(jira_issue.fields, jira_field)
+            except AttributeError:
+                if jira_field != "parent":
+                    self._logger.debug(f"Couldn't find jira field '{jira_field}' value for current {issue_type} ({jira_issue.key})")
+                    return False
+                jira_value = None
             sg_value = None
 
             if jira_field == "watches":
@@ -1260,6 +1311,9 @@ class EntitiesHandler(SyncHandler):
 
             elif jira_field == "status":
                 sg_value = self.__get_status_mapping(sg_entity["type"], jira_status=str(jira_value)) if jira_value else None
+
+            elif jira_field == "parent":
+                sg_value = self.__get_sg_entity_from_jira_issue(jira_value)
 
             else:
                 try:
@@ -1316,6 +1370,17 @@ class EntitiesHandler(SyncHandler):
             else:
                 raise
         return jira_worklog
+
+    def __get_sg_entity_from_jira_issue(self, jira_issue):
+        """"""
+        if not jira_issue:
+            return None
+        entity_mapping = self.__get_jira_issue_type_settings(jira_issue.fields.issuetype.name)
+        return self._shotgun.find_one(
+            entity_mapping["sg_entity"],
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
+        )
+
 
     def __parse_jira_key_from_sg_entity(self, sg_entity):
         """"""
