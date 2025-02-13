@@ -18,7 +18,7 @@ class Syncer(object):
 
     def __init__(self, name, bridge, hook_class, **kwargs):
         """
-        Instatiate a new syncer for the given bridge.
+        Instantiate a new syncer for the given bridge.
 
         :param str name: A unique name for the syncer.
         :param bridge: A :class:`~sg_jira.Bridge` instance.
@@ -54,7 +54,7 @@ class Syncer(object):
 
     @property
     def hook(self):
-        """"""
+        """Return the :class:`~sg_jira.Hook` instance used by this syncer."""
         return self._hook
 
     @property
