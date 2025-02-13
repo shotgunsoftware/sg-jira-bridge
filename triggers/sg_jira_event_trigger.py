@@ -52,7 +52,6 @@ def registerCallbacks(reg):
         "Shotgun_Project_Change": ["*"],
         "Shotgun_Asset_Change": ["*"],  # Needed by the Asset/Task example.
         "Shotgun_TimeLog_Change": ["*"],  # Needed by the Timelog/Task example.
-        "Shotgun_CustomEntity04_Change": ["*"],
         # These events require a reset of the bridge to ensure our cached schema
         # is up to date.
         "Shotgun_DisplayColumn_New": ["*"],
