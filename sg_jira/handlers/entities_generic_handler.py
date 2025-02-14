@@ -17,21 +17,20 @@ from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD
 # TODO:
 #  - handle specific sg entities (list for example)/jira values in the `_sync_sg_fields_to_jira` method
 #  - find a way to check if a field exist for a specific issue type when accepting SG event
-#  - handle Timelog/Note specific workflow
-#  - handle Jira Comments/FPTR Notes deletion
-#  - take into account the sync flag when creating/updating Notes/Comments
-#  - handle timelog/worklog deletion
 #  - add a check for Jira Worklog fields existence
 #  - improve logging (level/message)
 #  - ensure mandatory fields for Jira entity creation (eg: started + duration for TimeLogs)
 
 class EntitiesGenericHandler(SyncHandler):
     """
-    A handler which syncs a Flow Production Tracking Entities as a Jira Entities.
+    A handler which syncs Flow Production Tracking Entities as a Jira Entities.
     """
 
+    # Define the entities with specific behavior
+    # Usually, these entities are linked to a FPTR that will be synced as Jira Issue
     __ENTITIES_NOT_FLAGGED_AS_SYNCED = ["Note", "TimeLog"]
 
+    # Define the FPTR field associated to the deletion action
     __SG_RETIREMENT_FIELD = "retirement_date"
 
     # Define the required FPTR fields for some specific entities not exposed entirely in the settings
@@ -42,6 +41,9 @@ class EntitiesGenericHandler(SyncHandler):
         """
         Instantiate a handler for the given syncer.
         :param syncer: A :class:`~sg_jira.Syncer` instance.
+        :param entity_mapping: A list of entities to map.
+            Each list entry is a python dictionary where the mapping between FPTR and Jira is done regarding the
+            entity type, the fields to sync or the sync direction.
         """
         super(EntitiesGenericHandler, self).__init__(syncer)
         self.__entity_mapping = entity_mapping
@@ -52,6 +54,8 @@ class EntitiesGenericHandler(SyncHandler):
         and cache any value which is slow to retrieve.
         """
 
+        # Make sure the custom Jira field allowing the user to sync data from Jira to FPTR has been created
+        # in Jira
         self.__jira_sync_in_fptr_field_id = self._jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower())
         if not self.__jira_sync_in_fptr_field_id:
             raise RuntimeError("Missing required custom Jira field %s" % JIRA_SYNC_IN_FPTR_FIELD)
@@ -87,7 +91,8 @@ class EntitiesGenericHandler(SyncHandler):
                     "checkbox"
                 )
 
-            if entity_mapping["sg_entity"] not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+            # if entity_mapping["sg_entity"] not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+            if entity_mapping["sg_entity"] not in ["Note"]:
 
                 # check that the field mapping has been defined in the settings
                 if "field_mapping" not in entity_mapping.keys():
@@ -137,8 +142,7 @@ class EntitiesGenericHandler(SyncHandler):
                 if "mapping" not in entity_mapping["status_mapping"].keys():
                     raise RuntimeError("Status mapping does not contain mapping key, please check your settings.")
                 # TODO: do we want to check that the status really exist in the two DBs
-
-            # TODO: add checks for hierarchy
+                # TODO: do we want to check that the FPTR field is actually a status field?
 
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -146,10 +150,12 @@ class EntitiesGenericHandler(SyncHandler):
         :returns: `True if the event is accepted for processing, `False` otherwise.
         """
 
+        self._logger.debug(f"Checking Flow Production Tracking event...\n {event}")
+
         # check that the entity linked to the event is supported by the bridge
         if entity_type not in self._supported_shotgun_entities_for_shotgun_event():
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event for unsupported PTR entity {entity_type}: {event}"
+                f"Rejecting Flow Production Tracking event: unsupported FPTR entity type {entity_type}"
             )
             return False
 
@@ -160,22 +166,22 @@ class EntitiesGenericHandler(SyncHandler):
 
         if sync_settings.get("sync_direction", "both_way") == "jira_to_sg":
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event for {entity_type}. "
-                f"The sync direction setting is configured to only sync from Jira to FPTR."
+                f"Rejecting Flow Production Tracking event: "
+                f"the sync direction setting is configured to only sync from Jira to FPTR."
             )
             return False
 
         sync_deletion_direction = sync_settings.get("sync_deletion_direction", None)
         retired_only = False
         if field == self.__SG_RETIREMENT_FIELD:
-            if sync_deletion_direction in [None, "jira_to_sg"]:
+            if entity_type not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
                 self._logger.debug(
-                    f"Rejecting Flow Production Tracking event as deletion is disabled for entity type {entity_type}: {event}"
+                    f"Rejecting Flow Production Tracking event: deletion is not supported for entity type {entity_type}"
                 )
                 return False
-            elif entity_type not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+            elif sync_deletion_direction in [None, "jira_to_sg"]:
                 self._logger.debug(
-                    f"Rejecting Flow Production Tracking event as deletion is not supported for entity type {entity_type}: {event}"
+                    f"Rejecting Flow Production Tracking event: deletion is disabled for FPTR entity type {entity_type}"
                 )
                 return False
             else:
@@ -185,7 +191,7 @@ class EntitiesGenericHandler(SyncHandler):
         # check that the field linked to the event is supported by the bridge
         if field not in self._supported_shotgun_fields_for_shotgun_event(entity_type) + extra_sg_fields:
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event for unsupported PTR field {field}: {event}"
+                f"Rejecting Flow Production Tracking event: unsupported FPTR field {field}"
             )
             return False
 
@@ -197,14 +203,14 @@ class EntitiesGenericHandler(SyncHandler):
         )
         if not sg_entity:
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event for unfounded PTR entity {entity_type}: {entity_id}"
+                f"Rejecting Flow Production Tracking event: unfounded FPTR entity {entity_type} ({entity_id})"
             )
             return False
 
         # for now, we only support project entities as we need to find the associated Jira project
         if not sg_entity.get(f"project.Project.{SHOTGUN_JIRA_ID_FIELD}"):
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event because {entity_type} ({entity_id}) doesn't belong to a FPTR"
+                f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) doesn't belong to a FPTR"
                 f" Project associated to a Jira Project."
             )
             return False
@@ -213,7 +219,7 @@ class EntitiesGenericHandler(SyncHandler):
         # some special entities like Notes or TimeLogs don't need the flag as they are tied to other flagged entities
         if entity_type not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED and not sg_entity.get(SHOTGUN_SYNC_IN_JIRA_FIELD):
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event because {entity_type} ({entity_id}) "
+                f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) "
                 f"is not flagged as ready-to-sync."
             )
             return False
@@ -228,7 +234,7 @@ class EntitiesGenericHandler(SyncHandler):
                 was_previously_linked = self.__was_previously_synced_in_jira(previous_entities)
                 if not was_previously_linked:
                     self._logger.debug(
-                        f"Rejecting Flow Production Tracking event because {entity_type} ({entity_id}) "
+                        f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) "
                         f"is not linked to an entity already synced to Jira."
                     )
                     return False
@@ -247,12 +253,9 @@ class EntitiesGenericHandler(SyncHandler):
         # We use the Jira id field value to check if we're processing the first
         # event. If it exists with in_create, we know the entity has already
         # been created.
-        # Special use cases: when a new Note is added to a Task, the "in_create" flag
-        # will be propagated to the Task entity as well while it can be an existing Task
         if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event for {entity_type}.{field} field update during "
-                f"create. Entity was already created in Jira: {event}"
+                f"Rejecting Flow Production Tracking event: entity creation event was already handled."
             )
             return False
 
@@ -266,8 +269,8 @@ class EntitiesGenericHandler(SyncHandler):
                 self._jira.issue_type_by_name(sync_settings["jira_issue_type"], jira_project_key)
             except KeyError:
                 self._logger.debug(
-                    f"Rejecting Flow Production Tracking event because issue type {sync_settings['jira_issue_type']} "
-                    f"has not been enabled for project {jira_project_key} in Jira: {event}"
+                    f"Rejecting Flow Production Tracking event: issue type {sync_settings['jira_issue_type']} "
+                    f"has not been enabled for project {jira_project_key} in Jira"
                 )
                 return False
 
@@ -300,6 +303,8 @@ class EntitiesGenericHandler(SyncHandler):
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
         """
+
+        self._logger.debug(f"Processing Flow Production Tracking event...\n {event}")
 
         meta = event["meta"]
         sg_field = event["meta"]["attribute_name"]
@@ -558,6 +563,8 @@ class EntitiesGenericHandler(SyncHandler):
         """
         Return the list of Flow Production Tracking fields that this handler can process for a
         Flow Production Tracking to Jira event.
+        :param entity_type: The type of FPTR entity to process.
+        :type entity_type: str
         :returns: A list of strings.
         """
 
@@ -576,8 +583,13 @@ class EntitiesGenericHandler(SyncHandler):
 
         return sg_fields
 
-    def _supported_jira_webhook_events(self):
-        """"""
+    @staticmethod
+    def _supported_jira_webhook_events():
+        """
+        Return the list of Jira Webhook events that this handler can process for a Jira to Flow Production Tracking
+        event.
+        :returns: A list of strings.
+        """
         return [
             "jira:issue_created",
             "jira:issue_updated",
@@ -588,7 +600,10 @@ class EntitiesGenericHandler(SyncHandler):
         ]
 
     def _supported_jira_issue_types_for_jira_event(self):
-        """"""
+        """
+        Return the list of Jira Issue Types that this handler can process for a Jira to Flow Production Tracking event.
+        :returns: A list of strings.
+        """
         jira_issue_types = []
         for em in self.__entity_mapping:
             if em.get("jira_issue_type"):
@@ -596,7 +611,12 @@ class EntitiesGenericHandler(SyncHandler):
         return jira_issue_types
 
     def _supported_jira_fields_for_jira_event(self, jira_entity_type):
-        """"""
+        """
+        Return the list of Jira fields that this handler can process for a Jira to Flow Production Tracking event.
+        :param jira_entity_type: The type of Jira entity to process.
+        :type jira_entity_type: str
+        :returns: A list of strings.
+        """
 
         jira_fields = []
 
@@ -619,7 +639,12 @@ class EntitiesGenericHandler(SyncHandler):
         return jira_fields
 
     def __sg_get_entity_fields(self, entity_type):
-        """Get all the FPTR fields required when querying the database"""
+        """
+        Get all the FPTR fields required when querying the database.
+        :param entity_type: The type of FPTR entity we want to query the fields for.
+        :type entity_type: str
+        :returns: A list of strings.
+        """
         return [
             SHOTGUN_SYNC_IN_JIRA_FIELD,
             SHOTGUN_JIRA_ID_FIELD,
@@ -629,21 +654,40 @@ class EntitiesGenericHandler(SyncHandler):
         ] + self._supported_shotgun_fields_for_shotgun_event(entity_type)
 
     def __get_sg_entity_settings(self, entity_type):
-        """Returns the sync settings for the given entity type"""
+        """
+        Returns the sync settings for the given FPTR entity type.
+        :param entity_type: The type of FPTR entity we want to query the settings for.
+        :type entity_type: str
+        :returns: A dictionary with the sync settings.
+        """
         for entity_mapping in self.__entity_mapping:
             if entity_mapping["sg_entity"] == entity_type:
                 return entity_mapping
         return None
 
     def __get_jira_issue_type_settings(self, issue_type):
-        """"""
+        """
+        Returns the sync settings for the given Jira issue type.
+        :param issue_type: The type of Jira issue we want to query the settings for.
+        :type issue_type: str
+        :returns: A dictionary with the sync settings.
+        """
         for entity_mapping in self.__entity_mapping:
             if entity_mapping.get("jira_issue_type") == issue_type:
                 return entity_mapping
         return None
 
     def __get_field_mapping(self, entity_type, jira_field=None, sg_field=None):
-        """"""
+        """
+        Return the field mapping between FPTR and Jira.
+        :param entity_type: The type of FPTR entity we want to have the equivalent field for.
+        :type entity_type: str
+        :param jira_field: If provided, this method will return the associated FPTR field.
+        :type jira_field: str
+        :param sg_field: If provided, this method will return the associated Jira field.
+        :type sg_field: str
+        :returns: The associated field as string.
+        """
         if not jira_field and not sg_field:
             raise ValueError("jira_field or sg_field must be provided")
 
@@ -673,8 +717,17 @@ class EntitiesGenericHandler(SyncHandler):
             elif sg_field and f["sg_field"] == sg_field:
                 return f
 
-    def __get_status_mapping(self, entity_type, sg_status=None, jira_status=None):
-        """"""
+    def __get_status_mapping(self, entity_type, jira_status=None, sg_status=None):
+        """
+        Return the status mapping between FPTR and Jira.
+        :param entity_type: The type of FPTR entity we want to have the equivalent field for.
+        :type entity_type: str
+        :param jira_status: If provided, this method will return the associated FPTR status.
+        :type jira_status: str
+        :param sg_status: If provided, this method will return the associated Jira status.
+        :type sg_status: str
+        :returns: The associated status as string.
+        """
         if not sg_status and not jira_status:
             raise ValueError("sg_status or jira_status must be provided")
 
@@ -689,7 +742,12 @@ class EntitiesGenericHandler(SyncHandler):
                 return s_status
 
     def _get_jira_entity(self, sg_entity):
-        """Get the Jira object for the given Jira entity ID and entity type."""
+        """
+        Get the Jira entity associated to the given FPTR entity.
+        :param sg_entity: A FPTR entity dictionary.
+        :type sg_entity: dict
+        :returns: The associated Jira entity as a Jira object.
+        """
 
         # we need to manage special entities like Note/Comment and TimeLog/Worklog apart
         if sg_entity["type"] == "Note":
@@ -722,14 +780,21 @@ class EntitiesGenericHandler(SyncHandler):
             return jira_issue
 
     def _create_jira_entity(self, sg_entity, jira_project):
-        """"""
+        """
+        Create a Jira entity from a given FPTR entity.
+        :param sg_entity: A FPTR entity dictionary representing the Jira entity to create.
+        :type sg_entity: dict
+        :param jira_project: The Jira project to create the Jira entity from.
+        :type jira_project: jira.resources.Project
+        :returns: The created Jira entity as object
+        """
 
         # we need to manage special entities like Note/Comment and TimeLog/Worklog apart
         if sg_entity["type"] == "Note":
             # to avoid confusion, even if the Note is linked to many synced entities, we're going to associate
             # this Note to only one Issue in Jira
             if len(sg_entity["tasks"]) > 1:
-                self._logger.debug(
+                self._logger.warning(
                     f"FPTR Note ({sg_entity['id']}) is linked to more than one Task. "
                     f"Comment in Jira will only be created for one Issue."
                 )
@@ -830,7 +895,12 @@ class EntitiesGenericHandler(SyncHandler):
         return jira_entity
 
     def _delete_jira_entity(self, sg_entity, update_sg=False):
-        """"""
+        """
+        Delete the Jira entity associated to the given FPTR entity.
+        :param sg_entity: The Flow Production Tracking entity we want to delete the Jira associated entity from.
+        :type sg_entity: dict
+        :param update_sg: If True, the Jira key associated to the FPTR entity will be cleaned up.
+        """
 
         jira_entity = self._get_jira_entity(sg_entity)
         if not jira_entity:
@@ -849,7 +919,16 @@ class EntitiesGenericHandler(SyncHandler):
             )
 
     def _sync_sg_fields_to_jira(self, sg_entity, jira_entity, field_name=None):
-        """"""
+        """
+        Sync a list of FPTR fields to Jira.
+        :param sg_entity: The Flow Production Tracking entity we want to sync the fields from.
+        :type sg_entity: dict
+        :param jira_entity: The Jira entity we want to sync the fields to.
+        :type jira_entity: jira.resources.Issue or jira.resources.Worklog or jira.resources.Comment
+        :param field_name: Optional field name to sync. If not one is supplied, all the fields associated to the FPTR
+            entity will be synced.
+        :returns: True if everything went well, False if errors happened
+        """
 
         jira_fields = {}
         sync_with_errors = False
@@ -953,8 +1032,10 @@ class EntitiesGenericHandler(SyncHandler):
             jira_fields[jira_field] = jira_value
 
         if jira_fields:
+            self._logger.debug(f"Updating Jira fields: {jira_fields}")
             jira_entity.update(fields=jira_fields)
 
+        # if a full sync is required for a Jira Issue, we also need to sync its associated comments and worklogs
         if sg_entity["type"] not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED and not field_name:
             worklog_sync_with_error = self._sync_sg_linked_entities_to_jira(sg_entity, "TimeLog", jira_entity)
             comment_sync_with_error = self._sync_sg_linked_entities_to_jira(sg_entity, "Note", jira_entity)
@@ -964,7 +1045,15 @@ class EntitiesGenericHandler(SyncHandler):
         return sync_with_errors
 
     def _sync_sg_watchers_to_jira(self, sg_value, jira_issue):
-        """"""
+        """
+        Update the Jira Issue watchers list.
+
+        :param sg_value: FPTR entities representing the Jira watchers
+        :type sg_value: dict or list of dict
+        :param jira_issue: Jira issue we want to update the watchers
+        :type jira_issue: jira.resources.Issue
+        :returns: True if everything went well, False if errors happened
+        """
 
         current_watchers = []
 
@@ -1000,7 +1089,17 @@ class EntitiesGenericHandler(SyncHandler):
         return True
 
     def _sync_sg_status_to_jira(self, sg_value, entity_type, jira_issue):
-        """"""
+        """
+        Update the Jira Issue status.
+
+        :param sg_value: FPTR entity status
+        :type sg_value: str
+        :param entity_type: The type of the FPTR entity we want to update the status from
+        :type entity_type: str
+        :param jira_issue: Jira issue we want to update the status
+        :type jira_issue: jira.resources.Issue
+        :returns: True if everything went well, False if errors happened
+        """
 
         jira_status = self.__get_status_mapping(entity_type, sg_status=sg_value)
         if not jira_status:
@@ -1017,7 +1116,17 @@ class EntitiesGenericHandler(SyncHandler):
         )
 
     def _sync_sg_linked_entities_to_jira(self, sg_entity, linked_entity_type, jira_issue):
-        """"""
+        """
+        Perform a full sync for each FPTR related entities linked to a FPTR entity representing a Jira Issue.
+        A related entity can be a FPTR TimeLog or Note.
+        :param sg_entity: FPTR entity we want to sync the related entities from
+        :type sg_entity: dict
+        :param linked_entity_type: Type of the FPTR related entities we're trying to sync
+        :type linked_entity_type: str
+        :param jira_issue: Jira issue associated to the FPTR entity the original sync if performed from
+        :type jira_issue: jira.resources.Issue
+        :returns: True if everything went well, False if errors happened
+        """
 
         linked_entity_field = "tasks" if linked_entity_type == "Note" else "entity"
 
@@ -1041,7 +1150,7 @@ class EntitiesGenericHandler(SyncHandler):
                     continue
                 jira_entity = self._get_jira_entity(e)
             if not jira_entity:
-                self._logger.debug(f"Couldn't get Jira entity for FPTR {e['type']} ({e['id']})")
+                self._logger.warning(f"Couldn't get Jira entity for FPTR {e['type']} ({e['id']})")
                 sync_with_error = True
                 continue
             self._sync_sg_fields_to_jira(e, jira_entity)
@@ -1051,7 +1160,15 @@ class EntitiesGenericHandler(SyncHandler):
         return sync_with_error
 
     def _sync_hierarchy_to_jira(self, sg_parent_entity, jira_issue):
-        """"""
+        """
+        Sync the FPTR parent/child relationship to Jira.
+        :param sg_parent_entity: The FPTR entity used as parent of the associated issue. It can be None
+            if the parent field in FPTR is empty.
+        :type sg_parent_entity: dict
+        :param jira_issue: Jira issue we want to update the parent
+        :type jira_issue: jira.resources.Issue
+        :returns: True if everything went well, False if errors happened
+        """
 
         jira_parent = None
 
@@ -1077,7 +1194,7 @@ class EntitiesGenericHandler(SyncHandler):
 
             jira_parent_issue = self._jira.issue(sg_parent_entity[SHOTGUN_JIRA_ID_FIELD])
             if not jira_parent_issue:
-                self._logger.debug(
+                self._logger.warning(
                     f"Couldn't find Jira Issue associated to Jira Key ({sg_parent_entity[SHOTGUN_JIRA_ID_FIELD]}). Skipping hierarchy syncing."
                 )
                 return False
@@ -1107,7 +1224,7 @@ class EntitiesGenericHandler(SyncHandler):
             sg_type = getattr(jira_issue.fields, self._jira.jira_shotgun_type_field)
             sg_id = getattr(jira_issue.fields, self._jira.jira_shotgun_id_field)
             if sg_type or sg_id:
-                self._logger.debug(
+                self._logger.warning(
                     f"Error happened while processing Jira event: Jira Issue {jira_issue.key} is already synced "
                     f"to a FPTR {sg_type} ({sg_id}) entity that couldn't be found in FPTR."
                 )
