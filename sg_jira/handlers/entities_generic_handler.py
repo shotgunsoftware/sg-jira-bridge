@@ -856,7 +856,7 @@ class EntitiesGenericHandler(SyncHandler):
 
             shotgun_url = self._shotgun.get_entity_page_url(sg_entity)
 
-            self._logger.info(
+            self._logger.debug(
                 f"Creating Jira Issue in Project {jira_project} for Flow Production Tracking {sg_entity['type']} "
                 f"{sg_entity['name']} ({sg_entity['id']})"
             )
@@ -1042,7 +1042,7 @@ class EntitiesGenericHandler(SyncHandler):
             if worklog_sync_with_error or comment_sync_with_error:
                 sync_with_errors = True
 
-        return sync_with_errors
+        return not sync_with_errors
 
     def _sync_sg_watchers_to_jira(self, sg_value, jira_issue):
         """
@@ -1448,7 +1448,7 @@ class EntitiesGenericHandler(SyncHandler):
         if sg_data:
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
-        return sync_with_errors
+        return not sync_with_errors
 
     def _get_jira_issue_comment(self, jira_issue_key, jira_comment_id):
         """
