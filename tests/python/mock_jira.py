@@ -108,6 +108,30 @@ ISSUE_FIELDS = {
             "type": "string",
         },
     },
+    "customfield_11503": {
+        "hasDefaultValue": False,
+        "key": "customfield_11503",
+        "name": "Shotgun URL",
+        "operations": ["set"],
+        "required": False,
+        "schema": {
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+            "customId": 11503,
+            "type": "string",
+        },
+    },
+    "customfield_11504": {
+        "hasDefaultValue": False,
+        "key": "customfield_11504",
+        "name": "Sync in FPTR",
+        "operations": ["set"],
+        "required": False,
+        "schema": {
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 11504,
+            "type": "option",
+        },
+    },
     "description": {
         "hasDefaultValue": False,
         "key": "description",
@@ -878,6 +902,21 @@ class MockedJira(object):
                     "customId": 11517,
                     "type": "string",
                     "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+                },
+            },
+            {
+                "name": "Sync In FPTR",
+                "searchable": True,
+                "navigable": True,
+                "custom": True,
+                "key": "customfield_11504",
+                "clauseNames": ["cf[11504]", "Sync In FPTR"],
+                "orderable": True,
+                "id": "customfield_11504",
+                "schema": {
+                    "customId": 11504,
+                    "type": "option",
+                    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
                 },
             },
             {
