@@ -214,30 +214,6 @@ SYNC = {
                         },
                     ]
                 },
-                # {
-                #     "sg_entity": "CustomEntity02",
-                #     "jira_issue_type": "MFL",
-                #     "field_mapping": [
-                #         {
-                #             "sg_field": "code",
-                #             "jira_field": "summary",
-                #         },
-                #         {
-                #             "sg_field": "description",
-                #             "jira_field": "description",
-                #         }
-                #     ],
-                # },
-                # {
-                #     "sg_entity": "CustomEntity03",
-                #     "jira_issue_type": "LOQ",
-                #     "field_mapping": [
-                #         {
-                #             "sg_field": "code",
-                #             "jira_field": "summary",
-                #         },
-                #     ]
-                # }
                 {
                     "sg_entity": "CustomEntity04",
                     "jira_issue_type": "Epic",
