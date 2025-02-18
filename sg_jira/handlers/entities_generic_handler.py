@@ -225,20 +225,30 @@ class EntitiesGenericHandler(SyncHandler):
             )
             return False
 
-        if entity_type in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED and field != self.__SG_RETIREMENT_FIELD:
-            if not self.__get_linked_entity_synced_in_jira(sg_entity):
-                previous_entities = []
-                if meta.get("old_value"):
-                    previous_entities.append(meta["old_value"])
-                elif meta.get("removed"):
-                    previous_entities.extend(meta["removed"])
-                was_previously_linked = self.__was_previously_synced_in_jira(previous_entities)
-                if not was_previously_linked:
+        if entity_type in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+
+            if field == self.__SG_RETIREMENT_FIELD:
+                if not sg_entity.get(SHOTGUN_JIRA_ID_FIELD):
                     self._logger.debug(
-                        f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) "
-                        f"is not linked to an entity already synced to Jira."
+                        f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) doesn't seem to "
+                        f"be synced to Jira."
                     )
                     return False
+
+            else:
+                if not self.__get_linked_entity_synced_in_jira(sg_entity):
+                    previous_entities = []
+                    if meta.get("old_value"):
+                        previous_entities.append(meta["old_value"])
+                    elif meta.get("removed"):
+                        previous_entities.extend(meta["removed"])
+                    was_previously_linked = self.__was_previously_synced_in_jira(previous_entities)
+                    if not was_previously_linked:
+                        self._logger.debug(
+                            f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) "
+                            f"is not linked to an entity already synced to Jira."
+                        )
+                        return False
 
         # When an Entity is created in PTR, a unique event is generated for
         # each field value set in the creation of the Entity. These events
