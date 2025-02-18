@@ -7,7 +7,7 @@
 
 import copy
 from jira.resources import Project as JiraProject
-from jira.resources import IssueType, Issue, User, Comment, IssueLink, Worklog
+from jira.resources import IssueType, Issue, User, Comment, IssueLink, Worklog, Status
 from jira import JIRAError
 
 # Faked Jira Project, Issue, change log and event
@@ -423,7 +423,6 @@ class MockedComment(Comment):
 
     def delete(self):
         pass
-
 
 class MockedWorklog(Worklog):
     def update(self, *args, **kwargs):
@@ -1729,8 +1728,14 @@ class MockedJira(object):
             }
         ]
 
-    def transition_issue(self, *args, **kwargs):
-        return ""
+    def transition_issue(self, jira_issue, transition_id, *args, **kwargs):
+        for t in self.transitions():
+            if t["id"] == transition_id:
+                jira_issue.update(
+                    fields={
+                        "status": Status(None, None, raw={"name": t["to"]["name"]})
+                    }
+                )
 
     def search_assignable_users_for_issues(
         self, username=None, query=None, startAt=0, maxResults=20, *args, **kwargs
