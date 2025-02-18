@@ -91,7 +91,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         """Test setup."""
         super(TestEntitiesGenericHandlerFPTRToJira, self).setUp()
 
-    def __mock_sg_data(self, sg_instance, jira_issue=None):
+    def __mock_sg_data(self, sg_instance, jira_issue=None, sync_in_jira=True):
         """
         Helper method to mock FPTR data.
         We can't call it in the `setUp` method as we need the mocked_sg instance...
@@ -100,10 +100,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         self.add_to_sg_mock_db(sg_instance, mock_shotgun.SG_USER)
 
         mocked_sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
-        mocked_sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        mocked_sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = sync_in_jira
         if jira_issue:
             mocked_sg_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
         self.add_to_sg_mock_db(sg_instance, mocked_sg_task)
+
+        return mocked_sg_task
 
     def __mock_jira_data(self, bridge, sg_entity=None):
         """
@@ -370,14 +372,14 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         - the FPTR JIra fields will be updated
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way")
 
         self.__mock_jira_data(bridge)
         self.__mock_sg_data(bridge.shotgun)
 
         self.assertTrue(
             bridge.sync_in_jira(
-                self.HANDLER_NAME,
+                "entities_generic_both_way",
                 "Task",
                 mock_shotgun.SG_TASK["id"],
                 mock_shotgun.SG_TASK_CHANGE_EVENT,
@@ -470,7 +472,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue)
+        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
         self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
@@ -513,7 +515,13 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
 
         jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue)
+        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [mocked_sg_task]
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        self.assertEqual(bridge._jira.comments(jira_issue.key), [])
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
         self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
@@ -534,10 +542,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         )
         jira_issue = bridge.jira.issue(jira_issue.key)
 
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
 
-        # TODO: need to check for TimeLogs + Notes
+        # TODO: need to check for TimeLogs
 
     def test_fptr_to_jira_sync_existing_entity_fields_directions(self, mocked_sg):
         """
@@ -558,7 +568,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
 
         jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue)
+        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
         self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
@@ -587,7 +597,150 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         # direction for this field is "jira_to_sg"
         self.assertNotEqual(jira_issue.fields.duedate, mocked_sg.SG_TASK["due_date"])
 
-    # TODO: tests for status update
+    def test_fptr_to_jira_sync_status(self, mocked_sg):
+        """
+        Check that the status syncing is working correctly.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is not set, meaning that it would be both_way by default
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira Issue status should be correctly updated
+        """
+
+        jira_status = "To Do"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertNotEqual(jira_issue.fields.status.name, jira_status)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                sg_mocked_event,
+            )
+        )
+
+        self.assertEqual(jira_issue.fields.status.name, jira_status)
+
+    def test_fptr_to_jira_sync_status_both_way(self, mocked_sg):
+        """
+        Check that the status syncing direction is working correctly.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is configured to work both way
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira Issue status should be correctly updated
+        """
+
+        jira_status = "To Do"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_both_way")
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertNotEqual(jira_issue.fields.status.name, jira_status)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "entities_generic_status_both_way",
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                sg_mocked_event,
+            )
+        )
+
+        self.assertEqual(jira_issue.fields.status.name, jira_status)
+
+    def test_fptr_to_jira_sync_status_sg_to_jira(self, mocked_sg):
+        """
+        Check that the status syncing direction is working correctly when specified from FPTR to Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is configured to work from FPTR to Jira
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira Issue status should be correctly updated
+        """
+
+        jira_status = "To Do"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_sg_to_jira")
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertNotEqual(jira_issue.fields.status.name, jira_status)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "entities_generic_status_sg_to_jira",
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                sg_mocked_event,
+            )
+        )
+
+        self.assertEqual(jira_issue.fields.status.name, jira_status)
+
+    def test_fptr_to_jira_sync_status_jira_to_sg(self, mocked_sg):
+        """
+        Check that the status syncing direction is working correctly when specified from Jira to FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is configured to work from Jira to FPTR
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira Issue status should not be updated
+        """
+
+        jira_status = "To Do"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_jira_to_sg")
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertNotEqual(jira_issue.fields.status.name, jira_status)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "entities_generic_status_jira_to_sg",
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                sg_mocked_event,
+            )
+        )
+
+        self.assertNotEqual(jira_issue.fields.status.name, jira_status)
+
 
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Entity Delete Event
@@ -597,31 +750,17 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         If a FPTR entity other than a Note/TimeLog has been deleted in FPTR,
         the event will be rejected as deletion is not supported by the Bridge.
         """
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
         self.assertFalse(
             bridge.sync_in_jira(
                 self.HANDLER_NAME,
                 mocked_sg.SG_TASK,
                 mock_shotgun.SG_TASK["id"],
-                mock_shotgun.SG_TASK_DELETE_EVENT,
-            )
-        )
-
-    # -------------------------------------------------------------------------------
-    # FPTR to Jira Sync - TimeLog Delete Event
-    # -------------------------------------------------------------------------------
-    def test_fptr_to_jira_timelog_deletion_bad_direction(self, mocked_sg):
-        """
-        If a TimeLog has been deleted in FPTR but the sync deletion flag is set so deletion is only enabled
-        from Jira to FPTR, the event will be rejected.
-        """
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
-        self.assertFalse(
-            bridge.sync_in_jira(
-                "entities_generic_jira_to_sg_deletion",
-                mocked_sg.SG_TIMELOG,
-                mock_shotgun.SG_TIMELOG["id"],
-                mock_shotgun.SG_TIMELOG_DELETE_EVENT,
+                mocked_sg_event,
             )
         )
 
@@ -629,46 +768,489 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
     # FPTR to Jira Sync - TimeLog Change Event (Timelog creation/update)
     # -------------------------------------------------------------------------------
 
-    def test_fptr_to_jira_timelog_not_linked_to_a_synced_entity(self, mocked_sg):
-        """If the FPTR TimeLog is linked to an entity not synced in Jira, the event will be rejected."""
+    def test_fptr_to_jira_sync_new_timelog_not_linked_to_a_synced_entity(self, mocked_sg):
+        """
+        Check that no Jira Issue worklog won't be created in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is NOT flagged as ready to sync in FPTR
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the event should be rejected
+        """
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
-        mocked_sg_timelog["entity"] = mock_shotgun.SG_TASK
+        mocked_sg_timelog["entity"] = sg_mocked_task
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
         self.assertFalse(
             bridge.sync_in_jira(
                 self.HANDLER_NAME,
-                mocked_sg.SG_TIMELOG,
+                "TimeLog",
                 mock_shotgun.SG_TIMELOG["id"],
                 mock_shotgun.SG_TIMELOG_CHANGE_EVENT,
             )
         )
 
-    # TODO: test against modifying the entity from non synced to synced
-    # TODO: test against modifying the entity from synced to non synced
+    def test_fptr_to_jira_sync_new_timelog_linked_to_a_synced_entity(self, mocked_sg):
+        """
+        Check that the Jira Issue worklog associated to the FPTR TimeLog is correctly created in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is not set, meaning that it will be both_way by default
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira worklog should be created
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["entity"] = mocked_sg_task
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        self.assertEqual(bridge._jira.worklogs(jira_issue.key), [])
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "TimeLog",
+                mock_shotgun.SG_TIMELOG["id"],
+                mock_shotgun.SG_TIMELOG_CHANGE_EVENT,
+            )
+        )
+
+        jira_worklogs = bridge._jira.worklogs(jira_issue.key)
+        self.assertEqual(len(jira_worklogs), 1)
+        worklog_key = "%s/%s" % (jira_issue.key, jira_worklogs[0].id)
+
+        sg_timelog = bridge.shotgun.find_one(
+            "TimeLog",
+            [["id", "is", mocked_sg_timelog["id"]]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+
+        self.assertEqual(sg_timelog[SHOTGUN_JIRA_ID_FIELD], worklog_key)
+
+    def test_fptr_to_jira_sync_existing_timelog(self, mocked_sg):
+        """
+        Check that the Jira Issue worklog associated to the FPTR TimeLog is correctly updated in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is not set, meaning that it will be both_way by default
+        - the Worklog already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira worklog should be updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
+
+        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["entity"] = mocked_sg_task
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "TimeLog",
+                mock_shotgun.SG_TIMELOG["id"],
+                mock_shotgun.SG_TIMELOG_CHANGE_EVENT,
+            )
+        )
+
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
+        jira_worklog = bridge._jira.worklog(jira_issue.key, jira_worklog.id)
+        self.assertEqual(jira_worklog.timeSpentSeconds, mock_shotgun.SG_TIMELOG["duration"] * 60)
+
+    # -------------------------------------------------------------------------------
+    # FPTR to Jira Sync - TimeLog Delete Event
+    # -------------------------------------------------------------------------------
+
+    def test_fptr_to_jira_delete_timelog_deletion_disabled(self, mocked_sg):
+        """
+        Check that the event will be rejected if the sync deletion direction is not set for the TimeLog entity.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "TimeLog",
+                mock_shotgun.SG_TIMELOG["id"],
+                mocked_sg_event,
+            )
+        )
+
+    def test_fptr_to_jira_delete_timelog_not_linked_to_synced_entity(self, mocked_sg):
+        """
+        Check that the event will be rejected if the deleted TimeLog is not associated to a synced entity.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["__retired"] = True
+        mocked_sg_timelog["entity"] = [sg_mocked_task]
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "entities_generic_both_way_deletion",
+                "TimeLog",
+                mock_shotgun.SG_TIMELOG["id"],
+                mocked_sg_event,
+            )
+        )
 
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Note Change Event (Note creation/update)
     # -------------------------------------------------------------------------------
 
-    def test_fptr_to_jira_note_not_linked_to_a_synced_entity(self, mocked_sg):
-        """If the FPTR TimeLog is linked to an entity not synced in Jira, the event will be rejected."""
+    def test_fptr_to_jira_sync_new_note_not_linked_to_a_synced_entity(self, mocked_sg):
+        """
+        Check that no Jira Issue comment won't be created in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is NOT flagged as ready to sync in FPTR
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the event should be rejected
+        """
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
-        mocked_sg_note["tasks"] = [mock_shotgun.SG_TASK]
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
         self.assertFalse(
             bridge.sync_in_jira(
                 self.HANDLER_NAME,
-                mocked_sg.SG_NOTE,
+                "Note",
                 mock_shotgun.SG_NOTE["id"],
                 mock_shotgun.SG_NOTE_CHANGE_EVENT,
             )
         )
 
-    # TODO: test against modifying the entity from non synced to synced
-    # TODO: test against modifying the entity from synced to non synced
+    def test_fptr_to_jira_sync_new_note_linked_to_a_synced_entity(self, mocked_sg):
+        """
+        Check that the Jira Issue comment associated to the FPTR Note is correctly created in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is not set, meaning that it will be both_way by default
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira comment should be created
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [mocked_sg_task]
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        self.assertEqual(bridge._jira.comments(jira_issue.key), [])
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mock_shotgun.SG_NOTE_CHANGE_EVENT,
+            )
+        )
+
+        jira_comments = bridge._jira.comments(jira_issue.key)
+        self.assertEqual(len(jira_comments), 1)
+        comment_key = "%s/%s" % (jira_issue.key, jira_comments[0].id)
+
+        sg_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", mocked_sg_note["id"]]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+
+        self.assertEqual(sg_note[SHOTGUN_JIRA_ID_FIELD], comment_key)
+
+    def test_fptr_to_jira_sync_existing_note(self, mocked_sg):
+        """
+        Check that the Jira Issue comment associated to the FPTR Note is correctly updated in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is not set, meaning that it will be both_way by default
+        - the Comment already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira comment should be updated
+        """
+
+        comment_body = "comment created from Jira"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, comment_body)
+        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [mocked_sg_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mock_shotgun.SG_NOTE_CHANGE_EVENT,
+            )
+        )
+
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+        jira_comment = bridge._jira.comment(jira_issue.key, jira_comment.id)
+        self.assertNotEqual(jira_comment.body, comment_body)
+
+    # def test_fptr_to_jira_sync_existing_note_remove_linked_entity(self, mocked_sg):
+    #     """
+    #     TODO
+    #
+    #     Test environment:
+    #     - the entity/field mapping has been done correctly in the settings
+    #     - the entity is flagged as ready to sync in FPTR
+    #     - the sync direction is not set, meaning that it will be both_way by default
+    #     - the Comment already exists in Jira and is correctly associated to the FPTR entity
+    #     Expected result:
+    #     - the Jira comment should be deleted
+    #     """
+    #
+    #     syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+    #
+    #     jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+    #     jira_comment = bridge.jira.add_comment(jira_issue, "created in Jira")
+    #     mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+    #
+    #     mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+    #     mocked_sg_note["tasks"] = []
+    #     mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+    #     self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+    #
+    #     mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+    #     mocked_sg_event["meta"]["attribute_name"] = "tasks"
+    #     mocked_sg_event["meta"]["removed"] = [mocked_sg_task]
+    #
+    #     self.assertTrue(
+    #         bridge.sync_in_jira(
+    #             self.HANDLER_NAME,
+    #             "Note",
+    #             mock_shotgun.SG_NOTE["id"],
+    #             mocked_sg_event,
+    #         )
+    #     )
+    #
+    #     self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 0)
+
+    # -------------------------------------------------------------------------------
+    # FPTR to Jira Sync - Note Deletion Event
+    # -------------------------------------------------------------------------------
+
+    def test_fptr_to_jira_delete_note_deletion_disabled(self, mocked_sg):
+        """
+        Check that the event will be rejected if the sync deletion direction is not set for the Note entity.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mocked_sg_event,
+            )
+        )
+
+    def test_fptr_to_jira_delete_note_not_linked_to_synced_entity(self, mocked_sg):
+        """
+        Check that the event will be rejected if the deleted Note is not associated to a synced entity.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["__retired"] = True
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "entities_generic_both_way_deletion",
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mocked_sg_event,
+            )
+        )
+
+    def test_fptr_to_jira_delete_note_linked_to_synced_entity_both_way_sync_deletion(self, mocked_sg):
+        """
+        Check that the Jira Issue comment associated to the FPTR Note is correctly deleted in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync deletion direction is set to "both_way"
+        - the Comment already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira comment should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["__retired"] = True
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "entities_generic_both_way_deletion",
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mocked_sg_event,
+            )
+        )
+
+        self.assertEqual(bridge._jira.comments(jira_issue.key), [])
+
+    def test_fptr_to_jira_delete_note_linked_to_synced_entity_sg_to_jira_sync_deletion(self, mocked_sg):
+        """
+        Check that the Jira Issue comment associated to the FPTR Note is correctly deleted in Jira (sync direction set from FPTR to Jira).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync deletion direction is set to "both_way"
+        - the Comment already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira comment should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["__retired"] = True
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "entities_generic_sg_to_jira_deletion",
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mocked_sg_event,
+            )
+        )
+
+        self.assertEqual(bridge._jira.comments(jira_issue.key), [])
+
+    def test_fptr_to_jira_delete_note_linked_to_synced_entity_jira_to_sg_sync_deletion(self, mocked_sg):
+        """
+        Check that the Jira Issue comment associated to the FPTR Note is not deleted in Jira (sync direction set from Jira to FPTR).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync deletion direction is set to "both_way"
+        - the Comment already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira comment should not be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["__retired"] = True
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "entities_generic_jira_to_sg_deletion",
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mocked_sg_event,
+            )
+        )

@@ -408,6 +408,7 @@ class MockedIssue(Issue):
     def __init__(self, *args, **kwargs):
         super(MockedIssue, self).__init__(*args, **kwargs)
         self._worklogs = []
+        self._comments = []
 
     def update(self, fields, *args, **kwargs):
         raw = self.raw
@@ -416,19 +417,24 @@ class MockedIssue(Issue):
 
 
 class MockedComment(Comment):
-    def update(self, fields, *args, **kwargs):
+    def update(self, *args, **kwargs):
         raw = self.raw
-        raw["fields"].update(fields)
+        for k in kwargs:
+            raw[k] = kwargs[k]
         self._parse_raw(raw)
 
-    def delete(self):
-        pass
+    def delete(self, *args, **kwargs):
+        """Mocked Jira method to delete a comment"""
+        self.issue._comments.remove(self)
 
 class MockedWorklog(Worklog):
     def update(self, *args, **kwargs):
         """Mocked Jira method to update a worklog"""
         raw = self.raw
         for k in kwargs:
+            if k == "fields":
+                for v in kwargs[k]:
+                    raw[v] = kwargs[k][v]
             raw[k] = kwargs[k]
         self._parse_raw(raw)
 
@@ -1684,15 +1690,22 @@ class MockedJira(object):
         """
         Mocked Jira method.
         """
-        return MockedComment(None, None, raw={"issue": issue, "body": body, "id": 1})
+        raw = {"issue": issue, "id": str(len(issue._comments) + 1), "body": body}
+        for k in kwargs:
+            raw[k] = kwargs[k]
+        comment = MockedComment(None, None, raw=raw)
+        issue._comments.append(comment)
+        return comment
 
-    def comment(self, issue, *args, **kwargs):
+    def comment(self, issue_key, comment_id, *args, **kwargs):
         """
         Mocked Jira method.
         """
-        return MockedComment(
-            None, None, raw={"issue": issue, "body": "Totally faked", "id": 1}
-        )
+        issue = self.issue(issue_key)
+        for c in issue._comments:
+            if c.id == comment_id:
+                return c
+        return None
 
     def add_worklog(self, issue, *args, **kwargs):
         """Mocked Jira method to add a worklog"""
@@ -1715,6 +1728,11 @@ class MockedJira(object):
         """Mocked Jira method to retrieve all the worklogs associated with an issue"""
         issue = self.issue(issue_key)
         return issue._worklogs
+
+    def comments(self, issue_key):
+        """Mocked Jira method to retrieve all the comments associated with an issue"""
+        issue = self.issue(issue_key)
+        return issue._comments
 
     def transitions(self, *args, **kwargs):
         """

@@ -87,7 +87,8 @@ SG_NOTE = {
     "id": 1,
     "subject": "This is a note",
     "content": "This is the note's content",
-    "user": SG_USER
+    "user": SG_USER,
+    "project": SG_PROJECT
 }
 
 #
@@ -116,34 +117,12 @@ SG_TASK_CHANGE_EVENT = {
     },
 }
 
-SG_TASK_DELETE_EVENT = {
-    "user": {"type": "HumanUser", "id": SG_USER["id"]},
-    "project": {"type": "Project", "id": SG_PROJECT["id"]},
-    "meta": {
-        "type": "attribute_change",
-        "attribute_name": "retirement_date",
-        "entity_type": "Task",
-        "entity_id": SG_TASK["id"],
-    },
-}
-
 SG_TIMELOG_CHANGE_EVENT = {
     "user": {"type": "HumanUser", "id": SG_USER["id"]},
     "project": {"type": "Project", "id": SG_PROJECT["id"]},
     "meta": {
         "type": "attribute_change",
-        "attribute_name": "retirement_date",
-        "entity_type": "TimeLog",
-        "entity_id": SG_TIMELOG["id"],
-    },
-}
-
-SG_TIMELOG_DELETE_EVENT = {
-    "user": {"type": "HumanUser", "id": SG_USER["id"]},
-    "project": {"type": "Project", "id": SG_PROJECT["id"]},
-    "meta": {
-        "type": "attribute_change",
-        "attribute_name": "entity",
+        "attribute_name": "duration",
         "entity_type": "TimeLog",
         "entity_id": SG_TIMELOG["id"],
     },
