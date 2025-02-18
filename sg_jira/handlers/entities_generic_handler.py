@@ -112,7 +112,8 @@ class EntitiesGenericHandler(SyncHandler):
                     # check that the Jira field exist
                     if "jira_field" not in field_mapping.keys():
                         raise RuntimeError("Field mapping does not contain jira_field key, please check your settings.")
-                    self._jira.assert_field(field_mapping["jira_field"])
+                    if entity_mapping["sg_entity"] != "TimeLog":
+                        self._jira.assert_field(field_mapping["jira_field"])
 
                     # special use case for the Jira assignee field
                     # it should only be mapped to a FPTR entity/multi-entity HumanUser field
