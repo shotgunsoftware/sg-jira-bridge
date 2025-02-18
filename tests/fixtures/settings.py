@@ -169,11 +169,18 @@ SYNC = {
                     }
                 },
                 {
+                    "sg_entity": "Note",
+                },
+                {
                     "sg_entity": "TimeLog",
                     "field_mapping": [
                         {
                             "sg_field": "description",
                             "jira_field": "comment",
+                        },
+                        {
+                            "sg_field": "duration",
+                            "jira_field": "timeSpentSeconds",
                         }
                     ]
                 }
@@ -224,8 +231,26 @@ SYNC["entities_generic_field_directions"]["settings"]["entity_mapping"][0]["fiel
     }
 )
 
+SYNC["entities_generic_status_both_way"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_status_both_way"]["settings"]["entity_mapping"][0]["status_mapping"]["sync_direction"] = "both_way"
+
+SYNC["entities_generic_status_sg_to_jira"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_status_sg_to_jira"]["settings"]["entity_mapping"][0]["status_mapping"]["sync_direction"] = "sg_to_jira"
+
+SYNC["entities_generic_status_jira_to_sg"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_status_jira_to_sg"]["settings"]["entity_mapping"][0]["status_mapping"]["sync_direction"] = "jira_to_sg"
+
+SYNC["entities_generic_both_way_deletion"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_both_way_deletion"]["settings"]["entity_mapping"][1]["sync_deletion_direction"] = "both_way"
+SYNC["entities_generic_both_way_deletion"]["settings"]["entity_mapping"][2]["sync_deletion_direction"] = "both_way"
+
+SYNC["entities_generic_sg_to_jira_deletion"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_sg_to_jira_deletion"]["settings"]["entity_mapping"][1]["sync_deletion_direction"] = "sg_to_jira"
+SYNC["entities_generic_sg_to_jira_deletion"]["settings"]["entity_mapping"][2]["sync_deletion_direction"] = "sg_to_jira"
+
 SYNC["entities_generic_jira_to_sg_deletion"] = copy.deepcopy(SYNC["entities_generic"])
 SYNC["entities_generic_jira_to_sg_deletion"]["settings"]["entity_mapping"][1]["sync_deletion_direction"] = "jira_to_sg"
+SYNC["entities_generic_jira_to_sg_deletion"]["settings"]["entity_mapping"][2]["sync_deletion_direction"] = "jira_to_sg"
 
 SYNC["entities_generic_bad_jira_issue_type"] = copy.deepcopy(SYNC["entities_generic"])
 SYNC["entities_generic_bad_jira_issue_type"]["settings"]["entity_mapping"][0]["jira_issue_type"] = "Unknown Issue Type"

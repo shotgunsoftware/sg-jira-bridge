@@ -929,6 +929,127 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
             )
         )
 
+    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_both_way_sync_deletion(self, mocked_sg):
+        """
+        Check that the Jira Issue worklog associated to the FPTR TimeLog is correctly deleted in Jira (sync direction set both way).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync deletion direction is set to "both_way"
+        - the Worklog already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira worklog should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue)
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["__retired"] = True
+        mocked_sg_timelog["entity"] = [sg_mocked_task]
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "entities_generic_both_way_deletion",
+                "TimeLog",
+                mock_shotgun.SG_TIMELOG["id"],
+                mocked_sg_event,
+            )
+        )
+
+        self.assertEqual(bridge._jira.worklogs(jira_issue.key), [])
+
+    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_sg_to_jira_sync_deletion(self, mocked_sg):
+        """
+        Check that the Jira Issue worklog associated to the FPTR TimeLog is correctly deleted in Jira (sync direction set from FPTR to Jira).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync deletion direction is set to "sg_to_jira"
+        - the Worklog already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira worklog should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue)
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["__retired"] = True
+        mocked_sg_timelog["entity"] = [sg_mocked_task]
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                "entities_generic_sg_to_jira_deletion",
+                "TimeLog",
+                mock_shotgun.SG_TIMELOG["id"],
+                mocked_sg_event,
+            )
+        )
+
+        self.assertEqual(bridge._jira.worklogs(jira_issue.key), [])
+
+    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_jira_to_sg_sync_deletion(self, mocked_sg):
+        """
+        Check that the Jira Issue worklog associated to the FPTR TimeLog is not deleted in Jira (sync direction set from Jira to FPTR).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync deletion direction is set to "jira_to_sg"
+        - the Worklog already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the Jira comment should not be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+
+        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue)
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
+
+        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["__retired"] = True
+        mocked_sg_timelog["entity"] = [sg_mocked_task]
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
+        mocked_sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "entities_generic_jira_to_sg_deletion",
+                "TimeLog",
+                mock_shotgun.SG_TIMELOG["id"],
+                mocked_sg_event,
+            )
+        )
+
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Note Change Event (Note creation/update)
     # -------------------------------------------------------------------------------
