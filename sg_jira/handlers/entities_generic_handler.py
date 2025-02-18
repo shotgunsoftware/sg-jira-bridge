@@ -303,6 +303,8 @@ class EntitiesGenericHandler(SyncHandler):
                     )
                     return False
 
+        self._logger.debug("Flow Production Tracking event successfully accepted!")
+
         return True
 
     def process_shotgun_event(self, entity_type, entity_id, event):
@@ -327,7 +329,7 @@ class EntitiesGenericHandler(SyncHandler):
         )
 
         if sg_field == self.__SG_RETIREMENT_FIELD:
-            self._delete_jira_entity(sg_entity)
+            return self._delete_jira_entity(sg_entity)
 
         # if the entity already has an associated Jira ID, make sur to retrieve the associated Jira object
         jira_entity = None
@@ -913,6 +915,10 @@ class EntitiesGenericHandler(SyncHandler):
         :param update_sg: If True, the Jira key associated to the FPTR entity will be cleaned up.
         """
 
+        self._logger.debug(
+            f"Deleting Jira entity associated to Flow Production Tracking {sg_entity['type']} ({sg_entity['id']})..."
+        )
+
         jira_entity = self._get_jira_entity(sg_entity)
         if not jira_entity:
             self._logger.debug(
@@ -928,6 +934,8 @@ class EntitiesGenericHandler(SyncHandler):
                 sg_entity["id"],
                 {SHOTGUN_JIRA_ID_FIELD: ""}
             )
+
+        return True
 
     def _sync_sg_fields_to_jira(self, sg_entity, jira_entity, field_name=None):
         """
