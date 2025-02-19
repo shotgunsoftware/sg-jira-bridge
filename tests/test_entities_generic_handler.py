@@ -154,9 +154,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         self.assertFalse(
             bridge.sync_in_jira(
                 self.HANDLER_NAME,
-                "Asset",
-                mock_shotgun.SG_ASSET["id"],
-                mock_shotgun.SG_ASSET_CHANGE_EVENT,
+                "Shot",
+                mock_shotgun.SG_SHOT["id"],
+                mock_shotgun.SG_SHOT_CHANGE_EVENT,
             )
         )
 

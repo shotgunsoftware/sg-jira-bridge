@@ -44,6 +44,13 @@ SG_ASSET = {
     "project": SG_PROJECT,
 }
 
+SG_SHOT = {
+    "type": "Shot",
+    "id": 1,
+    "code": "Shot 1",
+    "project": SG_PROJECT,
+}
+
 SG_TASK = {
     "type": "Task",
     "id": 1,
@@ -106,6 +113,17 @@ SG_ASSET_CHANGE_EVENT = {
     },
 }
 
+SG_SHOT_CHANGE_EVENT = {
+    "user": {"type": "HumanUser", "id": SG_USER["id"]},
+    "project": {"type": "Project", "id": SG_PROJECT["id"]},
+    "meta": {
+        "type": "attribute_change",
+        "attribute_name": "code",
+        "entity_type": "Shot",
+        "entity_id": SG_SHOT["id"],
+    },
+}
+
 SG_TASK_CHANGE_EVENT = {
     "user": {"type": "HumanUser", "id": SG_USER["id"]},
     "project": {"type": "Project", "id": SG_PROJECT["id"]},
@@ -125,17 +143,6 @@ SG_TIMELOG_CHANGE_EVENT = {
         "attribute_name": "duration",
         "entity_type": "TimeLog",
         "entity_id": SG_TIMELOG["id"],
-    },
-}
-
-SG_NON_PROJECT_ENTITY_CHANGE_EVENT = {
-    "user": {"type": "HumanUser", "id": SG_USER["id"]},
-    # "project": {"type": "Project", "id": SG_PROJECT["id"]},
-    "meta": {
-        "type": "attribute_change",
-        "attribute_name": "code",
-        "entity_type": "CustomNonProjectEntity01",
-        "entity_id": SG_CUSTOM_NON_PROJECT_ENTITY["id"],
     },
 }
 
