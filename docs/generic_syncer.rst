@@ -360,3 +360,37 @@ Once everything has been correctly configured in both Jira and Flow Production T
 You need to make sure that:
     * the FPTR ``Task`` entity has been added to the entity mapping, is correctly mapped to the Task Issue type, and its ``parent`` field has been added to the field mapping
     * the FPTR ``Epic`` entity (CustomEntity04) has been added to the entity mapping and is correctly mapped to the Epic Issue type
+
+
+FPTR Event Daemon Configuration
+===============================
+
+In order to have the sync working from FPTR to Jira, you need to make sure to add the corresponding event to the ``sg_jira_event_trigger`` plugin.
+
+.. code-block:: python
+
+    def registerCallbacks(reg):
+        """
+        Register all necessary or appropriate callbacks for this plugin.
+
+        Flow Production Tracking credentials are retrieved from the `SGDAEMON_SGJIRA_NAME` and `SGDAEMON_SGJIRA_KEY`
+        environment variables.
+
+        :param reg: A Flow Production Tracking Event Daemon Registrar instance.
+        """
+        # Narrow down the list of events we pass to the bridge
+        event_filter = {
+            "Shotgun_Note_Change": ["*"],
+            "Shotgun_Task_Change": ["*"],
+            "Shotgun_Ticket_Change": ["*"],
+            "Shotgun_Project_Change": ["*"],
+            "Shotgun_CustomEntity04_Change": ["*"],  # Needed to sync the Task/Epic linking
+            # These events require a reset of the bridge to ensure our cached schema
+            # is up to date.
+            "Shotgun_DisplayColumn_New": ["*"],
+            "Shotgun_DisplayColumn_Change": ["*"],
+            "Shotgun_DisplayColumn_Retirement": ["*"],
+            "Shotgun_Status_New": ["*"],
+            "Shotgun_Status_Change": ["*"],
+            "Shotgun_Status_Retirement": ["*"],
+        }
