@@ -194,7 +194,6 @@ SYNC = {
                 {
                     "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
                     "sync_direction": "sg_to_jira",
-                    "sync_deletion_direction": "jira_to_sg",
                 },
                 {
                     "sg_entity": "TimeLog",
@@ -221,6 +220,10 @@ SYNC = {
                         {
                             "sg_field": "code",
                             "jira_field": "summary",
+                        },
+                        {
+                            "sg_field": "sg_tasks",
+                            "jira_field": "{{CHILDREN}}",
                         },
                     ],
                 }

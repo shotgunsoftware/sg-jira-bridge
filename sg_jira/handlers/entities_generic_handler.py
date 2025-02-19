@@ -37,6 +37,8 @@ class EntitiesGenericHandler(SyncHandler):
     __NOTE_SG_FIELDS = ["subject", "content", "user", "tasks"]
     __TIMELOG_EXTRA_SG_FIELDS = ["user", "entity"]
 
+    __JIRA_CHILDREN_FIELD = "{{CHILDREN}}"
+
     def __init__(self, syncer, entity_mapping):
         """
         Instantiate a handler for the given syncer.
@@ -112,7 +114,7 @@ class EntitiesGenericHandler(SyncHandler):
                     # check that the Jira field exist
                     if "jira_field" not in field_mapping.keys():
                         raise RuntimeError("Field mapping does not contain jira_field key, please check your settings.")
-                    if entity_mapping["sg_entity"] != "TimeLog":
+                    if entity_mapping["sg_entity"] != "TimeLog" and field_mapping["jira_field"] != self.__JIRA_CHILDREN_FIELD:
                         self._jira.assert_field(field_mapping["jira_field"])
 
                     # special use case for the Jira assignee field
@@ -1001,8 +1003,8 @@ class EntitiesGenericHandler(SyncHandler):
                 self._sync_sg_status_to_jira(sg_entity[sg_field], sg_entity["type"], jira_entity)
                 continue
 
-            if jira_field == "parent":
-                self._sync_hierarchy_to_jira(sg_entity[sg_field], jira_entity)
+            if jira_field in ["parent", self.__JIRA_CHILDREN_FIELD]:
+                self._sync_hierarchy_to_jira(sg_entity[sg_field], jira_entity, jira_field)
                 continue
 
             # check that we have permission to edit this field
@@ -1178,50 +1180,85 @@ class EntitiesGenericHandler(SyncHandler):
 
         return sync_with_error
 
-    def _sync_hierarchy_to_jira(self, sg_parent_entity, jira_issue):
+    def _sync_hierarchy_to_jira(self, sg_linked_entities, jira_issue, jira_field):
         """
         Sync the FPTR parent/child relationship to Jira.
-        :param sg_parent_entity: The FPTR entity used as parent of the associated issue. It can be None
-            if the parent field in FPTR is empty.
-        :type sg_parent_entity: dict
+        :param sg_linked_entities: The FPTR entity/ies used as parent or child of the associated issue. It can be None
+            if the field in FPTR is empty. It will be a list if we are trying to sync children but it will be a single
+            entity if we're trying to sync the parent
+        :type sg_linked_entities: dict or list
         :param jira_issue: Jira issue we want to update the parent
         :type jira_issue: jira.resources.Issue
+        :param jira_field: Jira field we want to update, it will drive the hierarchy direction
+            (parent to child or child to parent)
+        :type jira_field: str
         :returns: True if everything went well, False if errors happened
         """
 
-        jira_parent = None
+        sync_with_error = False
+        jira_keys = []
 
-        if sg_parent_entity:
+        if not isinstance(sg_linked_entities, list):
+            sg_linked_entities = [sg_linked_entities]
 
-            # make sure the entity linked to the current FPTR entity is also synced to Jira and already exist
-            entity_mapping = self.__get_sg_entity_settings(sg_parent_entity["type"])
-            if not entity_mapping:
-                self._logger.debug(
-                    f"Couldn't find entity mapping for {sg_parent_entity['type']} in the settings. Skipping hierarchy syncing."
+        # first, loop through all the FPTR linked entity to make sure new entities are correctly linked
+        for sg_entity in sg_linked_entities:
+
+            jira_parent = None
+            jira_child = None if jira_field == self.__JIRA_CHILDREN_FIELD else jira_issue
+
+            if sg_entity:
+
+                # make sure the entity linked to the current FPTR entity is also synced to Jira and already exist
+                entity_mapping = self.__get_sg_entity_settings(sg_entity["type"])
+                if not entity_mapping:
+                    self._logger.debug(
+                        f"Couldn't find entity mapping for {sg_entity['type']} in the settings. Skipping hierarchy syncing."
+                    )
+                    sync_with_error = True
+                    continue
+
+                sg_consolidated_entity = self._shotgun.consolidate_entity(
+                    sg_entity,
+                    [SHOTGUN_JIRA_ID_FIELD]
                 )
-                return False
 
-            sg_parent_entity = self._shotgun.consolidate_entity(
-                sg_parent_entity,
-                [SHOTGUN_JIRA_ID_FIELD]
-            )
-            if not sg_parent_entity.get(SHOTGUN_JIRA_ID_FIELD):
-                self._logger.debug(
-                    f"Couldn't find Jira Key for parent entity {sg_parent_entity['type']} ({sg_parent_entity['id']}). Skipping hierarchy syncing."
-                )
-                return False
+                if sg_consolidated_entity.get(SHOTGUN_JIRA_ID_FIELD) is None:
+                    self._logger.debug(
+                        f"Couldn't find Jira Key for linked entity {sg_consolidated_entity['type']} ({sg_consolidated_entity['id']}). Skipping hierarchy syncing."
+                    )
+                    sync_with_error = True
+                    continue
 
-            jira_parent_issue = self._jira.issue(sg_parent_entity[SHOTGUN_JIRA_ID_FIELD])
-            if not jira_parent_issue:
-                self._logger.warning(
-                    f"Couldn't find Jira Issue associated to Jira Key ({sg_parent_entity[SHOTGUN_JIRA_ID_FIELD]}). Skipping hierarchy syncing."
-                )
-                return False
-            jira_parent = {"key": jira_parent_issue.key}
+                jira_keys.append(sg_consolidated_entity[SHOTGUN_JIRA_ID_FIELD])
 
-        jira_issue.update(fields={"parent": jira_parent})
+                jira_linked_issue = self._jira.issue(sg_consolidated_entity[SHOTGUN_JIRA_ID_FIELD])
+                if not jira_linked_issue:
+                    self._logger.warning(
+                        f"Couldn't find Jira Issue associated to Jira Key ({sg_consolidated_entity[SHOTGUN_JIRA_ID_FIELD]}). Skipping hierarchy syncing."
+                    )
+                    sync_with_error = True
+                    continue
 
-        return True
+                if jira_field == "parent":
+                    jira_parent = {"key": jira_linked_issue.key}
+                else:
+                    jira_parent = {"key": jira_issue.key}
+                    jira_child = jira_linked_issue
+
+            if jira_child:
+                jira_child.update(fields={"parent": jira_parent})
+
+        # now, we need to go through each issue linked to the parent issue to check if they are still linked in FPTR
+        # if not, we need to remove their links in Jira
+        if jira_field == self.__JIRA_CHILDREN_FIELD:
+
+            jira_children = self.__get_issue_children(jira_issue)
+            for c in jira_children:
+                if c.key not in jira_keys:
+                    c.update(fields={"parent": None})
+
+        return not sync_with_error
 
 
     def _sync_jira_issue_to_sg(self, jira_issue):
@@ -1586,3 +1623,7 @@ class EntitiesGenericHandler(SyncHandler):
         if not result:
             return None, None
         return result.group(1), result.group(2)
+
+    def __get_issue_children(self, jira_issue):
+        """"""
+        return self._jira.search_issues(f"parent IN ('{jira_issue.key}')")
