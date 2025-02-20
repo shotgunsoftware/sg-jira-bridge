@@ -207,22 +207,6 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
             )
         )
 
-    # def test_fptr_to_jira_custom_non_project_entity(self, mocked_sg):
-    #     """If trying to sync a FPTR non-project entity, event will be rejected."""
-    #
-    #     syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-    #
-    #     self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_CUSTOM_NON_PROJECT_ENTITY)
-    #
-    #     self.assertFalse(
-    #         bridge.sync_in_jira(
-    #             self.HANDLER_NAME,
-    #             "Task",
-    #             mock_shotgun.SG_CUSTOM_NON_PROJECT_ENTITY["id"],
-    #             mock_shotgun.SG_NON_PROJECT_ENTITY_CHANGE_EVENT,
-    #         )
-    #     )
-
     def test_fptr_to_jira_project_not_synced_in_jira(self, mocked_sg):
         """
         If the entity we're trying to sync doesn't belong to a FPTR already synced in Jira, the event will be rejected.
