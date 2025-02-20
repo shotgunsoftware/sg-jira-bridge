@@ -532,7 +532,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         mocked_sg_note["tasks"] = [mocked_sg_task]
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["entity"] = mocked_sg_task
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
         self.assertEqual(bridge._jira.comments(jira_issue.key), [])
+        self.assertEqual(bridge._jira.worklogs(jira_issue.key), [])
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
         self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
@@ -554,6 +559,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         jira_issue = bridge.jira.issue(jira_issue.key)
 
         self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
 
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
