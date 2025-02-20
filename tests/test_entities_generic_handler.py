@@ -564,8 +564,6 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
 
-        # TODO: need to check for TimeLogs
-
     def test_fptr_to_jira_sync_existing_entity_fields_directions(self, mocked_sg):
         """
         Check that the sync directions for fields are working correctly.
