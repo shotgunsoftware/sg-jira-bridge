@@ -6,29 +6,112 @@
 #
 import copy
 import mock
+import os
 
+from shotgun_api3.lib import mockgun
 from test_sync_base import TestSyncBase
 import mock_jira
 import mock_shotgun
 
+import sg_jira
 from sg_jira.constants import (SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_URL_FIELD, JIRA_SYNC_IN_FPTR_FIELD,
                                JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD)
 
 
 # TODO:
 #  - see if we can mockup the Jira Bridge schema (aka fields) to check against the field existence
-#  - see if we can mockup the DB to add a check against the SHOTGUN_JIRA_ID_FIELD field existence
-#  - add CustomNonProjectEntity to the mocked DB
+
+class TestEntitiesGenericHandler(TestSyncBase):
+
+    HANDLER_NAME = "entities_generic"
+
+    def _get_syncer(self, mocked_sg, name="task_issue"):
+        """
+        Helper to get a syncer and a bridge with a mocked Flow Production Tracking.
+        We are overriding the method in this class to be able to patch the FPTR database and add more fields to the
+        schema.
+
+        :param mocked_sg: Mocked shotgun_api3.Shotgun.
+        :parma str name: A syncer name.
+        """
+
+        sg = mockgun.Shotgun(
+            "https://mocked.my.com",
+            "Ford Prefect",
+            "xxxxxxxxxx",
+        )
+
+        for sg_field in [SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD]:
+            new_field = copy.deepcopy(sg._schema["Task"][sg_field])
+            new_field["entity_type"]["value"] = "Asset"
+            sg._schema["Asset"][sg_field] = new_field
+
+        mocked_sg.return_value = sg
+        bridge = sg_jira.Bridge.get_bridge(
+            os.path.join(self._fixtures_path, "settings.py")
+        )
+        syncer = bridge.get_syncer(name)
+        return syncer, bridge
+
+    def _mock_sg_data(self, sg_instance, jira_issue=None, sync_in_jira=True):
+        """
+        Helper method to mock FPTR data.
+        We can't call it in the `setUp` method as we need the mocked_sg instance...
+        """
+        self.add_to_sg_mock_db(sg_instance, mock_shotgun.SG_PROJECT)
+        self.add_to_sg_mock_db(sg_instance, mock_shotgun.SG_USER)
+
+        mocked_sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        mocked_sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = sync_in_jira
+        if jira_issue:
+            mocked_sg_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
+        self.add_to_sg_mock_db(sg_instance, mocked_sg_task)
+
+        return mocked_sg_task
+
+    def _mock_jira_data(self, bridge, sg_entity=None):
+        """
+        Helper method to mock Jira data.
+        We can't call it in the `setUp` method as we need the bridge instance...
+        """
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        if sg_entity:
+            jira_issue = bridge.jira.create_issue({
+                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): sg_entity["id"],
+                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower()): sg_entity["type"],
+                bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): "True",
+            })
+            return jira_issue
+
+    def _check_jira_issue(self, bridge, sg_entity, sync_in_fptr=None):
+        """Helper method to check that a Jira issue is correctly created."""
+
+        # Jira Issue should be created
+        jira_issue = bridge.jira.issue(sg_entity[SHOTGUN_JIRA_ID_FIELD])
+        self.assertIsNotNone(jira_issue)
+
+        # its "Sync in FPTR" field should be set to "True"
+        sync_in_fptr_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower())
+        self.assertEqual(jira_issue.get_field(sync_in_fptr_jira_field_id).value, sync_in_fptr)
+
+        # all its FPTR fields should be filled with the Task data
+        sg_type_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower())
+        self.assertEqual(jira_issue.get_field(sg_type_jira_field_id), sg_entity["type"])
+
+        sg_id_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower())
+        self.assertEqual(jira_issue.get_field(sg_id_jira_field_id), str(sg_entity["id"]))
+
+        sg_url_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_URL_FIELD.lower())
+        sg_entity_url = bridge.shotgun.get_entity_page_url(sg_entity)
+        self.assertEqual(jira_issue.get_field(sg_url_jira_field_id), sg_entity_url)
+
+        return jira_issue
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
-class TestEntitiesGenericHandlerSettings(TestSyncBase):
+class TestEntitiesGenericHandlerSettings(TestEntitiesGenericHandler):
     """Test the configuration settings for the Entities Generic Handler."""
-
-    def setUp(self):
-        """Test setup."""
-        super(TestEntitiesGenericHandlerSettings, self).setUp()
 
     def test_bad_settings_formatting_for_entity_mapping(self, mocked_sg):
         """Test all the use cases where the entity mappings setting is not correctly formatted."""
@@ -82,68 +165,12 @@ class TestEntitiesGenericHandlerSettings(TestSyncBase):
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
 @mock.patch("shotgun_api3.Shotgun")
-class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
+class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
     """Test the sync from FPTR to Jira, covering for the different type of entities."""
 
-    HANDLER_NAME = "entities_generic"
-
-    def setUp(self):
-        """Test setup."""
-        super(TestEntitiesGenericHandlerFPTRToJira, self).setUp()
-
-    def __mock_sg_data(self, sg_instance, jira_issue=None, sync_in_jira=True):
-        """
-        Helper method to mock FPTR data.
-        We can't call it in the `setUp` method as we need the mocked_sg instance...
-        """
-        self.add_to_sg_mock_db(sg_instance, mock_shotgun.SG_PROJECT)
-        self.add_to_sg_mock_db(sg_instance, mock_shotgun.SG_USER)
-
-        mocked_sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
-        mocked_sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = sync_in_jira
-        if jira_issue:
-            mocked_sg_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
-        self.add_to_sg_mock_db(sg_instance, mocked_sg_task)
-
-        return mocked_sg_task
-
-    def __mock_jira_data(self, bridge, sg_entity=None):
-        """
-        Helper method to mock Jira data.
-        We can't call it in the `setUp` method as we need the bridge instance...
-        """
-        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
-        if sg_entity:
-            jira_issue = bridge.jira.create_issue({
-                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): sg_entity["id"],
-                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower()): sg_entity["type"],
-                bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): "True",
-            })
-            return jira_issue
-
-    def __check_jira_issue(self, bridge, sg_entity, sync_in_fptr=None):
-        """Helper method to check that a Jira issue is correctly created."""
-
-        # Jira Issue should be created
-        jira_issue = bridge.jira.issue(sg_entity[SHOTGUN_JIRA_ID_FIELD])
-        self.assertIsNotNone(jira_issue)
-
-        # its "Sync in FPTR" field should be set to "True"
-        sync_in_fptr_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower())
-        self.assertEqual(jira_issue.get_field(sync_in_fptr_jira_field_id).value, sync_in_fptr)
-
-        # all its FPTR fields should be filled with the Task data
-        sg_type_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower())
-        self.assertEqual(jira_issue.get_field(sg_type_jira_field_id), sg_entity["type"])
-
-        sg_id_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower())
-        self.assertEqual(jira_issue.get_field(sg_id_jira_field_id), str(sg_entity["id"]))
-
-        sg_url_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_URL_FIELD.lower())
-        sg_entity_url = bridge.shotgun.get_entity_page_url(sg_entity)
-        self.assertEqual(jira_issue.get_field(sg_url_jira_field_id), sg_entity_url)
-
-        return jira_issue
+    # def setUp(self):
+    #     """Test setup."""
+    #     super(TestEntitiesGenericHandlerFPTRToJira, self).setUp()
 
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Entity Change Event (entity creation/update)
@@ -253,7 +280,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_bad_jira_issue_type")
 
-        self.__mock_sg_data(bridge.shotgun)
+        self._mock_sg_data(bridge.shotgun)
 
         self.assertFalse(
             bridge.sync_in_jira(
@@ -309,8 +336,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        self.__mock_jira_data(bridge)
-        self.__mock_sg_data(bridge.shotgun)
+        self._mock_jira_data(bridge)
+        self._mock_sg_data(bridge.shotgun)
 
         self.assertTrue(
             bridge.sync_in_jira(
@@ -330,7 +357,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         self.assertIsNotNone(sg_task[SHOTGUN_JIRA_ID_FIELD])
 
         # common Jira Issue checks
-        jira_issue = self.__check_jira_issue(bridge, sg_task, sync_in_fptr="True")
+        jira_issue = self._check_jira_issue(bridge, sg_task, sync_in_fptr="True")
 
         # Jira Issue checks specific to this use case
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
@@ -358,8 +385,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way")
 
-        self.__mock_jira_data(bridge)
-        self.__mock_sg_data(bridge.shotgun)
+        self._mock_jira_data(bridge)
+        self._mock_sg_data(bridge.shotgun)
 
         self.assertTrue(
             bridge.sync_in_jira(
@@ -379,7 +406,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         self.assertIsNotNone(sg_task[SHOTGUN_JIRA_ID_FIELD])
 
         # common Jira Issue checks
-        jira_issue = self.__check_jira_issue(bridge, sg_task, sync_in_fptr="True")
+        jira_issue = self._check_jira_issue(bridge, sg_task, sync_in_fptr="True")
 
         # Jira Issue checks specific to this use case
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
@@ -408,8 +435,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira")
 
-        self.__mock_jira_data(bridge)
-        self.__mock_sg_data(bridge.shotgun)
+        self._mock_jira_data(bridge)
+        self._mock_sg_data(bridge.shotgun)
 
         self.assertTrue(
             bridge.sync_in_jira(
@@ -429,7 +456,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         self.assertIsNotNone(sg_task[SHOTGUN_JIRA_ID_FIELD])
 
         # common Jira Issue checks
-        jira_issue = self.__check_jira_issue(bridge, sg_task, sync_in_fptr="False")
+        jira_issue = self._check_jira_issue(bridge, sg_task, sync_in_fptr="False")
 
         # Jira Issue checks specific to this use case
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
@@ -455,8 +482,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
         self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
@@ -498,8 +525,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [mocked_sg_task]
@@ -551,8 +578,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
         self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
@@ -601,8 +628,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.status.name, jira_status)
 
@@ -637,8 +664,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.status.name, jira_status)
 
@@ -673,8 +700,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.status.name, jira_status)
 
@@ -709,8 +736,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.status.name, jira_status)
 
@@ -766,7 +793,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, sync_in_jira=False)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = sg_mocked_task
@@ -796,8 +823,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = mocked_sg_task
@@ -841,10 +868,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
 
-        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = mocked_sg_task
@@ -894,7 +921,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, sync_in_jira=False)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["__retired"] = True
@@ -928,11 +955,11 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
         self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["__retired"] = True
@@ -969,11 +996,11 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
         self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["__retired"] = True
@@ -1010,11 +1037,11 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
         self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["__retired"] = True
@@ -1052,7 +1079,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, sync_in_jira=False)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [sg_mocked_task]
@@ -1082,8 +1109,8 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [mocked_sg_task]
@@ -1129,9 +1156,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, comment_body)
-        mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [mocked_sg_task]
@@ -1166,9 +1193,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
     #
     #     syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
     #
-    #     jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+    #     jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
     #     jira_comment = bridge.jira.add_comment(jira_issue, "created in Jira")
-    #     mocked_sg_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+    #     mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
     #
     #     mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
     #     mocked_sg_note["tasks"] = []
@@ -1220,7 +1247,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, sync_in_jira=False)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, sync_in_jira=False)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["__retired"] = True
@@ -1254,11 +1281,11 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
         self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["__retired"] = True
@@ -1295,11 +1322,11 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
         self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["__retired"] = True
@@ -1336,11 +1363,11 @@ class TestEntitiesGenericHandlerFPTRToJira(TestSyncBase):
 
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
 
-        jira_issue = self.__mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
         self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
 
-        sg_mocked_task = self.__mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["__retired"] = True
