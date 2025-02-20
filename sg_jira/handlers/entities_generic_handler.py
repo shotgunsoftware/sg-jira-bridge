@@ -1472,7 +1472,8 @@ class EntitiesGenericHandler(SyncHandler):
             except AttributeError:
                 if jira_field != "parent":
                     self._logger.debug(f"Couldn't find jira field '{jira_field}' value for current {issue_type} ({jira_issue.key})")
-                    return False
+                    sync_with_errors = True
+                    continue
                 jira_value = None
             sg_value = None
 
@@ -1484,6 +1485,12 @@ class EntitiesGenericHandler(SyncHandler):
 
             elif jira_field == "status":
                 sg_value = self.__get_status_mapping(sg_entity["type"], jira_status=str(jira_value)) if jira_value else None
+                if not sg_value:
+                    self._logger.debug(
+                        f"Couldn't find FPTR status associated to Jira Issue Status {jira_value}. "
+                        f"Skipping status update"
+                    )
+                    continue
 
             elif jira_field == "parent":
                 sg_value = self.__get_sg_entity_from_jira_issue(jira_value)
