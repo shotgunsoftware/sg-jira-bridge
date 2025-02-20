@@ -6,6 +6,8 @@
 #
 
 import copy
+import re
+
 from jira.resources import Project as JiraProject
 from jira.resources import IssueType, Issue, User, Comment, IssueLink, Worklog, Status
 from jira import JIRAError
@@ -185,6 +187,14 @@ ISSUE_FIELDS = {
         "operations": ["add", "set", "remove"],
         "required": False,
         "schema": {"items": "string", "system": "labels", "type": "array"},
+    },
+    "parent": {
+        "required": False,
+        "schema": {'system': 'parent', 'type': 'issuelink'},
+        "name": "Parent",
+        "key": "parent",
+        "hasDefaultValue": False,
+        "operations": ["set"],
     },
     "priority": {
         "allowedValues": [
@@ -1611,6 +1621,16 @@ class MockedJira(object):
                 "id": "votes",
                 "schema": {"type": "votes", "system": "votes"},
             },
+            {
+                "name": "Parent",
+                "searchable": False,
+                "navigable": True,
+                "custom": False,
+                "key": "parent",
+                "clauseNames": ["parent"],
+                "orderable": False,
+                "id": "parent",
+            }
         ]
 
     def create_issue(self, fields, *args, **kwargs):
@@ -1796,3 +1816,13 @@ class MockedJira(object):
         if id == JIRA_USER_2[payload]:
             return User(options, None, JIRA_USER_2)
         return None
+
+    def search_issues(self, jql_str):
+        """
+        Mocked Jira method
+        """
+
+        result = re.search(r"parent IN \(\'([\w-]+)\'\)", jql_str)
+
+        if result:
+            return [self.issue(result.group(1))]

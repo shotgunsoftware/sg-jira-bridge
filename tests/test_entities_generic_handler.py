@@ -564,6 +564,131 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
 
+    def test_fptr_to_jira_sync_existing_entity_parent_not_synced(self, mocked_sg):
+        """
+        Check that is a parent entity not synced is linked to a sync entity, it won't be synced in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is configured to work both way
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the parent entity shouldn't be created in Jira
+        """
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = "entity"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_asset = copy.deepcopy(mock_shotgun.SG_ASSET)
+        mocked_sg_asset["tasks"] = [mocked_sg_task]
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_asset)
+
+        self.assertRaises(AttributeError, jira_issue.get_field, "parent")
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                sg_mocked_event,
+            )
+        )
+
+        sg_asset = bridge.shotgun.find_one(
+            "Asset",
+            [["id", "is", mock_shotgun.SG_ASSET["id"]]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+
+        self.assertEqual(sg_asset[SHOTGUN_JIRA_ID_FIELD], None)
+        self.assertEqual(jira_issue.get_field("parent"), None)
+
+    def test_fptr_to_jira_sync_existing_entity_parent_synced(self, mocked_sg):
+        """
+        Check that is a synced parent entity is linked to a sync entity, they will be linked in Jira (event from parent to child).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is configured to work both way
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the parent issue should be linked to the associated child issue in Jira
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        jira_epic = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_ASSET)
+        mocked_sg_asset = copy.deepcopy(mock_shotgun.SG_ASSET)
+        mocked_sg_asset["tasks"] = [mocked_sg_task]
+        mocked_sg_asset[SHOTGUN_JIRA_ID_FIELD] = jira_epic.key
+        mocked_sg_asset[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_asset)
+
+        self.assertRaises(AttributeError, jira_issue.get_field, "parent")
+
+        bridge.sync_in_jira(
+            self.HANDLER_NAME,
+            "Asset",
+            mock_shotgun.SG_ASSET["id"],
+            mock_shotgun.SG_ASSET_CHANGE_EVENT,
+        )
+
+        self.assertTrue(jira_issue.get_field("parent"), jira_epic.key)
+
+    def test_fptr_to_jira_sync_existing_entity_child_synced(self, mocked_sg):
+        """
+        Check that is a synced child entity is linked to a sync entity, they will be linked in Jira (event from child to parent).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is configured to work both way
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        Expected result:
+        - the child issue should be linked to the associated parent issue in Jira
+        """
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = "entity"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        jira_epic = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_ASSET)
+        mocked_sg_asset = copy.deepcopy(mock_shotgun.SG_ASSET)
+        mocked_sg_asset[SHOTGUN_JIRA_ID_FIELD] = jira_epic.key
+        mocked_sg_asset[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_asset)
+
+        bridge.shotgun.update(
+            mocked_sg_task["type"],
+            mocked_sg_task["id"],
+            {"entity": mocked_sg_asset}
+        )
+
+        self.assertRaises(AttributeError, jira_issue.get_field, "parent")
+
+        bridge.sync_in_jira(
+            self.HANDLER_NAME,
+            "Task",
+            mock_shotgun.SG_TASK["id"],
+            sg_mocked_event,
+        )
+
+        self.assertTrue(jira_issue.get_field("parent"), jira_epic.key)
+
     def test_fptr_to_jira_sync_existing_entity_fields_directions(self, mocked_sg):
         """
         Check that the sync directions for fields are working correctly.

@@ -107,7 +107,7 @@ SG_ASSET_CHANGE_EVENT = {
     "project": {"type": "Project", "id": SG_PROJECT["id"]},
     "meta": {
         "type": "attribute_change",
-        "attribute_name": "entity",
+        "attribute_name": "tasks",
         "entity_type": "Asset",
         "entity_id": SG_ASSET["id"],
     },

@@ -160,6 +160,10 @@ SYNC = {
                             "sg_field": "sg_description",
                             "jira_field": "description"
                         },
+                        {
+                            "sg_field": "entity",
+                            "jira_field": "parent"
+                        },
                     ],
                     "status_mapping": {
                         "sg_field": "sg_status_list",
@@ -167,6 +171,20 @@ SYNC = {
                             "wtg": "To Do",
                         }
                     }
+                },
+                {
+                    "sg_entity": "Asset",
+                    "jira_issue_type": "Epic",
+                    "field_mapping": [
+                        {
+                            "sg_field": "code",
+                            "jira_field": "summary"
+                        },
+                        {
+                            "sg_field": "tasks",
+                            "jira_field": "{{CHILDREN}}"
+                        },
+                    ],
                 },
                 {
                     "sg_entity": "Note",
@@ -241,16 +259,16 @@ SYNC["entities_generic_status_jira_to_sg"] = copy.deepcopy(SYNC["entities_generi
 SYNC["entities_generic_status_jira_to_sg"]["settings"]["entity_mapping"][0]["status_mapping"]["sync_direction"] = "jira_to_sg"
 
 SYNC["entities_generic_both_way_deletion"] = copy.deepcopy(SYNC["entities_generic"])
-SYNC["entities_generic_both_way_deletion"]["settings"]["entity_mapping"][1]["sync_deletion_direction"] = "both_way"
 SYNC["entities_generic_both_way_deletion"]["settings"]["entity_mapping"][2]["sync_deletion_direction"] = "both_way"
+SYNC["entities_generic_both_way_deletion"]["settings"]["entity_mapping"][3]["sync_deletion_direction"] = "both_way"
 
 SYNC["entities_generic_sg_to_jira_deletion"] = copy.deepcopy(SYNC["entities_generic"])
-SYNC["entities_generic_sg_to_jira_deletion"]["settings"]["entity_mapping"][1]["sync_deletion_direction"] = "sg_to_jira"
 SYNC["entities_generic_sg_to_jira_deletion"]["settings"]["entity_mapping"][2]["sync_deletion_direction"] = "sg_to_jira"
+SYNC["entities_generic_sg_to_jira_deletion"]["settings"]["entity_mapping"][3]["sync_deletion_direction"] = "sg_to_jira"
 
 SYNC["entities_generic_jira_to_sg_deletion"] = copy.deepcopy(SYNC["entities_generic"])
-SYNC["entities_generic_jira_to_sg_deletion"]["settings"]["entity_mapping"][1]["sync_deletion_direction"] = "jira_to_sg"
 SYNC["entities_generic_jira_to_sg_deletion"]["settings"]["entity_mapping"][2]["sync_deletion_direction"] = "jira_to_sg"
+SYNC["entities_generic_jira_to_sg_deletion"]["settings"]["entity_mapping"][3]["sync_deletion_direction"] = "jira_to_sg"
 
 SYNC["entities_generic_bad_jira_issue_type"] = copy.deepcopy(SYNC["entities_generic"])
 SYNC["entities_generic_bad_jira_issue_type"]["settings"]["entity_mapping"][0]["jira_issue_type"] = "Unknown Issue Type"
