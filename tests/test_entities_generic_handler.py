@@ -82,6 +82,20 @@ class TestEntitiesGenericHandler(TestSyncBase):
                 bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): "True",
             })
             return jira_issue
+        return bridge.jira.create_issue(
+            fields={
+                # "issuetype": bridge.jira.issue_type_by_name("Issue"),
+            }
+        )
+
+    def _mock_jira_issue_event(self, jira_issue, jira_event):
+        """Helper method to mock Jira issue event."""
+
+        mocked_jira_event = copy.deepcopy(jira_event)
+        mocked_jira_event["issue"] = {
+            "id": jira_issue.key,
+        }
+        return mocked_jira_event
 
     def _check_jira_issue(self, bridge, sg_entity, sync_in_fptr=None):
         """Helper method to check that a Jira issue is correctly created."""
@@ -167,10 +181,6 @@ class TestEntitiesGenericHandlerSettings(TestEntitiesGenericHandler):
 @mock.patch("shotgun_api3.Shotgun")
 class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
     """Test the sync from FPTR to Jira, covering for the different type of entities."""
-
-    # def setUp(self):
-    #     """Test setup."""
-    #     super(TestEntitiesGenericHandlerFPTRToJira, self).setUp()
 
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Entity Change Event (entity creation/update)
@@ -1515,3 +1525,164 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
                 mocked_sg_event,
             )
         )
+
+
+# Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
+# and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
+@mock.patch("shotgun_api3.Shotgun")
+class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
+    """Test the sync from Jira to FPTR, covering for the different type of entities."""
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Global checks
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_bad_webhook_event(self, mocked_sg):
+        """The event will be rejected if the webhook event is not supported."""
+
+        bad_webhook_event = copy.deepcopy(mock_jira.ISSUE_CREATED_PAYLOAD)
+        bad_webhook_event["webhookEvent"] = "bad_event"
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                "FAKED-01",
+                bad_webhook_event
+            )
+        )
+
+    def test_jira_to_fptr_missing_jira_entity(self, mocked_sg):
+        """The event will be rejected if the jira entity is missing."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                "FAKED-01",
+                mock_jira.ISSUE_CREATED_PAYLOAD
+            )
+        )
+
+    def test_jira_to_fptr_missing_changelog(self, mocked_sg):
+        """The event will be rejected if the changelog is missing."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge)
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+
+        del mocked_jira_event["changelog"]
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                "FAKED-01",
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_issue_type_not_supported(self, mocked_sg):
+        """Reject the event if the issue type is not supported."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        jira_issue = bridge.jira.create_issue(
+            fields={
+                "issuetype": bridge.jira.issue_type_by_name("BadIssueType")
+            }
+        )
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    # TODO: enable the test when the worklog deletion will be enabled
+
+    # def test_jira_to_fptr_missing_issue_id(self, mocked_sg):
+    #     """Reject the event if the issue id is missing from the worklog/comment payload."""
+    #
+    #     missing_id_event = copy.deepcopy(mock_jira.WORKLOG_DELETED_PAYLOAD)
+    #     del missing_id_event["worklog"]["issueId"]
+    #
+    #     syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+    #
+    #     self.assertFalse(
+    #         bridge.sync_in_shotgun(
+    #             self.HANDLER_NAME,
+    #             "Issue",
+    #             "FAKED-01",
+    #             missing_id_event
+    #         )
+    #     )
+
+    # TODO: add a test against deletion sync flag check
+
+    def test_jira_to_fptr_bad_sync_direction(self, mocked_sg):
+        """Reject the event if the sync direction is configured to work from FPTR to Jira."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira")
+
+        jira_issue = self._mock_jira_data(bridge)
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "entities_generic_sg_to_jira",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_jira_project_not_linked_to_sg_project(self, mocked_sg):
+        """Reject the event if the sync direction is configured to work from FPTR to Jira."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge)
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_entity_not_flagged_as_sync(self, mocked_sg):
+        """Reject the event if the Jira entity is not flagged as synced."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge)
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+
+        self._mock_sg_data(bridge.shotgun)
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Issue Created Event
+    # -------------------------------------------------------------------------------

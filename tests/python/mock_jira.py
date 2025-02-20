@@ -405,6 +405,24 @@ RESOURCE_OPTIONS = {
     "rest_path": "api",
 }
 
+ISSUE_CREATED_PAYLOAD = {
+    "webhookEvent": "jira:issue_created",
+    "changelog": {
+        "items": {}
+    },
+    "issue": {
+        "id": "FAKED-01"
+    }
+}
+
+WORKLOG_DELETED_PAYLOAD = {
+    "webhookEvent": "worklog_deleted",
+    "worklog": {
+        "id": "100001",
+        "issueId": "FAKED-01"
+    }
+}
+
 
 class MockedSession(object):
     def put(self, *args, **kwargs):
