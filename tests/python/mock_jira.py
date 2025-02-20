@@ -8,6 +8,7 @@
 import copy
 import re
 
+import jira
 from jira.resources import Project as JiraProject
 from jira.resources import IssueType, Issue, User, Comment, IssueLink, Worklog, Status
 from jira import JIRAError
@@ -1722,6 +1723,8 @@ class MockedJira(object):
         """
         Mocked Jira method.
         """
+        if issue_key not in self._issues:
+            raise jira.JIRAError(text="Unable to find Issue %s" % issue_key, status_code=404)
         return self._issues.get(issue_key)
 
     def add_comment(self, issue, body, *args, **kwargs):
