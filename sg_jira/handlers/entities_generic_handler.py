@@ -457,6 +457,10 @@ class EntitiesGenericHandler(SyncHandler):
 
             jira_issue = self.get_jira_issue(jira_entity["id"])
 
+        if not jira_issue:
+            self._logger.debug("Rejecting Jira event: couldn't find Jira Issue.")
+            return False
+
         # check that the issue type has been defined in the settings
         if jira_issue.fields.issuetype.name not in self._supported_jira_issue_types_for_jira_event():
             self._logger.debug(f"Rejecting Jira event for unsupported issue type {jira_issue.fields.issuetype.name}")
