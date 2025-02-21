@@ -43,6 +43,8 @@ class JiraHook(object):
     # JIRA_COMMENT_REGEX = r"{panel:title=([^\}]*)\}\n_Note created from FPTR by ([\s\w]+)_\n(.*)\n\{panel\}"
     JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
 
+    JIRA_WORKLOG_REGEX = r"_Worklog created from FPTR by ([\w\s]+)_\n(.*)"
+
     # Define the format of the Flow Production Tracking dates
     SG_DATE_FORMAT = "%Y-%m-%d"
 
@@ -183,7 +185,7 @@ class JiraHook(object):
 
         return jira_value
 
-    def get_sg_value_from_jira_value(self, jira_value, sg_project, sg_field_properties):
+    def get_sg_value_from_jira_value(self, jira_value, jira_entity, sg_project, sg_field_properties):
         """"""
 
         sg_field = sg_field_properties["name"]["value"]
@@ -225,6 +227,8 @@ class JiraHook(object):
             if not jira_value:
                 return None
             try:
+                if isinstance(jira_entity, jira.resources.Worklog):
+                    return self.format_sg_date(jira_value)
                 # Validate the date string
                 datetime.datetime.strptime(jira_value, "%Y-%m-%d")
             except ValueError as e:
@@ -232,15 +236,15 @@ class JiraHook(object):
                 raise InvalidJiraValue(
                     sg_field,
                     jira_value,
-                    f"Unable to parse Jira value as a date."
+                    "Unable to parse Jira value %s as a date." % jira_value
                 )
             return jira_value
 
         if data_type in ["duration", "number"]:
             if not jira_value:
                 return None
-            elif isinstance(jira_value, jira.resources.TimeTracking):
-                return jira_value.timeSpentSeconds / 60
+            elif isinstance(jira_entity, jira.resources.Worklog):
+                return jira_value / 60
             try:
                 return int(jira_value)
             except ValueError as e:
@@ -324,11 +328,38 @@ class JiraHook(object):
             sg_timelog.get("description", ""),
         )
 
+    def extract_jira_worklog_data(self, jira_worklog_comment):
+        """"""
+
+        result = re.search(self.JIRA_WORKLOG_REGEX, jira_worklog_comment, flags=re.S)
+
+        # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
+        # so the data will be found from the comment itself rather than its body
+        if not result:
+            return jira_worklog_comment, None
+
+        author = result.group(1).strip()
+        # we need to make sure the author is associated with a current FPTR user
+        sg_user = self._shotgun.find_one(
+            "HumanUser",
+            [["name", "is", author]]
+        )
+        if not sg_user:
+            raise InvalidJiraValue(
+                "content",
+                jira_worklog_comment,
+                f"Invalid Jira Worklog comment formatting. Unable to parse FPTR "
+                "author from '%s'" % author,
+            )
+
+        return result.group(2).strip(), sg_user
+
     def format_jira_date(self, sg_date):
         """"""
         jira_formatted_date = self.JIRA_DATE_FORMAT.replace("%f", "000")
         jira_formatted_date = jira_formatted_date.replace("%z", "+0000")
         return datetime.datetime.strptime(sg_date, self.SG_DATE_FORMAT).strftime(jira_formatted_date)
 
-
-
+    def format_sg_date(self, jira_date):
+        """"""
+        return datetime.datetime.strptime(jira_date, self.JIRA_DATE_FORMAT).strftime(self.SG_DATE_FORMAT)
