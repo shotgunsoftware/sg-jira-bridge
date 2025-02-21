@@ -442,7 +442,10 @@ class EntitiesGenericHandler(SyncHandler):
             sync_settings = self.__get_sg_entity_settings(sg_entity_type)
 
             # make sure we can get the associated jira issue
+            # comment and worklog payload are not formatted the same unfortunately...
             jira_issue_key = event.get("issue", {}).get("key")
+            if not jira_issue_key:
+                jira_issue_key = jira_entity.get("issueId")
             if not jira_issue_key:
                 self._logger.debug("Rejecting Jira event without an associated issue.")
                 return False
@@ -528,12 +531,16 @@ class EntitiesGenericHandler(SyncHandler):
 
         self._logger.debug(f"Processing Jira event...\n {event}")
 
-        webhook_event = event["webhookEvent"]
-        jira_issue = self._jira.issue(event["issue"]["key"])
-        jira_key = event["issue"]["key"]
         supported_jira_fields = []
-
+        webhook_event = event["webhookEvent"]
         webhook_entity, webhook_action = self.__parse_jira_webhook_event(webhook_event)
+
+        jira_key = event.get("issue", {}).get("key")
+        if not jira_key:
+            jira_entity = event.get(webhook_entity)
+            jira_key = jira_entity.get("issueId")
+        jira_issue = self._jira.issue(jira_key)
+
         if webhook_entity == "issue":
             sg_entity = self._sync_jira_issue_to_sg(jira_issue)
             supported_jira_fields = (self._supported_jira_fields_for_jira_event(jira_issue.fields.issuetype.name) +
@@ -543,7 +550,7 @@ class EntitiesGenericHandler(SyncHandler):
             sg_entity_type = "Note" if webhook_entity == "comment" else "TimeLog"
             sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_key, sg_entity_type, webhook_action)
 
-        if webhook_event == "deleted":
+        if webhook_action == "deleted":
             # the entity has been deleted during the sync of it with FPTR
             return True
 
@@ -621,6 +628,7 @@ class EntitiesGenericHandler(SyncHandler):
             "comment_deleted",
             "worklog_created",
             "worklog_updated",
+            "worklog_deleted",
         ]
 
     def _supported_jira_issue_types_for_jira_event(self):
@@ -644,13 +652,10 @@ class EntitiesGenericHandler(SyncHandler):
 
         jira_fields = []
 
-        # Jira comments
-        if jira_entity_type == "Comment":
-            return self.__get_sg_entity_settings("TimeLog")
-
         # Jira worklogs
-        elif jira_entity_type == "Worklog":
-            return self.__get_sg_entity_settings("TimeLog")
+        if jira_entity_type == "Worklog":
+            entity_mapping = self.__get_sg_entity_settings("TimeLog")
+            jira_fields = [m["jira_field"] for m in entity_mapping["field_mapping"]]
 
         # Jira issues
         else:
@@ -1421,11 +1426,15 @@ class EntitiesGenericHandler(SyncHandler):
         """"""
 
         sync_with_errors = False
+        jira_entity = jira_issue
 
         if sg_entity["type"] == "Note":
             return self._sync_jira_comment_to_sg(jira_issue.key, jira_key, sg_entity)
-
-        issue_type = jira_issue.fields.issuetype.name
+        elif sg_entity["type"] == "TimeLog":
+            issue_type = "Worklog"
+            jira_entity = self._get_jira_issue_worklog(jira_issue, jira_key)
+        else:
+            issue_type = jira_issue.fields.issuetype.name
 
         if jira_fields is None:
             jira_fields = self._supported_jira_fields_for_jira_event(issue_type)
@@ -1453,7 +1462,10 @@ class EntitiesGenericHandler(SyncHandler):
                 continue
 
             try:
-                jira_value = getattr(jira_issue.fields, jira_field)
+                if isinstance(jira_entity, jira.resources.Issue):
+                    jira_value = getattr(jira_entity.fields, jira_field)
+                else:
+                    jira_value = getattr(jira_entity, jira_field)
             except AttributeError:
                 if jira_field != "parent":
                     self._logger.debug(f"Couldn't find jira field '{jira_field}' value for current {issue_type} ({jira_issue.key})")
@@ -1480,9 +1492,15 @@ class EntitiesGenericHandler(SyncHandler):
             elif jira_field == "parent":
                 sg_value = self.__get_sg_entity_from_jira_issue(jira_value)
 
+            elif jira_field == "comment" and isinstance(jira_entity, jira.resources.Worklog):
+                sg_value, sg_user = self._hook.extract_jira_worklog_data(jira_value)
+                if sg_user:
+                    sg_value = sg_value.strip()
+                    sg_data["user"] = sg_user
+
             else:
                 try:
-                    sg_value = self._hook.get_sg_value_from_jira_value(jira_value, sg_entity["project"], sg_field_schema)
+                    sg_value = self._hook.get_sg_value_from_jira_value(jira_value, jira_entity, sg_entity["project"], sg_field_schema)
                 except Exception as e:
                     self._logger.warning(
                         f"Not syncing Jira {issue_type}.{jira_field} to Flow Production Tracking . "
@@ -1591,6 +1609,8 @@ class EntitiesGenericHandler(SyncHandler):
 
         sg_linked_entities = sg_entity["tasks"] if sg_entity["type"] == "Note" else [sg_entity["entity"]]
         for e in sg_linked_entities:
+            if not e:
+                continue
             sg_linked_entity = self._shotgun.find_one(
                 e["type"],
                 [["id", "is", e["id"]]],
