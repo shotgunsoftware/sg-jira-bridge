@@ -14,6 +14,7 @@ from sg_jira.errors import InvalidShotgunValue, InvalidJiraValue
 
 
 class JiraHook(object):
+    """"""
 
     # This will match JIRA accounts in the following format
     # 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0
@@ -283,14 +284,10 @@ class JiraHook(object):
         """"""
         result = re.search(self.JIRA_COMMENT_REGEX, jira_comment_body, flags=re.S)
 
-        # We can't reliably determine what the Note should contain
+        # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
+        # so the data will be found from the comment itself rather than its body
         if not result:
-            raise InvalidJiraValue(
-                "content",
-                jira_comment_body,
-                "Invalid Jira Comment body format. Unable to parse FPTR "
-                "subject and content from '%s'" % jira_comment_body
-            )
+            return None, jira_comment_body, None
 
         author = result.group(2).strip()
         # we need to make sure the author is associated with a current FPTR user
