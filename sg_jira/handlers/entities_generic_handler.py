@@ -18,7 +18,6 @@ from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD
 #  - handle specific sg entities (list for example)/jira values in the `_sync_sg_fields_to_jira` method
 #  - find a way to check if a field exist for a specific issue type when accepting SG event
 #  - add a check for Jira Worklog fields existence
-#  - improve logging (level/message)
 #  - ensure mandatory fields for Jira entity creation (eg: started + duration for TimeLogs)
 
 class EntitiesGenericHandler(SyncHandler):
@@ -512,7 +511,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         # check that the Issue is flagged as synced
         if not self.__can_sync_to_fptr(jira_issue):
-            self._logger.debug(f"Rejecting Jira event because Jira Issue {jira_entity['key']} has not been flagged as synced.")
+            self._logger.debug(f"Rejecting Jira event because Jira entity {jira_entity} has not been flagged as synced.")
             return False
 
         self._logger.debug("Jira event successfully accepted!")
@@ -1427,6 +1426,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         sync_with_errors = False
         jira_entity = jira_issue
+        full_sync = True if not jira_fields else False
 
         if sg_entity["type"] == "Note":
             return self._sync_jira_comment_to_sg(jira_issue.key, jira_key, sg_entity)
@@ -1511,8 +1511,74 @@ class EntitiesGenericHandler(SyncHandler):
 
             sg_data[sg_field] = sg_value
 
+        # if a full sync is required and the entity is mapped to an issue, we need to sync the worklogs and the comments
+        # as well
+        if full_sync and sg_entity["type"] not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+            comment_sync_without_error = self._sync_jira_comments_to_sg(jira_entity)
+            worklog_sync_without_error = self._sync_jira_worklogs_to_sg(jira_entity)
+            if not comment_sync_without_error or not worklog_sync_without_error:
+                sync_with_errors = True
+
         if sg_data:
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
+
+        return not sync_with_errors
+
+    def _sync_jira_worklogs_to_sg(self, jira_issue):
+        """"""
+
+        existing_jira_worklogs = []
+        sync_with_errors = False
+
+        # first, push all the comments to FPTR
+        for jira_worklog in self._jira.worklogs(jira_issue):
+            existing_jira_worklogs.append("%s/%s" % (jira_issue.key, jira_worklog.id))
+            sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_worklog.id, "TimeLog", None)
+            if not sg_entity:
+                sync_with_errors = True
+            if not self._sync_jira_fields_to_sg(jira_issue, jira_worklog.id, sg_entity, None):
+                sync_with_errors = True
+
+        sync_settings = self.__get_sg_entity_settings("TimeLog")
+        if sync_settings.get("sync_deletion_direction") in [None, "sg_to_jira"]:
+            return not sync_with_errors
+
+        sg_timelogs = self._shotgun.find(
+            "TimeLog",
+            [[f"entity.Task.{SHOTGUN_JIRA_ID_FIELD}", "is", jira_issue.key]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+        for sg_timelog in sg_timelogs:
+            if sg_timelog.get(SHOTGUN_JIRA_ID_FIELD) and sg_timelog[SHOTGUN_JIRA_ID_FIELD] not in existing_jira_worklogs:
+                self._shotgun.delete("TimeLog", sg_timelog["id"])
+
+        return not sync_with_errors
+
+    def _sync_jira_comments_to_sg(self, jira_issue):
+        """"""
+
+        existing_jira_comments = []
+        sync_with_errors = False
+
+        # first, push all the comments to FPTR
+        for jira_comment in self._jira.comments(jira_issue):
+            existing_jira_comments.append("%s/%s" % (jira_issue.key, jira_comment.id))
+            sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_comment.id, "Note", None)
+            if not sg_entity:
+                sync_with_errors = True
+
+        sync_settings = self.__get_sg_entity_settings("Note")
+        if sync_settings.get("sync_deletion_direction") in [None, "sg_to_jira"]:
+            return not sync_with_errors
+
+        sg_notes = self._shotgun.find(
+            "Note",
+            [[f"tasks.Task.{SHOTGUN_JIRA_ID_FIELD}", "is", jira_issue.key]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+        for sg_note in sg_notes:
+            if sg_note.get(SHOTGUN_JIRA_ID_FIELD) and sg_note[SHOTGUN_JIRA_ID_FIELD] not in existing_jira_comments:
+                self._shotgun.delete("Note", sg_note["id"])
 
         return not sync_with_errors
 
