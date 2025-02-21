@@ -442,7 +442,7 @@ class EntitiesGenericHandler(SyncHandler):
             sync_settings = self.__get_sg_entity_settings(sg_entity_type)
 
             # make sure we can get the associated jira issue
-            jira_issue_key = jira_entity.get("issueId")
+            jira_issue_key = event.get("issue", {}).get("key")
             if not jira_issue_key:
                 self._logger.debug("Rejecting Jira event without an associated issue.")
                 return False
@@ -530,6 +530,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         webhook_event = event["webhookEvent"]
         jira_issue = self._jira.issue(event["issue"]["key"])
+        jira_key = event["issue"]["key"]
         supported_jira_fields = []
 
         webhook_entity, webhook_action = self.__parse_jira_webhook_event(webhook_event)
@@ -538,10 +539,13 @@ class EntitiesGenericHandler(SyncHandler):
             supported_jira_fields = (self._supported_jira_fields_for_jira_event(jira_issue.fields.issuetype.name) +
                                      [self.__jira_sync_in_fptr_field_id])
         else:
-            # jira_entity_key = "%s/%s" % (event[webhook_entity]["issueId"], event[webhook_entity]["id"])
-            # sg_entity_type = "Note" if webhook_entity == "comment" else "TimeLog"
-            # sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_entity_key, sg_entity_type. webhook_action)
-            return False
+            jira_key = event[webhook_entity]["id"]
+            sg_entity_type = "Note" if webhook_entity == "comment" else "TimeLog"
+            sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_key, sg_entity_type, webhook_action)
+
+        if webhook_event == "deleted":
+            # the entity has been deleted during the sync of it with FPTR
+            return True
 
         if not sg_entity:
             self._logger.debug(f"Error happened while processing Jira event: couldn't get FPTR associated entity.")
@@ -566,9 +570,9 @@ class EntitiesGenericHandler(SyncHandler):
             jira_fields.append(self.__jira_sync_in_fptr_field_id)
 
         if self.__jira_sync_in_fptr_field_id in jira_fields:
-            return self._sync_jira_fields_to_sg(jira_issue, sg_entity)
+            return self._sync_jira_fields_to_sg(jira_issue, jira_key, sg_entity)
 
-        return self._sync_jira_fields_to_sg(jira_issue, sg_entity, jira_fields)
+        return self._sync_jira_fields_to_sg(jira_issue, jira_key, sg_entity, jira_fields)
 
     def _supported_shotgun_entities_for_shotgun_event(self):
         """
@@ -612,8 +616,9 @@ class EntitiesGenericHandler(SyncHandler):
         return [
             "jira:issue_created",
             "jira:issue_updated",
-            # "comment_created",
+            "comment_created",
             "comment_updated",
+            "comment_deleted",
             "worklog_created",
             "worklog_updated",
         ]
@@ -1328,57 +1333,10 @@ class EntitiesGenericHandler(SyncHandler):
 
         return sg_entity
 
-    def _sync_jira_comment_to_sg(self, event):
+    def _sync_jira_entity_to_sg(self, jira_issue, jira_entity_id, sg_entity_type, webhook_action):
         """"""
 
-        sg_jira_key = "%s/%s" % (event["issue"]["key"], event["comment"]["id"])
-        sg_notes = self._shotgun.find(
-            "Note",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", sg_jira_key]],
-            fields=["subject", "tasks"],
-        )
-
-        # If we have more than one Note with the same key, we don't want to
-        # create more mess.
-        if len(sg_notes) > 1:
-            self._logger.warning(
-                f"Unable to process Jira Comment {event} event. More than one Note "
-                f"exists in Shotgun with Jira key {sg_jira_key}: {sg_notes}"
-            )
-            return False
-
-        # TODO: We don't know if the Issue this comment is for, is currently
-        #       synced to Shotgun. We need to load it first to properly check
-        #       if this is a warning or debug level message, but that's
-        #       expensive. Keeping it at debug for now.
-        if not sg_notes:
-            self._logger.debug(
-                f"Unable to process Jira Comment {event} event. Unable to find a Shotgun "
-                f"Note with Jira key {sg_jira_key}"
-            )
-            return False
-
-        # We have a single Note
-        # TODO: Check that the Task the Note is linked to has syncing enabled.
-        #       Otherwise syncing could be turned off for the Task but this
-        #       will still sync the Note.
-
-        sg_data = {}
-        try:
-            sg_data["subject"], sg_data["content"], sg_data["user"] = self._hook.compose_sg_note(event["comment"]["body"])
-        except InvalidJiraValue as e:
-            self._logger.warning(f"Unable to process Jira Comment {event} event. {e}")
-            return False
-
-        self._logger.debug(f"Updating FPTR Note ({sg_notes[0]['id']}) (jira_key {sg_jira_key}) with data {sg_data}")
-
-        self._shotgun.update("Note", sg_notes[0]["id"], sg_data)
-        return True
-
-    def _sync_jira_entity_to_sg(self, jira_issue, jira_entity_key, sg_entity_type, webhook_action):
-        """"""
-
-        # first, check that the Jira entity we're tryinc to sync is associated to a Jira Issue already synced in FPTR
+        # first, check that the Jira entity we're trying to sync is associated to a Jira Issue already synced in FPTR
 
         entity_mapping = self.__get_jira_issue_type_settings(jira_issue.fields.issuetype.name)
         sg_linked_entity_type = entity_mapping.get("sg_entity")
@@ -1413,7 +1371,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         # now, check for the entity itself
 
-        sg_jira_key = "%s/%s" % (jira_issue.key, jira_entity_key)
+        sg_jira_key = "%s/%s" % (jira_issue.key, jira_entity_id)
 
         sg_entities = self._shotgun.find(
             sg_entity_type,
@@ -1436,13 +1394,36 @@ class EntitiesGenericHandler(SyncHandler):
                 )
                 return False
 
-            # TODO: we need to create the FPTR entity and create the entity
+            sg_project = self._shotgun.find_one(
+                "Project",
+                [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.fields.project.key]]
+            )
 
+            sg_data = {
+                "project": sg_project,
+                SHOTGUN_JIRA_ID_FIELD: sg_jira_key,
+            }
 
-    def _sync_jira_fields_to_sg(self, jira_issue, sg_entity, jira_fields=None):
+            if sg_entity_type == "TimeLog":
+                sg_data["entity"] = sg_linked_entities[0]
+            else:
+                sg_data["tasks"] = [sg_linked_entities[0]]
+
+            return self._shotgun.create(sg_entity_type, sg_data)
+
+        # we want to delete the entity in FPTR
+        if webhook_action == "deleted":
+            self._shotgun.delete(sg_entity_type, sg_entities[0]["id"])
+
+        return sg_entities[0]
+
+    def _sync_jira_fields_to_sg(self, jira_issue, jira_key, sg_entity, jira_fields=None):
         """"""
 
         sync_with_errors = False
+
+        if sg_entity["type"] == "Note":
+            return self._sync_jira_comment_to_sg(jira_issue.key, jira_key, sg_entity)
 
         issue_type = jira_issue.fields.issuetype.name
 
@@ -1516,6 +1497,29 @@ class EntitiesGenericHandler(SyncHandler):
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
         return not sync_with_errors
+
+    def _sync_jira_comment_to_sg(self, jira_issue_key, jira_comment_id, sg_entity):
+        """"""
+
+        jira_comment = self._get_jira_issue_comment(jira_issue_key, jira_comment_id)
+        if not jira_comment:
+            self._logger.debug(f"Couldn't find Jira comment ({jira_comment_id}) linked to Jira Issue ({jira_issue_key})")
+            return False
+
+        sg_subject, sg_body, sg_author = self._hook.compose_sg_note(jira_comment.body)
+
+        if not sg_author:
+            sg_author = self._hook.get_sg_user_from_jira_user(jira_comment.author)
+
+        sg_data = {
+            "subject": "Comment created from Jira" if not sg_subject else sg_subject,
+            "content": sg_body,
+            "user": sg_author
+        }
+
+        self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
+
+        return True
 
     def _get_jira_issue_comment(self, jira_issue_key, jira_comment_id):
         """
