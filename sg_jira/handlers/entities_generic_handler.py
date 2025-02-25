@@ -1354,14 +1354,14 @@ class EntitiesGenericHandler(SyncHandler):
 
         if len(sg_linked_entities) > 1:
             self._logger.debug(
-                f"Error happened while processing Jira event: more than one {sg_entity_type} "
+                f"Error happened while processing Jira event: more than one {sg_linked_entity_type} "
                 f"exists in Flow Production Tracking with Jira key {jira_issue.key}."
             )
             return False
 
         elif len(sg_linked_entities) == 0:
             self._logger.debug(
-                f"Error happened while processing Jira event: couldn't find any {sg_entity_type} "
+                f"Error happened while processing Jira event: couldn't find any {sg_linked_entity_type} "
                 f"in Flow Production Tracking with Jira key {jira_issue.key}"
             )
             return False
