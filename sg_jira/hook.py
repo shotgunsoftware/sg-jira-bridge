@@ -242,9 +242,9 @@ class JiraHook(object):
 
         if data_type in ["duration", "number"]:
             if not jira_value:
-                return None
+                return 0
             elif isinstance(jira_entity, jira.resources.Worklog):
-                return jira_value / 60
+                jira_value = jira_value / 60
             try:
                 return int(jira_value)
             except ValueError as e:
