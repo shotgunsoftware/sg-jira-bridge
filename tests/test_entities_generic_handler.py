@@ -1959,3 +1959,146 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
             [["entity", "is", mocked_sg_task]]
         )
         self.assertEqual(len(sg_timelogs), 1)
+
+    def test_jira_to_fptr_sync_existing_entity_parent_not_synced(self, mocked_sg):
+        """
+        Check that is a parent entity not synced is linked to a sync entity, it won't be synced in FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in Jira
+        - the sync direction is configured to work both way
+        - the Task already exists in FPTR and is correctly associated to the Jira Issue
+        Expected result:
+        - the parent entity shouldn't be created in FPTR
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        jira_epic = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_ASSET, sync_in_fptr="False")
+        jira_issue.update(fields={"parent": jira_epic})
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event["changelog"]["items"][0]["field"] = "parent"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "parent"
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_asset = bridge.shotgun.find_one(
+            "Asset",
+            [["id", "is", mock_shotgun.SG_ASSET["id"]]],
+        )
+
+        self.assertEqual(sg_asset, None)
+
+    def test_jira_to_fptr_sync_existing_entity_parent_synced(self, mocked_sg):
+        """
+        Check that is a synced parent entity is linked to a sync entity, they will be linked in FPTR
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in Jira
+        - the sync direction is configured to work both way
+        - the entity already exists in FPTR and is correctly associated to the Jira Issue
+        Expected result:
+        - the parent entity should be linked to the associated child entity in FPTR
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        jira_epic = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_ASSET, issue_type_name="Epic")
+        mocked_sg_asset = copy.deepcopy(mock_shotgun.SG_ASSET)
+        mocked_sg_asset[SHOTGUN_JIRA_ID_FIELD] = jira_epic.key
+        mocked_sg_asset[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_asset)
+
+        jira_issue.update(fields={"parent": jira_epic})
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event["changelog"]["items"][0]["field"] = "parent"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "parent"
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", mock_shotgun.SG_TASK["id"]]],
+            ["entity"]
+        )
+        self.assertEqual(sg_task["entity"], None)
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", mock_shotgun.SG_TASK["id"]]],
+            ["entity"]
+        )
+        self.assertEqual(sg_task["entity"]["id"], mock_shotgun.SG_ASSET["id"])
+
+    def test_jira_to_fptr_sync_existing_entity_fields_directions(self, mocked_sg):
+        """
+        Check that the sync directions for fields are working correctly.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is configured to work both way
+        - the entity already exists in FPTR and is correctly associated to the Jira issue
+        Expected result:
+        - the fields should be updated according to the sync direction defined for each of them in the settings
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event["changelog"]["items"][0]["field"] = "Sync In FPTR"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "customfield_11504"
+
+        self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
+        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
+        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["due_date"])
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", mock_shotgun.SG_TASK["id"]]],
+            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+        )
+        jira_issue = bridge.jira.issue(jira_issue.key)
+
+        # direction for this field is empty aka "both_way"
+        self.assertEqual(jira_issue.fields.summary, sg_task["content"])
+        # direction for this field is "sg_to_jira"
+        self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
+        # direction for this field is "jira_to_sg"
+        self.assertNotEqual(jira_issue.fields.duedate, mocked_sg.SG_TASK["due_date"])
