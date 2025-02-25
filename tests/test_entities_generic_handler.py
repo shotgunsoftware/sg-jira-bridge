@@ -54,7 +54,7 @@ class TestEntitiesGenericHandler(TestSyncBase):
         syncer = bridge.get_syncer(name)
         return syncer, bridge
 
-    def _mock_sg_data(self, sg_instance, jira_issue=None, sync_in_jira=True):
+    def _mock_sg_data(self, sg_instance, jira_issue=None, sync_in_jira=True, extra_fields=None):
         """
         Helper method to mock FPTR data.
         We can't call it in the `setUp` method as we need the mocked_sg instance...
@@ -66,6 +66,8 @@ class TestEntitiesGenericHandler(TestSyncBase):
         mocked_sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = sync_in_jira
         if jira_issue:
             mocked_sg_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
+        if extra_fields:
+            mocked_sg_task.update(extra_fields)
         self.add_to_sg_mock_db(sg_instance, mocked_sg_task)
 
         return mocked_sg_task
@@ -2102,3 +2104,126 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
         # direction for this field is "jira_to_sg"
         self.assertNotEqual(jira_issue.fields.duedate, mocked_sg.SG_TASK["due_date"])
+
+    def test_jira_to_fptr_sync_status(self, mocked_sg):
+        """
+        Check that the status syncing is working correctly.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it would be both_way by default
+        - the entity already exists in FPTR and is correctly associated to the Jira issue
+        Expected result:
+        - the FPTR entity status should be correctly updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", mock_shotgun.SG_TASK["id"]]],
+            ["sg_status_list"]
+        )
+
+        self.assertEqual(sg_task["sg_status_list"], "ip")
+
+    def test_fptr_to_jira_sync_status_sg_to_jira(self, mocked_sg):
+        """
+        Check that the status syncing is working correctly when specified from FPTR to Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it would be both_way by default
+        - the entity already exists in FPTR and is correctly associated to the Jira issue
+        Expected result:
+        - the FPTR entity status should not be updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_sg_to_jira")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "entities_generic_status_sg_to_jira",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", mock_shotgun.SG_TASK["id"]]],
+            ["sg_status_list"]
+        )
+
+        self.assertNotEqual(sg_task["sg_status_list"], "ip")
+
+    def test_fptr_to_jira_sync_status_jira_to_sg(self, mocked_sg):
+        """
+        Check that the status syncing is working correctly when specified from Jira to FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it would be both_way by default
+        - the entity already exists in FPTR and is correctly associated to the Jira issue
+        Expected result:
+        - the FPTR entity status should be correctly updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_jira_to_sg")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "entities_generic_status_jira_to_sg",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", mock_shotgun.SG_TASK["id"]]],
+            ["sg_status_list"]
+        )
+
+        self.assertEqual(sg_task["sg_status_list"], "ip")
