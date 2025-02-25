@@ -1433,8 +1433,10 @@ class EntitiesGenericHandler(SyncHandler):
         elif sg_entity["type"] == "TimeLog":
             issue_type = "Worklog"
             jira_entity = self._get_jira_issue_worklog(jira_issue, jira_key)
+            jira_entity_key = jira_entity.id
         else:
             issue_type = jira_issue.fields.issuetype.name
+            jira_entity_key = jira_issue.key
 
         if jira_fields is None:
             jira_fields = self._supported_jira_fields_for_jira_event(issue_type)
@@ -1468,7 +1470,7 @@ class EntitiesGenericHandler(SyncHandler):
                     jira_value = getattr(jira_entity, jira_field)
             except AttributeError:
                 if jira_field != "parent":
-                    self._logger.debug(f"Couldn't find jira field '{jira_field}' value for current {issue_type} ({jira_issue.key})")
+                    self._logger.debug(f"Couldn't find jira field '{jira_field}' value for current {issue_type} ({jira_entity_key})")
                     sync_with_errors = True
                     continue
                 jira_value = None
