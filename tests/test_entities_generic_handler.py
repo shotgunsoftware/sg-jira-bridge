@@ -80,7 +80,7 @@ class TestEntitiesGenericHandler(TestSyncBase):
             jira_issue = bridge.jira.create_issue({
                 bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): sg_entity["id"],
                 bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower()): sg_entity["type"],
-                bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): sync_in_fptr,
+                bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): jira.resources.CustomFieldOption(None, None, {"value": sync_in_fptr}),
             })
             return jira_issue
         return bridge.jira.create_issue(
@@ -524,7 +524,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
     def test_fptr_to_jira_sync_existing_entity_all_fields(self, mocked_sg):
         """
-        When the "Sync to FPTR" field is checked in FPTR, a full sync of the entity is done to Jira.
+        When the "Sync to Jira" field is checked in FPTR, a full sync of the entity is done to Jira.
 
         Test environment:
         - the entity/field mapping has been done correctly in the settings
@@ -1842,3 +1842,119 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         self.assertEqual(sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD], False)
 
         self._check_jira_issue(bridge, sg_task, sync_in_fptr="True")
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Issue Updated Event
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_sync_existing_entity_one_field_only(self, mocked_sg):
+        """
+        When a field of an issue already synced to FPTR is updated in Jira, the associated FPTR entity will be updated
+        accordingly.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in Jira
+        - the sync direction is configured to work both way
+        - the Entity already exists in FPTR and is correctly associated to the Jira issue
+        Expected result:
+        - only the associated field will be updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+
+        self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
+        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
+            ["content", "sg_description"]
+        )
+
+        self.assertNotEqual(jira_issue.fields.summary, sg_task["content"])
+        self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
+
+    def test_jira_to_fptr_sync_existing_entity_all_fields(self, mocked_sg):
+        """
+        When the "Sync to FPTR" field is checked in Jira, a full sync of the entity is done to FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is configured to work both way
+        - the entity already exists in FPTR and is correctly associated to the FPTR entity
+        Expected result:
+        - all the fields will be updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        bridge.jira.add_comment(jira_issue, "jira comment body")
+        bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="jira worklog body")
+
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event["changelog"]["items"][0]["field"] = "Sync In FPTR"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "customfield_11504"
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [["tasks", "is", mocked_sg_task]]
+        )
+        self.assertEqual(len(sg_notes), 0)
+
+        sg_timelogs = bridge.shotgun.find(
+            "TimeLog",
+            [["entity", "is", mocked_sg_task]]
+        )
+        self.assertEqual(len(sg_timelogs), 0)
+
+        self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
+        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
+            ["content", "sg_description"]
+        )
+
+        self.assertEqual(jira_issue.fields.summary, sg_task["content"])
+        self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [["tasks", "is", mocked_sg_task]]
+        )
+        self.assertEqual(len(sg_notes), 1)
+
+        sg_timelogs = bridge.shotgun.find(
+            "TimeLog",
+            [["entity", "is", mocked_sg_task]]
+        )
+        self.assertEqual(len(sg_timelogs), 1)
