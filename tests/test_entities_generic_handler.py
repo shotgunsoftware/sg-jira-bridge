@@ -70,7 +70,7 @@ class TestEntitiesGenericHandler(TestSyncBase):
 
         return mocked_sg_task
 
-    def _mock_jira_data(self, bridge, sg_entity=None, sync_in_fptr="True"):
+    def _mock_jira_data(self, bridge, sg_entity=None, issue_type_name="Task", sync_in_fptr="True"):
         """
         Helper method to mock Jira data.
         We can't call it in the `setUp` method as we need the bridge instance...
@@ -78,6 +78,7 @@ class TestEntitiesGenericHandler(TestSyncBase):
         bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
         if sg_entity:
             jira_issue = bridge.jira.create_issue({
+                "issuetype": bridge.jira.issue_type_by_name(issue_type_name),
                 bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): sg_entity["id"],
                 bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower()): sg_entity["type"],
                 bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): jira.resources.CustomFieldOption(None, None, {"value": sync_in_fptr}),
@@ -85,7 +86,7 @@ class TestEntitiesGenericHandler(TestSyncBase):
             return jira_issue
         return bridge.jira.create_issue(
             fields={
-                "issuetype": bridge.jira.issue_type_by_name("Task"),
+                "issuetype": bridge.jira.issue_type_by_name(issue_type_name),
                 bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): "",
                 bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower()): "",
                 bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): jira.resources.CustomFieldOption(None, None, {"value": sync_in_fptr}),
