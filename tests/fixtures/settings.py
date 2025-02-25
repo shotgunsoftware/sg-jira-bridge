@@ -169,6 +169,7 @@ SYNC = {
                         "sg_field": "sg_status_list",
                         "mapping": {
                             "wtg": "To Do",
+                            "ip": "Backlog",
                         }
                     }
                 },
