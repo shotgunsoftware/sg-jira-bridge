@@ -1531,7 +1531,7 @@ class EntitiesGenericHandler(SyncHandler):
         sync_with_errors = False
 
         # first, push all the comments to FPTR
-        for jira_worklog in self._jira.worklogs(jira_issue):
+        for jira_worklog in self._jira.worklogs(jira_issue.key):
             existing_jira_worklogs.append("%s/%s" % (jira_issue.key, jira_worklog.id))
             sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_worklog.id, "TimeLog", None)
             if not sg_entity:
@@ -1561,7 +1561,7 @@ class EntitiesGenericHandler(SyncHandler):
         sync_with_errors = False
 
         # first, push all the comments to FPTR
-        for jira_comment in self._jira.comments(jira_issue):
+        for jira_comment in self._jira.comments(jira_issue.key):
             existing_jira_comments.append("%s/%s" % (jira_issue.key, jira_comment.id))
             sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_comment.id, "Note", None)
             if not sg_entity:
