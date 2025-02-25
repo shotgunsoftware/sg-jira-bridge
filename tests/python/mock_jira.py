@@ -431,11 +431,14 @@ ISSUE_UPDATED_PAYLOAD = {
     }
 }
 
-WORKLOG_DELETED_PAYLOAD = {
+WORKLOG_PAYLOAD = {
     "webhookEvent": "worklog_deleted",
     "worklog": {
         "id": "100001",
-        "issueId": "FAKED-01"
+        "issueId": "FAKED-01",
+        "author": {
+            "accountId": JIRA_USER_2["accountId"],
+        }
     }
 }
 

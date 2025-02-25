@@ -95,14 +95,19 @@ class TestEntitiesGenericHandler(TestSyncBase):
             }
         )
 
-    def _mock_jira_issue_event(self, jira_issue, jira_event):
+    def _mock_jira_event(self, jira_issue, jira_event, jira_worklog=None):
         """Helper method to mock Jira issue event."""
 
         mocked_jira_event = copy.deepcopy(jira_event)
-        mocked_jira_event["issue"] = {
-            "id": jira_issue.key,
-            "key": jira_issue.key
-        }
+
+        if jira_worklog:
+            mocked_jira_event["worklog"]["issueId"] = jira_issue.key
+            mocked_jira_event["worklog"]["id"] = jira_worklog.id
+        else:
+            mocked_jira_event["issue"] = {
+                "id": jira_issue.key,
+                "key": jira_issue.key
+            }
         return mocked_jira_event
 
     def _check_jira_issue(self, bridge, sg_entity, sync_in_fptr=None):
@@ -1582,7 +1587,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         del mocked_jira_event["changelog"]
 
@@ -1606,7 +1611,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "issuetype": bridge.jira.issue_type_by_name("BadIssueType")
             }
         )
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         self.assertFalse(
             bridge.sync_in_shotgun(
@@ -1644,7 +1649,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira")
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         self.assertFalse(
             bridge.sync_in_shotgun(
@@ -1661,7 +1666,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         self.assertFalse(
             bridge.sync_in_shotgun(
@@ -1678,7 +1683,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sync_in_fptr="False")
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         self._mock_sg_data(bridge.shotgun)
 
@@ -1713,7 +1718,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         self._mock_sg_data(bridge.shotgun)
 
@@ -1763,7 +1768,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way")
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         self._mock_sg_data(bridge.shotgun)
 
@@ -1814,7 +1819,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg")
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
 
         self._mock_sg_data(bridge.shotgun)
 
@@ -1869,7 +1874,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
         self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
@@ -1913,7 +1918,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
         mocked_jira_event["changelog"]["items"][0]["field"] = "Sync In FPTR"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "customfield_11504"
 
@@ -1983,7 +1988,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_epic = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_ASSET, sync_in_fptr="False")
         jira_issue.update(fields={"parent": jira_epic})
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
         mocked_jira_event["changelog"]["items"][0]["field"] = "parent"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "parent"
 
@@ -2029,7 +2034,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         jira_issue.update(fields={"parent": jira_epic})
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
         mocked_jira_event["changelog"]["items"][0]["field"] = "parent"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "parent"
 
@@ -2074,7 +2079,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
         mocked_jira_event["changelog"]["items"][0]["field"] = "Sync In FPTR"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "customfield_11504"
 
@@ -2125,7 +2130,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
         mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
 
@@ -2166,7 +2171,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
         mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
 
@@ -2207,7 +2212,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
 
-        mocked_jira_event = self._mock_jira_issue_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
         mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
 
@@ -2227,3 +2232,111 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         )
 
         self.assertEqual(sg_task["sg_status_list"], "ip")
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Worklog Created Event
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_sync_new_worklog_created_by_jira_bridge_user(self, mocked_sg):
+        """
+        Check that the event will be rejected if the worklog has been created by the Jira Bridge user to avoid infinite loop.
+
+        Expected result:
+        - the event should be rejected
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
+
+        self._mock_sg_data(bridge.shotgun)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_created"
+        mocked_jira_event["worklog"]["author"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_sync_new_worklog_not_linked_to_a_synced_issue(self, mocked_sg):
+        """
+        Check that no FPTR Timelog entity won't be created in Jira.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is NOT flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the event should be rejected
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
+
+        self._mock_sg_data(bridge.shotgun)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_created"
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_sync_new_worklog_linked_to_a_synced_issue(self, mocked_sg):
+        """
+        Check that the FPTR TimeLog entity associated to the Jira Worklog is correctly created in FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the FPTR entity TimeLog entity will be created in FPTR
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_created"
+
+        sg_timelogs = bridge.shotgun.find(
+            "TimeLog",
+            [["entity", "is", mocked_sg_task]]
+        )
+        self.assertEqual(len(sg_timelogs), 0)
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_timelogs = bridge.shotgun.find(
+            "TimeLog",
+            [["entity", "is", mocked_sg_task]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertEqual(len(sg_timelogs), 1)
+        self.assertEqual(sg_timelogs[0][SHOTGUN_JIRA_ID_FIELD], "%s/%s" % (jira_issue.key, jira_worklog.id))
