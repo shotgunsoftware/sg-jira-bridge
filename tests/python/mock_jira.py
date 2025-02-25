@@ -416,6 +416,21 @@ ISSUE_CREATED_PAYLOAD = {
     }
 }
 
+ISSUE_UPDATED_PAYLOAD = {
+    "webhookEvent": "jira:issue_updated",
+    "changelog": {
+        "items": [
+            {
+                "field": "description",
+                "fieldId": "description",
+            },
+        ]
+    },
+    "issue": {
+        "id": "FAKED-01"
+    }
+}
+
 WORKLOG_DELETED_PAYLOAD = {
     "webhookEvent": "worklog_deleted",
     "worklog": {
@@ -1723,6 +1738,8 @@ class MockedJira(object):
         """
         Mocked Jira method.
         """
+        if isinstance(issue_key, jira.resources.Issue):
+            issue_key = issue_key.key
         if issue_key not in self._issues:
             raise jira.JIRAError(text="Unable to find Issue %s" % issue_key, status_code=404)
         return self._issues.get(issue_key)
@@ -1731,6 +1748,8 @@ class MockedJira(object):
         """
         Mocked Jira method.
         """
+        if not isinstance(issue, jira.resources.Issue):
+            issue = self.issue(issue)
         raw = {"issue": issue, "id": str(len(issue._comments) + 1), "body": body}
         for k in kwargs:
             raw[k] = kwargs[k]
@@ -1750,6 +1769,8 @@ class MockedJira(object):
 
     def add_worklog(self, issue, *args, **kwargs):
         """Mocked Jira method to add a worklog"""
+        if not isinstance(issue, jira.resources.Issue):
+            issue = self.issue(issue)
         raw = {"issue": issue, "id": str(len(issue._worklogs) + 1)}
         for k in kwargs:
             raw[k] = kwargs[k]
