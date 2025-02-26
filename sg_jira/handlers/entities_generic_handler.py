@@ -1650,7 +1650,7 @@ class EntitiesGenericHandler(SyncHandler):
             self._logger.debug(f"Couldn't find Jira comment ({jira_comment_id}) linked to Jira Issue ({jira_issue_key})")
             return False
 
-        sg_subject, sg_body, sg_author = self._hook.compose_sg_note(jira_comment.body)
+        sg_subject, sg_body, sg_author = self._hook.extract_jira_comment_data(jira_comment.body)
 
         if not sg_author:
             sg_author = self._hook.get_sg_user_from_jira_user(jira_comment.author)

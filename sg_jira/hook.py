@@ -14,7 +14,7 @@ from sg_jira.errors import InvalidShotgunValue, InvalidJiraValue
 
 
 class JiraHook(object):
-    """"""
+    """Hook class that can be inherited by the user so he'd be able to override/customize methods"""
 
     # This will match JIRA accounts in the following format
     # 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0
@@ -34,15 +34,16 @@ class JiraHook(object):
     {panel}
     """
 
+    # Associated regex used to get FPTR Note information from Jira comment body
+    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+
+    # Template used to build Jira worklogs content from a TimeLog.
     WORKLOG_BODY_TEMPLATE = """
     _Worklog created from FPTR by %s_
     %s
     """
 
-    # Associated regex used to get FPTR Note information from Jira comment body
-    # JIRA_COMMENT_REGEX = r"{panel:title=([^\}]*)\}\n_Note created from FPTR by ([\s\w]+)_\n(.*)\n\{panel\}"
-    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
-
+    # Associated regex used to get FPTR TimeLog information from Jira worklog body
     JIRA_WORKLOG_REGEX = r"_Worklog created from FPTR by ([\w\s]+)_\n(.*)"
 
     # Define the format of the Flow Production Tracking dates
@@ -66,7 +67,15 @@ class JiraHook(object):
         return self._bridge.jira
 
     def get_jira_value_from_sg_value(self, sg_value, jira_entity, jira_field, jira_field_properties, skip_array_check=False):
-        """"""
+        """
+        Helper method to convert a FPTR field value to a Jira field value.
+        :param sg_value: The FPTR field value to convert.
+        :param jira_entity: The Jira entity we want to get the value for.
+        :param jira_field: The Jira field we want to get the value for.
+        :param jira_field_properties: Properties of the Jira field we want to get hte value for.
+        :param skip_array_check: If True, will skip some extra Jira formatting if the FPTR field is an array.
+        :returns: The Jira field value.
+        """
 
         self._logger.debug(f"Getting Jira value for Flow Production Tracking value {sg_value}")
 
@@ -150,7 +159,9 @@ class JiraHook(object):
 
     @staticmethod
     def get_jira_default_value(jira_field_type):
-        """"""
+        """
+        Returns the default value for the given Jira field type.
+        """
         if jira_field_type == "string":
             return ""
 
@@ -161,8 +172,15 @@ class JiraHook(object):
 
         return None
 
-    def get_jira_value_from_sg_list(self, sg_value, jira_issue, jira_field, jira_field_properties):
-        """"""
+    def get_jira_value_from_sg_list(self, sg_value, jira_entity, jira_field, jira_field_properties):
+        """
+        Convert a FPTR list value into a Jira field value that is compatible.
+        :param sg_value: The FPTR field value to convert.
+        :param jira_entity: The Jira entity we want to get the value for.
+        :param jira_field: The Jira field we want to get the value for.
+        :param jira_field_properties: Properties of the Jira field we want to get hte value for.
+        :returns: The Jira field value.
+        """
 
         is_array = jira_field_properties["schema"]["type"] == "array"
 
@@ -170,7 +188,7 @@ class JiraHook(object):
         if is_array:
             jira_value = []
             for v in sg_value:
-                jv = self.get_jira_value_from_sg_value(v, jira_issue, jira_field, jira_field_properties, skip_array_check=True)
+                jv = self.get_jira_value_from_sg_value(v, jira_entity, jira_field, jira_field_properties, skip_array_check=True)
                 if jv is not None:
                     jira_value.append(jv)
 
@@ -178,7 +196,7 @@ class JiraHook(object):
         else:
             jira_value = self.get_jira_value_from_sg_value(
                 sg_value[0] if len(sg_value) > 0 else None,
-                jira_issue,
+                jira_entity,
                 jira_field,
                 jira_field_properties
             )
@@ -186,7 +204,14 @@ class JiraHook(object):
         return jira_value
 
     def get_sg_value_from_jira_value(self, jira_value, jira_entity, sg_project, sg_field_properties):
-        """"""
+        """
+        Convert a Jira field value into a FPTR field value that is compatible.
+        :param jira_value: The Jira field value to convert.
+        :param jira_entity: The Jira entity we want to convert the value from.
+        :param sg_project: FPTR project the entity we're trying to get the value for belongs to.
+        :param sg_field_properties: Properties of the FPTR field we want to get the value for.
+        :returns: The FPTR field value.
+        """
 
         sg_field = sg_field_properties["name"]["value"]
 
@@ -262,7 +287,9 @@ class JiraHook(object):
         )
 
     def get_sg_user_from_jira_user(self, jira_user):
-        """"""
+        """
+        Given a Jira user, returns the associated FPTR user.
+        """
 
         if self._jira.is_jira_cloud:
             sg_filters = [["sg_jira_account_id", "is", jira_user.accountId]]
@@ -277,15 +304,16 @@ class JiraHook(object):
         return self._shotgun.find_one("HumanUser", sg_filters, ["id" , "email", "name"])
 
     def compose_jira_comment_body(self, sg_note):
-        """"""
+        """Helper method to compose the Jira comment body from a FPTR note."""
         return self.COMMENT_BODY_TEMPLATE % (
             sg_note["subject"],
             sg_note["user"]["name"],
             sg_note["content"],
         )
 
-    def compose_sg_note(self, jira_comment_body):
-        """"""
+    def extract_jira_comment_data(self, jira_comment_body):
+        """Helper method to extract the FPTR note data from a Jira comment body."""
+
         result = re.search(self.JIRA_COMMENT_REGEX, jira_comment_body, flags=re.S)
 
         # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
@@ -322,14 +350,14 @@ class JiraHook(object):
         return subject, content, sg_user
 
     def compose_jira_worklog_comment(self, sg_timelog):
-        """"""
+        """Helper method to compose the Jira Worklog comment from a FPTR timelog."""
         return self.WORKLOG_BODY_TEMPLATE % (
             sg_timelog["user"]["name"],
             sg_timelog.get("description", ""),
         )
 
     def extract_jira_worklog_data(self, jira_worklog_comment):
-        """"""
+        """Helper method to extract the FPTR timelog data from a Jira Worklog comment."""
 
         result = re.search(self.JIRA_WORKLOG_REGEX, jira_worklog_comment, flags=re.S)
 
@@ -355,11 +383,11 @@ class JiraHook(object):
         return result.group(2).strip(), sg_user
 
     def format_jira_date(self, sg_date):
-        """"""
+        """Helper method to convert a FPTR date into a Jira date."""
         jira_formatted_date = self.JIRA_DATE_FORMAT.replace("%f", "000")
         jira_formatted_date = jira_formatted_date.replace("%z", "+0000")
         return datetime.datetime.strptime(sg_date, self.SG_DATE_FORMAT).strftime(jira_formatted_date)
 
     def format_sg_date(self, jira_date):
-        """"""
+        """Helper method to convert a Jira date into a FPTR date."""
         return datetime.datetime.strptime(jira_date, self.JIRA_DATE_FORMAT).strftime(self.SG_DATE_FORMAT)
