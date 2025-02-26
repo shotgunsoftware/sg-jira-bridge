@@ -2790,3 +2790,185 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         )
 
         self.assertEqual(sg_notes[0]["content"], jira_comment.body)
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Comment Deleted Event
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_delete_comment_deletion_disabled(self, mocked_sg):
+        """
+        Check that the event will be rejected if the sync deletion direction is not set for the Comment entity.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_deleted"
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_delete_comment_not_linked_to_synced_issue(self, mocked_sg):
+        """
+        Check that the event will be rejected if the deleted Comment is not associated to a synced Issue.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_deleted"
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "entities_generic_both_way_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_both_way_sync_deletion(self, mocked_sg):
+        """
+        Check that the FPTR Note associated to the Jira Issue Comment is correctly deleted in FPTR (sync direction set both way).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the issue is flagged as ready to sync in Jira
+        - the sync deletion direction is set to "both_way"
+        - the Note already exists in FPTR and is correctly associated to the Jira entity
+        Expected result:
+        - the FPTR note should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_deleted"
+
+        jira_comment.delete()
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "entities_generic_both_way_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
+        )
+
+        self.assertEqual(len(sg_notes), 0)
+
+    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_sg_to_jira_sync_deletion(self, mocked_sg):
+        """
+        Check that the FPTR Note associated to the Jira Issue Comment is not deleted in FPTR (sync direction set from FPTR to Jira).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the issue is flagged as ready to sync in Jira
+        - the sync deletion direction is set to "sg_to_jira"
+        - the Note already exists in FPTR and is correctly associated to the Jira entity
+        Expected result:
+        - the FPTR note should not be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_deleted"
+
+        jira_comment.delete()
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "entities_generic_sg_to_jira_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_jira_to_sg_sync_deletion(self, mocked_sg):
+        """
+        Check that the FPTR TimeLog associated to the Jira Issue Worklog is correctly deleted in FPTR (sync direction set from Jira to FPTR).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the issue is flagged as ready to sync in Jira
+        - the sync deletion direction is set to "both_way"
+        - the TimeLog already exists in FPTR and is correctly associated to the Jira entity
+        Expected result:
+        - the FPTR timelog should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+        self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 1)
+
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [sg_mocked_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_deleted"
+
+        jira_comment.delete()
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "entities_generic_jira_to_sg_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
+        )
+
+        self.assertEqual(len(sg_notes), 0)
