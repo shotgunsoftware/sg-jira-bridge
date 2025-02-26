@@ -445,6 +445,23 @@ WORKLOG_PAYLOAD = {
     }
 }
 
+COMMENT_PAYLOAD = {
+    "webhookEvent": "comment_created",
+    "comment": {
+        "id": "100001",
+        "author": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+        "updateAuthor": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+    },
+    "issue": {
+        "id": "FAKED-01",
+        "key": "FAKED-01"
+    }
+}
+
 
 class MockedSession(object):
     def put(self, *args, **kwargs):

@@ -95,7 +95,7 @@ class TestEntitiesGenericHandler(TestSyncBase):
             }
         )
 
-    def _mock_jira_event(self, jira_issue, jira_event, jira_worklog=None):
+    def _mock_jira_event(self, jira_issue, jira_event, jira_worklog=None, jira_comment=None):
         """Helper method to mock Jira issue event."""
 
         mocked_jira_event = copy.deepcopy(jira_event)
@@ -103,6 +103,10 @@ class TestEntitiesGenericHandler(TestSyncBase):
         if jira_worklog:
             mocked_jira_event["worklog"]["issueId"] = jira_issue.key
             mocked_jira_event["worklog"]["id"] = jira_worklog.id
+        elif jira_comment:
+            mocked_jira_event["comment"]["id"] = jira_comment.id
+            mocked_jira_event["issue"]["id"] = jira_issue.key
+            mocked_jira_event["issue"]["key"] = jira_issue.key
         else:
             mocked_jira_event["issue"] = {
                 "id": jira_issue.key,
@@ -2267,7 +2271,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
     def test_jira_to_fptr_sync_new_worklog_not_linked_to_a_synced_issue(self, mocked_sg):
         """
-        Check that no FPTR Timelog entity won't be created in Jira.
+        Check that no FPTR Timelog entity will be created in FPTR.
 
         Test environment:
         - the entity/field mapping has been done correctly in the settings
@@ -2600,3 +2604,111 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         )
 
         self.assertEqual(len(sg_timelogs), 0)
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Comment Created Event
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_sync_new_comment_created_by_jira_bridge_user(self, mocked_sg):
+        """
+        Check that the event will be rejected if the comment has been created by the Jira Bridge user to avoid infinite loop.
+
+        Expected result:
+        - the event should be rejected
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+
+        self._mock_sg_data(bridge.shotgun)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_created"
+        mocked_jira_event["comment"]["author"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_sync_new_comment_not_linked_to_a_synced_issue(self, mocked_sg):
+        """
+        Check that no FPTR Note entity will be created in FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is NOT flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the event should be rejected
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+
+        self._mock_sg_data(bridge.shotgun)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_created"
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_sync_new_comment_linked_to_a_synced_issue(self, mocked_sg):
+        """
+        Check that the FPTR Note entity associated to the Jira Comment is correctly created in FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the FPTR Note entity will be created in FPTR
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body", author=mock_jira.JIRA_USER)
+
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_created"
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [["tasks", "is", mocked_sg_task]]
+        )
+        self.assertEqual(len(sg_notes), 0)
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [["tasks", "is", mocked_sg_task]],
+            [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertEqual(len(sg_notes), 1)
+        self.assertEqual(sg_notes[0][SHOTGUN_JIRA_ID_FIELD], "%s/%s" % (jira_issue.key, jira_comment.id))
