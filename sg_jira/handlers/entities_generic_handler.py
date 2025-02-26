@@ -9,7 +9,6 @@ import re
 
 import jira
 
-from sg_jira.errors import InvalidJiraValue
 from sg_jira.handlers import SyncHandler
 from sg_jira.constants import (SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD,
                                JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SYNC_IN_FPTR_FIELD)
