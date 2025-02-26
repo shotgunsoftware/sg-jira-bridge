@@ -2340,3 +2340,263 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         )
         self.assertEqual(len(sg_timelogs), 1)
         self.assertEqual(sg_timelogs[0][SHOTGUN_JIRA_ID_FIELD], "%s/%s" % (jira_issue.key, jira_worklog.id))
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Worklog Updated Event
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_sync_existing_worklog_updated_by_jira_bridge_user(self, mocked_sg):
+        """
+        Check that the event will be rejected if the worklog has been updated by the Jira Bridge user to avoid infinite loop.
+
+        Expected result:
+        - the event should be rejected
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
+
+        self._mock_sg_data(bridge.shotgun)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_updated"
+        mocked_jira_event["worklog"]["updateAuthor"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_sync_existing_worklog(self, mocked_sg):
+        """
+        Check that the FPTR TimeLog entity associated to the Jira Worklog is correctly updated in FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the FPTR entity TimeLog entity should be updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["entity"] = mocked_sg_task
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_updated"
+
+        self.assertNotEqual(mocked_sg_timelog["duration"], jira_worklog.timeSpentSeconds)
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_timelogs = bridge.shotgun.find(
+            "TimeLog",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_worklog.id)]],
+            ["duration"]
+        )
+
+        self.assertEqual(sg_timelogs[0]["duration"], jira_worklog.timeSpentSeconds)
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Worklog Deleted Event
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_delete_worklog_deletion_disabled(self, mocked_sg):
+        """
+        Check that the event will be rejected if the sync deletion direction is not set for the Worklog entity.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_deleted"
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_delete_worklog_not_linked_to_synced_issue(self, mocked_sg):
+        """
+        Check that the event will be rejected if the deleted Worklog is not associated to a synced Issue.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_deleted"
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "entities_generic_both_way_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_both_way_sync_deletion(self, mocked_sg):
+        """
+        Check that the FPTR TimeLog associated to the Jira Issue Worklog is correctly deleted in FPTR (sync direction set both way).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the issue is flagged as ready to sync in Jira
+        - the sync deletion direction is set to "both_way"
+        - the TimeLog already exists in FPTR and is correctly associated to the Jira entity
+        Expected result:
+        - the FPTR timelog should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue)
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
+
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["entity"] = [sg_mocked_task]
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_deleted"
+
+        jira_worklog.delete()
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "entities_generic_both_way_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_timelogs = bridge.shotgun.find(
+            "TimeLog",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_worklog.id)]],
+        )
+
+        self.assertEqual(len(sg_timelogs), 0)
+
+    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_sg_to_jira_sync_deletion(self, mocked_sg):
+        """
+        Check that the FPTR TimeLog associated to the Jira Issue Worklog is not deleted in FPTR (sync direction set from FPTR to Jira).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the issue is flagged as ready to sync in Jira
+        - the sync deletion direction is set to "sg_to_jira"
+        - the TimeLog already exists in FPTR and is correctly associated to the Jira entity
+        Expected result:
+        - the FPTR timelog should not be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue)
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
+
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["entity"] = [sg_mocked_task]
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_deleted"
+
+        jira_worklog.delete()
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "entities_generic_sg_to_jira_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_jira_to_sg_sync_deletion(self, mocked_sg):
+        """
+        Check that the FPTR TimeLog associated to the Jira Issue Worklog is correctly deleted in FPTR (sync direction set from Jira to FPTR).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the issue is flagged as ready to sync in Jira
+        - the sync deletion direction is set to "both_way"
+        - the TimeLog already exists in FPTR and is correctly associated to the Jira entity
+        Expected result:
+        - the FPTR timelog should be deleted
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_worklog = bridge.jira.add_worklog(jira_issue)
+        self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
+
+        sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        mocked_sg_timelog["entity"] = [sg_mocked_task]
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event["webhookEvent"] = "worklog_deleted"
+
+        jira_worklog.delete()
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                "entities_generic_jira_to_sg_deletion",
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_timelogs = bridge.shotgun.find(
+            "TimeLog",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_worklog.id)]],
+        )
+
+        self.assertEqual(len(sg_timelogs), 0)

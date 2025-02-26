@@ -438,7 +438,10 @@ WORKLOG_PAYLOAD = {
         "issueId": "FAKED-01",
         "author": {
             "accountId": JIRA_USER_2["accountId"],
-        }
+        },
+        "updateAuthor": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
     }
 }
 
@@ -1783,7 +1786,7 @@ class MockedJira(object):
 
     def worklog(self, issue_key, worklog_key):
         """Mocked Jira method to retrieve a worklog associated with an issue"""
-        issue = self.issue(issue_key)
+        issue = self.issue(issue_key) if not isinstance(issue_key, jira.resources.Issue) else issue_key
         for w in issue._worklogs:
             if w.id == worklog_key:
                 return w
