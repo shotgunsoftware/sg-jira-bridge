@@ -35,6 +35,7 @@ class EntitiesGenericHandler(SyncHandler):
     __NOTE_SG_FIELDS = ["subject", "content", "user", "tasks"]
     __TIMELOG_EXTRA_SG_FIELDS = ["user", "entity"]
 
+    # Define the "fake" field used to map FPTR child entity with Jira entity
     __JIRA_CHILDREN_FIELD = "{{CHILDREN}}"
 
     def __init__(self, syncer, entity_mapping):
@@ -1274,7 +1275,13 @@ class EntitiesGenericHandler(SyncHandler):
 
 
     def _sync_jira_issue_to_sg(self, jira_issue):
-        """"""
+        """
+        Get the FPTR entity linked to the JIra Issue. If the entity doesn't exist yet in FPTR, it will be created.
+        :param jira_issue: Jira issue we want to get the associated FPTR entity from
+        :type jira_issue: jira.resources.Issue
+        :returns: The associated FPTR entity
+        :rtype: dict
+        """
 
         entity_mapping = self.__get_jira_issue_type_settings(jira_issue.fields.issuetype.name)
         sg_entity_type = entity_mapping.get("sg_entity")
@@ -1337,7 +1344,21 @@ class EntitiesGenericHandler(SyncHandler):
         return sg_entity
 
     def _sync_jira_entity_to_sg(self, jira_issue, jira_entity_id, sg_entity_type, webhook_action):
-        """"""
+        """
+        Get the FPTR entity linked to a Jira entity (that is not an Issue).
+        If the entity doesn't exist yet in FPTR, it will be created.
+        It the entity doesn't exist in Jira anymore, it will be deleted in FPTR.
+        :param jira_issue: Jira issue linked to the Jira entity we want to get the FPTR entity from
+        :type jira_issue: jira.resources.Issue
+        :param jira_entity_id: Id of the Jira entity we want to get the FPTR entity from
+        :type jira_entity_id: str
+        :param sg_entity_type: Type of the FPTR entity we want to act on
+        :type sg_entity_type: str
+        :param webhook_action: Type of the action we want to perform (creation/update/deletion)
+        :type webhook_action: str
+        :returns: The associated FPTR entity if it still exists, None otherwise
+        :rtype: dict or None
+        """
 
         # first, check that the Jira entity we're trying to sync is associated to a Jira Issue already synced in FPTR
 
@@ -1421,7 +1442,21 @@ class EntitiesGenericHandler(SyncHandler):
         return sg_entities[0]
 
     def _sync_jira_fields_to_sg(self, jira_issue, jira_key, sg_entity, jira_fields=None):
-        """"""
+        """
+        Sync a list of Jira fields to FPTR.
+        :param jira_issue: Jira issue we want to sync the fields from or linked to the Jira entity we want to sync the
+            fields from
+        :type jira_issue: jira.resources.Issue
+        :param jira_key: Key of the Jira entity we want to sync the fields from. The Jira entity could be an Issue,
+            a Worklog or a Comment
+        :type jira_key: str
+        :param sg_entity: The Flow Production Tracking entity we want to sync the fields to
+        :type sg_entity: dict
+        :param jira_fields: Optional list of fields name to sync. If not one is supplied, all the fields associated to
+            the Jira entity will be synced.
+        :type: list
+        :returns: True if everything went well, False if errors happened
+        """
 
         sync_with_errors = False
         jira_entity = jira_issue
@@ -1473,7 +1508,6 @@ class EntitiesGenericHandler(SyncHandler):
                     sync_with_errors = True
                     continue
                 jira_value = None
-            sg_value = None
 
             if jira_field == "watches":
                 sg_value = []
@@ -1526,7 +1560,13 @@ class EntitiesGenericHandler(SyncHandler):
         return not sync_with_errors
 
     def _sync_jira_worklogs_to_sg(self, jira_issue):
-        """"""
+        """
+        Sync the Jira Issue worklogs to FPTR.
+
+        :param jira_issue: Jira Issue we want to sync the worklogs from
+        :type jira_issue: jira.resources.Issue
+        :returns: True if everything works well, False otherwise
+        """
 
         existing_jira_worklogs = []
         sync_with_errors = False
@@ -1540,6 +1580,7 @@ class EntitiesGenericHandler(SyncHandler):
             if not self._sync_jira_fields_to_sg(jira_issue, jira_worklog.id, sg_entity, None):
                 sync_with_errors = True
 
+        # then, if the sync deletion flag is enabled, remove the timelogs that doesn't exist anymore in Jira
         sync_settings = self.__get_sg_entity_settings("TimeLog")
         if sync_settings.get("sync_deletion_direction") in [None, "sg_to_jira"]:
             return not sync_with_errors
@@ -1556,7 +1597,13 @@ class EntitiesGenericHandler(SyncHandler):
         return not sync_with_errors
 
     def _sync_jira_comments_to_sg(self, jira_issue):
-        """"""
+        """
+        Sync the Jira Issue comments to FPTR.
+
+        :param jira_issue: Jira Issue we want to sync the comments from
+        :type jira_issue: jira.resources.Issue
+        :returns: True if everything works well, False otherwise
+        """
 
         existing_jira_comments = []
         sync_with_errors = False
@@ -1567,6 +1614,8 @@ class EntitiesGenericHandler(SyncHandler):
             sg_entity = self._sync_jira_entity_to_sg(jira_issue, jira_comment.id, "Note", None)
             if not sg_entity:
                 sync_with_errors = True
+
+        # then, if the sync deletion flag is enabled, remove the notes that doesn't exist anymore in Jira
 
         sync_settings = self.__get_sg_entity_settings("Note")
         if sync_settings.get("sync_deletion_direction") in [None, "sg_to_jira"]:
@@ -1584,7 +1633,17 @@ class EntitiesGenericHandler(SyncHandler):
         return not sync_with_errors
 
     def _sync_jira_comment_to_sg(self, jira_issue_key, jira_comment_id, sg_entity):
-        """"""
+        """
+        Sync the content of a Jira comment to FPTR.
+
+        :param jira_issue_key: Key of the Jira Issue associated to the comment we want to push the update from
+        :type jira_issue_key: str
+        :param jira_comment_id: Id of the Jira comment we want to push the update from
+        :type jira_comment_id: str
+        :param sg_entity: FPTR entity associated to the Jira comment we want to push the update from
+        :type sg_entity: dict
+        :returns: True if everything works well, False otherwise
+        """
 
         jira_comment = self._get_jira_issue_comment(jira_issue_key, jira_comment_id)
         if not jira_comment:
@@ -1631,7 +1690,17 @@ class EntitiesGenericHandler(SyncHandler):
         return jira_comment
 
     def _get_jira_issue_worklog(self, jira_issue_key, jira_worklog_id):
-        """"""
+        """
+        Retrieve the Jira worklog with the given id attached to the given Issue.
+
+        .. note:: Jira worklogs can't live without being attached to an Issue,
+                  so we use a "<Issue key>/<Worklog id>" key to reference a
+                  particular worklog.
+
+        :param str jira_issue_key: A Jira Issue key.
+        :param str jira_worklog_id: A Jira Worklog id.
+        :returns: A :class:`jira.Worklog` instance or None.
+        """
         jira_worklog = None
         try:
             jira_worklog = self._jira.worklog(jira_issue_key, jira_worklog_id)
@@ -1645,7 +1714,14 @@ class EntitiesGenericHandler(SyncHandler):
         return jira_worklog
 
     def __get_sg_entity_from_jira_issue(self, jira_issue):
-        """"""
+        """
+        Get the FPTR entity associated to the given Jira Issue.
+
+        :param jira_issue: The Jira Issue we want to get the associated FPTR entity from
+        :type jira_issue: jira.resources.Issue
+        :returns: The associated FPTR entity if we can find it, None otherwise.
+        :rtype: dict or None
+        """
         if not jira_issue:
             return None
         entity_mapping = self.__get_jira_issue_type_settings(jira_issue.fields.issuetype.name)
@@ -1654,9 +1730,14 @@ class EntitiesGenericHandler(SyncHandler):
             [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
         )
 
-
     def __parse_jira_key_from_sg_entity(self, sg_entity):
-        """"""
+        """
+        Given a FPTR entity, parse the Jira ID field to get the Jira Issue key and the associated Jira entity ID if one
+        is associated to the FPTR entity.
+        :param sg_entity: The FPTR entity to parse the field.
+        :type sg_entity: dict
+        :returns: The Jira Issue key and the Jira entity ID if one is also associated (the ID will be None otherwise).
+        """
 
         jira_key = sg_entity[SHOTGUN_JIRA_ID_FIELD]
 
@@ -1672,7 +1753,13 @@ class EntitiesGenericHandler(SyncHandler):
         return parts[0], parts[1]
 
     def __get_linked_entity_synced_in_jira(self, sg_entity):
-        """"""
+        """
+        Given a FPTR entity, get the linked entity that is also synced to Jira.
+        :param sg_entity: The FPTR entity to get the linked entity from. It can be a TimeLog or a Note.
+        :type sg_entity: dict
+        :returns: The linked entity that is also synced to Jira if it can be found, None otherwise.
+        :rtype: dict or None
+        """
 
         sg_linked_entities = sg_entity["tasks"] if sg_entity["type"] == "Note" else [sg_entity["entity"]]
         for e in sg_linked_entities:
@@ -1690,7 +1777,12 @@ class EntitiesGenericHandler(SyncHandler):
         return None
 
     def __was_previously_synced_in_jira(self, sg_entities):
-        """"""
+        """
+        Given a list of FPTR entities, check if at least one of them has already been synced in Jira.
+        :param sg_entities: The FPTR entities to check if they have already been synced.
+        :type sg_entities: list of dict
+        :returns: True if at least one of the entities has already been synced, False otherwise.
+        """
 
         if not sg_entities:
             return False
@@ -1710,7 +1802,12 @@ class EntitiesGenericHandler(SyncHandler):
         return False
 
     def __can_sync_to_fptr(self, jira_issue):
-        """"""
+        """
+        Check that, for a given Jira Issue, it can be synced to FPTR.
+        :param jira_issue: The Jira Issue to check.
+        :type jira_issue: jira.resources.Issue
+        :returns: True if the Jira Issue can be synced to FPTR, False otherwise.
+        """
 
         jira_field = jira_issue.get_field(self.__jira_sync_in_fptr_field_id)
         if not jira_field:
@@ -1719,7 +1816,12 @@ class EntitiesGenericHandler(SyncHandler):
 
     @staticmethod
     def __parse_jira_webhook_event(webhook_event):
-        """"""
+        """
+        Helper method to parse the Jira webhook event.
+        :param webhook_event: The Jira webhook event to parse.
+        :type webhook_event: str
+        :returns: The Jira entity the action is done from as well as the action to perform
+        """
 
         result = re.search(r"([\w]+)_([\w]+)", webhook_event)
         if not result:
@@ -1727,5 +1829,11 @@ class EntitiesGenericHandler(SyncHandler):
         return result.group(1), result.group(2)
 
     def __get_issue_children(self, jira_issue):
-        """"""
+        """
+        Helper method to get all the children issues of a given Jira issue.
+        :param jira_issue: The Jira Issue we want to get the children for.
+        :type jira_issue: jira.resources.Issue
+        :returns: The list of Jira Issue children.
+        :rtype: list of jira.resources.Issue
+        """
         return self._jira.search_issues(f"parent IN ('{jira_issue.key}')")
