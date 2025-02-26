@@ -2712,3 +2712,81 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         )
         self.assertEqual(len(sg_notes), 1)
         self.assertEqual(sg_notes[0][SHOTGUN_JIRA_ID_FIELD], "%s/%s" % (jira_issue.key, jira_comment.id))
+
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR Sync - Comment Updated Event
+    # -------------------------------------------------------------------------------
+
+    def test_jira_to_fptr_sync_existing_comment_updated_by_jira_bridge_user(self, mocked_sg):
+        """
+        Check that the event will be rejected if the comment has been updated by the Jira Bridge user to avoid infinite loop.
+
+        Expected result:
+        - the event should be rejected
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
+
+        self._mock_sg_data(bridge.shotgun)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_updated"
+        mocked_jira_event["comment"]["updateAuthor"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_sync_existing_comment(self, mocked_sg):
+        """
+        Check that the FPTR Note entity associated to the Jira comment is correctly updated in FPTR.
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the Issue is flagged as ready to sync in Jira
+        - the sync direction is not set, meaning that it will be both_way by default
+        Expected result:
+        - the FPTR Note entity should be updated
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, timeSpentSeconds=0, body="body comment updated", author=mock_jira.JIRA_USER)
+
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [mocked_sg_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event["webhookEvent"] = "comment_updated"
+
+        self.assertNotEqual(mocked_sg_note["content"], jira_comment.body)
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME,
+                "Issue",
+                jira_issue.key,
+                mocked_jira_event
+            )
+        )
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
+            ["content"]
+        )
+
+        self.assertEqual(sg_notes[0]["content"], jira_comment.body)
