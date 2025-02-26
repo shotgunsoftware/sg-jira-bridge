@@ -134,7 +134,6 @@ SYNC = {
     },
     "entities": {
         "syncer": "sg_jira.EntitiesGenericSyncer",
-        # "hook": "/Users/darkshot/Work/__TMP/another_folder/hook.py",
         "settings": {
             "entity_mapping": [
                 {
@@ -193,7 +192,8 @@ SYNC = {
                 },
                 {
                     "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
-                    "sync_direction": "sg_to_jira",
+                    # "sync_direction": "sg_to_jira",
+                    "sync_deletion_direction": "both_way",
                 },
                 {
                     "sg_entity": "TimeLog",
