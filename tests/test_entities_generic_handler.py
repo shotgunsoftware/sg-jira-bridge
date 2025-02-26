@@ -8,6 +8,7 @@ import copy
 import jira
 import mock
 import os
+import sys
 
 from shotgun_api3.lib import mockgun
 from test_sync_base import TestSyncBase
@@ -1334,45 +1335,6 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         jira_comment = bridge._jira.comment(jira_issue.key, jira_comment.id)
         self.assertNotEqual(jira_comment.body, comment_body)
 
-    # def test_fptr_to_jira_sync_existing_note_remove_linked_entity(self, mocked_sg):
-    #     """
-    #     TODO
-    #
-    #     Test environment:
-    #     - the entity/field mapping has been done correctly in the settings
-    #     - the entity is flagged as ready to sync in FPTR
-    #     - the sync direction is not set, meaning that it will be both_way by default
-    #     - the Comment already exists in Jira and is correctly associated to the FPTR entity
-    #     Expected result:
-    #     - the Jira comment should be deleted
-    #     """
-    #
-    #     syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-    #
-    #     jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-    #     jira_comment = bridge.jira.add_comment(jira_issue, "created in Jira")
-    #     mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
-    #
-    #     mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
-    #     mocked_sg_note["tasks"] = []
-    #     mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
-    #     self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
-    #
-    #     mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
-    #     mocked_sg_event["meta"]["attribute_name"] = "tasks"
-    #     mocked_sg_event["meta"]["removed"] = [mocked_sg_task]
-    #
-    #     self.assertTrue(
-    #         bridge.sync_in_jira(
-    #             self.HANDLER_NAME,
-    #             "Note",
-    #             mock_shotgun.SG_NOTE["id"],
-    #             mocked_sg_event,
-    #         )
-    #     )
-    #
-    #     self.assertEqual(len(bridge._jira.comments(jira_issue.key)), 0)
-
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Note Deletion Event
     # -------------------------------------------------------------------------------
@@ -1625,27 +1587,6 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 mocked_jira_event
             )
         )
-
-    # TODO: enable the test when the worklog deletion will be enabled
-
-    # def test_jira_to_fptr_missing_issue_id(self, mocked_sg):
-    #     """Reject the event if the issue id is missing from the worklog/comment payload."""
-    #
-    #     missing_id_event = copy.deepcopy(mock_jira.WORKLOG_DELETED_PAYLOAD)
-    #     del missing_id_event["worklog"]["issueId"]
-    #
-    #     syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-    #
-    #     self.assertFalse(
-    #         bridge.sync_in_shotgun(
-    #             self.HANDLER_NAME,
-    #             "Issue",
-    #             "FAKED-01",
-    #             missing_id_event
-    #         )
-    #     )
-
-    # TODO: add a test against deletion sync flag check
 
     def test_jira_to_fptr_bad_sync_direction(self, mocked_sg):
         """Reject the event if the sync direction is configured to work from FPTR to Jira."""
@@ -2972,3 +2913,33 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         )
 
         self.assertEqual(len(sg_notes), 0)
+
+
+@mock.patch("shotgun_api3.Shotgun")
+class TestEntitiesGenericHandlerHook(TestEntitiesGenericHandler):
+    """Test the hook functionality for the Entities Generic Handler."""
+
+    JIRA_DATE = "2025-02-18T16:45:09.783+0100"
+
+    def test_default_hook(self, mocked_sg):
+        """Check the default hook functionality."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        hook_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sg_jira", "hook.py"))
+        module_path = sys.modules[syncer.hook.__module__].__file__
+
+        self.assertEqual(hook_path, module_path)
+        self.assertNotEqual(syncer.hook.format_sg_date(self.JIRA_DATE), "fixture_date")
+
+    def test_custom_hook(self, mocked_sg):
+        """Check the custom hook functionality."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_custom_hook")
+
+        hook_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures", "hook.py"))
+        module_path = sys.modules[syncer.hook.__module__].__file__
+
+        self.assertEqual(hook_path, module_path)
+        self.assertEqual(syncer.hook.format_sg_date(self.JIRA_DATE), "fixture_date")
+

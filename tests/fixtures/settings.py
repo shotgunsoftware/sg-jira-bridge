@@ -305,3 +305,6 @@ SYNC["entities_generic_sg_entity_with_missing_field_in_schema"]["settings"]["ent
         "sg_fields": []
     }
 )
+
+SYNC["entities_generic_custom_hook"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_custom_hook"]["hook"] = os.path.join(os.path.dirname(__file__), "hook.py")
