@@ -13,6 +13,7 @@ import importlib
 import importlib.util
 import inspect
 from six.moves import urllib
+import sys
 import threading
 import uuid
 
@@ -407,6 +408,7 @@ class Bridge(object):
         module_name = f"{uuid.uuid4().hex}.{file_name}"
         spec = importlib.util.spec_from_file_location(module_name, hook_path)
         module_obj = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module_obj
         spec.loader.exec_module(module_obj)
         for cls in inspect.getmembers(module_obj, inspect.isclass):
             if cls[1].__module__ == module_name:
