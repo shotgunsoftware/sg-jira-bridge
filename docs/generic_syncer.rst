@@ -17,6 +17,8 @@ Configuration
 At this point, we are assuming that the Jira Bridge configuration has been correctly done following the main configuration process.
 The next section will only describe the extra steps that need to be done to setup and configure this new handler.
 
+.. _entity-sync-jira-config:
+
 Jira Configuration
 ==================
 
@@ -33,6 +35,8 @@ For each Issue Type we want to sync in Jira, we need to make sure that the follo
 +--------------+-----------------------------+----------------------------------------------------------------------------------------------------------+
 | Sync In FPTR | Select List (single choice) | Boolean to trigger the sync from Jira to FPTR. It should contain two options: ``True`` and ``False``     |
 +--------------+-----------------------------+----------------------------------------------------------------------------------------------------------+
+
+.. _entity-sync-fptr-config:
 
 Flow Production Tracking Configuration
 ======================================
@@ -473,88 +477,39 @@ Here is an example of how we can modify the behavior of the method returning the
             }
         }
 
-Use Case: Epic linking syncing
-******************************
+Example: How to sync Jira Epics to FPTR and keep the Epic/Task relationship
+***************************************************************************
 
-Here, we want to mimic the Epic/Task Jira relationship in Flow Production Tracking and have everything synchronized.
+In Jira, it is possible to use Epics as Task parents to define a hierarchy between Issues. The purpose of this example, he to explain
+how to configure Flow Production Tracking and the Jira Bridge to be able to sync everything between Jira & FPTR, while keeping the relationship that exists
+in Jira.
 
 Flow Production Tracking configuration
 ======================================
 
-First, make sure you have a CustomProjectEntity representing an Epic enabled in Flow Production Tracking.
+In Flow Production Tracking, we are going to use a ``CustomProjectEntity`` to represent Jira Epics and the ``Task`` entity to represent the Jira Tasks.
+The relationship between these two entities will be done using a custom ``entity`` field.
+
+Here are all the steps we need to perform in Flow Production Tracking:
+
+- Make sure you have a CustomProjectEntity representing an Epic enabled in Flow Production Tracking.
 
 .. image:: _static/epic_syncing_enable_entity.png
 
-Ensure that the mandatory FPTR fields are created for this entity type.
+- Ensure that the mandatory FPTR fields described in :ref:`entity-sync-fptr-config` are created for this entity type.
 
-============= =========== ======================================= ============================
-Field Name    Field Type  Description                             Field Code (auto-generated)
-============= =========== ======================================= ============================
-Jira Sync URL File/Link   URL of the associated Jira Bridge Issue  ``sg_jira_sync_url``
-Jira Key      Text        Synced Issue Key value in Jira           ``sg_jira_key``
-Sync In Jira  Checkbox    Enable/Disable syncing for this Entity   ``sg_sync_in_jira``
-============= =========== ======================================= ============================
-
-On the ``Task`` entity, create an ``entity`` field to be able to link an Epic entity to a Task entity in Flow Production Tracking.
+- On the ``Task`` entity, create an ``entity`` field to be able to link an Epic entity to a Task entity in Flow Production Tracking.
 
 .. image:: _static/epic_syncing_epic_field.png
 
 Jira configuration
 ==================
 
-Enable the Issue Type ``Epic`` in Jira and check for the hierarchy setting that the ``Task`` Issue type accepts the ``Epic`` Issue type as parent.
-Also, make sure that the new ``Sync in FPTR`` field option exists for the ``Epic`` Issue type.
+In Jira, you need to do the following steps:
 
-Setting configuration
-=====================
+- Enable the Issue Type ``Epic`` in Jira and check for the hierarchy setting that the ``Task`` Issue type accepts the ``Epic`` Issue type as parent.
 
-Once everything has been correctly configured in both Jira and Flow Production Tracking, we need to make sure that the mapping is done in the ``settings.py`` file.
-
-.. code-block:: python
-
-    SYNC = {
-        # Add the test syncer to the list of syncers, it will be available
-        # with the http://<your server>/jira2sg/entities and http://<your server>/sg2jira/entities
-        # urls.
-        "entities": {
-            # Example of a custom syncer with an additional parameter to define
-            # a log level.
-            "syncer": "sg_jira.EntitiesGenericSyncer",
-            "settings": {
-                "entity_mapping": [
-                    {
-                         "sg_entity": "Task",
-                         "jira_issue_type": "Task",
-                         "field_mapping": [
-                            {
-                                 "sg_field": "content",
-                                 "jira_field": "summary",
-                            },
-                            {
-                                "sg_field": "sg_epic",
-                                "jira_field": "parent",
-                            },
-                         ]
-                    },
-                    {
-                        "sg_entity": "CustomEntity04",
-                        "jira_issue_type": "Epic",
-                        "field_mapping": [
-                            {
-                                "sg_field": "code",
-                                "jira_field": "summary",
-                            },
-                        ],
-                    }
-                ]
-            },
-        }
-    }
-
-
-You need to make sure that:
-    * the FPTR ``Task`` entity has been added to the entity mapping, is correctly mapped to the Task Issue type, and its ``parent`` field has been added to the field mapping
-    * the FPTR ``Epic`` entity (CustomEntity04) has been added to the entity mapping and is correctly mapped to the Epic Issue type
+- Make sure that all the fields described in :ref:`entity-sync-jira-config` exist and are enabled for the ``Epic`` Issue Type.
 
 FPTR Event Daemon Configuration
 ===============================
@@ -562,6 +517,7 @@ FPTR Event Daemon Configuration
 In order to have the sync working from FPTR to Jira, you need to make sure to add the corresponding event to the ``sg_jira_event_trigger`` plugin.
 
 .. code-block:: python
+    :emphasize-lines: 16
 
     def registerCallbacks(reg):
         """
@@ -589,6 +545,65 @@ In order to have the sync working from FPTR to Jira, you need to make sure to ad
             "Shotgun_Status_Retirement": ["*"],
         }
 
+Setting configuration
+=====================
+
+Once everything has been correctly configured in both Jira and Flow Production Tracking, we need to make sure that the mapping is done in the ``settings.py`` file.
+
+.. code-block:: python
+    :emphasize-lines: 15,16,20,21,22,23,24,25,26,27,28,29,30,31,32,33
+
+    SYNC = {
+        "entities": {
+            "syncer": "sg_jira.EntitiesGenericSyncer",
+            "settings": {
+                "entity_mapping": [
+                    {
+                         "sg_entity": "Task",
+                         "jira_issue_type": "Task",
+                         "field_mapping": [
+                            {
+                                 "sg_field": "content",
+                                 "jira_field": "summary",
+                            },
+                            {
+                                "sg_field": "sg_epic",
+                                "jira_field": "parent",
+                            },
+                         ]
+                    },
+                    {
+                        "sg_entity": "CustomEntity04",
+                        "jira_issue_type": "Epic",
+                        "field_mapping": [
+                            {
+                                "sg_field": "code",
+                                "jira_field": "summary",
+                            },
+                            {
+                                 "sg_field": "sg_tasks",
+                                 "jira_field": "{{CHILDREN}}",
+                            },
+                        ],
+                    }
+                ]
+            },
+        }
+    }
+
+Expected results
+================
+
+Depending on the ``sync_direction`` you setup in the settings, you should be able to see your Epic/Tasks entities in both Jira and Flow Production Tracking.
+
+.. figure:: _static/jira_epic_syncing.png
+
+    Epic/Task relationship in Jira
+
+.. figure:: _static/fptr_epic_syncing.png
+
+    Epic/Task relationship in Jira
+
 Known Issues
 ************
 
@@ -602,8 +617,7 @@ features have not been implemented yet.
 
 - When you delete an entity in FPTR and revive it, it won't be re-synced in Jira.
 
-- If you edit, in Jira, a comment created in FPTR by removing the heading and updating formatted part, you may see some
-    Jira formatting syntax in the Note body.
+- If you edit, in Jira, a comment created in FPTR by removing the heading and updating formatted part, you may see some Jira formatting syntax in the Note body.
 
 - Comments created in Jira and synced to FPTR won't appear in the Activity Stream in FPTR.
 
