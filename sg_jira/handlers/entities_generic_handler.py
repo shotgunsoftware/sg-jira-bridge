@@ -1162,6 +1162,9 @@ class EntitiesGenericHandler(SyncHandler):
         :returns: True if everything went well, False if errors happened
         """
 
+        if linked_entity_type not in self._supported_shotgun_entities_for_shotgun_event():
+            return False
+
         linked_entity_field = "tasks" if linked_entity_type == "Note" else "entity"
 
         sg_linked_entities = self._shotgun.find(
@@ -1568,6 +1571,9 @@ class EntitiesGenericHandler(SyncHandler):
         :returns: True if everything works well, False otherwise
         """
 
+        if "TimeLog" not in self._supported_shotgun_entities_for_shotgun_event():
+            return True
+
         existing_jira_worklogs = []
         sync_with_errors = False
 
@@ -1604,6 +1610,9 @@ class EntitiesGenericHandler(SyncHandler):
         :type jira_issue: jira.resources.Issue
         :returns: True if everything works well, False otherwise
         """
+
+        if "Note" not in self._supported_shotgun_entities_for_shotgun_event():
+            return True
 
         existing_jira_comments = []
         sync_with_errors = False
