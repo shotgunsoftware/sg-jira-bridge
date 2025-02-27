@@ -244,6 +244,62 @@ Here is an example of what a ``status_mapping`` definition can look like:
         }
     }
 
+Parent/children relationship
+----------------------------
+
+In Jira, it is possible to define an issue type hierarchy.
+Replicating this behavior in Flow Production Tracking can be done using ``entity``/``multi-entity`` field relationship between entities.
+
+In the Jira Bridge settings, the hierarchy is defined using the ``parent`` Jira field associated to the corresponding FPTR field in the ``field_mapping`` entry.
+
+In order to have both-way sync, we also need to define the child relationship. As there is no child field for Jira Issues, the ``{{CHILDREN}}`` keyword must be used instead.
+
+Here is an example of how to replicate the Task/Epic Jira relationship, using a FPTR Custom Entity:
+
+.. code-block:: python
+    :emphasize-lines: 14,15,16,17,28,29,30,31
+
+    SYNC = {
+        "entities": {
+            "syncer": "sg_jira.EntitiesGenericSyncer",
+            "settings": {
+                "entity_mapping": [
+                    {
+                         "sg_entity": "Task",
+                         "jira_issue_type": "Task",
+                         "field_mapping": [
+                            {
+                                 "sg_field": "content",
+                                 "jira_field": "summary",
+                            },
+                            {
+                                 "sg_field": "sg_epic",
+                                 "jira_field": "parent",
+                            },
+                         ],
+                    },
+                    {
+                         "sg_entity": "CustomEntity04",
+                         "jira_issue_type": "Epic",
+                         "field_mapping": [
+                            {
+                                 "sg_field": "code",
+                                 "jira_field": "summary",
+                            },
+                            {
+                                 "sg_field": "sg_tasks",
+                                 "jira_field": "{{CHILDREN}}",
+                            },
+                         ],
+                    }
+                ]
+            },
+        }
+    }
+
+.. note::
+    As a Jira Issue can only have one parent, the associated FPTR field must be an ``entity`` field (and not a ``multi-entity`` field)
+
 Syncing FPTR Notes as Jira Comments
 -----------------------------------
 
