@@ -532,3 +532,25 @@ In order to have the sync working from FPTR to Jira, you need to make sure to ad
             "Shotgun_Status_Change": ["*"],
             "Shotgun_Status_Retirement": ["*"],
         }
+
+Known Issues
+************
+
+Because Flow Production Tracking and Jira are both highly customizable and have different APIs,
+there are some cases where things may not match up as expected. There are also cases where certain
+features have not been implemented yet.
+
+- Entity deletion, except for Note/Comment and TimeLog/Worklog, is still not supported.
+
+- Deleting a synced entity linked to another synced entity in FPTR won't remove the link between the two entities in Jira.
+
+- When you delete an entity in FPTR and revive it, it won't be re-synced in Jira.
+
+- If you edit, in Jira, a comment created in FPTR by removing the heading and updating formatted part, you may see some
+    Jira formatting syntax in the Note body.
+
+- Comments created in Jira and synced to FPTR won't appear in the Activity Stream in FPTR.
+
+- Jira subtasks are not supported as Issue Type as parent linking is mandatory on the Jira side.
+
+- Updating watchers on a Jira Issue won't trigger any Jira webhook event so the FPTR associated field won't be updated on the fly.
