@@ -54,7 +54,7 @@ LOGGING = {
         # Set web server level to WARNING so we don't hear about every request
         # If you want to see the requests in the logs, set this to INFO.
         "webapp": {
-            "level": "WARNING"
+            "level": "DEBUG"
         }
     },
     # Some formatters, mainly as examples
@@ -73,12 +73,12 @@ LOGGING = {
     "handlers": {
         # Print out any message to stdout
         "console": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "standard"
         },
         "file": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "standard",
             # this location should be updated to where you store logs
@@ -131,6 +131,85 @@ SYNC = {
         "settings": {
             "log_level": logging.DEBUG
         },
-    }
+    },
+    "entities": {
+        "syncer": "sg_jira.EntitiesGenericSyncer",
+        "settings": {
+            "entity_mapping": [
+                {
+                    "sg_entity": "Task",
+                    "jira_issue_type": "Task",
+                    "field_mapping": [
+                        {
+                            "sg_field": "content",
+                            "jira_field": "summary",
+                        },
+                        {
+                            "sg_field": "sg_description",
+                            "jira_field": "description",
+                        },
+                        {
+                            "sg_field": "task_assignees",
+                            "jira_field": "assignee",
+                        },
+                        {
+                            "sg_field": "tags",
+                            "jira_field": "labels",
+                        },
+                        {
+                            "sg_field": "created_by",
+                            "jira_field": "reporter",
+                        },
+                        {
+                            "sg_field": "due_date",
+                            "jira_field": "duedate",
+                        },
+                        {
+                            "sg_field": "est_in_mins",
+                            "jira_field": "timetracking",
+                        },
+                        {
+                            "sg_field": "addressings_cc",
+                            "jira_field": "watches",
+                        },
+                        {
+                            "sg_field": "sg_epic",
+                            "jira_field": "parent",
+                        },
+                    ],
+                    "status_mapping": {
+                        "sync_direction": "jira_to_sg",
+                        "sg_field": "sg_status_list",
+                        "mapping": {
+                            "wtg": "To Do",
+                            "rdy": "Open",
+                            "ip": "In Progress",
+                            "fin": "Done",
+                            "hld": "Backlog",
+                            "omt": "Closed",
+                        }
+                    }
+                },
+                {
+                    "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
+                    "sync_deletion_direction": "both_way",
+                },
+                {
+                    "sg_entity": "CustomEntity04",
+                    "jira_issue_type": "Epic",
+                    "field_mapping": [
+                        {
+                            "sg_field": "code",
+                            "jira_field": "summary",
+                        },
+                        {
+                            "sg_field": "sg_tasks",
+                            "jira_field": "{{CHILDREN}}",
+                        },
+                    ],
+                }
+            ],
+        },
+    },
 }
 # fmt: on

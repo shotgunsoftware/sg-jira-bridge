@@ -34,6 +34,9 @@ SHOTGUN_JIRA_URL_FIELD = "sg_jira_url"
 # A Shotgun check box field used to specify which entities should be synced.
 SHOTGUN_SYNC_IN_JIRA_FIELD = "sg_sync_in_jira"
 
+# A Jira check box field used to specify which entities should be synced.
+JIRA_SYNC_IN_FPTR_FIELD = "Sync In FPTR"
+
 # Shotgun fields handling multiple values
 SHOTGUN_LIST_FIELDS = ["multi_entity"]
 
@@ -53,7 +56,7 @@ SG_ENTITY_SPECIAL_NAME_FIELDS = {
     "TimeLog": "description",
 }
 
-# Jira search methods use some paging
+# Jira search methods use some pagingJir
 # this is the max number of results to get per "page".
 JIRA_RESULT_PAGING = 2000
 
