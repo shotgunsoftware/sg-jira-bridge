@@ -8,6 +8,9 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+default_language_version:
+    python: python3
+
 # Styles the code properly
 # Exclude the UI files, as they are auto-generated.
 exclude: "ui\/.*py$"
@@ -18,7 +21,6 @@ repos:
     hooks:
     # Ensures the code's syntax is correct.
     - id: check-ast
-      language_version: python3
     # Ensures a file name will resolve on all platform.
     - id: check-case-conflict
     # Checks files with the execute bit set have shebangs.
@@ -36,4 +38,3 @@ repos:
     rev: 25.1.0
     hooks:
     - id: black
-      language_version: python3
