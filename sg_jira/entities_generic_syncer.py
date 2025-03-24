@@ -5,8 +5,8 @@
 # this software in either electronic or hard copy form.
 #
 
-from sg_jira import Syncer
-from sg_jira.handlers.entities_generic_handler import EntitiesGenericHandler
+from .syncer import Syncer
+from .handlers.entities_generic_handler import EntitiesGenericHandler
 
 
 class EntitiesGenericSyncer(Syncer):
