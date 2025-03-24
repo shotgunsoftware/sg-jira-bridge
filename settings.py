@@ -54,7 +54,7 @@ LOGGING = {
         # Set web server level to WARNING so we don't hear about every request
         # If you want to see the requests in the logs, set this to INFO.
         "webapp": {
-            "level": "DEBUG"
+            "level": "WARNING"
         }
     },
     # Some formatters, mainly as examples
