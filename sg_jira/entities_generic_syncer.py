@@ -12,8 +12,8 @@ from .handlers.entities_generic_handler import EntitiesGenericHandler
 class EntitiesGenericSyncer(Syncer):
     """
     Sync Flow Production Tracking Entities as Jira Entities.
-    This generic syncer relies on the settings.py file to define how the entities are synced.
-    This is inside this file that the entities and fields mappings are done.
+    This generic syncer relies on the settings.py file to define how the entities are synced, such as which entities 
+    and their fields mappings.
     """
 
     def __init__(self, entity_mapping=None, **kwargs):
