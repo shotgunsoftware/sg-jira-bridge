@@ -66,7 +66,14 @@ class JiraHook(object):
     def _jira(self):
         return self._bridge.jira
 
-    def get_jira_value_from_sg_value(self, sg_value, jira_entity, jira_field, jira_field_properties, skip_array_check=False):
+    def get_jira_value_from_sg_value(
+        self,
+        sg_value,
+        jira_entity,
+        jira_field,
+        jira_field_properties,
+        skip_array_check=False,
+    ):
         """
         Helper method to convert a FPTR field value to a Jira field value.
         :param sg_value: The FPTR field value to convert.
@@ -77,7 +84,9 @@ class JiraHook(object):
         :returns: The Jira field value.
         """
 
-        self._logger.debug(f"Getting Jira value for Flow Production Tracking value {sg_value}")
+        self._logger.debug(
+            f"Getting Jira value for Flow Production Tracking value {sg_value}"
+        )
 
         # if we're facing some custom use cases (FPTR TimeLog vs Jira Worklog for example)
         # we want to force the returned value
@@ -90,7 +99,9 @@ class JiraHook(object):
 
         jira_field_type = jira_field_properties["schema"]["type"]
         is_array = jira_field_properties["schema"]["type"] == "array"
-        jira_value = self.get_jira_default_value(jira_field_type) if not sg_value else sg_value
+        jira_value = (
+            self.get_jira_default_value(jira_field_type) if not sg_value else sg_value
+        )
 
         if isinstance(sg_value, dict):
             # Assume a FPTR Entity
@@ -108,7 +119,9 @@ class JiraHook(object):
                     return None
             else:
                 email_address = jira_value
-            jira_value = self._jira.find_jira_assignee_for_issue(email_address, jira_entity.fields.project, jira_entity)
+            jira_value = self._jira.find_jira_assignee_for_issue(
+                email_address, jira_entity.fields.project, jira_entity
+            )
 
         elif jira_field == "labels":
             if isinstance(jira_value, dict):
@@ -150,7 +163,9 @@ class JiraHook(object):
 
         # finally, sanitize the jira value
         try:
-            jira_value = self._jira.sanitize_jira_update_value(jira_value, jira_field_properties)
+            jira_value = self._jira.sanitize_jira_update_value(
+                jira_value, jira_field_properties
+            )
         except UserWarning as e:
             self._logger.warning(e)
             return None
@@ -172,7 +187,9 @@ class JiraHook(object):
 
         return None
 
-    def get_jira_value_from_sg_list(self, sg_value, jira_entity, jira_field, jira_field_properties):
+    def get_jira_value_from_sg_list(
+        self, sg_value, jira_entity, jira_field, jira_field_properties
+    ):
         """
         Convert a FPTR list value into a Jira field value that is compatible.
         :param sg_value: The FPTR field value to convert.
@@ -188,7 +205,13 @@ class JiraHook(object):
         if is_array:
             jira_value = []
             for v in sg_value:
-                jv = self.get_jira_value_from_sg_value(v, jira_entity, jira_field, jira_field_properties, skip_array_check=True)
+                jv = self.get_jira_value_from_sg_value(
+                    v,
+                    jira_entity,
+                    jira_field,
+                    jira_field_properties,
+                    skip_array_check=True,
+                )
                 if jv is not None:
                     jira_value.append(jv)
 
@@ -198,12 +221,14 @@ class JiraHook(object):
                 sg_value[0] if len(sg_value) > 0 else None,
                 jira_entity,
                 jira_field,
-                jira_field_properties
+                jira_field_properties,
             )
 
         return jira_value
 
-    def get_sg_value_from_jira_value(self, jira_value, jira_entity, sg_project, sg_field_properties):
+    def get_sg_value_from_jira_value(
+        self, jira_value, jira_entity, sg_project, sg_field_properties
+    ):
         """
         Convert a Jira field value into a FPTR field value that is compatible.
         :param jira_value: The Jira field value to convert.
@@ -235,7 +260,9 @@ class JiraHook(object):
                 if isinstance(entity_name, jira.resources.User):
                     sg_value = self.get_sg_user_from_jira_user(entity_name)
                 else:
-                    sg_value = self._shotgun.match_entity_by_name(entity_name, allowed_entities, sg_project)
+                    sg_value = self._shotgun.match_entity_by_name(
+                        entity_name, allowed_entities, sg_project
+                    )
                 if not sg_value:
                     # TODO: do we want to enable entity creation when syncing
                     continue
@@ -261,7 +288,7 @@ class JiraHook(object):
                 raise InvalidJiraValue(
                     sg_field,
                     jira_value,
-                    "Unable to parse Jira value %s as a date." % jira_value
+                    "Unable to parse Jira value %s as a date." % jira_value,
                 )
             return jira_value
 
@@ -274,9 +301,7 @@ class JiraHook(object):
                 return int(jira_value)
             except ValueError as e:
                 raise InvalidJiraValue(
-                    sg_field,
-                    jira_value,
-                    "Unable to parse Jira value as integer"
+                    sg_field, jira_value, "Unable to parse Jira value as integer"
                 )
 
         if data_type == "checkbox":
@@ -301,7 +326,7 @@ class JiraHook(object):
                 f"Couldn't find valid FPTR filters to get the user associated to this Jira user {jira_user}"
             )
 
-        return self._shotgun.find_one("HumanUser", sg_filters, ["id" , "email", "name"])
+        return self._shotgun.find_one("HumanUser", sg_filters, ["id", "email", "name"])
 
     def compose_jira_comment_body(self, sg_note):
         """Helper method to compose the Jira comment body from a FPTR note."""
@@ -323,10 +348,7 @@ class JiraHook(object):
 
         author = result.group(2).strip()
         # we need to make sure the author is associated with a current FPTR user
-        sg_user = self._shotgun.find_one(
-            "HumanUser",
-            [["name", "is", author]]
-        )
+        sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
         if not sg_user:
             raise InvalidJiraValue(
                 "content",
@@ -368,10 +390,7 @@ class JiraHook(object):
 
         author = result.group(1).strip()
         # we need to make sure the author is associated with a current FPTR user
-        sg_user = self._shotgun.find_one(
-            "HumanUser",
-            [["name", "is", author]]
-        )
+        sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
         if not sg_user:
             raise InvalidJiraValue(
                 "content",
@@ -386,8 +405,12 @@ class JiraHook(object):
         """Helper method to convert a FPTR date into a Jira date."""
         jira_formatted_date = self.JIRA_DATE_FORMAT.replace("%f", "000")
         jira_formatted_date = jira_formatted_date.replace("%z", "+0000")
-        return datetime.datetime.strptime(sg_date, self.SG_DATE_FORMAT).strftime(jira_formatted_date)
+        return datetime.datetime.strptime(sg_date, self.SG_DATE_FORMAT).strftime(
+            jira_formatted_date
+        )
 
     def format_sg_date(self, jira_date):
         """Helper method to convert a Jira date into a FPTR date."""
-        return datetime.datetime.strptime(jira_date, self.JIRA_DATE_FORMAT).strftime(self.SG_DATE_FORMAT)
+        return datetime.datetime.strptime(jira_date, self.JIRA_DATE_FORMAT).strftime(
+            self.SG_DATE_FORMAT
+        )

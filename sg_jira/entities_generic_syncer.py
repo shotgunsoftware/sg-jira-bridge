@@ -28,7 +28,9 @@ class EntitiesGenericSyncer(Syncer):
         super(EntitiesGenericSyncer, self).__init__(**kwargs)
 
         # we need one and only one handler here as everything will be handled within it
-        self._entities_handler = EntitiesGenericHandler(self, entity_mapping if entity_mapping else [])
+        self._entities_handler = EntitiesGenericHandler(
+            self, entity_mapping if entity_mapping else []
+        )
 
     @property
     def handlers(self):

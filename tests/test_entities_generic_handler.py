@@ -16,12 +16,20 @@ import mock_jira
 import mock_shotgun
 
 import sg_jira
-from sg_jira.constants import (SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, SHOTGUN_JIRA_URL_FIELD, JIRA_SYNC_IN_FPTR_FIELD,
-                               JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_URL_FIELD)
+from sg_jira.constants import (
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+    JIRA_SYNC_IN_FPTR_FIELD,
+    JIRA_SHOTGUN_TYPE_FIELD,
+    JIRA_SHOTGUN_ID_FIELD,
+    JIRA_SHOTGUN_URL_FIELD,
+)
 
 
 # TODO:
 #  - see if we can mockup the Jira Bridge schema (aka fields) to check against the field existence
+
 
 class TestEntitiesGenericHandler(TestSyncBase):
 
@@ -55,7 +63,9 @@ class TestEntitiesGenericHandler(TestSyncBase):
         syncer = bridge.get_syncer(name)
         return syncer, bridge
 
-    def _mock_sg_data(self, sg_instance, jira_issue=None, sync_in_jira=True, extra_fields=None):
+    def _mock_sg_data(
+        self, sg_instance, jira_issue=None, sync_in_jira=True, extra_fields=None
+    ):
         """
         Helper method to mock FPTR data.
         We can't call it in the `setUp` method as we need the mocked_sg instance...
@@ -73,30 +83,50 @@ class TestEntitiesGenericHandler(TestSyncBase):
 
         return mocked_sg_task
 
-    def _mock_jira_data(self, bridge, sg_entity=None, issue_type_name="Task", sync_in_fptr="True"):
+    def _mock_jira_data(
+        self, bridge, sg_entity=None, issue_type_name="Task", sync_in_fptr="True"
+    ):
         """
         Helper method to mock Jira data.
         We can't call it in the `setUp` method as we need the bridge instance...
         """
         bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
         if sg_entity:
-            jira_issue = bridge.jira.create_issue({
-                "issuetype": bridge.jira.issue_type_by_name(issue_type_name),
-                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): sg_entity["id"],
-                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower()): sg_entity["type"],
-                bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): jira.resources.CustomFieldOption(None, None, {"value": sync_in_fptr}),
-            })
+            jira_issue = bridge.jira.create_issue(
+                {
+                    "issuetype": bridge.jira.issue_type_by_name(issue_type_name),
+                    bridge.jira.get_jira_issue_field_id(
+                        JIRA_SHOTGUN_ID_FIELD.lower()
+                    ): sg_entity["id"],
+                    bridge.jira.get_jira_issue_field_id(
+                        JIRA_SHOTGUN_TYPE_FIELD.lower()
+                    ): sg_entity["type"],
+                    bridge.jira.get_jira_issue_field_id(
+                        JIRA_SYNC_IN_FPTR_FIELD.lower()
+                    ): jira.resources.CustomFieldOption(
+                        None, None, {"value": sync_in_fptr}
+                    ),
+                }
+            )
             return jira_issue
         return bridge.jira.create_issue(
             fields={
                 "issuetype": bridge.jira.issue_type_by_name(issue_type_name),
                 bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): "",
-                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower()): "",
-                bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()): jira.resources.CustomFieldOption(None, None, {"value": sync_in_fptr}),
+                bridge.jira.get_jira_issue_field_id(
+                    JIRA_SHOTGUN_TYPE_FIELD.lower()
+                ): "",
+                bridge.jira.get_jira_issue_field_id(
+                    JIRA_SYNC_IN_FPTR_FIELD.lower()
+                ): jira.resources.CustomFieldOption(
+                    None, None, {"value": sync_in_fptr}
+                ),
             }
         )
 
-    def _mock_jira_event(self, jira_issue, jira_event, jira_worklog=None, jira_comment=None):
+    def _mock_jira_event(
+        self, jira_issue, jira_event, jira_worklog=None, jira_comment=None
+    ):
         """Helper method to mock Jira issue event."""
 
         mocked_jira_event = copy.deepcopy(jira_event)
@@ -109,10 +139,7 @@ class TestEntitiesGenericHandler(TestSyncBase):
             mocked_jira_event["issue"]["id"] = jira_issue.key
             mocked_jira_event["issue"]["key"] = jira_issue.key
         else:
-            mocked_jira_event["issue"] = {
-                "id": jira_issue.key,
-                "key": jira_issue.key
-            }
+            mocked_jira_event["issue"] = {"id": jira_issue.key, "key": jira_issue.key}
         return mocked_jira_event
 
     def _check_jira_issue(self, bridge, sg_entity, sync_in_fptr=None):
@@ -123,21 +150,34 @@ class TestEntitiesGenericHandler(TestSyncBase):
         self.assertIsNotNone(jira_issue)
 
         # its "Sync in FPTR" field should be set to "True"
-        sync_in_fptr_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower())
-        self.assertEqual(jira_issue.get_field(sync_in_fptr_jira_field_id).value, sync_in_fptr)
+        sync_in_fptr_jira_field_id = bridge.jira.get_jira_issue_field_id(
+            JIRA_SYNC_IN_FPTR_FIELD.lower()
+        )
+        self.assertEqual(
+            jira_issue.get_field(sync_in_fptr_jira_field_id).value, sync_in_fptr
+        )
 
         # all its FPTR fields should be filled with the Task data
-        sg_type_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_TYPE_FIELD.lower())
+        sg_type_jira_field_id = bridge.jira.get_jira_issue_field_id(
+            JIRA_SHOTGUN_TYPE_FIELD.lower()
+        )
         self.assertEqual(jira_issue.get_field(sg_type_jira_field_id), sg_entity["type"])
 
-        sg_id_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower())
-        self.assertEqual(jira_issue.get_field(sg_id_jira_field_id), str(sg_entity["id"]))
+        sg_id_jira_field_id = bridge.jira.get_jira_issue_field_id(
+            JIRA_SHOTGUN_ID_FIELD.lower()
+        )
+        self.assertEqual(
+            jira_issue.get_field(sg_id_jira_field_id), str(sg_entity["id"])
+        )
 
-        sg_url_jira_field_id = bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_URL_FIELD.lower())
+        sg_url_jira_field_id = bridge.jira.get_jira_issue_field_id(
+            JIRA_SHOTGUN_URL_FIELD.lower()
+        )
         sg_entity_url = bridge.shotgun.get_entity_page_url(sg_entity)
         self.assertEqual(jira_issue.get_field(sg_url_jira_field_id), sg_entity_url)
 
         return jira_issue
+
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
@@ -149,49 +189,91 @@ class TestEntitiesGenericHandlerSettings(TestEntitiesGenericHandler):
         """Test all the use cases where the entity mappings setting is not correctly formatted."""
 
         # "sg_entity" key must be defined in the entity_mapping dictionary
-        self.assertRaises(RuntimeError, self._get_syncer, mocked_sg, "entities_generic_bad_sg_entity_formatting")
+        self.assertRaises(
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_sg_entity_formatting",
+        )
         # "jira_issue_type" key must be defined in the entity_mapping dictionary
-        self.assertRaises(RuntimeError, self._get_syncer, mocked_sg, "entities_generic_bad_jira_issue_type_formatting")
+        self.assertRaises(
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_jira_issue_type_formatting",
+        )
 
     def test_bad_settings_formatting_for_field_mapping(self, mocked_sg):
         """Test all the use cases where the entity field mappings setting is not correctly formatted."""
         # "field_mapping" key must be defined in the entity_mapping dictionary
-        self.assertRaises(RuntimeError, self._get_syncer, mocked_sg, "entities_generic_bad_fields_formatting")
+        self.assertRaises(
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_fields_formatting",
+        )
         # "sg_field" key must be defined in the field_mapping dictionary
         self.assertRaises(
-            RuntimeError, self._get_syncer, mocked_sg,"entities_generic_bad_fields_formatting_missing_sg_field_key"
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_fields_formatting_missing_sg_field_key",
         )
         # "jira_field" key must be defined in the field_mapping dictionary
         self.assertRaises(
-            RuntimeError, self._get_syncer, mocked_sg,"entities_generic_bad_fields_formatting_missing_jira_field_key"
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_fields_formatting_missing_jira_field_key",
         )
 
     def test_bad_settings_formatting_for_status_mapping(self, mocked_sg):
         """Test all the use cases where the status field mappings setting is not correctly formatted."""
         # "sg_field" key must be defined in the field_mapping dictionary
         self.assertRaises(
-            RuntimeError, self._get_syncer, mocked_sg,"entities_generic_bad_status_formatting_missing_sg_field_key"
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_status_formatting_missing_sg_field_key",
         )
         # "mapping" key must be defined in the field_mapping dictionary
         self.assertRaises(
-            RuntimeError, self._get_syncer, mocked_sg,"entities_generic_bad_status_formatting_missing_mapping_key"
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_status_formatting_missing_mapping_key",
         )
 
     def test_project_in_entity_mapping(self, mocked_sg):
         """Test that a FPTR project entity cannot be used in the entity mapping."""
-        self.assertRaises(RuntimeError, self._get_syncer, mocked_sg, "entities_generic_with_project")
+        self.assertRaises(
+            RuntimeError, self._get_syncer, mocked_sg, "entities_generic_with_project"
+        )
 
     def test_fptr_missing_fields_in_schema(self, mocked_sg):
         """Test that the FPTR entities used in the entity mapping are correctly setup in FPTR"""
 
         # SHOTGUN_JIRA_ID_FIELD field must have been created for the FPTR entity
         self.assertRaises(
-            RuntimeError, self._get_syncer, mocked_sg, "entities_generic_sg_entity_with_missing_field_in_schema"
+            RuntimeError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_sg_entity_with_missing_field_in_schema",
         )
         # FPTR field associated to Jira "assignee" field must be an entity/multi-entity field
-        self.assertRaises(ValueError, self._get_syncer, mocked_sg, "entities_generic_bad_assignee_field_type")
+        self.assertRaises(
+            ValueError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_assignee_field_type",
+        )
         # FPTR field associated to Jira "assignee" field must be an entity/multi-entity field supporting HumanUser
-        self.assertRaises(ValueError, self._get_syncer, mocked_sg, "entities_generic_bad_assignee_field_entity_type")
+        self.assertRaises(
+            ValueError,
+            self._get_syncer,
+            mocked_sg,
+            "entities_generic_bad_assignee_field_entity_type",
+        )
 
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
@@ -306,7 +388,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
     def test_fptr_to_jira_bad_issue_type(self, mocked_sg):
         """If the FPTR entity is mapped to a bad Jira issue type, the event will be rejected."""
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_bad_jira_issue_type")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_bad_jira_issue_type"
+        )
 
         self._mock_sg_data(bridge.shotgun)
 
@@ -380,7 +464,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         sg_task = bridge.shotgun.find_one(
             "Task",
             [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+            [
+                SHOTGUN_JIRA_URL_FIELD,
+                SHOTGUN_JIRA_ID_FIELD,
+                "content",
+                "sg_description",
+            ],
         )
         self.assertIsNotNone(sg_task[SHOTGUN_JIRA_ID_FIELD])
 
@@ -429,7 +518,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         sg_task = bridge.shotgun.find_one(
             "Task",
             [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+            [
+                SHOTGUN_JIRA_URL_FIELD,
+                SHOTGUN_JIRA_ID_FIELD,
+                "content",
+                "sg_description",
+            ],
         )
         self.assertIsNotNone(sg_task[SHOTGUN_JIRA_ID_FIELD])
 
@@ -479,7 +573,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         sg_task = bridge.shotgun.find_one(
             "Task",
             [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+            [
+                SHOTGUN_JIRA_URL_FIELD,
+                SHOTGUN_JIRA_ID_FIELD,
+                "content",
+                "sg_description",
+            ],
         )
         self.assertIsNotNone(sg_task[SHOTGUN_JIRA_ID_FIELD])
 
@@ -514,7 +613,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"]
+        )
 
         self.assertTrue(
             bridge.sync_in_jira(
@@ -528,7 +629,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         sg_task = bridge.shotgun.find_one(
             "Task",
             [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+            [
+                SHOTGUN_JIRA_URL_FIELD,
+                SHOTGUN_JIRA_ID_FIELD,
+                "content",
+                "sg_description",
+            ],
         )
         jira_issue = bridge.jira.issue(jira_issue.key)
 
@@ -568,7 +674,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         self.assertEqual(bridge._jira.worklogs(jira_issue.key), [])
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"]
+        )
 
         self.assertTrue(
             bridge.sync_in_jira(
@@ -582,7 +690,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         sg_task = bridge.shotgun.find_one(
             "Task",
             [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+            [
+                SHOTGUN_JIRA_URL_FIELD,
+                SHOTGUN_JIRA_ID_FIELD,
+                "content",
+                "sg_description",
+            ],
         )
         jira_issue = bridge.jira.issue(jira_issue.key)
 
@@ -631,7 +744,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         sg_asset = bridge.shotgun.find_one(
             "Asset",
             [["id", "is", mock_shotgun.SG_ASSET["id"]]],
-            [SHOTGUN_JIRA_ID_FIELD]
+            [SHOTGUN_JIRA_ID_FIELD],
         )
 
         self.assertEqual(sg_asset[SHOTGUN_JIRA_ID_FIELD], None)
@@ -701,9 +814,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_asset)
 
         bridge.shotgun.update(
-            mocked_sg_task["type"],
-            mocked_sg_task["id"],
-            {"entity": mocked_sg_asset}
+            mocked_sg_task["type"], mocked_sg_task["id"], {"entity": mocked_sg_asset}
         )
 
         self.assertRaises(AttributeError, jira_issue.get_field, "parent")
@@ -739,8 +850,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["due_date"])
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"]
+        )
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["due_date"]
+        )
 
         self.assertTrue(
             bridge.sync_in_jira(
@@ -754,7 +869,12 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         sg_task = bridge.shotgun.find_one(
             "Task",
             [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+            [
+                SHOTGUN_JIRA_URL_FIELD,
+                SHOTGUN_JIRA_ID_FIELD,
+                "content",
+                "sg_description",
+            ],
         )
         jira_issue = bridge.jira.issue(jira_issue.key)
 
@@ -816,7 +936,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         jira_status = "To Do"
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_both_way")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_status_both_way"
+        )
 
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
@@ -852,7 +974,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         jira_status = "To Do"
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_sg_to_jira")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_status_sg_to_jira"
+        )
 
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
@@ -888,7 +1012,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         jira_status = "To Do"
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_jira_to_sg")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_status_jira_to_sg"
+        )
 
         sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
         sg_mocked_event["meta"]["attribute_name"] = "sg_status_list"
@@ -908,7 +1034,6 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         )
 
         self.assertNotEqual(jira_issue.fields.status.name, jira_status)
-
 
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Entity Delete Event
@@ -936,7 +1061,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
     # FPTR to Jira Sync - TimeLog Change Event (Timelog creation/update)
     # -------------------------------------------------------------------------------
 
-    def test_fptr_to_jira_sync_new_timelog_not_linked_to_a_synced_entity(self, mocked_sg):
+    def test_fptr_to_jira_sync_new_timelog_not_linked_to_a_synced_entity(
+        self, mocked_sg
+    ):
         """
         Check that no Jira Issue worklog won't be created in Jira.
 
@@ -1003,9 +1130,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         worklog_key = "%s/%s" % (jira_issue.key, jira_worklogs[0].id)
 
         sg_timelog = bridge.shotgun.find_one(
-            "TimeLog",
-            [["id", "is", mocked_sg_timelog["id"]]],
-            [SHOTGUN_JIRA_ID_FIELD]
+            "TimeLog", [["id", "is", mocked_sg_timelog["id"]]], [SHOTGUN_JIRA_ID_FIELD]
         )
 
         self.assertEqual(sg_timelog[SHOTGUN_JIRA_ID_FIELD], worklog_key)
@@ -1032,7 +1157,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = mocked_sg_task
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
         self.assertTrue(
@@ -1046,7 +1174,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         self.assertEqual(len(bridge._jira.worklogs(jira_issue.key)), 1)
         jira_worklog = bridge._jira.worklog(jira_issue.key, jira_worklog.id)
-        self.assertEqual(jira_worklog.timeSpentSeconds, mock_shotgun.SG_TIMELOG["duration"] * 60)
+        self.assertEqual(
+            jira_worklog.timeSpentSeconds, mock_shotgun.SG_TIMELOG["duration"] * 60
+        )
 
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - TimeLog Delete Event
@@ -1076,7 +1206,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         Check that the event will be rejected if the deleted TimeLog is not associated to a synced entity.
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
         sg_mocked_task = self._mock_sg_data(bridge.shotgun, sync_in_jira=False)
 
@@ -1097,7 +1229,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
             )
         )
 
-    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_both_way_sync_deletion(self, mocked_sg):
+    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_both_way_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the Jira Issue worklog associated to the FPTR TimeLog is correctly deleted in Jira (sync direction set both way).
 
@@ -1110,7 +1244,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         - the Jira worklog should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
@@ -1121,7 +1257,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["__retired"] = True
         mocked_sg_timelog["entity"] = [sg_mocked_task]
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
         mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
@@ -1138,7 +1277,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         self.assertEqual(bridge._jira.worklogs(jira_issue.key), [])
 
-    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_sg_to_jira_sync_deletion(self, mocked_sg):
+    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_sg_to_jira_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the Jira Issue worklog associated to the FPTR TimeLog is correctly deleted in Jira (sync direction set from FPTR to Jira).
 
@@ -1151,7 +1292,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         - the Jira worklog should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_sg_to_jira_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
@@ -1162,7 +1305,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["__retired"] = True
         mocked_sg_timelog["entity"] = [sg_mocked_task]
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
         mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
@@ -1179,7 +1325,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         self.assertEqual(bridge._jira.worklogs(jira_issue.key), [])
 
-    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_jira_to_sg_sync_deletion(self, mocked_sg):
+    def test_fptr_to_jira_delete_timelog_linked_to_synced_entity_jira_to_sg_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the Jira Issue worklog associated to the FPTR TimeLog is not deleted in Jira (sync direction set from Jira to FPTR).
 
@@ -1192,7 +1340,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         - the Jira comment should not be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_jira_to_sg_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
@@ -1203,7 +1353,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["__retired"] = True
         mocked_sg_timelog["entity"] = [sg_mocked_task]
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
         mocked_sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
@@ -1289,9 +1442,7 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         comment_key = "%s/%s" % (jira_issue.key, jira_comments[0].id)
 
         sg_note = bridge.shotgun.find_one(
-            "Note",
-            [["id", "is", mocked_sg_note["id"]]],
-            [SHOTGUN_JIRA_ID_FIELD]
+            "Note", [["id", "is", mocked_sg_note["id"]]], [SHOTGUN_JIRA_ID_FIELD]
         )
 
         self.assertEqual(sg_note[SHOTGUN_JIRA_ID_FIELD], comment_key)
@@ -1319,7 +1470,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [mocked_sg_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
         self.assertTrue(
@@ -1363,7 +1517,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         Check that the event will be rejected if the deleted Note is not associated to a synced entity.
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
         sg_mocked_task = self._mock_sg_data(bridge.shotgun, sync_in_jira=False)
 
@@ -1384,7 +1540,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
             )
         )
 
-    def test_fptr_to_jira_delete_note_linked_to_synced_entity_both_way_sync_deletion(self, mocked_sg):
+    def test_fptr_to_jira_delete_note_linked_to_synced_entity_both_way_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the Jira Issue comment associated to the FPTR Note is correctly deleted in Jira.
 
@@ -1397,7 +1555,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         - the Jira comment should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
@@ -1408,7 +1568,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["__retired"] = True
         mocked_sg_note["tasks"] = [sg_mocked_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
         mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
@@ -1425,7 +1588,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         self.assertEqual(bridge._jira.comments(jira_issue.key), [])
 
-    def test_fptr_to_jira_delete_note_linked_to_synced_entity_sg_to_jira_sync_deletion(self, mocked_sg):
+    def test_fptr_to_jira_delete_note_linked_to_synced_entity_sg_to_jira_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the Jira Issue comment associated to the FPTR Note is correctly deleted in Jira (sync direction set from FPTR to Jira).
 
@@ -1438,7 +1603,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         - the Jira comment should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_sg_to_jira_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
@@ -1449,7 +1616,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["__retired"] = True
         mocked_sg_note["tasks"] = [sg_mocked_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
         mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
@@ -1466,7 +1636,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
 
         self.assertEqual(bridge._jira.comments(jira_issue.key), [])
 
-    def test_fptr_to_jira_delete_note_linked_to_synced_entity_jira_to_sg_sync_deletion(self, mocked_sg):
+    def test_fptr_to_jira_delete_note_linked_to_synced_entity_jira_to_sg_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the Jira Issue comment associated to the FPTR Note is not deleted in Jira (sync direction set from Jira to FPTR).
 
@@ -1479,7 +1651,9 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         - the Jira comment should not be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_jira_to_sg_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, "my comment")
@@ -1490,7 +1664,10 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["__retired"] = True
         mocked_sg_note["tasks"] = [sg_mocked_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
         mocked_sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
@@ -1526,10 +1703,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                "FAKED-01",
-                bad_webhook_event
+                self.HANDLER_NAME, "Issue", "FAKED-01", bad_webhook_event
             )
         )
 
@@ -1540,10 +1714,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                "FAKED-01",
-                mock_jira.ISSUE_CREATED_PAYLOAD
+                self.HANDLER_NAME, "Issue", "FAKED-01", mock_jira.ISSUE_CREATED_PAYLOAD
             )
         )
 
@@ -1553,16 +1724,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         del mocked_jira_event["changelog"]
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                "FAKED-01",
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", "FAKED-01", mocked_jira_event
             )
         )
 
@@ -1573,18 +1743,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
         jira_issue = bridge.jira.create_issue(
-            fields={
-                "issuetype": bridge.jira.issue_type_by_name("BadIssueType")
-            }
+            fields={"issuetype": bridge.jira.issue_type_by_name("BadIssueType")}
         )
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -1594,14 +1761,16 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira")
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         self.assertFalse(
             bridge.sync_in_shotgun(
                 "entities_generic_sg_to_jira",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
@@ -1611,14 +1780,13 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -1628,16 +1796,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sync_in_fptr="False")
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         self._mock_sg_data(bridge.shotgun)
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -1663,30 +1830,28 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         self._mock_sg_data(bridge.shotgun)
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]]
+            "Task", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]]
         )
 
         self.assertEqual(sg_task, None)
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_task = bridge.shotgun.find_one(
             "Task",
             [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
-            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD]
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD],
         )
         self.assertNotEqual(sg_task, None)
         expected_url = {"name": "View in Jira", "url": jira_issue.permalink()}
@@ -1713,30 +1878,28 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way")
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         self._mock_sg_data(bridge.shotgun)
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]]
+            "Task", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]]
         )
 
         self.assertEqual(sg_task, None)
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                "entities_generic_both_way",
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                "entities_generic_both_way", "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_task = bridge.shotgun.find_one(
             "Task",
             [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
-            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD]
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD],
         )
         self.assertNotEqual(sg_task, None)
         expected_url = {"name": "View in Jira", "url": jira_issue.permalink()}
@@ -1764,13 +1927,14 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg")
 
         jira_issue = self._mock_jira_data(bridge)
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_CREATED_PAYLOAD
+        )
 
         self._mock_sg_data(bridge.shotgun)
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]]
+            "Task", [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]]
         )
 
         self.assertEqual(sg_task, None)
@@ -1780,14 +1944,14 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_jira_to_sg",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
         sg_task = bridge.shotgun.find_one(
             "Task",
             [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
-            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD]
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD],
         )
         self.assertNotEqual(sg_task, None)
         expected_url = {"name": "View in Jira", "url": jira_issue.permalink()}
@@ -1819,24 +1983,25 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"]
+        )
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_task = bridge.shotgun.find_one(
             "Task",
             [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
-            ["content", "sg_description"]
+            ["content", "sg_description"],
         )
 
         self.assertNotEqual(jira_issue.fields.summary, sg_task["content"])
@@ -1859,57 +2024,48 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         bridge.jira.add_comment(jira_issue, "jira comment body")
-        bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="jira worklog body")
+        bridge.jira.add_worklog(
+            jira_issue, timeSpentSeconds=0, comment="jira worklog body"
+        )
 
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
         mocked_jira_event["changelog"]["items"][0]["field"] = "Sync In FPTR"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "customfield_11504"
 
-        sg_notes = bridge.shotgun.find(
-            "Note",
-            [["tasks", "is", mocked_sg_task]]
-        )
+        sg_notes = bridge.shotgun.find("Note", [["tasks", "is", mocked_sg_task]])
         self.assertEqual(len(sg_notes), 0)
 
-        sg_timelogs = bridge.shotgun.find(
-            "TimeLog",
-            [["entity", "is", mocked_sg_task]]
-        )
+        sg_timelogs = bridge.shotgun.find("TimeLog", [["entity", "is", mocked_sg_task]])
         self.assertEqual(len(sg_timelogs), 0)
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"]
+        )
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_task = bridge.shotgun.find_one(
             "Task",
             [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
-            ["content", "sg_description"]
+            ["content", "sg_description"],
         )
 
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
 
-        sg_notes = bridge.shotgun.find(
-            "Note",
-            [["tasks", "is", mocked_sg_task]]
-        )
+        sg_notes = bridge.shotgun.find("Note", [["tasks", "is", mocked_sg_task]])
         self.assertEqual(len(sg_notes), 1)
 
-        sg_timelogs = bridge.shotgun.find(
-            "TimeLog",
-            [["entity", "is", mocked_sg_task]]
-        )
+        sg_timelogs = bridge.shotgun.find("TimeLog", [["entity", "is", mocked_sg_task]])
         self.assertEqual(len(sg_timelogs), 1)
 
     def test_jira_to_fptr_sync_existing_entity_parent_not_synced(self, mocked_sg):
@@ -1930,19 +2086,20 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        jira_epic = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_ASSET, sync_in_fptr="False")
+        jira_epic = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_ASSET, sync_in_fptr="False"
+        )
         jira_issue.update(fields={"parent": jira_epic})
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
         mocked_jira_event["changelog"]["items"][0]["field"] = "parent"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "parent"
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -1971,7 +2128,9 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        jira_epic = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_ASSET, issue_type_name="Epic")
+        jira_epic = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_ASSET, issue_type_name="Epic"
+        )
         mocked_sg_asset = copy.deepcopy(mock_shotgun.SG_ASSET)
         mocked_sg_asset[SHOTGUN_JIRA_ID_FIELD] = jira_epic.key
         mocked_sg_asset[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
@@ -1979,30 +2138,25 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         jira_issue.update(fields={"parent": jira_epic})
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
         mocked_jira_event["changelog"]["items"][0]["field"] = "parent"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "parent"
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            ["entity"]
+            "Task", [["id", "is", mock_shotgun.SG_TASK["id"]]], ["entity"]
         )
         self.assertEqual(sg_task["entity"], None)
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            ["entity"]
+            "Task", [["id", "is", mock_shotgun.SG_TASK["id"]]], ["entity"]
         )
         self.assertEqual(sg_task["entity"]["id"], mock_shotgun.SG_ASSET["id"])
 
@@ -2024,27 +2178,35 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
         mocked_jira_event["changelog"]["items"][0]["field"] = "Sync In FPTR"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "customfield_11504"
 
         self.assertNotEqual(jira_issue.fields.summary, mocked_sg.SG_TASK["content"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"])
-        self.assertNotEqual(jira_issue.fields.description, mocked_sg.SG_TASK["due_date"])
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["sg_description"]
+        )
+        self.assertNotEqual(
+            jira_issue.fields.description, mocked_sg.SG_TASK["due_date"]
+        )
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_task = bridge.shotgun.find_one(
             "Task",
             [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            [SHOTGUN_JIRA_URL_FIELD, SHOTGUN_JIRA_ID_FIELD, "content", "sg_description"]
+            [
+                SHOTGUN_JIRA_URL_FIELD,
+                SHOTGUN_JIRA_ID_FIELD,
+                "content",
+                "sg_description",
+            ],
         )
         jira_issue = bridge.jira.issue(jira_issue.key)
 
@@ -2075,23 +2237,20 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
         mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            ["sg_status_list"]
+            "Task", [["id", "is", mock_shotgun.SG_TASK["id"]]], ["sg_status_list"]
         )
 
         self.assertEqual(sg_task["sg_status_list"], "ip")
@@ -2109,14 +2268,18 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR entity status should not be updated
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_sg_to_jira")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_status_sg_to_jira"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
         mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
 
@@ -2125,14 +2288,12 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_status_sg_to_jira",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            ["sg_status_list"]
+            "Task", [["id", "is", mock_shotgun.SG_TASK["id"]]], ["sg_status_list"]
         )
 
         self.assertNotEqual(sg_task["sg_status_list"], "ip")
@@ -2150,14 +2311,18 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR entity status should be correctly updated
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_status_jira_to_sg")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_status_jira_to_sg"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         sg_mocked_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         self.assertNotEqual(sg_mocked_task["sg_status_list"], "ip")
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
         mocked_jira_event["changelog"]["items"][0]["field"] = "Status"
         mocked_jira_event["changelog"]["items"][0]["fieldId"] = "status"
 
@@ -2166,14 +2331,12 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_status_jira_to_sg",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
         sg_task = bridge.shotgun.find_one(
-            "Task",
-            [["id", "is", mock_shotgun.SG_TASK["id"]]],
-            ["sg_status_list"]
+            "Task", [["id", "is", mock_shotgun.SG_TASK["id"]]], ["sg_status_list"]
         )
 
         self.assertEqual(sg_task["sg_status_list"], "ip")
@@ -2192,25 +2355,30 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_issue = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False"
+        )
         jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
 
         self._mock_sg_data(bridge.shotgun)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_created"
-        mocked_jira_event["worklog"]["author"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+        mocked_jira_event["worklog"]["author"]["accountId"] = mock_jira.JIRA_USER[
+            "accountId"
+        ]
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
-    def test_jira_to_fptr_sync_new_worklog_not_linked_to_a_synced_issue(self, mocked_sg):
+    def test_jira_to_fptr_sync_new_worklog_not_linked_to_a_synced_issue(
+        self, mocked_sg
+    ):
         """
         Check that no FPTR Timelog entity will be created in FPTR.
 
@@ -2224,20 +2392,21 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_issue = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False"
+        )
         jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
 
         self._mock_sg_data(bridge.shotgun)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_created"
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -2256,41 +2425,42 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+        jira_worklog = bridge.jira.add_worklog(
+            jira_issue, timeSpentSeconds=0, comment="fake comment"
+        )
 
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_created"
 
-        sg_timelogs = bridge.shotgun.find(
-            "TimeLog",
-            [["entity", "is", mocked_sg_task]]
-        )
+        sg_timelogs = bridge.shotgun.find("TimeLog", [["entity", "is", mocked_sg_task]])
         self.assertEqual(len(sg_timelogs), 0)
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_timelogs = bridge.shotgun.find(
-            "TimeLog",
-            [["entity", "is", mocked_sg_task]],
-            [SHOTGUN_JIRA_ID_FIELD]
+            "TimeLog", [["entity", "is", mocked_sg_task]], [SHOTGUN_JIRA_ID_FIELD]
         )
         self.assertEqual(len(sg_timelogs), 1)
-        self.assertEqual(sg_timelogs[0][SHOTGUN_JIRA_ID_FIELD], "%s/%s" % (jira_issue.key, jira_worklog.id))
+        self.assertEqual(
+            sg_timelogs[0][SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, jira_worklog.id),
+        )
 
     # -------------------------------------------------------------------------------
     # Jira to FPTR Sync - Worklog Updated Event
     # -------------------------------------------------------------------------------
 
-    def test_jira_to_fptr_sync_existing_worklog_updated_by_jira_bridge_user(self, mocked_sg):
+    def test_jira_to_fptr_sync_existing_worklog_updated_by_jira_bridge_user(
+        self, mocked_sg
+    ):
         """
         Check that the event will be rejected if the worklog has been updated by the Jira Bridge user to avoid infinite loop.
 
@@ -2300,21 +2470,24 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_issue = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False"
+        )
         jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0)
 
         self._mock_sg_data(bridge.shotgun)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_updated"
-        mocked_jira_event["worklog"]["updateAuthor"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+        mocked_jira_event["worklog"]["updateAuthor"]["accountId"] = mock_jira.JIRA_USER[
+            "accountId"
+        ]
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -2333,33 +2506,45 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+        jira_worklog = bridge.jira.add_worklog(
+            jira_issue, timeSpentSeconds=0, comment="fake comment"
+        )
 
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = mocked_sg_task
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_updated"
 
-        self.assertNotEqual(mocked_sg_timelog["duration"], jira_worklog.timeSpentSeconds)
+        self.assertNotEqual(
+            mocked_sg_timelog["duration"], jira_worklog.timeSpentSeconds
+        )
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_timelogs = bridge.shotgun.find(
             "TimeLog",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_worklog.id)]],
-            ["duration"]
+            [
+                [
+                    SHOTGUN_JIRA_ID_FIELD,
+                    "is",
+                    "%s/%s" % (jira_issue.key, jira_worklog.id),
+                ]
+            ],
+            ["duration"],
         )
 
         self.assertEqual(sg_timelogs[0]["duration"], jira_worklog.timeSpentSeconds)
@@ -2376,17 +2561,18 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+        jira_worklog = bridge.jira.add_worklog(
+            jira_issue, timeSpentSeconds=0, comment="fake comment"
+        )
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_deleted"
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -2395,12 +2581,20 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         Check that the event will be rejected if the deleted Worklog is not associated to a synced Issue.
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
-        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
-        jira_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=0, comment="fake comment")
+        jira_issue = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False"
+        )
+        jira_worklog = bridge.jira.add_worklog(
+            jira_issue, timeSpentSeconds=0, comment="fake comment"
+        )
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_deleted"
 
         self.assertFalse(
@@ -2408,11 +2602,13 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_both_way_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
-    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_both_way_sync_deletion(self, mocked_sg):
+    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_both_way_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the FPTR TimeLog associated to the Jira Issue Worklog is correctly deleted in FPTR (sync direction set both way).
 
@@ -2425,7 +2621,9 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR timelog should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
@@ -2435,10 +2633,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = [sg_mocked_task]
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_deleted"
 
         jira_worklog.delete()
@@ -2448,18 +2651,26 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_both_way_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
         sg_timelogs = bridge.shotgun.find(
             "TimeLog",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_worklog.id)]],
+            [
+                [
+                    SHOTGUN_JIRA_ID_FIELD,
+                    "is",
+                    "%s/%s" % (jira_issue.key, jira_worklog.id),
+                ]
+            ],
         )
 
         self.assertEqual(len(sg_timelogs), 0)
 
-    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_sg_to_jira_sync_deletion(self, mocked_sg):
+    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_sg_to_jira_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the FPTR TimeLog associated to the Jira Issue Worklog is not deleted in FPTR (sync direction set from FPTR to Jira).
 
@@ -2472,7 +2683,9 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR timelog should not be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_sg_to_jira_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
@@ -2482,10 +2695,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = [sg_mocked_task]
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_deleted"
 
         jira_worklog.delete()
@@ -2495,11 +2713,13 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_sg_to_jira_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
-    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_jira_to_sg_sync_deletion(self, mocked_sg):
+    def test_jira_to_fptr_delete_worklog_linked_to_synced_issue_jira_to_sg_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the FPTR TimeLog associated to the Jira Issue Worklog is correctly deleted in FPTR (sync direction set from Jira to FPTR).
 
@@ -2512,7 +2732,9 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR timelog should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_jira_to_sg_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_worklog = bridge.jira.add_worklog(jira_issue)
@@ -2522,10 +2744,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         mocked_sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
         mocked_sg_timelog["entity"] = [sg_mocked_task]
-        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        mocked_sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_timelog)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.WORKLOG_PAYLOAD, jira_worklog=jira_worklog
+        )
         mocked_jira_event["webhookEvent"] = "worklog_deleted"
 
         jira_worklog.delete()
@@ -2535,13 +2762,19 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_jira_to_sg_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
         sg_timelogs = bridge.shotgun.find(
             "TimeLog",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_worklog.id)]],
+            [
+                [
+                    SHOTGUN_JIRA_ID_FIELD,
+                    "is",
+                    "%s/%s" % (jira_issue.key, jira_worklog.id),
+                ]
+            ],
         )
 
         self.assertEqual(len(sg_timelogs), 0)
@@ -2565,20 +2798,23 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self._mock_sg_data(bridge.shotgun)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_created"
-        mocked_jira_event["comment"]["author"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+        mocked_jira_event["comment"]["author"]["accountId"] = mock_jira.JIRA_USER[
+            "accountId"
+        ]
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
-    def test_jira_to_fptr_sync_new_comment_not_linked_to_a_synced_issue(self, mocked_sg):
+    def test_jira_to_fptr_sync_new_comment_not_linked_to_a_synced_issue(
+        self, mocked_sg
+    ):
         """
         Check that no FPTR Note entity will be created in FPTR.
 
@@ -2592,20 +2828,21 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_issue = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False"
+        )
         jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
 
         self._mock_sg_data(bridge.shotgun)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_created"
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -2624,41 +2861,42 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        jira_comment = bridge.jira.add_comment(jira_issue, body="comment body", author=mock_jira.JIRA_USER)
+        jira_comment = bridge.jira.add_comment(
+            jira_issue, body="comment body", author=mock_jira.JIRA_USER
+        )
 
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_created"
 
-        sg_notes = bridge.shotgun.find(
-            "Note",
-            [["tasks", "is", mocked_sg_task]]
-        )
+        sg_notes = bridge.shotgun.find("Note", [["tasks", "is", mocked_sg_task]])
         self.assertEqual(len(sg_notes), 0)
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_notes = bridge.shotgun.find(
-            "Note",
-            [["tasks", "is", mocked_sg_task]],
-            [SHOTGUN_JIRA_ID_FIELD]
+            "Note", [["tasks", "is", mocked_sg_task]], [SHOTGUN_JIRA_ID_FIELD]
         )
         self.assertEqual(len(sg_notes), 1)
-        self.assertEqual(sg_notes[0][SHOTGUN_JIRA_ID_FIELD], "%s/%s" % (jira_issue.key, jira_comment.id))
+        self.assertEqual(
+            sg_notes[0][SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, jira_comment.id),
+        )
 
     # -------------------------------------------------------------------------------
     # Jira to FPTR Sync - Comment Updated Event
     # -------------------------------------------------------------------------------
 
-    def test_jira_to_fptr_sync_existing_comment_updated_by_jira_bridge_user(self, mocked_sg):
+    def test_jira_to_fptr_sync_existing_comment_updated_by_jira_bridge_user(
+        self, mocked_sg
+    ):
         """
         Check that the event will be rejected if the comment has been updated by the Jira Bridge user to avoid infinite loop.
 
@@ -2673,16 +2911,17 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         self._mock_sg_data(bridge.shotgun)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_updated"
-        mocked_jira_event["comment"]["updateAuthor"]["accountId"] = mock_jira.JIRA_USER["accountId"]
+        mocked_jira_event["comment"]["updateAuthor"]["accountId"] = mock_jira.JIRA_USER[
+            "accountId"
+        ]
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -2701,33 +2940,46 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        jira_comment = bridge.jira.add_comment(jira_issue, timeSpentSeconds=0, body="body comment updated", author=mock_jira.JIRA_USER)
+        jira_comment = bridge.jira.add_comment(
+            jira_issue,
+            timeSpentSeconds=0,
+            body="body comment updated",
+            author=mock_jira.JIRA_USER,
+        )
 
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [mocked_sg_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_updated"
 
         self.assertNotEqual(mocked_sg_note["content"], jira_comment.body)
 
         self.assertTrue(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
         sg_notes = bridge.shotgun.find(
             "Note",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
-            ["content"]
+            [
+                [
+                    SHOTGUN_JIRA_ID_FIELD,
+                    "is",
+                    "%s/%s" % (jira_issue.key, jira_comment.id),
+                ]
+            ],
+            ["content"],
         )
 
         self.assertEqual(sg_notes[0]["content"], jira_comment.body)
@@ -2746,15 +2998,14 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_deleted"
 
         self.assertFalse(
             bridge.sync_in_shotgun(
-                self.HANDLER_NAME,
-                "Issue",
-                jira_issue.key,
-                mocked_jira_event
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 
@@ -2763,12 +3014,18 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         Check that the event will be rejected if the deleted Comment is not associated to a synced Issue.
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
-        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False")
+        jira_issue = self._mock_jira_data(
+            bridge, sg_entity=mock_shotgun.SG_TASK, sync_in_fptr="False"
+        )
         jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_deleted"
 
         self.assertFalse(
@@ -2776,11 +3033,13 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_both_way_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
-    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_both_way_sync_deletion(self, mocked_sg):
+    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_both_way_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the FPTR Note associated to the Jira Issue Comment is correctly deleted in FPTR (sync direction set both way).
 
@@ -2793,7 +3052,9 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR note should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_both_way_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_both_way_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
@@ -2803,10 +3064,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [sg_mocked_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_deleted"
 
         jira_comment.delete()
@@ -2816,18 +3082,26 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_both_way_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
         sg_notes = bridge.shotgun.find(
             "Note",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
+            [
+                [
+                    SHOTGUN_JIRA_ID_FIELD,
+                    "is",
+                    "%s/%s" % (jira_issue.key, jira_comment.id),
+                ]
+            ],
         )
 
         self.assertEqual(len(sg_notes), 0)
 
-    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_sg_to_jira_sync_deletion(self, mocked_sg):
+    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_sg_to_jira_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the FPTR Note associated to the Jira Issue Comment is not deleted in FPTR (sync direction set from FPTR to Jira).
 
@@ -2840,7 +3114,9 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR note should not be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_sg_to_jira_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_sg_to_jira_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
@@ -2850,10 +3126,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [sg_mocked_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_deleted"
 
         jira_comment.delete()
@@ -2863,11 +3144,13 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_sg_to_jira_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
-    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_jira_to_sg_sync_deletion(self, mocked_sg):
+    def test_jira_to_fptr_delete_comment_linked_to_synced_issue_jira_to_sg_sync_deletion(
+        self, mocked_sg
+    ):
         """
         Check that the FPTR TimeLog associated to the Jira Issue Worklog is correctly deleted in FPTR (sync direction set from Jira to FPTR).
 
@@ -2880,7 +3163,9 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         - the FPTR timelog should be deleted
         """
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg_deletion")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_jira_to_sg_deletion"
+        )
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
         jira_comment = bridge.jira.add_comment(jira_issue, body="comment body")
@@ -2890,10 +3175,15 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
 
         mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         mocked_sg_note["tasks"] = [sg_mocked_task]
-        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
         self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
 
-        mocked_jira_event = self._mock_jira_event(jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.COMMENT_PAYLOAD, jira_comment=jira_comment
+        )
         mocked_jira_event["webhookEvent"] = "comment_deleted"
 
         jira_comment.delete()
@@ -2903,13 +3193,19 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 "entities_generic_jira_to_sg_deletion",
                 "Issue",
                 jira_issue.key,
-                mocked_jira_event
+                mocked_jira_event,
             )
         )
 
         sg_notes = bridge.shotgun.find(
             "Note",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
+            [
+                [
+                    SHOTGUN_JIRA_ID_FIELD,
+                    "is",
+                    "%s/%s" % (jira_issue.key, jira_comment.id),
+                ]
+            ],
         )
 
         self.assertEqual(len(sg_notes), 0)
@@ -2926,7 +3222,9 @@ class TestEntitiesGenericHandlerHook(TestEntitiesGenericHandler):
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
-        hook_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sg_jira", "hook.py"))
+        hook_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "sg_jira", "hook.py")
+        )
         module_path = sys.modules[syncer.hook.__module__].__file__
 
         self.assertEqual(hook_path, module_path)
@@ -2935,11 +3233,14 @@ class TestEntitiesGenericHandlerHook(TestEntitiesGenericHandler):
     def test_custom_hook(self, mocked_sg):
         """Check the custom hook functionality."""
 
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_custom_hook")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_custom_hook"
+        )
 
-        hook_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures", "hook.py"))
+        hook_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "fixtures", "hook.py")
+        )
         module_path = sys.modules[syncer.hook.__module__].__file__
 
         self.assertEqual(hook_path, module_path)
         self.assertEqual(syncer.hook.format_sg_date(self.JIRA_DATE), "fixture_date")
-

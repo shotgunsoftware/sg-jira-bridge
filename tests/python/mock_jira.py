@@ -191,7 +191,7 @@ ISSUE_FIELDS = {
     },
     "parent": {
         "required": False,
-        "schema": {'system': 'parent', 'type': 'issuelink'},
+        "schema": {"system": "parent", "type": "issuelink"},
         "name": "Parent",
         "key": "parent",
         "hasDefaultValue": False,
@@ -408,12 +408,8 @@ RESOURCE_OPTIONS = {
 
 ISSUE_CREATED_PAYLOAD = {
     "webhookEvent": "jira:issue_created",
-    "changelog": {
-        "items": {}
-    },
-    "issue": {
-        "id": "FAKED-01"
-    }
+    "changelog": {"items": {}},
+    "issue": {"id": "FAKED-01"},
 }
 
 ISSUE_UPDATED_PAYLOAD = {
@@ -426,9 +422,7 @@ ISSUE_UPDATED_PAYLOAD = {
             },
         ]
     },
-    "issue": {
-        "id": "FAKED-01"
-    }
+    "issue": {"id": "FAKED-01"},
 }
 
 WORKLOG_PAYLOAD = {
@@ -442,7 +436,7 @@ WORKLOG_PAYLOAD = {
         "updateAuthor": {
             "accountId": JIRA_USER_2["accountId"],
         },
-    }
+    },
 }
 
 COMMENT_PAYLOAD = {
@@ -456,10 +450,7 @@ COMMENT_PAYLOAD = {
             "accountId": JIRA_USER_2["accountId"],
         },
     },
-    "issue": {
-        "id": "FAKED-01",
-        "key": "FAKED-01"
-    }
+    "issue": {"id": "FAKED-01", "key": "FAKED-01"},
 }
 
 
@@ -493,6 +484,7 @@ class MockedComment(Comment):
     def delete(self, *args, **kwargs):
         """Mocked Jira method to delete a comment"""
         self.issue._comments.remove(self)
+
 
 class MockedWorklog(Worklog):
     def update(self, *args, **kwargs):
@@ -1687,7 +1679,7 @@ class MockedJira(object):
                 "clauseNames": ["parent"],
                 "orderable": False,
                 "id": "parent",
-            }
+            },
         ]
 
     def create_issue(self, fields, *args, **kwargs):
@@ -1764,7 +1756,9 @@ class MockedJira(object):
         if isinstance(issue_key, jira.resources.Issue):
             issue_key = issue_key.key
         if issue_key not in self._issues:
-            raise jira.JIRAError(text="Unable to find Issue %s" % issue_key, status_code=404)
+            raise jira.JIRAError(
+                text="Unable to find Issue %s" % issue_key, status_code=404
+            )
         return self._issues.get(issue_key)
 
     def add_comment(self, issue, body, *args, **kwargs):
@@ -1803,7 +1797,11 @@ class MockedJira(object):
 
     def worklog(self, issue_key, worklog_key):
         """Mocked Jira method to retrieve a worklog associated with an issue"""
-        issue = self.issue(issue_key) if not isinstance(issue_key, jira.resources.Issue) else issue_key
+        issue = (
+            self.issue(issue_key)
+            if not isinstance(issue_key, jira.resources.Issue)
+            else issue_key
+        )
         for w in issue._worklogs:
             if w.id == worklog_key:
                 return w
@@ -1835,9 +1833,7 @@ class MockedJira(object):
         for t in self.transitions():
             if t["id"] == transition_id:
                 jira_issue.update(
-                    fields={
-                        "status": Status(None, None, raw={"name": t["to"]["name"]})
-                    }
+                    fields={"status": Status(None, None, raw={"name": t["to"]["name"]})}
                 )
 
     def search_assignable_users_for_issues(

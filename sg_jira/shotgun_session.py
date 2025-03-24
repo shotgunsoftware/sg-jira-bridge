@@ -61,7 +61,7 @@ class ShotgunSession(object):
             unicode_to_utf8(base_url),
             unicode_to_utf8(script_name),
             *safe_args,
-            **safe_kwargs
+            **safe_kwargs,
         )
 
         self._shotgun_entities = []  # will be used to store FPT entities list

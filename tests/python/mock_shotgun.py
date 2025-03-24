@@ -59,7 +59,7 @@ SG_TASK = {
     "task_assignees": [SG_USER],
     "sg_description": "Task Description",
     "sg_status_list": "wtg",
-    "due_date": "2025-02-12"
+    "due_date": "2025-02-12",
 }
 
 SG_TIMELOG = {
@@ -86,7 +86,7 @@ SG_RETIRED_TIMELOG = {
 SG_CUSTOM_NON_PROJECT_ENTITY = {
     "type": "CustomNonProjectEntity01",
     "id": 1,
-    "code": "My Custom Entity"
+    "code": "My Custom Entity",
 }
 
 SG_NOTE = {
@@ -95,7 +95,7 @@ SG_NOTE = {
     "subject": "This is a note",
     "content": "This is the note's content",
     "user": SG_USER,
-    "project": SG_PROJECT
+    "project": SG_PROJECT,
 }
 
 #

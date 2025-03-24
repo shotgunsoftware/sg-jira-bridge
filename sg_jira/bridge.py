@@ -335,7 +335,9 @@ class Bridge(object):
             settings = sync_settings.get("settings") or {}
             # Instantiate the syncer with our standard parameters and any
             # additional settings as parameters.
-            self._syncers[name] = syncer_class(name=name, bridge=self, hook_class=hook_class, **settings)
+            self._syncers[name] = syncer_class(
+                name=name, bridge=self, hook_class=hook_class, **settings
+            )
             self._syncers[name].setup()
         return self._syncers[name]
 
