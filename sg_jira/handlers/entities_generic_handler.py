@@ -24,11 +24,15 @@ from .sync_handler import SyncHandler
 
 class EntitiesGenericHandler(SyncHandler):
     """
-    A handler which syncs Flow Production Tracking Entities as a Jira Entities.
+    A handler that controls the bidirectional syncing of data between Flow Production Tracking and Jira.
+    Unlike other handlers, it is designed to be a generic handler for all supported entity types.
     """
 
-    # Define the entities with specific behavior
-    # Usually, these entities are linked to a FPTR that will be synced as Jira Issue
+    # List of entities with a specific behavior
+    # These entities couldn't be flagged as synced in Jira/FPTR (aka they don't have the "Sync in Jira"/"Sync in FPTR"
+    # fields)
+    # They will be synced automatically if they have been defined in the settings file, as soon as the entity they are
+    # linked to is synced as well
     __ENTITIES_NOT_FLAGGED_AS_SYNCED = ["Note", "TimeLog"]
 
     # Define the FPTR field associated to the deletion action
