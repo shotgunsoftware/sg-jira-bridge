@@ -43,6 +43,7 @@ class EntitiesGenericHandler(SyncHandler):
     __TIMELOG_EXTRA_SG_FIELDS = ["user", "entity"]
 
     # Define the "fake" field used to map FPTR child entity with Jira entity
+    # please, refer to the doc to see how this keyword can be used in the settings file
     __JIRA_CHILDREN_FIELD = "{{CHILDREN}}"
 
     def __init__(self, syncer, entity_mapping):
