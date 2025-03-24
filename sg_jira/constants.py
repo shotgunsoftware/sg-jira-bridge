@@ -56,7 +56,7 @@ SG_ENTITY_SPECIAL_NAME_FIELDS = {
     "TimeLog": "description",
 }
 
-# Jira search methods use some pagingJir
+# Jira search methods use some paging
 # this is the max number of results to get per "page".
 JIRA_RESULT_PAGING = 2000
 
