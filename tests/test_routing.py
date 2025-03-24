@@ -7,15 +7,16 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
-import six
 import json
-import mock
 import logging
+import os
 import unittest
 
+import mock
+import six
 from six import BytesIO
 from test_base import TestBase
+
 import webapp
 
 # Raw POST request template

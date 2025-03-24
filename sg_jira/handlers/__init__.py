@@ -5,9 +5,9 @@
 # this software in either electronic or hard copy form.
 #
 
-from .sync_handler import SyncHandler
-from .entity_issue_handler import EntityIssueHandler
-from .entities_generic_handler import EntitiesGenericHandler
-from .task_issue_handler import TaskIssueHandler
-from .note_comment_handler import NoteCommentHandler
 from .enable_syncing_handler import EnableSyncingHandler
+from .entities_generic_handler import EntitiesGenericHandler
+from .entity_issue_handler import EntityIssueHandler
+from .note_comment_handler import NoteCommentHandler
+from .sync_handler import SyncHandler
+from .task_issue_handler import TaskIssueHandler

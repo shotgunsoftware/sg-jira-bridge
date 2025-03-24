@@ -5,15 +5,15 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
 import logging
-import requests
-from six.moves import urllib
+import os
 
+import requests
 # Allow users to define their sensitive data in a .env file and
 # load it in environment variables with python-dotenv.
 # https://pypi.org/project/python-dotenv/
 from dotenv import load_dotenv
+from six.moves import urllib
 
 load_dotenv(override=True)
 

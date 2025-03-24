@@ -9,9 +9,10 @@ import copy
 import re
 
 import jira
-from jira.resources import Project as JiraProject
-from jira.resources import IssueType, Issue, User, Comment, IssueLink, Worklog, Status
 from jira import JIRAError
+from jira.resources import Comment, Issue, IssueLink, IssueType
+from jira.resources import Project as JiraProject
+from jira.resources import Status, User, Worklog
 
 # Faked Jira Project, Issue, change log and event
 JIRA_PROJECT_KEY = "UTest"

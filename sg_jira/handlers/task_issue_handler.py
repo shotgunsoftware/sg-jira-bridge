@@ -5,14 +5,9 @@
 # this software in either electronic or hard copy form.
 #
 
-from ..constants import (
-    SHOTGUN_JIRA_ID_FIELD,
-    SHOTGUN_SYNC_IN_JIRA_FIELD,
-    SHOTGUN_JIRA_URL_FIELD,
-    TASK_FIELDS_MAPPING,
-    TASK_ISSUE_FIELDS_MAPPING,
-    TASK_ISSUE_STATUS_MAPPING,
-)
+from ..constants import (SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD,
+                         SHOTGUN_SYNC_IN_JIRA_FIELD, TASK_FIELDS_MAPPING,
+                         TASK_ISSUE_FIELDS_MAPPING, TASK_ISSUE_STATUS_MAPPING)
 from ..errors import InvalidShotgunValue
 from .entity_issue_handler import EntityIssueHandler
 

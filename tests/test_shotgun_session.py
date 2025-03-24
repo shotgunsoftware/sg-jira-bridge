@@ -5,13 +5,14 @@
 # this software in either electronic or hard copy form.
 #
 
-import mock
 import os
 
-import sg_jira
+import mock
+from mock_shotgun import SG_ASSET, SG_RETIRED_TIMELOG, SG_TASK, SG_USER
 from shotgun_api3.lib import mockgun
 from test_base import TestBase
-from mock_shotgun import SG_USER, SG_ASSET, SG_TASK, SG_RETIRED_TIMELOG
+
+import sg_jira
 
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun

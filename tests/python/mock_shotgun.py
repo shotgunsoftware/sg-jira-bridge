@@ -6,6 +6,7 @@
 #
 
 import mock_jira
+
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD
 
 #

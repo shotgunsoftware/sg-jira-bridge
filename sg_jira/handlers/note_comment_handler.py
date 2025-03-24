@@ -8,12 +8,10 @@
 import re
 
 from jira import JIRAError
+
+from ..constants import (NOTE_FIELDS_MAPPING, SHOTGUN_JIRA_ID_FIELD,
+                         SHOTGUN_SYNC_IN_JIRA_FIELD)
 from ..errors import InvalidJiraValue
-from ..constants import (
-    SHOTGUN_JIRA_ID_FIELD,
-    SHOTGUN_SYNC_IN_JIRA_FIELD,
-    NOTE_FIELDS_MAPPING,
-)
 from .sync_handler import SyncHandler
 
 # Template used to build Jira comments body from a Note.

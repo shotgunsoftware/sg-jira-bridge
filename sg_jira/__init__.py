@@ -27,8 +27,8 @@ for module_name in IMPORT_MODULES:
         )
 
 from .bridge import Bridge
-from .syncer import Syncer
-from .jira_session import JiraSession
-from .task_issue_syncer import TaskIssueSyncer
 from .entities_generic_syncer import EntitiesGenericSyncer
 from .hook import JiraHook
+from .jira_session import JiraSession
+from .syncer import Syncer
+from .task_issue_syncer import TaskIssueSyncer

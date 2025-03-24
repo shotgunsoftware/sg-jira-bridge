@@ -7,17 +7,18 @@
 """
 Flow Production Tracking Jira sync settings
 """
+import logging
 import os
 import sys
-import logging
-
-# Documentation for these settings are available at
-# https://developer.shotgridsoftware.com/sg-jira-bridge/settings.html
 
 # Allow users to define their sensitive data in a .env file and
 # load it in environment variables with python-dotenv.
 # https://pypi.org/project/python-dotenv/
 from dotenv import load_dotenv
+
+# Documentation for these settings are available at
+# https://developer.shotgridsoftware.com/sg-jira-bridge/settings.html
+
 
 load_dotenv(override=True)
 

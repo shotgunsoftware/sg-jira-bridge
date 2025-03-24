@@ -5,8 +5,9 @@
 # this software in either electronic or hard copy form.
 #
 
+from .handlers import (EnableSyncingHandler, NoteCommentHandler,
+                       TaskIssueHandler)
 from .syncer import Syncer
-from .handlers import TaskIssueHandler, NoteCommentHandler, EnableSyncingHandler
 
 
 class TaskIssueSyncer(Syncer):

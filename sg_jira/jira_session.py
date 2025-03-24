@@ -6,11 +6,11 @@
 #
 
 import logging
-from packaging import version
 from json.decoder import JSONDecodeError
 
-from jira import JIRAError
 import jira
+from jira import JIRAError
+from packaging import version
 
 # Since we are using pbr in the forked jira repo, the tags we are using are marked as dev versions and
 # pip doesn't update them as expected.
@@ -21,12 +21,8 @@ if version.parse(jira.__version__) < version.parse("3.5.0"):
         'You can do this by using "pip install -r /path/to/requirements.txt --upgrade"'
     )
 
-from .constants import (
-    JIRA_SHOTGUN_TYPE_FIELD,
-    JIRA_SHOTGUN_ID_FIELD,
-    JIRA_SHOTGUN_URL_FIELD,
-)
-from .constants import JIRA_RESULT_PAGING
+from .constants import (JIRA_RESULT_PAGING, JIRA_SHOTGUN_ID_FIELD,
+                        JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_URL_FIELD)
 
 logger = logging.getLogger(__name__)
 

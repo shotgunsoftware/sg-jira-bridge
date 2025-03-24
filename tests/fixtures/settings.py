@@ -10,9 +10,9 @@
 Flow Production Tracking Jira sync settings
 """
 import copy
+import logging
 import os
 import sys
-import logging
 
 try:
     # Allow users to define their sensible data in a .env file and

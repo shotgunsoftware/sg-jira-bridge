@@ -10,7 +10,7 @@ import re
 
 import jira
 
-from sg_jira.errors import InvalidShotgunValue, InvalidJiraValue
+from sg_jira.errors import InvalidJiraValue, InvalidShotgunValue
 
 
 class JiraHook(object):

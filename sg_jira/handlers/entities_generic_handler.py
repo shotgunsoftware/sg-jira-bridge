@@ -9,15 +9,11 @@ import re
 
 import jira
 
+from sg_jira.constants import (JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_TYPE_FIELD,
+                               JIRA_SYNC_IN_FPTR_FIELD, SHOTGUN_JIRA_ID_FIELD,
+                               SHOTGUN_JIRA_URL_FIELD,
+                               SHOTGUN_SYNC_IN_JIRA_FIELD)
 from sg_jira.handlers import SyncHandler
-from sg_jira.constants import (
-    SHOTGUN_SYNC_IN_JIRA_FIELD,
-    SHOTGUN_JIRA_ID_FIELD,
-    SHOTGUN_JIRA_URL_FIELD,
-    JIRA_SHOTGUN_TYPE_FIELD,
-    JIRA_SHOTGUN_ID_FIELD,
-    JIRA_SYNC_IN_FPTR_FIELD,
-)
 
 # TODO:
 #  - handle specific sg entities (list for example)/jira values in the `_sync_sg_fields_to_jira` method

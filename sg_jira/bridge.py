@@ -5,24 +5,25 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
 import imp
-import logging
-import logging.config
 import importlib
 import importlib.util
 import inspect
-from six.moves import urllib
+import logging
+import logging.config
+import os
 import sys
 import threading
 import uuid
 
-from .shotgun_session import ShotgunSession
-from .jira_session import JiraSession
+from six.moves import urllib
+
+from .constants import (ALL_SETTINGS_KEYS, JIRA_SETTINGS_KEY,
+                        LOGGING_SETTINGS_KEY, SHOTGUN_SETTINGS_KEY,
+                        SYNC_SETTINGS_KEY)
 from .hook import JiraHook
-from .constants import ALL_SETTINGS_KEYS
-from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
-from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
+from .jira_session import JiraSession
+from .shotgun_session import ShotgunSession
 from .utils import utf8_to_unicode
 
 logger = logging.getLogger(__name__)

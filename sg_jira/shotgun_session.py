@@ -6,11 +6,11 @@
 #
 
 import logging
+
 import shotgun_api3
 
-from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
-from .constants import SHOTGUN_JIRA_ID_FIELD
-from .utils import utf8_to_unicode, unicode_to_utf8
+from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS, SHOTGUN_JIRA_ID_FIELD
+from .utils import unicode_to_utf8, utf8_to_unicode
 
 logger = logging.getLogger(__name__)
 
