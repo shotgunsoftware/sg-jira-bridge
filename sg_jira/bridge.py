@@ -404,7 +404,7 @@ class Bridge(object):
 
     @staticmethod
     def __get_hook_class(hook_path):
-        """"""
+        """Given the path to a hook file, get the associated class object."""
         if not hook_path or not os.path.exists(hook_path):
             return JiraHook
         file_name = os.path.splitext(os.path.basename(hook_path))[0]
