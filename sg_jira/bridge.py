@@ -413,6 +413,6 @@ class Bridge(object):
         module_obj = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module_obj
         spec.loader.exec_module(module_obj)
-        for cls in inspect.getmembers(module_obj, inspect.isclass):
-            if cls[1].__module__ == module_name:
-                return getattr(module_obj, cls[0])
+        for obj_name, obj_value in inspect.getmembers(module_obj, inspect.isclass):
+            if obj_value.__module__ == module_name:
+                return getattr(module_obj, obj_name)
