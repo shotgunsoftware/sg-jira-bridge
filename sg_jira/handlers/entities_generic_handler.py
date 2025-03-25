@@ -1557,6 +1557,7 @@ class EntitiesGenericHandler(SyncHandler):
     ):
         """
         Get the FPTR entity linked to a Jira entity (that is not an Issue).
+        These Jira entities can be a Jira comment or a Jira Worklog.
         If the entity doesn't exist yet in FPTR, it will be created.
         It the entity doesn't exist in Jira anymore, it will be deleted in FPTR.
         :param jira_issue: Jira issue linked to the Jira entity we want to get the FPTR entity from
@@ -1805,7 +1806,7 @@ class EntitiesGenericHandler(SyncHandler):
         existing_jira_worklogs = []
         sync_with_errors = False
 
-        # first, push all the comments to FPTR
+        # first, push all the worklogs to FPTR
         for jira_worklog in self._jira.worklogs(jira_issue.key):
             existing_jira_worklogs.append("%s/%s" % (jira_issue.key, jira_worklog.id))
             sg_entity = self._sync_jira_entity_to_sg(
@@ -2019,12 +2020,12 @@ class EntitiesGenericHandler(SyncHandler):
         sg_linked_entities = (
             sg_entity["tasks"] if sg_entity["type"] == "Note" else [sg_entity["entity"]]
         )
-        for e in sg_linked_entities:
-            if not e:
+        for entity in sg_linked_entities:
+            if not entity:
                 continue
             sg_linked_entity = self._shotgun.find_one(
-                e["type"],
-                [["id", "is", e["id"]]],
+                entity["type"],
+                [["id", "is", entity["id"]]],
                 [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD],
             )
             if (
@@ -2083,6 +2084,8 @@ class EntitiesGenericHandler(SyncHandler):
         :returns: The Jira entity the action is done from as well as the action to perform
         """
 
+        # webhook event could have the form of comment_created, worklog_deleted, ...
+        # where the first item will be the name is the jira entity type and the second item will be the action type
         result = re.search(r"([\w]+)_([\w]+)", webhook_event)
         if not result:
             return None, None
