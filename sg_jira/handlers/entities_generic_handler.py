@@ -308,7 +308,7 @@ class EntitiesGenericHandler(SyncHandler):
         jira_project_key = sg_entity[f"project.Project.{SHOTGUN_JIRA_ID_FIELD}"]
         jira_project = self.get_jira_project(jira_project_key)
 
-        # special use case: when the entity linked to an existing TimeLog has been updated,
+        # special use case: when the entity linked to an existing TimeLog has been changed to a different entity,
         # we need to make sure we're removing the old worklog from Jira and create a new one
         # associated to the right Jira issue
         # same for the FPTR Notes/Jira Comments
@@ -317,6 +317,10 @@ class EntitiesGenericHandler(SyncHandler):
         ):
 
             # delete the Jira entity in case it is not linked to a synced entity anymore
+            # note about the meta formatting structure: if the modified field is a single entity field, the "old_value"
+            # key will be used and will be a FPTR python dictionary
+            # but if the modified field is a multi-entity field, the "removed" key will be used instead and its value
+            # will be a list of FPTR python dictionary
             previous_entities = []
             if meta.get("old_value"):
                 previous_entities.append(meta["old_value"])
@@ -334,10 +338,12 @@ class EntitiesGenericHandler(SyncHandler):
                     sg_linked_entity[SHOTGUN_SYNC_IN_JIRA_FIELD]
                     and sg_linked_entity[SHOTGUN_JIRA_ID_FIELD] == jira_issue_key
                 ):
-                    # TODO: should we delete or not the worklog according to the setting value? same for the comment
+                    # TODO: for now, we are deleting the Jira comments/worklogs without checking for the
+                    #  sync_deletion_direction when a synced entity is unlinked
+                    #  should we take this value into consideration instead instead of forcing the deletion in Jira?
                     self._delete_jira_entity(sg_entity, update_sg=True)
 
-            # now, create the new Jira entity if needed and link it to the right Jira Issue
+            # if a new entity is linked to the FPTR TimeLog/Comment, check if it has been flagged to be synced in Jira
             new_entities = []
             if meta.get("new_value"):
                 new_entities.append(meta["new_value"])
@@ -953,7 +959,6 @@ class EntitiesGenericHandler(SyncHandler):
             sg_linked_entity = self.__get_linked_entity_synced_in_jira(sg_entity)
             jira_issue = self._get_jira_entity(sg_linked_entity)
             if not jira_issue:
-                # self._logger.debug("")
                 return None
             jira_entity = self._jira.add_comment(
                 jira_issue,
