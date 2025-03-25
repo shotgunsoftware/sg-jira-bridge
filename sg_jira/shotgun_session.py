@@ -92,7 +92,7 @@ class ShotgunSession(object):
         """
         self.assert_field("Project", SHOTGUN_JIRA_ID_FIELD, "text", check_unique=True)
 
-    def assert_entity(self, entity_type):
+    def assert_entity_type(self, entity_type):
         """
         Check if the given entity exists in Flow Production Tracking site.
 

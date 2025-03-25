@@ -80,7 +80,7 @@ class EntitiesGenericHandler(SyncHandler):
                 raise RuntimeError(
                     "Entity mapping does not contain sg_entity key, please check your settings."
                 )
-            self._shotgun.assert_entity(entity_mapping["sg_entity"])
+            self._shotgun.assert_entity_type(entity_mapping["sg_entity"])
 
             # for now, we don't support sync at project level
             if entity_mapping["sg_entity"] == "Project":
