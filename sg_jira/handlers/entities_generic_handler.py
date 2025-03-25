@@ -101,13 +101,13 @@ class EntitiesGenericHandler(SyncHandler):
                     raise RuntimeError(
                         "Entity mapping does not contain jira_issue_type key, please check your settings."
                     )
-                # self._jira.issue_type_by_name(entity_mapping["jira_issue_type"])
 
                 self._shotgun.assert_field(
                     entity_mapping["sg_entity"], SHOTGUN_SYNC_IN_JIRA_FIELD, "checkbox"
                 )
 
-            # if entity_mapping["sg_entity"] not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+            # as the Note mapping is done internally by the code, not using the setting fields mapping, we want to skip
+            # some checks
             if entity_mapping["sg_entity"] not in ["Note"]:
 
                 # check that the field mapping has been defined in the settings
@@ -176,7 +176,7 @@ class EntitiesGenericHandler(SyncHandler):
     def accept_shotgun_event(self, entity_type, entity_id, event):
         """
         Accept or reject the given event for the given Flow Production Tracking Entity.
-        :returns: `True if the event is accepted for processing, `False` otherwise.
+        :returns: `True` if the event is accepted for processing, `False` otherwise.
         """
 
         self._logger.debug(f"Checking Flow Production Tracking event...\n {event}")
