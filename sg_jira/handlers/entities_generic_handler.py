@@ -949,101 +949,14 @@ class EntitiesGenericHandler(SyncHandler):
 
         # we need to manage special entities like Note/Comment and TimeLog/Worklog apart
         if sg_entity["type"] == "Note":
-            # to avoid confusion, even if the Note is linked to many synced entities, we're going to associate
-            # this Note to only one Issue in Jira
-            if len(sg_entity["tasks"]) > 1:
-                self._logger.warning(
-                    f"FPTR Note ({sg_entity['id']}) is linked to more than one Task. "
-                    f"Comment in Jira will only be created for one Issue."
-                )
-            sg_linked_entity = self.__get_linked_entity_synced_in_jira(sg_entity)
-            jira_issue = self._get_jira_entity(sg_linked_entity)
-            if not jira_issue:
-                return None
-            jira_entity = self._jira.add_comment(
-                jira_issue,
-                self._hook.compose_jira_comment_body(sg_entity),
-                visibility=None,  # TODO: check if Note properties should drive this
-                is_internal=False,
-            )
-            jira_entity_key = "%s/%s" % (jira_issue.key, jira_entity.id)
+            jira_entity, jira_entity_key = self._create_jira_comment(sg_entity)
 
         elif sg_entity["type"] == "TimeLog":
-            started_date = None
-            if sg_entity.get("date"):
-                started_date = datetime.datetime.strptime(
-                    sg_entity["date"], self._hook.SG_DATE_FORMAT
-                )
-            # here, we're assuming that all the entities sync in Jira are issues
-            sg_linked_entity = self.__get_linked_entity_synced_in_jira(sg_entity)
-            jira_issue = self._get_jira_entity(sg_linked_entity)
-            if not jira_issue:
-                # self._logger.debug("")
-                return None
-            jira_entity = self._jira.add_worklog(
-                jira_issue,
-                timeSpentSeconds=sg_entity["duration"] * 60,
-                started=started_date,
-            )
-            jira_entity_key = "%s/%s" % (jira_issue.key, jira_entity.id)
+            jira_entity, jira_entity_key = self._create_jira_worklog(sg_entity)
 
         # Considering all the other FPTR entities as Jira issues
         else:
-
-            # Retrieve the reporter, either the user who created the Entity or the
-            # Jira user used to run the syncing.
-            reporter = self._jira.myself()
-            created_by = sg_entity["created_by"]
-            if created_by["type"] == "HumanUser":
-                user = self._shotgun.consolidate_entity(created_by)
-                if user and user.get("email"):
-                    jira_user = self.get_jira_user(user["email"], jira_project)
-                    if jira_user:
-                        reporter = jira_user
-            else:
-                self._logger.debug(
-                    f"Ignoring created_by '{created_by}' since it's not a HumanUser."
-                )
-
-            # If a FPTR field has been associated to the Jira summary field in the settings, use it
-            # otherwise use the entity name
-            summary_field = self.__get_field_mapping(
-                sg_entity["type"], jira_field="summary"
-            )
-            if summary_field:
-                summary_field = summary_field["sg_field"]
-            else:
-                summary_field = self._shotgun.get_entity_name_field(sg_entity["type"])
-
-            shotgun_url = self._shotgun.get_entity_page_url(sg_entity)
-
-            self._logger.debug(
-                f"Creating Jira Issue in Project {jira_project} for Flow Production Tracking {sg_entity['type']} "
-                f"{sg_entity['name']} ({sg_entity['id']})"
-            )
-
-            entity_settings = self.__get_sg_entity_settings(sg_entity["type"])
-            sync_in_fptr = (
-                "False"
-                if entity_settings.get("sync_direction", "both_way") == "sg_to_jira"
-                else "True"
-            )
-            data = {
-                "project": jira_project.raw,
-                "summary": sg_entity[summary_field].replace("\n", "").replace("\r", ""),
-                "description": "",
-                self._jira.jira_shotgun_id_field: str(sg_entity["id"]),
-                self._jira.jira_shotgun_type_field: sg_entity["type"],
-                self._jira.jira_shotgun_url_field: shotgun_url,
-                self.__jira_sync_in_fptr_field_id: {"value": sync_in_fptr},
-                "reporter": reporter,
-            }
-            jira_entity = self._jira.create_issue_from_data(
-                jira_project,
-                entity_settings["jira_issue_type"],
-                data,
-            )
-            jira_entity_key = jira_entity.key
+            jira_entity, jira_entity_key = self._create_jira_issue(sg_entity, jira_project)
 
         # update FPTR with the Jira data
         if jira_entity:
@@ -1058,6 +971,115 @@ class EntitiesGenericHandler(SyncHandler):
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
         return jira_entity
+
+    def _create_jira_comment(self, sg_entity):
+        """Helper method to create a Jira comment from a FPTR Note entity."""
+
+        # to avoid confusion, even if the Note is linked to many synced entities, we're going to associate
+        # this Note to only one Issue in Jira
+        if len(sg_entity["tasks"]) > 1:
+            self._logger.warning(
+                f"FPTR Note ({sg_entity['id']}) is linked to more than one Task. "
+                f"Comment in Jira will only be created for one Issue."
+            )
+        sg_linked_entity = self.__get_linked_entity_synced_in_jira(sg_entity)
+        jira_issue = self._get_jira_entity(sg_linked_entity)
+        if not jira_issue:
+            return None, None
+
+        jira_entity = self._jira.add_comment(
+            jira_issue,
+            self._hook.compose_jira_comment_body(sg_entity),
+            visibility=None,  # TODO: check if Note properties should drive this
+            is_internal=False,
+        )
+        jira_entity_key = "%s/%s" % (jira_issue.key, jira_entity.id)
+
+        return jira_entity, jira_entity_key
+
+    def _create_jira_worklog(self, sg_entity):
+        """Helper method to create a Jira worklog from a FPTR TimeLog entity."""
+
+        started_date = None
+        if sg_entity.get("date"):
+            started_date = datetime.datetime.strptime(
+                sg_entity["date"], self._hook.SG_DATE_FORMAT
+            )
+
+        # here, we're assuming that all the entities sync in Jira are issues
+        sg_linked_entity = self.__get_linked_entity_synced_in_jira(sg_entity)
+        jira_issue = self._get_jira_entity(sg_linked_entity)
+        if not jira_issue:
+            return None, None
+
+        jira_entity = self._jira.add_worklog(
+            jira_issue,
+            timeSpentSeconds=sg_entity["duration"] * 60,
+            started=started_date,
+        )
+        jira_entity_key = "%s/%s" % (jira_issue.key, jira_entity.id)
+
+        return jira_entity, jira_entity_key
+
+    def _create_jira_issue(self, sg_entity, jira_project):
+        """"""
+
+        # Retrieve the reporter, either the user who created the Entity or the
+        # Jira user used to run the syncing.
+        reporter = self._jira.myself()
+        created_by = sg_entity["created_by"]
+        if created_by["type"] == "HumanUser":
+            user = self._shotgun.consolidate_entity(created_by)
+            if user and user.get("email"):
+                jira_user = self.get_jira_user(user["email"], jira_project)
+                if jira_user:
+                    reporter = jira_user
+        else:
+            self._logger.debug(
+                f"Ignoring created_by '{created_by}' since it's not a HumanUser."
+            )
+
+        # If a FPTR field has been associated to the Jira summary field in the settings, use it
+        # otherwise use the entity name
+        summary_field = self.__get_field_mapping(
+            sg_entity["type"], jira_field="summary"
+        )
+        if summary_field:
+            summary_field = summary_field["sg_field"]
+        else:
+            summary_field = self._shotgun.get_entity_name_field(sg_entity["type"])
+
+        shotgun_url = self._shotgun.get_entity_page_url(sg_entity)
+
+        self._logger.debug(
+            f"Creating Jira Issue in Project {jira_project} for Flow Production Tracking {sg_entity['type']} "
+            f"{sg_entity['name']} ({sg_entity['id']})"
+        )
+
+        entity_settings = self.__get_sg_entity_settings(sg_entity["type"])
+        sync_in_fptr = (
+            "False"
+            if entity_settings.get("sync_direction", "both_way") == "sg_to_jira"
+            else "True"
+        )
+        data = {
+            "project": jira_project.raw,
+            "summary": sg_entity[summary_field].replace("\n", "").replace("\r", ""),
+            "description": "",
+            self._jira.jira_shotgun_id_field: str(sg_entity["id"]),
+            self._jira.jira_shotgun_type_field: sg_entity["type"],
+            self._jira.jira_shotgun_url_field: shotgun_url,
+            self.__jira_sync_in_fptr_field_id: {"value": sync_in_fptr},
+            "reporter": reporter,
+        }
+        jira_entity = self._jira.create_issue_from_data(
+            jira_project,
+            entity_settings["jira_issue_type"],
+            data,
+        )
+        jira_entity_key = jira_entity.key
+
+        return jira_entity, jira_entity_key
 
     def _delete_jira_entity(self, sg_entity, update_sg=False):
         """
