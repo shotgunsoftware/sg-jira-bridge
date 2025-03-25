@@ -248,45 +248,6 @@ class EntitiesGenericHandler(SyncHandler):
             )
             return False
 
-        # check that the entity linked to the event has been flagged as ready-to-sync in FPTR
-        # some special entities like Notes or TimeLogs don't need the flag as they are tied to other flagged entities
-        if (
-            entity_type not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED
-            and not sg_entity.get(SHOTGUN_SYNC_IN_JIRA_FIELD)
-        ):
-            self._logger.debug(
-                f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) "
-                f"is not flagged as ready-to-sync."
-            )
-            return False
-
-        if entity_type in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
-
-            if field == self.__SG_RETIREMENT_FIELD:
-                if not sg_entity.get(SHOTGUN_JIRA_ID_FIELD):
-                    self._logger.debug(
-                        f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) doesn't seem to "
-                        f"be synced to Jira."
-                    )
-                    return False
-
-            else:
-                if not self.__get_linked_entity_synced_in_jira(sg_entity):
-                    previous_entities = []
-                    if meta.get("old_value"):
-                        previous_entities.append(meta["old_value"])
-                    elif meta.get("removed"):
-                        previous_entities.extend(meta["removed"])
-                    was_previously_linked = self.__was_previously_synced_in_jira(
-                        previous_entities
-                    )
-                    if not was_previously_linked:
-                        self._logger.debug(
-                            f"Rejecting Flow Production Tracking event: {entity_type} ({entity_id}) "
-                            f"is not linked to an entity already synced to Jira."
-                        )
-                        return False
-
         # When an Entity is created in PTR, a unique event is generated for
         # each field value set in the creation of the Entity. These events
         # have an additional "in_create" key in the metadata, identifying them
@@ -307,47 +268,11 @@ class EntitiesGenericHandler(SyncHandler):
             )
             return False
 
-        # if we're trying to sync a FPTR as a Jira Issue, we need to make sure that the issue type exists in the
-        # project and has the required field
-        jira_project_key = sg_entity[f"project.Project.{SHOTGUN_JIRA_ID_FIELD}"]
+        # in case we are facing Note/TimeLog entity, we have some custom checks
+        if entity_type in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
+            return self.__accept_shotgun_event_for_entities_not_flagged_as_synced(sg_entity, field, meta)
 
-        if entity_type not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
-
-            try:
-                self._jira.issue_type_by_name(
-                    sync_settings["jira_issue_type"], jira_project_key
-                )
-            except KeyError:
-                self._logger.debug(
-                    f"Rejecting Flow Production Tracking event: issue type {sync_settings['jira_issue_type']} "
-                    f"has not been enabled for project {jira_project_key} in Jira"
-                )
-                return False
-
-            jira_project = self.get_jira_project(jira_project_key)
-            if not jira_project:
-                self._logger.debug(
-                    f"Rejecting Flow Production Tracking event because project {jira_project_key} doesn't exist in Jira"
-                )
-                return False
-
-            required_fields = [JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_TYPE_FIELD]
-            jira_fields = self._jira.get_project_issue_type_fields(
-                jira_project, sync_settings["jira_issue_type"]
-            )
-            for rf in required_fields:
-                jira_field_id = self._jira.get_jira_issue_field_id(rf.lower())
-                if jira_field_id not in jira_fields.keys():
-                    self._logger.debug(
-                        f"Rejection Flow Production Tracking event because Jira field {rf} ({jira_field_id}) has not "
-                        f"been enabled for Jira Project {jira_project} and Issue Type {sync_settings['jira_issue_type']}"
-                        "."
-                    )
-                    return False
-
-        self._logger.debug("Flow Production Tracking event successfully accepted!")
-
-        return True
+        return self.__accept_shotgun_event_for_entities_synced_as_issues(sg_entity, sync_settings["jira_issue_type"])
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -663,6 +588,95 @@ class EntitiesGenericHandler(SyncHandler):
         return self._sync_jira_fields_to_sg(
             jira_issue, jira_key, sg_entity, jira_fields
         )
+
+    def __accept_shotgun_event_for_entities_not_flagged_as_synced(self, sg_entity, field, meta):
+        """
+        Helper method to check if an entity not flagged as synced (aka that doesn't have the field to initiate the
+        sync) can be accepted when processing the sync from FPTR to Jira.
+        """
+
+        if field == self.__SG_RETIREMENT_FIELD:
+            if not sg_entity.get(SHOTGUN_JIRA_ID_FIELD):
+                self._logger.debug(
+                    f"Rejecting Flow Production Tracking event: {sg_entity['type']} ({sg_entity['id']}) doesn't seem to "
+                    f"be synced to Jira."
+                )
+                return False
+
+        else:
+            if not self.__get_linked_entity_synced_in_jira(sg_entity):
+                previous_entities = []
+                if meta.get("old_value"):
+                    previous_entities.append(meta["old_value"])
+                elif meta.get("removed"):
+                    previous_entities.extend(meta["removed"])
+                was_previously_linked = self.__was_previously_synced_in_jira(
+                    previous_entities
+                )
+                if not was_previously_linked:
+                    self._logger.debug(
+                        f"Rejecting Flow Production Tracking event: {sg_entity['type']} ({sg_entity['id']}) "
+                        f"is not linked to an entity already synced to Jira."
+                    )
+                    return False
+
+        self._logger.debug("Flow Production Tracking event successfully accepted!")
+        return True
+
+    def __accept_shotgun_event_for_entities_synced_as_issues(self, sg_entity, jira_issue_type):
+        """
+        Helper method to check if an entity that will be synced as issue in Jira can be accepted when processing the
+        sync from FPTR to Jira.
+        """
+
+        # check that the entity linked to the event has been flagged as ready-to-sync in FPTR
+        # some special entities like Notes or TimeLogs don't need the flag as they are tied to other flagged entities
+        if not sg_entity.get(SHOTGUN_SYNC_IN_JIRA_FIELD):
+            self._logger.debug(
+                f"Rejecting Flow Production Tracking event: {sg_entity['type']} ({sg_entity['id']}) "
+                f"is not flagged as ready-to-sync."
+            )
+            return False
+
+        # if we're trying to sync a FPTR as a Jira Issue, we need to make sure that the issue type exists in the
+        # project and has the required field
+        jira_project_key = sg_entity[f"project.Project.{SHOTGUN_JIRA_ID_FIELD}"]
+
+        try:
+            self._jira.issue_type_by_name(
+                jira_issue_type, jira_project_key
+            )
+        except KeyError:
+            self._logger.debug(
+                f"Rejecting Flow Production Tracking event: issue type {jira_issue_type} "
+                f"has not been enabled for project {jira_project_key} in Jira"
+            )
+            return False
+
+        jira_project = self.get_jira_project(jira_project_key)
+        if not jira_project:
+            self._logger.debug(
+                f"Rejecting Flow Production Tracking event because project {jira_project_key} doesn't exist in Jira"
+            )
+            return False
+
+        required_fields = [JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_TYPE_FIELD]
+        jira_fields = self._jira.get_project_issue_type_fields(
+            jira_project, jira_issue_type
+        )
+        for rf in required_fields:
+            jira_field_id = self._jira.get_jira_issue_field_id(rf.lower())
+            if jira_field_id not in jira_fields.keys():
+                self._logger.debug(
+                    f"Rejection Flow Production Tracking event because Jira field {rf} ({jira_field_id}) has not "
+                    f"been enabled for Jira Project {jira_project} and Issue Type {jira_issue_type}"
+                    "."
+                )
+                return False
+
+        self._logger.debug("Flow Production Tracking event successfully accepted!")
+
+        return True
 
     def _supported_shotgun_entities_for_shotgun_event(self):
         """
