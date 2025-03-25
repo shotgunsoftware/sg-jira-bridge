@@ -1022,7 +1022,7 @@ class EntitiesGenericHandler(SyncHandler):
         return jira_entity, jira_entity_key
 
     def _create_jira_issue(self, sg_entity, jira_project):
-        """"""
+        """Helper method to create a Jira issue from a FPTR entity."""
 
         # Retrieve the reporter, either the user who created the Entity or the
         # Jira user used to run the syncing.
