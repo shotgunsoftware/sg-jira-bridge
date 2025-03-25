@@ -18,9 +18,13 @@ import uuid
 
 from six.moves import urllib
 
-from .constants import (ALL_SETTINGS_KEYS, JIRA_SETTINGS_KEY,
-                        LOGGING_SETTINGS_KEY, SHOTGUN_SETTINGS_KEY,
-                        SYNC_SETTINGS_KEY)
+from .constants import (
+    ALL_SETTINGS_KEYS,
+    JIRA_SETTINGS_KEY,
+    LOGGING_SETTINGS_KEY,
+    SHOTGUN_SETTINGS_KEY,
+    SYNC_SETTINGS_KEY,
+)
 from .hook import JiraHook
 from .jira_session import JiraSession
 from .shotgun_session import ShotgunSession

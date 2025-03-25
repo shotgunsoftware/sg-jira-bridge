@@ -21,8 +21,12 @@ if version.parse(jira.__version__) < version.parse("3.5.0"):
         'You can do this by using "pip install -r /path/to/requirements.txt --upgrade"'
     )
 
-from .constants import (JIRA_RESULT_PAGING, JIRA_SHOTGUN_ID_FIELD,
-                        JIRA_SHOTGUN_TYPE_FIELD, JIRA_SHOTGUN_URL_FIELD)
+from .constants import (
+    JIRA_RESULT_PAGING,
+    JIRA_SHOTGUN_ID_FIELD,
+    JIRA_SHOTGUN_TYPE_FIELD,
+    JIRA_SHOTGUN_URL_FIELD,
+)
 
 logger = logging.getLogger(__name__)
 

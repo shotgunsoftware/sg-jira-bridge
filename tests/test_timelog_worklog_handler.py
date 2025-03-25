@@ -10,8 +10,14 @@ import json
 
 import mock
 from mock_jira import JIRA_PROJECT, JIRA_USER_2
-from mock_shotgun import (SG_PROJECT, SG_RETIRED_TIMELOG, SG_TASK, SG_TIMELOG,
-                          SG_USER, SG_USER_2)
+from mock_shotgun import (
+    SG_PROJECT,
+    SG_RETIRED_TIMELOG,
+    SG_TASK,
+    SG_TIMELOG,
+    SG_USER,
+    SG_USER_2,
+)
 from test_sync_base import TestSyncBase
 
 from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD

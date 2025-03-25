@@ -9,6 +9,7 @@ import logging
 import os
 
 import requests
+
 # Allow users to define their sensitive data in a .env file and
 # load it in environment variables with python-dotenv.
 # https://pypi.org/project/python-dotenv/

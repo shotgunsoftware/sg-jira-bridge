@@ -10,8 +10,11 @@ import mock
 from mock_jira import JIRA_PROJECT, JIRA_PROJECT_KEY, JIRA_USER
 from test_sync_base import TestSyncBase
 
-from sg_jira.constants import (SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD,
-                               SHOTGUN_SYNC_IN_JIRA_FIELD)
+from sg_jira.constants import (
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+)
 
 # A list of Shotgun Projects
 SG_PROJECTS = [

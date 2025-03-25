@@ -9,8 +9,11 @@ import re
 
 from jira import JIRAError
 
-from ..constants import (NOTE_FIELDS_MAPPING, SHOTGUN_JIRA_ID_FIELD,
-                         SHOTGUN_SYNC_IN_JIRA_FIELD)
+from ..constants import (
+    NOTE_FIELDS_MAPPING,
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+)
 from ..errors import InvalidJiraValue
 from .sync_handler import SyncHandler
 

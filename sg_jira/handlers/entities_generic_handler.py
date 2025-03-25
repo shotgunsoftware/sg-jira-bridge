@@ -9,10 +9,14 @@ import re
 
 import jira
 
-from sg_jira.constants import (JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_TYPE_FIELD,
-                               JIRA_SYNC_IN_FPTR_FIELD, SHOTGUN_JIRA_ID_FIELD,
-                               SHOTGUN_JIRA_URL_FIELD,
-                               SHOTGUN_SYNC_IN_JIRA_FIELD)
+from sg_jira.constants import (
+    JIRA_SHOTGUN_ID_FIELD,
+    JIRA_SHOTGUN_TYPE_FIELD,
+    JIRA_SYNC_IN_FPTR_FIELD,
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+)
 from .sync_handler import SyncHandler
 
 # TODO:
@@ -270,9 +274,13 @@ class EntitiesGenericHandler(SyncHandler):
 
         # in case we are facing Note/TimeLog entity, we have some custom checks
         if entity_type in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
-            return self.__accept_shotgun_event_for_entities_not_flagged_as_synced(sg_entity, field, meta)
+            return self.__accept_shotgun_event_for_entities_not_flagged_as_synced(
+                sg_entity, field, meta
+            )
 
-        return self.__accept_shotgun_event_for_entities_synced_as_issues(sg_entity, sync_settings["jira_issue_type"])
+        return self.__accept_shotgun_event_for_entities_synced_as_issues(
+            sg_entity, sync_settings["jira_issue_type"]
+        )
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -595,7 +603,9 @@ class EntitiesGenericHandler(SyncHandler):
             jira_issue, jira_key, sg_entity, jira_fields
         )
 
-    def __accept_shotgun_event_for_entities_not_flagged_as_synced(self, sg_entity, field, meta):
+    def __accept_shotgun_event_for_entities_not_flagged_as_synced(
+        self, sg_entity, field, meta
+    ):
         """
         Helper method to check if an entity not flagged as synced (aka that doesn't have the field to initiate the
         sync) can be accepted when processing the sync from FPTR to Jira.
@@ -629,7 +639,9 @@ class EntitiesGenericHandler(SyncHandler):
         self._logger.debug("Flow Production Tracking event successfully accepted!")
         return True
 
-    def __accept_shotgun_event_for_entities_synced_as_issues(self, sg_entity, jira_issue_type):
+    def __accept_shotgun_event_for_entities_synced_as_issues(
+        self, sg_entity, jira_issue_type
+    ):
         """
         Helper method to check if an entity that will be synced as issue in Jira can be accepted when processing the
         sync from FPTR to Jira.
@@ -649,9 +661,7 @@ class EntitiesGenericHandler(SyncHandler):
         jira_project_key = sg_entity[f"project.Project.{SHOTGUN_JIRA_ID_FIELD}"]
 
         try:
-            self._jira.issue_type_by_name(
-                jira_issue_type, jira_project_key
-            )
+            self._jira.issue_type_by_name(jira_issue_type, jira_project_key)
         except KeyError:
             self._logger.debug(
                 f"Rejecting Flow Production Tracking event: issue type {jira_issue_type} "
@@ -956,7 +966,9 @@ class EntitiesGenericHandler(SyncHandler):
 
         # Considering all the other FPTR entities as Jira issues
         else:
-            jira_entity, jira_entity_key = self._create_jira_issue(sg_entity, jira_project)
+            jira_entity, jira_entity_key = self._create_jira_issue(
+                sg_entity, jira_project
+            )
 
         # update FPTR with the Jira data
         if jira_entity:

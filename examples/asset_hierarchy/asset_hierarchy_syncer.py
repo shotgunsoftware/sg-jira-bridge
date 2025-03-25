@@ -6,8 +6,7 @@
 #
 
 from sg_jira import Syncer
-from sg_jira.handlers import (EnableSyncingHandler, NoteCommentHandler,
-                              TaskIssueHandler)
+from sg_jira.handlers import EnableSyncingHandler, NoteCommentHandler, TaskIssueHandler
 
 from .asset_issue_handler import AssetIssueHandler
 

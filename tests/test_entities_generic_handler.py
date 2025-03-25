@@ -16,10 +16,15 @@ from shotgun_api3.lib import mockgun
 from test_sync_base import TestSyncBase
 
 import sg_jira
-from sg_jira.constants import (JIRA_SHOTGUN_ID_FIELD, JIRA_SHOTGUN_TYPE_FIELD,
-                               JIRA_SHOTGUN_URL_FIELD, JIRA_SYNC_IN_FPTR_FIELD,
-                               SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_URL_FIELD,
-                               SHOTGUN_SYNC_IN_JIRA_FIELD)
+from sg_jira.constants import (
+    JIRA_SHOTGUN_ID_FIELD,
+    JIRA_SHOTGUN_TYPE_FIELD,
+    JIRA_SHOTGUN_URL_FIELD,
+    JIRA_SYNC_IN_FPTR_FIELD,
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+)
 
 # TODO:
 #  - see if we can mockup the Jira Bridge schema (aka fields) to check against the field existence
