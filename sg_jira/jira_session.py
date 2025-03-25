@@ -692,7 +692,7 @@ class JiraSession(jira.client.JIRA):
         return jira_edit_fields
 
     def get_project_issue_type_fields(self, jira_project, issue_type):
-        """"""
+        """Get all the available Jira fields for a given Jira project and issue type."""
 
         jira_issue_type = self.issue_type_by_name(issue_type, project=jira_project)
         # Retrieve creation meta data for the project / issue type
