@@ -245,7 +245,10 @@ class JiraHook(object):
             return jira_value if jira_value else ""
 
         if data_type == "list":
-            # TODO: do we want to modify the list allowed value on the fly
+            # TODO: based on the previous behavior, if the Jira value we're trying to push to FPTR list doesn't exist
+            #  in the list, the new value will be added
+            #  do we want to keep this behavior and modify the list values on the fly? or should we raise an
+            #  error/exception/message to let the user that the value is trying to sync doesn't exist in FPTR
             return jira_value if jira_value else ""
 
         if data_type in ["multi_entity", "entity"]:
@@ -266,9 +269,6 @@ class JiraHook(object):
                 if not sg_value:
                     # TODO: do we want to enable entity creation when syncing
                     continue
-                    # for now, we only support multi-entity fields with a single allowed entity type
-                    # if len(allowed_entities) != 1:
-                    #     raise ValueError("Flow Production Tracking multi-entity field must have only one entity type defined.")
                 sg_entities.append(sg_value)
             if data_type == "entity" and len(sg_entities) > 0:
                 return sg_entities[0]
