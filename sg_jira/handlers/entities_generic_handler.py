@@ -199,8 +199,8 @@ class EntitiesGenericHandler(SyncHandler):
 
         if sync_settings.get("sync_direction", "both_way") == "jira_to_sg":
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event: "
-                f"the sync direction setting is configured to only sync from Jira to FPTR."
+                "Rejecting Flow Production Tracking event: "
+                "the sync direction setting is configured to only sync from Jira to FPTR."
             )
             return False
 
@@ -268,7 +268,7 @@ class EntitiesGenericHandler(SyncHandler):
         # been created.
         if sg_entity[SHOTGUN_JIRA_ID_FIELD] and meta.get("in_create"):
             self._logger.debug(
-                f"Rejecting Flow Production Tracking event: entity creation event was already handled."
+                "Rejecting Flow Production Tracking event: entity creation event was already handled."
             )
             return False
 
@@ -455,7 +455,7 @@ class EntitiesGenericHandler(SyncHandler):
 
             changelog = event.get("changelog")
             if not changelog:
-                self._logger.debug(f"Rejecting Jira event without a changelog.")
+                self._logger.debug("Rejecting Jira event without a changelog.")
                 return False
 
             jira_issue = self.get_jira_issue(jira_entity["id"])
@@ -480,7 +480,7 @@ class EntitiesGenericHandler(SyncHandler):
             )
         if sync_settings.get("sync_direction", "both_way") == "sg_to_jira":
             self._logger.debug(
-                f"Rejecting Jira event. The sync direction setting is configured to only sync from FPTR to Jira."
+                "Rejecting Jira event. The sync direction setting is configured to only sync from FPTR to Jira."
             )
             return False
 
@@ -492,7 +492,7 @@ class EntitiesGenericHandler(SyncHandler):
                 return False
 
         if not jira_issue.fields.project:
-            self._logger.debug(f"Rejecting Jira event without a project.")
+            self._logger.debug("Rejecting Jira event without a project.")
             return False
 
         # check that the Jira project is associated to a FPTR project
@@ -570,7 +570,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         if not sg_entity:
             self._logger.debug(
-                f"Error happened while processing Jira event: couldn't get FPTR associated entity."
+                "Error happened while processing Jira event: couldn't get FPTR associated entity."
             )
             return False
 

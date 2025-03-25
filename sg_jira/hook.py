@@ -283,7 +283,7 @@ class JiraHook(object):
                     return self.format_sg_date(jira_value)
                 # Validate the date string
                 datetime.datetime.strptime(jira_value, "%Y-%m-%d")
-            except ValueError as e:
+            except ValueError:
                 # Notify the caller that the value is not right
                 raise InvalidJiraValue(
                     sg_field,
@@ -299,7 +299,7 @@ class JiraHook(object):
                 jira_value = jira_value / 60
             try:
                 return int(jira_value)
-            except ValueError as e:
+            except ValueError:
                 raise InvalidJiraValue(
                     sg_field, jira_value, "Unable to parse Jira value as integer"
                 )
@@ -353,7 +353,7 @@ class JiraHook(object):
             raise InvalidJiraValue(
                 "content",
                 jira_comment_body,
-                f"Invalid Jira Comment panel formatting. Unable to parse FPTR "
+                "Invalid Jira Comment panel formatting. Unable to parse FPTR "
                 "author from '%s'" % author,
             )
 
@@ -364,7 +364,7 @@ class JiraHook(object):
             raise InvalidJiraValue(
                 "content",
                 jira_comment_body,
-                f"Invalid Jira Comment panel formatting. Unable to parse FPTR "
+                "Invalid Jira Comment panel formatting. Unable to parse FPTR "
                 "subject from '%s'" % subject,
             )
         content = result.group(3).strip()
@@ -395,7 +395,7 @@ class JiraHook(object):
             raise InvalidJiraValue(
                 "content",
                 jira_worklog_comment,
-                f"Invalid Jira Worklog comment formatting. Unable to parse FPTR "
+                "Invalid Jira Worklog comment formatting. Unable to parse FPTR "
                 "author from '%s'" % author,
             )
 
