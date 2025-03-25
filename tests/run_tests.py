@@ -6,13 +6,13 @@
 # this software in either electronic or hard copy form.
 #
 
-import sys
-import os
 import argparse
-import unittest
-import xmlrunner
-
 import logging
+import os
+import sys
+import unittest
+
+import xmlrunner
 
 logging.basicConfig(format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("run_tests")

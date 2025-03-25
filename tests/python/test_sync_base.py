@@ -8,9 +8,9 @@
 import os
 
 from shotgun_api3.lib import mockgun
-import sg_jira
-
 from test_base import TestBase
+
+import sg_jira
 
 
 class TestSyncBase(TestBase):

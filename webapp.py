@@ -6,19 +6,20 @@
 #
 
 from __future__ import print_function
-import re
-import six
+
 import argparse
-from six.moves.urllib import parse
-from six.moves import BaseHTTPServer
 import json
+import logging
+import re
 import socket
 import ssl
-import sys
-import logging
 import subprocess
+import sys
 
+import six
+from six.moves import BaseHTTPServer
 from six.moves.socketserver import ThreadingMixIn
+from six.moves.urllib import parse
 
 import sg_jira
 

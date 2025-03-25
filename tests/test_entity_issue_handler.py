@@ -6,9 +6,9 @@
 # this software in either electronic or hard copy form.
 #
 
-from sg_jira.handlers.entity_issue_handler import EntityIssueHandler
-
 from unittest import TestCase
+
+from sg_jira.handlers.entity_issue_handler import EntityIssueHandler
 
 
 class TestHierarchySyncer(TestCase):

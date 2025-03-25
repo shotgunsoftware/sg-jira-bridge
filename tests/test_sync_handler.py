@@ -6,11 +6,11 @@
 #
 
 import mock
-
-from sg_jira.handlers import SyncHandler
-from mock_jira import JIRA_USER, JIRA_PROJECT, JIRA_PROJECT_KEY
+from mock_jira import JIRA_PROJECT, JIRA_PROJECT_KEY, JIRA_USER
 from mock_shotgun import SG_USER
 from test_sync_base import TestSyncBase
+
+from sg_jira.handlers import SyncHandler
 
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun

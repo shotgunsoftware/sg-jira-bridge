@@ -8,9 +8,10 @@
 #
 
 import re
-import six
 
+import six
 from test_base import TestBase
+
 import sg_jira
 
 UNICODE_STRING = "unicode_îéö_😀"
