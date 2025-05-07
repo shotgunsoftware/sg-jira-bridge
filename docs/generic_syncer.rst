@@ -4,7 +4,7 @@ Generic Syncer
 Description
 ***********
 
-In order to make the Jira Bridge customization easier, a new syncer/handler has been introduced.
+In order to make the Jira Bridge customization easier, we're introducing a new syncer/handler.
 It offers the following changes:
 
 * use the ``settings.py`` file to define which entities and fields we want to synchronize
