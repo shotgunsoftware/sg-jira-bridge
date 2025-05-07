@@ -97,20 +97,20 @@ To simplify the configuration/customization of the sync between Flow Production 
 Defining entity syncing
 -----------------------
 
-In order to sync a Flow Production Tracking entity type as Issue in Jira, you need to add the following entries to the ``entity_mapping`` dictionary.
+In order to sync a Flow Production Tracking entity type as Issue in Jira, add the following entries to the ``entity_mapping`` dictionary.
 
 ==================== ====================================================================================
 Key Name             Description
 ==================== ====================================================================================
-``sg_entity``        Type of the Flow Production Entity we want to sync as Jira Issue
+``sg_entity``        Type of the Flow Production Entity we want to sync as a Jira Issue
 ``jira_issue_type``  Type of the Jira Issue we want to associate to the Flow Production Tracking Entity
-``field_mapping``    List of Python dictionaries defining the entity fields to sync
-``status_mapping``   Python dictionary to specify how to sync statuses for the given enty and issue type
-``sync_direction``   [Optional] Specify the sync direction (default is both way)
+``field_mapping``    List of Python dictionaries that define the entity fields to sync
+``status_mapping``   Python dictionary that specify how to sync statuses for the given entity and issue type
+``sync_direction``   [Optional] Specify the sync direction (default is both ways)
 ==================== ====================================================================================
 
-To define which fields are going to sync for a specific entity type, we are relying on the ``field_mapping`` list of dictionaries specify in the table above.
-Each dictionary of the list must contains the following entries:
+To map which Jira fields are syncing to which entity type, we rely on the ``field_mapping`` list of dictionaries specified in the previous table.
+Each dictionary of the list must contain the following entries:
 
 ==================== ====================================================================================
 Key Name             Description
