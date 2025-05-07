@@ -403,7 +403,9 @@ class JiraHook(object):
 
     def format_jira_date(self, sg_date):
         """Helper method to convert a FPTR date into a Jira date."""
-        jira_formatted_date = self.JIRA_DATE_FORMAT.replace("%f", "000").replace("%z", "+0000")
+        jira_formatted_date = self.JIRA_DATE_FORMAT.replace("%f", "000").replace(
+            "%z", "+0000"
+        )
         return datetime.datetime.strptime(sg_date, self.SG_DATE_FORMAT).strftime(
             jira_formatted_date
         )
