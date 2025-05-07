@@ -617,7 +617,7 @@ features have not been implemented yet.
 
 - When you delete an entity in FPTR and revive it, it won't be re-synced in Jira.
 
-- If you edit, in Jira, a comment created in FPTR by removing the heading and updating formatted part, you may see some Jira formatting syntax in the Note body.
+- If you edit, in Jira, a comment created in FPTR by removing the heading and/or modifying the formatted part of the comment's body, the body of the FPTR Note can contain some Jira formatted string when it's synced back to FPTR.
 
 - Comments created in Jira and synced to FPTR won't appear in the Activity Stream in FPTR.
 
