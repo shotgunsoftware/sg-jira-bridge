@@ -116,14 +116,14 @@ Each dictionary of the list must contain the following entries:
 Key Name             Description
 ==================== ====================================================================================
 ``sg_field``         Code of the Flow Production Tracking field we want to sync to Jira
-``jira_field``       Name of the associated Jira field we want to sync to the Flow Production Tracking
-``sync_direction``   [Optional] Specify the sync direction (default is both way)
+``jira_field``       Name of the associated Jira field we want to sync to Flow Production Tracking
+``sync_direction``   [Optional] Specify the sync direction (default is both ways)
 ==================== ====================================================================================
 
 .. note::
     Only the fields added in the ``field_mapping`` list will be synced between Flow Production Tracking and Jira.
 
-Here is an example to sync Flow Production Task entity as Jira Task Issue, only syncing the FPTR ``content`` field mapped to the Jira ``summary`` field.
+Here is an example to sync Flow Production Task entity to a Jira Task Issue, only syncing the FPTR ``content`` field that's mapped to the Jira ``summary`` field.
 
 .. code-block:: python
     :emphasize-lines: 9,10,11,12,13,14
@@ -151,18 +151,18 @@ Here is an example to sync Flow Production Task entity as Jira Task Issue, only 
 Specifying sync direction
 -------------------------
 
-To have more control over what to sync, it is possible to define a sync direction by entity type and fields.
-To do that, you need to use the ``sync_direction`` dictionary key described in the table above.
-If you don't specify the ``sync_direction``, the sync will happen both way by default.
+To have more control over what to sync, it is possible to define a sync direction per entity type and fields.
+To do that, use the ``sync_direction`` dictionary key described in the table above.
+If you don't specify the ``sync_direction``, it uses the default, which is to sync both ways.
 
 The ``sync_direction`` values can be one of the following:
 
 ==================== ============================================================================================================
 Key value            Description
 ==================== ============================================================================================================
-``both_way``         The entity or field will be synced both way (update from FPTR will be reflected in Jira and vice-versa)
-``jira_to_sg``       The entity or field synced will be happening only from Jira to FPTR (update from FPTR won't appear in Jira)
-``sg_to_jira``       The entity or field synced will be happening only from FPTR to Jira (update from Jira won't appear in FPTR)
+``both_way``         The entity or field will be synced both ways (update from FPTR will be reflected in Jira and vice-versa)
+``jira_to_sg``       The entity or field sync will be happening only from Jira to FPTR (updates from FPTR won't appear in Jira)
+``sg_to_jira``       The entity or field sync will be happening only from FPTR to Jira (updates from Jira won't appear in FPTR)
 ==================== ============================================================================================================
 
 Here is an example of the use of the ``sync_direction`` setting:
@@ -195,8 +195,8 @@ Here is an example of the use of the ``sync_direction`` setting:
 Status mapping
 --------------
 
-It is also possible to sync statuses between a Jira Issue and a Flow Production Tracking entity.
-In order to do that, you will use the ``status_mapping`` entry described in :ref:`entity-sync-settings`.
+You can also sync statuses between a Jira Issue and a Flow Production Tracking entity.
+In order to do that, use the ``status_mapping`` entry described in :ref:`entity-sync-settings`.
 
 The ``status_mapping`` entry is a python dictionary that accepts the following entries:
 
@@ -205,11 +205,11 @@ Key Name             Description
 ==================== ========================================================================================================
 ``sg_field``         Code of the Flow Production Tracking status field we want to sync with the Jira Issue status
 ``mapping``          Python dictionary where the key is the FPTR status code and the value is the associated Jira status name
-``sync_direction``   [Optional] Specify the sync direction (default is both way)
+``sync_direction``   [Optional] Specify the sync direction (default is both ways)
 ==================== ========================================================================================================
 
 .. note::
-    For statuses, we only need to specify the FPTR field we want to use as a FPTR entity can have many status fields.
+    For statuses, we only need to specify the FPTR field we want to use because an FPTR entity can have many status fields.
     But a Jira Issue can have one and only one status field.
 
 Here is an example of what a ``status_mapping`` definition can look like:
@@ -251,11 +251,11 @@ Parent/children relationship
 ----------------------------
 
 In Jira, it is possible to define an issue type hierarchy.
-Replicating this behavior in Flow Production Tracking can be done using ``entity``/``multi-entity`` field relationship between entities.
+You can replicate this behavior in Flow Production Tracking with the ``entity``/``multi-entity`` field relationship between entities.
 
-In the Jira Bridge settings, the hierarchy is defined using the ``parent`` Jira field associated to the corresponding FPTR field in the ``field_mapping`` entry.
+In the Jira Bridge settings, the hierarchy is defined using the ``parent`` Jira field associated with the corresponding FPTR field in the ``field_mapping`` entry.
 
-In order to have both-way sync, we also need to define the child relationship. As there is no child field for Jira Issues, the ``{{CHILDREN}}`` keyword must be used instead.
+In order to have a both-way sync, we must also define the child relationship. There is no child field for Jira Issues, so the ``{{CHILDREN}}`` keyword must be used instead.
 
 Here is an example of how to replicate the Task/Epic Jira relationship, using a FPTR Custom Entity:
 
@@ -301,23 +301,23 @@ Here is an example of how to replicate the Task/Epic Jira relationship, using a 
     }
 
 .. note::
-    As a Jira Issue can only have one parent, the associated FPTR field must be an ``entity`` field (and not a ``multi-entity`` field)
+    Because a Jira Issue can only have one parent, the associated FPTR field must be an ``entity`` field. It can't be a ``multi-entity`` field.
 
 Syncing FPTR Notes as Jira Comments
 -----------------------------------
 
-Flow Production Tracking Note entity has a specific behavior: in Jira they will be represented as Comments and always be linked to an existing Issue.
-The entity mapping is done automatically, that's why we don't need to define the ``jira_issue_type`` and ``field_mapping`` keys.
+The Flow Production Tracking Note entity is always represented as Comments in Jira and always linked to an existing Issue.
+The entity mapping is done automatically, that's why you don't need to define the ``jira_issue_type`` and ``field_mapping`` keys.
 
 To enable Note syncing, you only need to add the entry in the ``entity_mapping`` dictionary with the ``sg_field`` key.
 
-Notes/Comments workflow also handle deletion. In order to control what will be deleted, a new ``sync_deletion_direction`` setting has been introduced and can have the following values:
+Notes/Comments workflow also handle deletion. The new ``sync_deletion_direction`` setting controls what's deleted, and can have the following values:
 
 ==================== =================================================================================================================================================================
 Key value            Description
 ==================== =================================================================================================================================================================
-``None``             [**DEFAULT VALUE**] If a Note is deleted in FPTR, the associated Comment won't be deleted in Jira (and vice-versa)
-``both_way``         If a Note is deleted in FPTR, the associated Comment will be deleted in Jira (and vice-versa)
+``None``             [**DEFAULT VALUE**] If a Note is deleted in FPTR, the associated Comment won't be deleted in Jira (and vice versa)
+``both_way``         If a Note is deleted in FPTR, the associated Comment will be deleted in Jira (and vice versa)
 ``jira_to_sg``       If a Note is deleted in FPTR, the associated Comment won't be deleted in Jira. But if a Comment is deleted in Jira, the associated Note will be deleted in FPTR
 ``sg_to_jira``       If a Note is deleted in FPTR, the associated Comment will be deleted in Jira. But if a Comment is deleted in Jira, the associated Note won't be deleted in FPTR
 ==================== =================================================================================================================================================================
@@ -352,30 +352,30 @@ Here is an example of how you can enable Note/Comment syncing:
     }
 
 .. note::
-    If you want to enable Comment deletion from Jira, you have to make sure that the ``Comment: deleted`` event is enable in the Jira webhook.
-    On the Flow Production Tracking side, you don't need to do anything special as the FPTR Event Daemon ``sg_jira_event_trigger`` plugin already handle it.
+    If you want to enable Comment deletion from Jira, you have to make sure that the ``Comment: deleted`` event is enabled in the Jira webhook.
+    On Flow Production Tracking, you don't need to set anything as the FPTR Event Daemon ``sg_jira_event_trigger`` plugin already handles the deletion.
 
 .. note::
-    When creating a Jira comment using the API, it is not possible to set the author. In order to keep a track of who created the Note in FPTR, the
-    author name will be embedded in the Jira comment body.
+    When creating a Jira comment using the API, it is not possible to set the author. To keep a track of who created the Note in FPTR, the
+    author's name is embedded in the Jira comment body.
 
 Syncing FPTR TimeLogs as Jira Worklogs
 --------------------------------------
 
-Flow Production Tracking TimeLog entity has a specific behavior: in Jira they will be represented as Worklogs and always be linked to an existing Issue.
-The entity mapping is done automatically, that's why we don't need to define the ``jira_issue_type``key but you can still use the ``field_mapping`` key to decide which fields to sync.
+The Flow Production Tracking TimeLog entity is always represented as Worklogs in Jira and always linked to an existing Issue.
+The entity mapping is done automatically, that's why you don't need to define the ``jira_issue_type`` key but you can still use the ``field_mapping`` key to decide which fields to sync.
 
 .. note::
-   When creating a Worklog in Jira, some fields are mandatory. So you need to make sure that the ``comment`` and ``timeSpentSeconds`` Jira fields are correctly
-    mapped to some FPTR TimeLog fields.
+   When creating a Worklog in Jira, some fields are mandatory. Make sure that the ``comment`` and ``timeSpentSeconds`` Jira fields are correctly
+   mapped to some FPTR TimeLog fields.
 
-TimeLogs/Worklogs workflow also handle deletion. In order to control what will be deleted, a new ``sync_deletion_direction`` setting has been introduced and can have the following values:
+TimeLogs/Worklogs workflow also handle deletion. The new ``sync_deletion_direction`` setting controls what's deleted, and can have the following values:
 
 ==================== ======================================================================================================================================================================
 Key value            Description
 ==================== ======================================================================================================================================================================
-``None``             [**DEFAULT VALUE**] If a TimeLog is deleted in FPTR, the associated Worklog won't be deleted in Jira (and vice-versa)
-``both_way``         If a TimeLog is deleted in FPTR, the associated Worklog will be deleted in Jira (and vice-versa)
+``None``             [**DEFAULT VALUE**] If a TimeLog is deleted in FPTR, the associated Worklog won't be deleted in Jira (and vice versa)
+``both_way``         If a TimeLog is deleted in FPTR, the associated Worklog will be deleted in Jira (and vice versa)
 ``jira_to_sg``       If a TimeLog is deleted in FPTR, the associated Worklog won't be deleted in Jira. But if a Worklog is deleted in Jira, the associated TimeLog will be deleted in FPTR
 ``sg_to_jira``       If a TimeLog is deleted in FPTR, the associated Worklog will be deleted in Jira. But if a Worklog is deleted in Jira, the associated TimeLog won't be deleted in FPTR
 ==================== ======================================================================================================================================================================
@@ -424,8 +424,8 @@ Here is an example of how you can enable TimeLog/Worklog syncing:
     }
 
 .. note::
-    If you want to enable Worklog deletion from Jira, you have to make sure that the ``Worklog: deleted`` event is enable in the Jira webhook.
-    On the Flow Production Tracking side, you don't need to do anything special as the FPTR Event Daemon ``sg_jira_event_trigger`` plugin already handle it.
+    If you want to enable Worklog deletion from Jira, you must enable the ``Worklog: deleted`` event in the Jira webhook.
+    On Flow Production Tracking, you don't need to set anything as the FPTR Event Daemon ``sg_jira_event_trigger`` plugin already handles the deletion.
 
 .. note::
     When creating a Jira worklog using the API, it is not possible to set the author. In order to keep a track of who created the TimeLog in FPTR, the
