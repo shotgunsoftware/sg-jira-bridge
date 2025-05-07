@@ -621,6 +621,6 @@ features have not been implemented yet.
 
 - Comments created in Jira and synced to FPTR won't appear in the Activity Stream in FPTR.
 
-- Jira subtasks are not supported as Issue Type as parent linking is mandatory on the Jira side.
+- Jira subtasks are not supported as Issue Type because parent linking is mandatory in Jira.
 
 - Updating watchers on a Jira Issue won't trigger any Jira webhook event so the FPTR associated field won't be updated on the fly.
