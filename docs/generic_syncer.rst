@@ -58,16 +58,16 @@ Sync In Jira  Checkbox    Enable/Disable syncing for this Entity   ``sg_sync_in_
 Flow Production Tracking Event Daemon Configuration
 ===================================================
 
-As soon as you want to enable the sync from Flow Production Tracking to Jira for a new entity type, you don't need to forgot to update
+When you enable the sync from Flow Production Tracking to Jira for a new entity type, you must also update
 the ``sg_jira_event_trigger`` plugin and add the corresponding event.
 
 Enabling the syncer
 ===================
 
-To use this generic syncer, you need to point at the right entry in the settings file.
+To use the generic syncer, you need to point at the right entry in the settings file.
 In order to do that, you have to make sure the right URLs are used in both Flow Production Tracking and Jira.
 
-Looking at the syncer entry in the ``settings.py`` file
+Looking at the syncer entry in the ``settings.py`` file:
 
 .. code-block:: python
 
@@ -90,8 +90,7 @@ You need to make sure that:
 Configure the Bridge sync settings
 ==================================
 
-To have an easier way to configure/customize what to sync between Flow Production Tracking and Jira, everything is now done
-through the ``settings.py`` file by mapping Flow Production Tracking entity type/fields with Jira Issue type/fields.
+To simplify the configuration/customization of the sync between Flow Production Tracking and Jira, youneed to edit only the ``settings.py`` file to map Flow Production Tracking entity type/fields to Jira Issue type/fields.
 
 .. _entity-sync-settings:
 
