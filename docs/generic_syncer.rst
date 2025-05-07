@@ -52,7 +52,7 @@ Sync In Jira  Checkbox    Enable/Disable syncing for this Entity   ``sg_sync_in_
 ============= =========== ======================================= ============================
 
 .. note::
-    Flow Production Tracking ``TimeLog`` and ``Note`` entities follow a specific workflow. For those entity types, only the
+    The Flow Production Tracking ``TimeLog`` and ``Note`` entities follow a specific workflow. For those entity types, only the
     ``Jira Key`` field is mandatory.
 
 Flow Production Tracking Event Daemon Configuration
