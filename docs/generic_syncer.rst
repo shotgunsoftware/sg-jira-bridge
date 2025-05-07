@@ -9,7 +9,7 @@ It offers the following changes:
 
 * Uses the ``settings.py`` file to define the entities and fields we want to synchronize
 * Adds support for initiating the sync from Jira, not only from Flow Production Tracking
-* introduce a new hook functionality to be able to override the behavior of some methods
+* Introduces a new hook functionality to override the behavior of some methods
 
 Configuration
 *************
