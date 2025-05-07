@@ -428,22 +428,22 @@ Here is an example of how you can enable TimeLog/Worklog syncing:
     On Flow Production Tracking, you don't need to set anything as the FPTR Event Daemon ``sg_jira_event_trigger`` plugin already handles the deletion.
 
 .. note::
-    When creating a Jira worklog using the API, it is not possible to set the author. In order to keep a track of who created the TimeLog in FPTR, the
-    author name will be embedded in the Jira worklog comment.
+    When creating a Jira comment using the API, it is not possible to set the author. To keep a track of who created the Timelog in FPTR, the
+    author's name is embedded in the Jira worklog comment.
 
 Hook
 ****
 
-In order to make the Bridge customization easier, some methods have been moved to a specific ``Hook`` class that can be overridden,
+In order to make it easier to customize the Bridge, some methods have been moved to a specific ``Hook`` class that can be overridden,
 allowing users to do modifications outside of the repository itself.
 
-Here is an example of how we can modify the behavior of the method returning the Jira value for a given FPTR value:
+Here is an example of how you can modify the behavior of the method returning the Jira value for a given FPTR value:
 
- * Create a python file that can be stored wherever you want
- * Within this file, import the ``JiraHook`` class from the ``sg_jira`` module
- * Create a class that inherits from ``JiraHook``
- * Within this class, override the method(s) you want
- * In the ``settings.py`` file, specify the hook path using the ``hook`` settings key
+ #. Create a python file that can be stored wherever you want
+ #. Within this file, import the ``JiraHook`` class from the ``sg_jira`` module
+ #. Create a class that inherits from ``JiraHook``
+ #. Within this class, override the method(s) you want
+ #. In the ``settings.py`` file, specify the hook path using the ``hook`` settings key
 
 .. code-block:: python
     :caption: Example of custom JiraHook class
@@ -479,19 +479,19 @@ Here is an example of how we can modify the behavior of the method returning the
 Example: How to sync Jira Epics to FPTR and keep the Epic/Task relationship
 ***************************************************************************
 
-In Jira, it is possible to use Epics as Task parents to define a hierarchy between Issues. The purpose of this example, he to explain
-how to configure Flow Production Tracking and the Jira Bridge to be able to sync everything between Jira & FPTR, while keeping the relationship that exists
+In Jira, it is possible to use Epics as Task parents to define a hierarchy between Issues. This example explains
+how to configure Flow Production Tracking and the Jira Bridge so as to sync everything between Jira and FPTR, while keeping the relationships that already exist
 in Jira.
 
 Flow Production Tracking configuration
 ======================================
 
 In Flow Production Tracking, we are going to use a ``CustomProjectEntity`` to represent Jira Epics and the ``Task`` entity to represent the Jira Tasks.
-The relationship between these two entities will be done using a custom ``entity`` field.
+The relationship between these two entities will be created using a custom ``entity`` field.
 
-Here are all the steps we need to perform in Flow Production Tracking:
+Here are the steps we need to perform in Flow Production Tracking:
 
-- Make sure you have a CustomProjectEntity representing an Epic enabled in Flow Production Tracking.
+- Enable in Flow Production Tracking a CustomProjectEntity that will represent the Epic.
 
 .. image:: _static/epic_syncing_enable_entity.png
 
@@ -504,16 +504,16 @@ Here are all the steps we need to perform in Flow Production Tracking:
 Jira configuration
 ==================
 
-In Jira, you need to do the following steps:
+In Jira, you need to do the following:
 
-- Enable the Issue Type ``Epic`` in Jira and check for the hierarchy setting that the ``Task`` Issue type accepts the ``Epic`` Issue type as parent.
+- Enable the Issue Type ``Epic`` in Jira and check in the hierarchy setting that the ``Task`` Issue type accepts the ``Epic`` Issue type as parent.
 
 - Make sure that all the fields described in :ref:`entity-sync-jira-config` exist and are enabled for the ``Epic`` Issue Type.
 
 FPTR Event Daemon Configuration
 ===============================
 
-In order to have the sync working from FPTR to Jira, you need to make sure to add the corresponding event to the ``sg_jira_event_trigger`` plugin.
+In order to have the sync working from FPTR to Jira, you need to add the corresponding event to the ``sg_jira_event_trigger`` plugin.
 
 .. code-block:: python
     :emphasize-lines: 16
@@ -547,7 +547,7 @@ In order to have the sync working from FPTR to Jira, you need to make sure to ad
 Setting configuration
 =====================
 
-Once everything has been correctly configured in both Jira and Flow Production Tracking, we need to make sure that the mapping is done in the ``settings.py`` file.
+Once Jira and Flow Production Tracking are correctly configured, we do the mapping in the ``settings.py`` file.
 
 .. code-block:: python
     :emphasize-lines: 15,16,20,21,22,23,24,25,26,27,28,29,30,31,32,33
