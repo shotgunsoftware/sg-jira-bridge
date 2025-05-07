@@ -7,7 +7,7 @@ Description
 In order to make the Jira Bridge customization easier, we're introducing a new syncer/handler.
 It offers the following changes:
 
-* use the ``settings.py`` file to define which entities and fields we want to synchronize
+* Uses the ``settings.py`` file to define the entities and fields we want to synchronize
 * add support for initiating the sync from Jira, not only from Flow Production Tracking
 * introduce a new hook functionality to be able to override the behavior of some methods
 
