@@ -15,7 +15,7 @@ Configuration
 *************
 
 At this point, we are assuming that the Jira Bridge has been correctly configured by following the main configuration process.
-The next section will only describe the extra steps that need to be done to setup and configure this new handler.
+The next section describes only the steps required to set up and configure this new handler.
 
 .. _entity-sync-jira-config:
 
