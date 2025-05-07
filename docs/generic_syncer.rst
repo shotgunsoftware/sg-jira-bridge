@@ -623,4 +623,4 @@ features have not been implemented yet.
 
 - Jira subtasks are not supported as Issue Type because parent linking is mandatory in Jira.
 
-- Updating watchers on a Jira Issue won't trigger any Jira webhook event so the FPTR associated field won't be updated on the fly.
+- Updating watchers on a Jira Issue don't trigger any Jira webhook event, and so can't trigger an update of the associated FPTR field.
