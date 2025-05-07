@@ -594,7 +594,7 @@ Once everything has been correctly configured in both Jira and Flow Production T
 Expected results
 ================
 
-Depending on the ``sync_direction`` you setup in the settings, you should be able to see your Epic/Tasks entities in both Jira and Flow Production Tracking.
+Based on the ``sync_direction`` you defined in the settings, you should now see your Epic/Tasks entities in both Jira and Flow Production Tracking.
 
 .. figure:: _static/jira_epic_syncing.png
 
