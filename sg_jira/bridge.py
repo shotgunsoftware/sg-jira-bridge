@@ -10,7 +10,7 @@ import imp
 import logging
 import logging.config
 import importlib
-from six.moves import urllib
+import urllib
 import threading
 
 from .shotgun_session import ShotgunSession
@@ -18,7 +18,6 @@ from .jira_session import JiraSession
 from .constants import ALL_SETTINGS_KEYS
 from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
 from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
-from .utils import utf8_to_unicode
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -64,7 +63,7 @@ class Bridge(object):
         :param str sg_http_proxy: Optional, a http proxy to use for the Flow Production Tracking
                                   connection, or None.
         """
-        super(Bridge, self).__init__()
+        super().__init__()
 
         # The bridge webserver is multithreaded, which means we need to
         # track Shotgun connections via the API per thread. The PTR Python
@@ -153,6 +152,7 @@ class Bridge(object):
         :raises ValueError: if the file does not exist or if its name does not end
                  with ``.py``.
         """
+        print("settings_file:", settings_file)
         full_path = os.path.abspath(settings_file)
         if not os.path.exists(settings_file):
             raise ValueError("Settings file %s does not exist" % full_path)
@@ -345,18 +345,15 @@ class Bridge(object):
         """
         synced = False
         try:
-            # Shotgun events might contain utf-8 encoded strings, convert them
-            # to unicode before processing.
-            safe_event = utf8_to_unicode(event)
             syncer = self.get_syncer(settings_name)
             # See comment in Syncer class: we assume complicated logic can be
             # handled in a single handler, so we don't have to support multiple
             # handlers.
-            handler = syncer.accept_shotgun_event(entity_type, entity_id, safe_event)
+            handler = syncer.accept_shotgun_event(entity_type, entity_id, event)
             if handler:
-                self.shotgun.set_session_uuid(safe_event.get("session_uuid"))
+                self.shotgun.set_session_uuid(event.get("session_uuid"))
                 synced = handler.process_shotgun_event(
-                    entity_type, entity_id, safe_event
+                    entity_type, entity_id, event
                 )
         except Exception as e:
             # Catch the exception to log it and let it bubble up

@@ -62,10 +62,6 @@ class WindowsService(win32serviceutil.ServiceFramework):
         # http://bugs.python.org/issue5162
         # TODO: Test this without virtualenv. Shouldn't use services with virtualenv.
 
-        # os.kill is supported on Windows in Python 2.7 but requires we know the
-        # pid which we don't have easy access to.
-        # See Windows-specific info: https://docs.python.org/2/library/os.html#os.kill
-
         # Threading option:
         # https://stackoverflow.com/a/35576127/3642440
 

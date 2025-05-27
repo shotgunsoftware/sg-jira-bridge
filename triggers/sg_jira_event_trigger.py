@@ -8,7 +8,7 @@
 import os
 import logging
 import requests
-from six.moves import urllib
+import urllib
 
 # Allow users to define their sensitive data in a .env file and
 # load it in environment variables with python-dotenv.

@@ -8,13 +8,12 @@
 #
 
 import os
-import six
 import json
 import mock
 import logging
 import unittest
 
-from six import BytesIO
+from io import BytesIO
 from test_base import TestBase
 import webapp
 
@@ -31,7 +30,6 @@ Content-Length: %d
 """
 
 UNICODE_STRING = "unicode_îéö_😀"
-UTF8_ENCODED_STRING = six.ensure_str(UNICODE_STRING)
 
 
 class MockServer(object):
@@ -70,13 +68,11 @@ class MockRequest(object):
             # Incoming request, issue a GET if we don't have any payload,
             # otherwise assume a POST.
             if not self._payload:
-                return BytesIO(six.ensure_binary("GET %s HTTP/1.1" % self._path))
+                return BytesIO(f"GET {self._path} HTTP/1.1".encode('utf-8'))
             else:
                 payload = json.dumps(self._payload)
                 return BytesIO(
-                    six.ensure_binary(
-                        POST_TEMPLATE % (self._path, len(payload), payload)
-                    )
+                    (POST_TEMPLATE % (self._path, len(payload), payload)).encode('utf-8')
                 )
         elif mode == "wb":
             # Response, return a writable empty file like object
@@ -105,7 +101,7 @@ class TestRouting(TestBase):
     """
 
     def setUp(self):
-        super(TestRouting, self).setUp()
+        super().setUp()
         # This is controlled by the bridge settings that we don't
         # load in these tests.
         # Our custom MockRequest using StringIO causes problems when running
@@ -177,10 +173,7 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
-            six.ensure_binary(
-                "Invalid request payload %s, unable to retrieve a Shotgun Entity type and its id"
-                % payload
-            )
+            f"Invalid request payload {payload}, unable to retrieve a Shotgun Entity type and its id".encode('utf-8')
             in raw_response
         )
 
@@ -342,38 +335,6 @@ class TestRouting(TestBase):
         # POST request with a valid admin action should succeed.
         handler = webapp.RequestHandler(
             MockRequest("/admin/reset", {"foo": "bar"}), ("localhost", -1), server
-        )
-        raw_response = handler.wfile.getvalue()
-        self.assertTrue(b"200 POST request successful" in raw_response)
-
-    # FIXME: This test fails in Python 3 due to the way the web server encodes using latin-1 instead of utf-8
-    #  However the test seems a bit over kill, and the Get method on the webapp does not appear
-    #  to do anything useful so it seems pointless trying to fix it, or test it.
-    #  Maybe this test should be removed, but leaving here for now in case it turns out there is a use for it.
-    @unittest.skipIf(six.PY3, "Only runs in Python 2")
-    def test_unicode(self, mocked_finish, mocked_jira, mocked_sg):
-        """
-        Test unicode values are correctly handled.
-        """
-        server = MockServer()
-        # GET request with settings name unicode characters.
-        unicode_url = "/jira2sg/%s" % UNICODE_STRING
-        handler = webapp.RequestHandler(
-            MockRequest(unicode_url, None), ("localhost", -1), server
-        )
-        raw_response = handler.wfile.getvalue()
-        self.assertTrue(b"HTTP/1.1 200" in raw_response)
-        self.assertTrue(
-            six.ensure_binary("<p>Syncing with %s settings.</p>" % UNICODE_STRING)
-            in raw_response
-        )
-        handler = webapp.RequestHandler(
-            MockRequest(
-                "%s/issue/%s" % (unicode_url, UNICODE_STRING),
-                {"foo": UNICODE_STRING, UNICODE_STRING: UNICODE_STRING},
-            ),
-            ("localhost", -1),
-            server,
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"200 POST request successful" in raw_response)

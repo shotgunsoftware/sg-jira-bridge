@@ -31,7 +31,7 @@ class TimelogWorklogSyncer(Syncer):
             be deleted in Jira
         """
         # Call base class init with all parameters we do not handle specifically
-        super(TimelogWorklogSyncer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Inherit from the other handlers to be able to perform the Task/Note sync as well as the Timelog sync
         self._task_issue_handler = TaskIssueHandler(self, issue_type)

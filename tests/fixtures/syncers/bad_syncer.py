@@ -20,7 +20,7 @@ class BadHandler(SyncHandler):
                                      Flow Production Tracking events.
         """
         self._fail_on_sg_sync = fail_on_sg_sync
-        return super(BadHandler, self).__init__(syncer)
+        return super().__init__(syncer)
 
     def process_shotgun_event(self, entity_type, entity_id, event):
         """
@@ -28,7 +28,7 @@ class BadHandler(SyncHandler):
         """
         if self._fail_on_sg_sync:
             raise RuntimeError("Sorry, I'm bad!")
-        return super(BadHandler, self).process_shotgun_event(
+        return super().process_shotgun_event(
             entity_type, entity_id, event
         )
 
@@ -54,7 +54,7 @@ class BadSyncer(Syncer):
         :param bool fail_on_sg_sync: Whether this syncer should fail when processing
                                      Flow Production Tracking events.
         """
-        super(BadSyncer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._fail_on_setup = fail_on_setup
         self._fail_on_sg_accept = fail_on_sg_accept
         self._handler = BadHandler(self, fail_on_sg_sync)
@@ -65,7 +65,7 @@ class BadSyncer(Syncer):
         """
         if self._fail_on_setup:
             raise RuntimeError("Sorry, I'm bad!")
-        return super(BadSyncer, self).setup()
+        return super().setup()
 
     @property
     def handlers(self):

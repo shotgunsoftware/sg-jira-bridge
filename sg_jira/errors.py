@@ -17,7 +17,7 @@ class InvalidSyncValue(ValueError):
         :param str field: The Jira or PTR field for which the exception was raised.
         :param value: The Jira or PTR value for which the exception was raised.
         """
-        super(InvalidSyncValue, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._field = field
         self._value = value
 

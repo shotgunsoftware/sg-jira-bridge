@@ -7,7 +7,6 @@
 # this software in either electronic or hard copy form.
 #
 
-from __future__ import print_function
 import os
 import time
 import threading
@@ -32,7 +31,7 @@ class ServerThread(threading.Thread):
         """
         Init.
         """
-        super(ServerThread, self).__init__()
+        super().__init__()
         self._httpd = webapp.create_server(
             9090, os.path.join(os.path.dirname(__file__), "..", "settings.py")
         )

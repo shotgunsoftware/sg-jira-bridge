@@ -21,7 +21,7 @@ class TaskIssueSyncer(Syncer):
         :param str issue_type: Jira Issue type to use when creating new Issues.
         """
         self._issue_type = issue_type
-        super(TaskIssueSyncer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._task_issue_handler = TaskIssueHandler(self, self._issue_type)
         self._note_comment_handler = NoteCommentHandler(self)
         # A handler combining the Task <-> Issue handler and the Note <-> Comment

@@ -22,7 +22,7 @@ class TestShotgunSession(TestBase):
 
     def setUp(self):
         """Test setup."""
-        super(TestShotgunSession, self).setUp()
+        super().setUp()
 
         # Set up the PTR database
         self.set_sg_mock_schema(

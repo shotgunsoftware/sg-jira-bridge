@@ -7,7 +7,6 @@
 #
 
 import os
-import six
 import mock
 
 from test_sync_base import TestSyncBase
@@ -1275,7 +1274,7 @@ class TestJiraSyncer(TestSyncBase):
         Test unicode values are correclty handled.
         """
         unicode_string = "No Sync unicode_îéö_😀"
-        encoded_string = six.ensure_str(unicode_string)
+        encoded_string = unicode_string.encode('utf-8')
         syncer, bridge = self._get_syncer(mocked_sg)
         # Faked Jira project
         bridge.jira.set_projects([JIRA_PROJECT])
@@ -1350,7 +1349,7 @@ class TestJiraSyncer(TestSyncBase):
                     "to": JIRA_USER["key"],
                     "fromString": JIRA_USER_2["displayName"],
                     "field": "assignee",
-                    "toString": six.ensure_text(sg_user["name"]),
+                    "toString": str(sg_user["name"]),
                     "fieldtype": "jira",
                     "fieldId": "assignee",
                 },
@@ -1380,10 +1379,7 @@ class TestJiraSyncer(TestSyncBase):
         )
         for k, v in updated_task.items():
             # All keys should be unicode
-            self.assertTrue(isinstance(k, six.text_type))
-            if six.PY2:
-                # We shouldn't have any string values, just unicode.
-                self.assertFalse(isinstance(v, str))
+            self.assertTrue(isinstance(k, str))
 
     def test_jira_comment(self, mocked_sg):
         """

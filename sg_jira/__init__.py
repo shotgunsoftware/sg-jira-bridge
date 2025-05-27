@@ -7,12 +7,10 @@
 
 import sys
 
-if sys.version_info[0] == 2:
-    ex_type = ImportError
-else:
-    ex_type = ModuleNotFoundError
 
-IMPORT_MODULES = ["shotgun_api3", "jira", "dotenv", "six"]
+ex_type = ModuleNotFoundError
+
+IMPORT_MODULES = ["shotgun_api3", "jira", "dotenv"]
 
 if sys.platform != "win32":
     IMPORT_MODULES.append("daemonize")

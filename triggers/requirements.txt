@@ -20,5 +20,3 @@ python-dotenv==0.13.0
 
 # Requests
 requests==2.32.3
-
-six
