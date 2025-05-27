@@ -11,7 +11,6 @@ import os
 import json
 import mock
 import logging
-import unittest
 
 from io import BytesIO
 from test_base import TestBase
