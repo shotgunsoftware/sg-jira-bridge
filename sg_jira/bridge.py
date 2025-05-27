@@ -352,9 +352,7 @@ class Bridge(object):
             handler = syncer.accept_shotgun_event(entity_type, entity_id, event)
             if handler:
                 self.shotgun.set_session_uuid(event.get("session_uuid"))
-                synced = handler.process_shotgun_event(
-                    entity_type, entity_id, event
-                )
+                synced = handler.process_shotgun_event(entity_type, entity_id, event)
         except Exception as e:
             # Catch the exception to log it and let it bubble up
             logger.exception(e)

@@ -54,12 +54,7 @@ class ShotgunSession(object):
         # to wrap with some very similar code which would encode all params,
         # blindly call the original method, decode and return the result.
 
-        self._shotgun = shotgun_api3.Shotgun(
-            base_url,
-            script_name,
-            *args,
-            **kwargs
-        )
+        self._shotgun = shotgun_api3.Shotgun(base_url, script_name, *args, **kwargs)
 
         self._shotgun_schemas = {}
         # Retrieve our current login, this does not seem to be available from

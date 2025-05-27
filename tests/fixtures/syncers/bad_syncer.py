@@ -28,9 +28,7 @@ class BadHandler(SyncHandler):
         """
         if self._fail_on_sg_sync:
             raise RuntimeError("Sorry, I'm bad!")
-        return super().process_shotgun_event(
-            entity_type, entity_id, event
-        )
+        return super().process_shotgun_event(entity_type, entity_id, event)
 
 
 class BadSyncer(Syncer):
