@@ -173,7 +173,9 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
-            f"Invalid request payload {payload}, unable to retrieve a Shotgun Entity type and its id".encode("utf-8")
+            f"Invalid request payload {payload}, unable to retrieve a Shotgun Entity type and its id".encode(
+                "utf-8"
+            )
             in raw_response
         )
 
