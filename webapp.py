@@ -253,11 +253,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Success, send a basic html page.
         self.post_response(
             200,
-            f"Syncing with {settings_name} settings.".encode(),
+            f"Syncing with {settings_name} settings.".encode("utf-8"),
             (
                 HMTL_TEMPLATE
                 % (title, title, f"Syncing with {settings_name} settings.")
-            ).encode(),
+            ).encode("utf-8"),
         )
 
     def do_POST(self):

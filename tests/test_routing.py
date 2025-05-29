@@ -67,13 +67,13 @@ class MockRequest(object):
             # Incoming request, issue a GET if we don't have any payload,
             # otherwise assume a POST.
             if not self._payload:
-                return BytesIO(f"GET {self._path} HTTP/1.1".encode())
+                return BytesIO(f"GET {self._path} HTTP/1.1".encode("utf-8"))
             else:
                 payload = json.dumps(self._payload)
                 post_template = POST_TEMPLATE.format(
                     path=self._path, content_length=len(payload), payload=payload
                 )
-                return BytesIO(post_template.encode())
+                return BytesIO(post_template.encode("utf-8"))
         elif mode == "wb":
             # Response, return a writable empty file like object
             return BytesIO(b"")
@@ -173,7 +173,7 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
-            f"Invalid request payload {payload}, unable to retrieve a Shotgun Entity type and its id".encode()
+            f"Invalid request payload {payload}, unable to retrieve a Shotgun Entity type and its id".encode("utf-8")
             in raw_response
         )
 
