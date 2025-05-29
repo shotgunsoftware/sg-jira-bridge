@@ -289,8 +289,7 @@ class ShotgunSession(object):
         method_to_wrap = getattr(self._shotgun, method_name)
 
         def wrapped(*args, **kwargs):
-            result = method_to_wrap(*args, **kwargs)
-            return result
+            return method_to_wrap(*args, **kwargs)
 
         return wrapped
 

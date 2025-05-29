@@ -1274,7 +1274,7 @@ class TestJiraSyncer(TestSyncBase):
         Test unicode values are correclty handled.
         """
         unicode_string = "No Sync unicode_îéö_😀"
-        encoded_string = unicode_string.encode("utf-8")
+        encoded_string = unicode_string.encode()
         syncer, bridge = self._get_syncer(mocked_sg)
         # Faked Jira project
         bridge.jira.set_projects([JIRA_PROJECT])

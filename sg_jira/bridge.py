@@ -152,7 +152,6 @@ class Bridge(object):
         :raises ValueError: if the file does not exist or if its name does not end
                  with ``.py``.
         """
-        print("settings_file:", settings_file)
         full_path = os.path.abspath(settings_file)
         if not os.path.exists(settings_file):
             raise ValueError("Settings file %s does not exist" % full_path)

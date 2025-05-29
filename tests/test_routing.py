@@ -17,15 +17,15 @@ from test_base import TestBase
 import webapp
 
 # Raw POST request template
-POST_TEMPLATE = """POST %s HTTP/1.1
+POST_TEMPLATE = """POST {path} HTTP/1.1
 Host: httpbin.org
 Connection: keep-alive
 Accept: */*
 User-Agent: Mozilla/4.0 (compatible; esp8266 Lua; Windows NT 5.1)
 Content-Type: application/json
-Content-Length: %d
+Content-Length: {content_length}
 
-%s
+{payload}
 """
 
 UNICODE_STRING = "unicode_îéö_😀"
@@ -67,14 +67,13 @@ class MockRequest(object):
             # Incoming request, issue a GET if we don't have any payload,
             # otherwise assume a POST.
             if not self._payload:
-                return BytesIO(f"GET {self._path} HTTP/1.1".encode("utf-8"))
+                return BytesIO(f"GET {self._path} HTTP/1.1".encode())
             else:
                 payload = json.dumps(self._payload)
-                return BytesIO(
-                    (POST_TEMPLATE % (self._path, len(payload), payload)).encode(
-                        "utf-8"
-                    )
+                post_template = POST_TEMPLATE.format(
+                    path=self._path, content_length=len(payload), payload=payload
                 )
+                return BytesIO(post_template.encode())
         elif mode == "wb":
             # Response, return a writable empty file like object
             return BytesIO(b"")
@@ -174,9 +173,7 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(
-            f"Invalid request payload {payload}, unable to retrieve a Shotgun Entity type and its id".encode(
-                "utf-8"
-            )
+            f"Invalid request payload {payload}, unable to retrieve a Shotgun Entity type and its id".encode()
             in raw_response
         )
 

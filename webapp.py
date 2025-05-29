@@ -5,18 +5,17 @@
 # this software in either electronic or hard copy form.
 #
 
-import re
 import argparse
-from urllib import parse
-from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+import logging
+import re
 import socket
 import ssl
-import sys
-import logging
 import subprocess
-
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
+from urllib import parse
 
 import sg_jira
 
