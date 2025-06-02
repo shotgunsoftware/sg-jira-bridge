@@ -20,11 +20,11 @@ jobs:
     vmImage: ${{ parameters.vm_image }}
   strategy:
     matrix:
-      Python39:
+      Python 3.9:
         python.version: '3.9'
-      Python310:
+      Python 3.10:
         python.version: '3.10'
-      Python311:
+      Python 3.11:
         python.version: '3.11'
     maxParallel: 3
 
