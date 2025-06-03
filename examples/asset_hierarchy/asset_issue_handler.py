@@ -5,17 +5,17 @@
 # this software in either electronic or hard copy form.
 #
 
-from sg_jira.handlers import EntityIssueHandler
 from sg_jira.constants import (
-    SHOTGUN_JIRA_ID_FIELD,
-    SHOTGUN_SYNC_IN_JIRA_FIELD,
-    SHOTGUN_JIRA_URL_FIELD,
     ASSET_FIELDS_MAPPING,
-    JIRA_PARENT_LINK_TYPE,
-    ISSUE_FIELDS_MAPPING,
     ASSET_ISSUE_STATUS_MAPPING,
+    ISSUE_FIELDS_MAPPING,
+    JIRA_PARENT_LINK_TYPE,
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
 )
 from sg_jira.errors import InvalidShotgunValue
+from sg_jira.handlers import EntityIssueHandler
 
 
 class AssetIssueHandler(EntityIssueHandler):

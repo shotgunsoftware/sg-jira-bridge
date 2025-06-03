@@ -5,8 +5,9 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
 import logging
+import os
+
 import requests
 import urllib
 

@@ -8,13 +8,12 @@
 #
 
 import os
-import time
 import threading
-
-from shotgun_api3 import Shotgun
-from jira import JIRA
-
+import time
 from unittest import TestCase, skipIf
+
+from jira import JIRA
+from shotgun_api3 import Shotgun
 
 import webapp
 

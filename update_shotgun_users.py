@@ -6,9 +6,9 @@
 # this software in either electronic or hard copy form.
 #
 
-import sys
 import argparse
 import logging
+import sys
 
 from shotgun_api3 import Shotgun
 

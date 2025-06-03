@@ -7,9 +7,9 @@
 
 import os
 import sys
-import unittest
 import tempfile
 import time
+import unittest
 from multiprocessing import Process
 
 if not sys.platform.startswith("win"):
