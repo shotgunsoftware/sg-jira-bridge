@@ -163,11 +163,13 @@ class Bridge(object):
         _, module_name = os.path.split(full_path)
         module_name = os.path.splitext(module_name)[0]
 
+        spec = importlib.util.spec_from_file_location(module_name, full_path)
+        module = importlib.util.module_from_spec(spec)
         try:
-            module = importlib.import_module(module_name)
+            spec.loader.exec_module(module)
         except Exception as e:
-            raise ImportError(f"Could not import module from {full_path}: {e}")
-
+            raise ImportError(f"Could not import module {module_name}: {e}")
+        
         # Retrieve all properties we handle and provide empty values if missing
         settings = dict(
             [
