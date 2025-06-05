@@ -6,10 +6,10 @@
 #
 
 import os
-import imp
 import logging
 import logging.config
 import importlib
+import importlib.util
 import urllib
 import threading
 
@@ -160,20 +160,14 @@ class Bridge(object):
                 "Settings file %s is not a Python file with a .py extension" % full_path
             )
 
-        folder, module_name = os.path.split(full_path)
+        _, module_name = os.path.split(full_path)
+        module_name = os.path.splitext(module_name)[0]
 
-        mfile, pathname, description = imp.find_module(
-            # Strip the .py extension
-            os.path.splitext(module_name)[0],
-            [folder],
-        )
         try:
-            module = imp.load_module(
-                "%s.settings" % __name__, mfile, pathname, description
-            )
-        finally:
-            if mfile:
-                mfile.close()
+            module = importlib.import_module(module_name)
+        except Exception as e:
+            raise ImportError(f"Could not import module from {full_path}: {e}")
+
         # Retrieve all properties we handle and provide empty values if missing
         settings = dict(
             [
