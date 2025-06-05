@@ -169,7 +169,7 @@ class Bridge(object):
             spec.loader.exec_module(module)
         except Exception as e:
             raise ImportError(f"Could not import module {module_name}: {e}")
-        
+
         # Retrieve all properties we handle and provide empty values if missing
         settings = dict(
             [
