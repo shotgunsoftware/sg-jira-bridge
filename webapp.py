@@ -231,8 +231,8 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if not path_parts:
             self.post_response(
                 200,
-                "The server is alive",
-                HMTL_TEMPLATE % ("The server is alive", "The server is alive", ""),
+                six.ensure_binary("The server is alive"),
+                six.ensure_binary(HMTL_TEMPLATE % ("The server is alive", "The server is alive", "")),
             )
             return
 
