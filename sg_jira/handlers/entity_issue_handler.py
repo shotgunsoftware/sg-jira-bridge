@@ -35,7 +35,7 @@ class EntityIssueHandler(SyncHandler):
         :param syncer: A :class:`~sg_jira.Syncer` instance.
         :param str issue_type: A target Issue type, e.g. 'Task', 'Story'.
         """
-        super(EntityIssueHandler, self).__init__(syncer)
+        super().__init__(syncer)
         self._issue_type = issue_type
 
         # Due to GDPR, some changes were done to JIRA Cloud which complicates

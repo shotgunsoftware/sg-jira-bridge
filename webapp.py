@@ -5,20 +5,17 @@
 # this software in either electronic or hard copy form.
 #
 
-from __future__ import print_function
-import re
-import six
 import argparse
-from six.moves.urllib import parse
-from six.moves import BaseHTTPServer
 import json
+import logging
+import re
 import socket
 import ssl
-import sys
-import logging
 import subprocess
-
-from six.moves.socketserver import ThreadingMixIn
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
+from urllib import parse
 
 import sg_jira
 
@@ -129,16 +126,14 @@ class SgJiraBridgeBadRequestError(Exception):
     pass
 
 
-class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
+class Server(ThreadingMixIn, HTTPServer):
     """
     Basic server with threading functionality mixed in. This will help the server
     keep up with a high volume of throughput from Flow Production Tracking and Jira.
     """
 
     def __init__(self, settings, *args, **kwargs):
-        # Note: BaseHTTPServer.HTTPServer is not a new style class so we can't use
-        # super here.
-        BaseHTTPServer.HTTPServer.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._sg_jira = sg_jira.Bridge.get_bridge(settings)
 
     def sync_in_jira(self, *args, **kwargs):
@@ -167,7 +162,7 @@ class Server(ThreadingMixIn, BaseHTTPServer.HTTPServer):
         return self._sg_jira.sync_settings_names
 
 
-class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class RequestHandler(BaseHTTPRequestHandler):
     # On Python3, in socketserver.StreamRequestHandler, if this is
     # set it will use makefile() to produce the output stream. Otherwise,
     # it will use socketserver._SocketWriter, and we won't be able to get
@@ -179,7 +174,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # Inject the version of sg-jira-bridge into server_version for the headers.
     server_version = "sg-jira-bridge/%s %s" % (
         get_sg_jira_bridge_version(),
-        BaseHTTPServer.BaseHTTPRequestHandler.server_version,
+        BaseHTTPRequestHandler.server_version,
     )
     # BaseHTTPServer Class variable that stores the HTML template for error
     # pages. Override the default error page template with our own.
@@ -231,8 +226,8 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if not path_parts:
             self.post_response(
                 200,
-                "The server is alive",
-                HMTL_TEMPLATE % ("The server is alive", "The server is alive", ""),
+                "The server is alive".encode("utf-8"),
+                (HMTL_TEMPLATE % ("The server is alive", "The server is alive", "")).encode("utf-8"),
             )
             return
 
@@ -251,18 +246,18 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         settings_name = path_parts[1]
-        if six.ensure_text(settings_name) not in self.server.sync_settings_names:
+        if str(settings_name) not in self.server.sync_settings_names:
             self.send_error(400, "Invalid settings name %s" % settings_name)
             return
 
         # Success, send a basic html page.
         self.post_response(
             200,
-            six.ensure_binary("Syncing with %s settings." % settings_name),
-            six.ensure_binary(
+            f"Syncing with {settings_name} settings.".encode("utf-8"),
+            (
                 HMTL_TEMPLATE
-                % (title, title, "Syncing with %s settings." % settings_name)
-            ),
+                % (title, title, f"Syncing with {settings_name} settings.")
+            ).encode("utf-8"),
         )
 
     def do_POST(self):
@@ -373,7 +368,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             raise SgJiraBridgeBadRequestError("Invalid request path %s" % self.path)
 
-        if six.ensure_text(settings_name) not in self.server.sync_settings_names:
+        if str(settings_name) not in self.server.sync_settings_names:
             raise SgJiraBridgeBadRequestError(
                 "Invalid settings name %s" % settings_name
             )
@@ -454,7 +449,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
         """
-        Override :class:`BaseHTTPServer.BaseHTTPRequestHandler` method to use a
+        Override :class:`BaseHTTPRequestHandler` method to use a
         standard logger.
 
         :param str format: A format string, e.g. '%s %s'.
@@ -465,7 +460,7 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def log_error(self, format, *args):
         """
-        Override :class:`BaseHTTPServer.BaseHTTPRequestHandler` method to use a
+        Override :class:`BaseHTTPRequestHandler` method to use a
         standard logger.
 
         :param str format: A format string, e.g. '%s %s'.
@@ -486,7 +481,7 @@ def create_server(port, listen_address, settings, keyfile=None, certfile=None):
     :param str certfile:  Optional path to a PEM certificate file to run in HTTPS mode.
 
     :returns: The HTTP Server
-    :type: :class:`BaseHTTPServer.BaseHTTPRequestHandler`
+    :type: :class:`BaseHTTPRequestHandler`
     """
     httpd = Server(settings, (listen_address, port), RequestHandler)
     if keyfile and certfile:

@@ -51,7 +51,7 @@ class TimelogWorklogHandler(SyncHandler):
         :param sync_jira_worklog_deletion: If True, when a timelog is deleted in Flow Production Tracking, it will also
             be deleted in Jira
         """
-        super(TimelogWorklogHandler, self).__init__(syncer)
+        super().__init__(syncer)
 
         self.__sync_sg_timelog_deletion = sync_sg_timelog_deletion
         self.__sync_jira_worklog_deletion = sync_jira_worklog_deletion

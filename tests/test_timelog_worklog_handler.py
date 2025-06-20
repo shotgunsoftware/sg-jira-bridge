@@ -34,7 +34,7 @@ class TestTimelogWorklogHandler(TestSyncBase):
     def setUp(self):
         """Test setup."""
 
-        super(TestTimelogWorklogHandler, self).setUp()
+        super().setUp()
 
     def test_sg_to_jira_add_timelog(self, mocked_sg):
         """Test adding a new timelog in Flow Production Tracking"""

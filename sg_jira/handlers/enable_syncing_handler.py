@@ -41,7 +41,7 @@ class EnableSyncingHandler(SyncHandler):
         :param syncer: A :class:`~sg_jira.Syncer` instance.
         :param handlers: A non empty list of :class:`SyncHandler` instances.
         """
-        super(EnableSyncingHandler, self).__init__(syncer)
+        super().__init__(syncer)
         if not handlers:
             raise ValueError("At least one handler needs to be provided")
         self._primary_handler = handlers[0]

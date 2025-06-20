@@ -20,7 +20,7 @@ class TestBase(unittest.TestCase):
     """
 
     def setUp(self):
-        super(TestBase, self).setUp()
+        super().setUp()
         self._fixtures_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "fixtures")
         )

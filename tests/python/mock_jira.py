@@ -382,7 +382,7 @@ class MockedSession(object):
 
 class MockedIssue(Issue):
     def __init__(self, *args, **kwargs):
-        super(MockedIssue, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._worklogs = []
 
     def update(self, fields, *args, **kwargs):

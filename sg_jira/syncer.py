@@ -23,7 +23,7 @@ class Syncer(object):
         :param str name: A unique name for the syncer.
         :param bridge: A :class:`~sg_jira.Bridge` instance.
         """
-        super(Syncer, self).__init__()
+        super().__init__()
         self._name = name
         self._bridge = bridge
         # Set a logger per instance: this allows to filter logs with the

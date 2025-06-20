@@ -23,7 +23,7 @@ class ExampleSync(Syncer):
         :param log_level: A standard logging level.
         """
         # Call base class init with all parameters we do not handle specifically
-        super(ExampleSync, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Handle our additional parameter.
         self.logger.setLevel(log_level)
 
