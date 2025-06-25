@@ -89,16 +89,17 @@ Required Fields
 ===============
 The following fields must be created in Jira and made available in Boards:
 
-+--------------+------+-----------------------------------------------------------------------+
-| Field Name   | Type | Description                                                           |
-+==============+======+=======================================================================+
-| Shotgun Type | Text | Stores the associated Flow Production Tracking Entity type            |
-+--------------+------+-----------------------------------------------------------------------+
-| Shotgun ID   | Text | Stores the associated Flow Production Tracking Entity ID              |
-+--------------+------+-----------------------------------------------------------------------+
-| Shotgun URL  | Text | Stores a link to the detail page for the associated entity in PTR     |
-+--------------+------+-----------------------------------------------------------------------+
-
++--------------+----------+-----------------------------------------------------------------------+
+| Field Name   | Type     | Description                                                           |
++==============+==========+=======================================================================+
+| Shotgun Type | Text     | Stores the associated Flow Production Tracking Entity type            |
++--------------+----------+-----------------------------------------------------------------------+
+| Shotgun ID   | Text     | Stores the associated Flow Production Tracking Entity ID              |
++--------------+----------+-----------------------------------------------------------------------+
+| Shotgun URL  | Text     | Stores a link to the detail page for the associated entity in PTR     |
++--------------+----------+-----------------------------------------------------------------------+
+| Sync in FPTR | Checkbox | Specifies which JIRA issues should sync back to PTR                   |
++--------------+----------+-----------------------------------------------------------------------+
 .. _Jira Webhook:
 
 Jira Webhook
