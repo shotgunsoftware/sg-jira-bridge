@@ -173,10 +173,6 @@ SYNC = {
                             "sg_field": "addressings_cc",
                             "jira_field": "watches",
                         },
-                        {
-                            "sg_field": "sg_epic",
-                            "jira_field": "parent",
-                        },
                     ],
                     "status_mapping": {
                         "sync_direction": "jira_to_sg",
