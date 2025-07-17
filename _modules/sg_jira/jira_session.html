@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -62,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -85,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -134,12 +136,12 @@
 <span class="c1"># this software in either electronic or hard copy form.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">packaging</span> <span class="kn">import</span> <span class="n">version</span>
-<span class="kn">from</span> <span class="nn">json.decoder</span> <span class="kn">import</span> <span class="n">JSONDecodeError</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">json.decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONDecodeError</span>
 
-<span class="kn">from</span> <span class="nn">jira</span> <span class="kn">import</span> <span class="n">JIRAError</span>
-<span class="kn">import</span> <span class="nn">jira</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jira</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jira</span><span class="w"> </span><span class="kn">import</span> <span class="n">JIRAError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">packaging</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
 
 <span class="c1"># Since we are using pbr in the forked jira repo, the tags we are using are marked as dev versions and</span>
 <span class="c1"># pip doesn&#39;t update them as expected.</span>
@@ -150,22 +152,22 @@
         <span class="s1">&#39;You can do this by using &quot;pip install -r /path/to/requirements.txt --upgrade&quot;&#39;</span>
     <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">JIRA_SHOTGUN_TYPE_FIELD</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.constants</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">JIRA_RESULT_PAGING</span><span class="p">,</span>
     <span class="n">JIRA_SHOTGUN_ID_FIELD</span><span class="p">,</span>
+    <span class="n">JIRA_SHOTGUN_TYPE_FIELD</span><span class="p">,</span>
     <span class="n">JIRA_SHOTGUN_URL_FIELD</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="n">JIRA_RESULT_PAGING</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="JiraSession"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession">[docs]</a><span class="k">class</span> <span class="nc">JiraSession</span><span class="p">(</span><span class="n">jira</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">JIRA</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">JiraSession</span><span class="p">(</span><span class="n">jira</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">JIRA</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extend :class:`jira.JIRA` with helpers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="JiraSession.__init__"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_site</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession.__init__"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_site</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate a JiraSession.</span>
 
@@ -215,7 +217,7 @@
         <span class="c1"># A dictionary where keys are Jira field name and values are their field id.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span> <span class="o">=</span> <span class="p">{}</span></div>
 
-<div class="viewcode-block" id="JiraSession.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.setup">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check the Jira site and cache site level values.</span>
 
@@ -251,7 +253,7 @@
             <span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">is_jira_cloud</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_jira_cloud</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return if the site is a JIRA Cloud site.</span>
 
@@ -259,7 +261,17 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_jira_cloud</span>
 
-<div class="viewcode-block" id="JiraSession.get_jira_issue_field_id"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_jira_issue_field_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_issue_field_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession.assert_field"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.assert_field">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">assert_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the given field exists in Jira site.</span>
+
+<span class="sd">        :param str field_name: A Jira field name.</span>
+<span class="sd">        :raises RuntimeError: if the entity does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">field_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Field </span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2"> doesn&#39;t exist in Jira site.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="JiraSession.get_jira_issue_field_id"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_jira_issue_field_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_jira_issue_field_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the Jira field id for the Issue field with the given name.</span>
 
@@ -268,7 +280,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_fields_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">jira_shotgun_type_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jira_shotgun_type_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the id of the Jira field used to store the type of a linked Flow Production Tracking</span>
 <span class="sd">        Entity.</span>
@@ -280,7 +292,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_type_field</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">jira_shotgun_id_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jira_shotgun_id_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the id of the Jira field used to store the id of a linked Flow Production Tracking</span>
 <span class="sd">        Entity.</span>
@@ -292,14 +304,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_id_field</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">jira_shotgun_url_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jira_shotgun_url_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the id of the Jira field used to store the url of a linked Flow Production Tracking</span>
 <span class="sd">        Entity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_shotgun_url_field</span>
 
-<div class="viewcode-block" id="JiraSession.sanitize_jira_update_value"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.sanitize_jira_update_value">[docs]</a>    <span class="k">def</span> <span class="nf">sanitize_jira_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">,</span> <span class="n">jira_field_schema</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession.sanitize_jira_update_value"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.sanitize_jira_update_value">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">sanitize_jira_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">,</span> <span class="n">jira_field_schema</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform sanity checks for the given Jira value and ensure it can be used</span>
 <span class="sd">        to update the Jira field with the given schema.</span>
@@ -352,7 +364,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">jira_value</span></div>
 
-<div class="viewcode-block" id="JiraSession.find_jira_assignee_for_issue"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.find_jira_assignee_for_issue">[docs]</a>    <span class="k">def</span> <span class="nf">find_jira_assignee_for_issue</span><span class="p">(</span>
+<div class="viewcode-block" id="JiraSession.find_jira_assignee_for_issue"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.find_jira_assignee_for_issue">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">find_jira_assignee_for_issue</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jira_issue</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -372,7 +384,7 @@
             <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">for_assignment</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_search_allowed_users_for_issue</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_search_allowed_users_for_issue</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">issueKey</span><span class="p">,</span> <span class="n">startAt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxResults</span><span class="o">=</span><span class="mi">50</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -409,7 +421,7 @@
     <span class="c1">#            params</span>
     <span class="c1">#        )</span>
 
-<div class="viewcode-block" id="JiraSession.find_jira_user"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.find_jira_user">[docs]</a>    <span class="k">def</span> <span class="nf">find_jira_user</span><span class="p">(</span>
+<div class="viewcode-block" id="JiraSession.find_jira_user"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.find_jira_user">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">find_jira_user</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jira_issue</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">for_assignment</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -539,7 +551,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found Jira Assignee </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jira_assignee</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jira_assignee</span></div>
 
-<div class="viewcode-block" id="JiraSession.set_jira_issue_status"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.set_jira_issue_status">[docs]</a>    <span class="k">def</span> <span class="nf">set_jira_issue_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_status_name</span><span class="p">,</span> <span class="n">comment</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession.set_jira_issue_status"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.set_jira_issue_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_jira_issue_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_status_name</span><span class="p">,</span> <span class="n">comment</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Attempt to change the Jira Issue status to the given value.</span>
 
@@ -634,7 +646,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Available transitions are </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jira_transitions</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="JiraSession.create_issue_from_data"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.create_issue_from_data">[docs]</a>    <span class="k">def</span> <span class="nf">create_issue_from_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession.create_issue_from_data"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.create_issue_from_data">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_issue_from_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create an Issue from the given data.</span>
 
@@ -794,7 +806,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_issue</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="JiraSession.get_jira_issue_edit_meta"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_jira_issue_edit_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_issue_edit_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">):</span>
+<div class="viewcode-block" id="JiraSession.get_jira_issue_edit_meta"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_jira_issue_edit_meta">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_jira_issue_edit_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the edit metadata for the given Jira Issue.</span>
 
@@ -812,7 +824,70 @@
                 <span class="s2">&quot;Unable to retrieve edit meta data for </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">. &quot;</span>
                 <span class="o">%</span> <span class="p">(</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">issuetype</span><span class="p">,</span> <span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">jira_edit_fields</span></div></div>
+        <span class="k">return</span> <span class="n">jira_edit_fields</span></div>
+
+<div class="viewcode-block" id="JiraSession.get_project_issue_type_fields"><a class="viewcode-back" href="../../developer.html#sg_jira.jira_session.JiraSession.get_project_issue_type_fields">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_project_issue_type_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all the available Jira fields for a given Jira project and issue type.&quot;&quot;&quot;</span>
+
+        <span class="n">jira_issue_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">issue_type_by_name</span><span class="p">(</span><span class="n">issue_type</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">jira_project</span><span class="p">)</span>
+        <span class="c1"># Retrieve creation meta data for the project / issue type</span>
+        <span class="c1"># Note: there is a new simpler Project type in Jira where createmeta is not</span>
+        <span class="c1"># available.</span>
+        <span class="c1"># https://confluence.atlassian.com/jirasoftwarecloud/working-with-agility-boards-945104895.html</span>
+        <span class="c1"># https://community.developer.atlassian.com/t/jira-cloud-next-gen-projects-and-connect-apps/23681/14</span>
+        <span class="c1"># It seems a Project `simplified` key can help distinguish between old</span>
+        <span class="c1"># school projects and new simpler projects.</span>
+        <span class="c1"># TODO: cache the retrieved data to avoid multiple requests to the server</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_jira_cloud</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_version</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="c1"># Existing logic works for Jira Cloud or Jira Server 8 or prior.</span>
+            <span class="n">create_meta_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createmeta</span><span class="p">(</span>
+                <span class="n">jira_project</span><span class="p">,</span>
+                <span class="n">issuetypeIds</span><span class="o">=</span><span class="n">jira_issue_type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;projects.issuetypes.fields&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># We asked for a single project / single issue type, so we can just pick</span>
+            <span class="c1"># the first entry, if it exists.</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">]</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;issuetypes&quot;</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Create meta data for Project </span><span class="si">{</span><span class="n">jira_project</span><span class="si">}</span><span class="s2"> Issue type </span><span class="si">{</span><span class="n">issue_type</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">create_meta_data</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unable to retrieve create meta data for Project </span><span class="si">{</span><span class="n">jira_project</span><span class="si">}</span><span class="s2"> Issue type </span><span class="si">{</span><span class="n">issue_type</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;projects&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;issuetypes&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span>
+
+        <span class="c1"># createmeta is not supported on Jira Server 9 and Python client 3.5.0</span>
+        <span class="c1"># Instead, we&#39;ll use the new createmeta_issuetypes and createmeta_fieldtypes methods</span>
+        <span class="n">create_meta_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createmeta_issuetypes</span><span class="p">(</span><span class="n">jira_project</span><span class="p">)</span>
+        <span class="c1"># We asked for a single project / single issue type, so we can just pick</span>
+        <span class="c1"># the first entry, if it exists.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Create meta data issue types for Project </span><span class="si">{</span><span class="n">jira_project</span><span class="si">}</span><span class="s2"> Issue type </span><span class="si">{</span><span class="n">issue_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">create_meta_data</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unable to retrieve create meta data for Project </span><span class="si">{</span><span class="n">jira_project</span><span class="si">}</span><span class="s2"> Issue type </span><span class="si">{</span><span class="n">issue_type</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># Get the field types because createmeta_issuetypes doesn&#39;t expand the fields</span>
+        <span class="n">create_meta_data_fieldtypes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createmeta_fieldtypes</span><span class="p">(</span>
+            <span class="n">jira_project</span><span class="p">,</span> <span class="n">issueTypeId</span><span class="o">=</span><span class="n">create_meta_data</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">create_meta_data_fieldtypes</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Create meta data field types for Project </span><span class="si">{</span><span class="n">jira_project</span><span class="si">}</span><span class="s2"> Issue type </span><span class="si">{</span><span class="n">issue_type</span><span class="si">}</span><span class="s2">: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">create_meta_data_fieldtypes</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unable to retrieve create meta data for Project </span><span class="si">{</span><span class="n">jira_project</span><span class="si">}</span><span class="s2"> Issue type </span><span class="si">{</span><span class="n">issue_type</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># Convert response to be backwards compatible</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">value</span><span class="p">[</span><span class="s2">&quot;fieldId&quot;</span><span class="p">]:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">create_meta_data_fieldtypes</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span>
+        <span class="p">}</span></div></div>
 </pre></div>
 
            </div>
@@ -822,7 +897,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

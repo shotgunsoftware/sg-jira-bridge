@@ -6,10 +6,11 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Resources &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>Developer Resources &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -117,6 +118,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -140,7 +142,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -233,15 +235,15 @@ one did for the same event.</p>
 implement a list of Handlers to dispatch events to. The <code class="docutils literal notranslate"><span class="pre">handlers()</span></code> property
 must be overridden but additional parameters can be accepted by the class as
 well, to pass on to Handlers:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.syncer</span> <span class="kn">import</span> <span class="n">Syncer</span>
-<span class="kn">from</span> <span class="nn">.handlers</span> <span class="kn">import</span> <span class="n">TaskIssueHandler</span><span class="p">,</span> <span class="n">NoteCommentHandler</span><span class="p">,</span> <span class="n">EnableSyncingHandler</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">.syncer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Syncer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskIssueHandler</span><span class="p">,</span> <span class="n">NoteCommentHandler</span><span class="p">,</span> <span class="n">EnableSyncingHandler</span>
 
 
-<span class="k">class</span> <span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sync Flow Production Tracking Tasks as Jira Issues.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instatiate a new Task/Issue syncer for the given bridge.</span>
 
@@ -262,7 +264,7 @@ well, to pass on to Handlers:</p>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a list of :class:`~handlers.SyncHandler` instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -364,11 +366,11 @@ must be overridden <em>in addition to the ones required by</em>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.shotgun_session.</span></span><span class="sig-name descname"><span class="pre">ShotgunSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition"></a></dt>
-<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.8.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
 <p>Ensures all the values we get from Flow Production Tracking are unicode and not utf-8 encoded
 strings. Utf-8 encodes unicode values before sending them to Flow Production Tracking.</p>
-<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.5.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
+<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.8.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.current_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_user</span></span><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition"></a></dt>
@@ -388,6 +390,20 @@ strings. Utf-8 encodes unicode values before sending them to Flow Production Tra
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the Flow Production Tracking site was not correctly configured to
 be used with this bridge.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.assert_entity_type">
+<span class="sig-name descname"><span class="pre">assert_entity_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession.assert_entity_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.assert_entity_type" title="Permalink to this definition"></a></dt>
+<dd><p>Check if the given entity exists in Flow Production Tracking site.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entity_type</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Flow Production Tracking Entity type.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the entity does not exist.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -585,6 +601,20 @@ be used with this bridge.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.assert_field">
+<span class="sig-name descname"><span class="pre">assert_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.assert_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.assert_field" title="Permalink to this definition"></a></dt>
+<dd><p>Check if the given field exists in Jira site.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>field_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A Jira field name.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#RuntimeError" title="(in Python v3.9)"><strong>RuntimeError</strong></a> – if the entity does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.get_jira_issue_field_id">
 <span class="sig-name descname"><span class="pre">get_jira_issue_field_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.get_jira_issue_field_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.get_jira_issue_field_id" title="Permalink to this definition"></a></dt>
 <dd><p>Return the Jira field id for the Issue field with the given name.</p>
@@ -756,6 +786,12 @@ are Jira values.</p></li>
 given Issue.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.get_project_issue_type_fields">
+<span class="sig-name descname"><span class="pre">get_project_issue_type_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jira_project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issue_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.get_project_issue_type_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.get_project_issue_type_fields" title="Permalink to this definition"></a></dt>
+<dd><p>Get all the available Jira fields for a given Jira project and issue type.</p>
 </dd></dl>
 
 </dd></dl>
@@ -975,16 +1011,16 @@ the event to a Handler to process the event.</p>
 <p>This must be subclassed to implement a list of Handlers to dispatch
 events to. Additional parameters can be accepted as well to pass on
 to Handlers.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.syncer</span> <span class="kn">import</span> <span class="n">Syncer</span>
-<span class="kn">from</span> <span class="nn">.handlers</span> <span class="kn">import</span> <span class="n">TaskIssueHandler</span><span class="p">,</span> <span class="n">NoteCommentHandler</span><span class="p">,</span> <span class="n">EnableSyncingHandler</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">.handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnableSyncingHandler</span><span class="p">,</span> <span class="n">NoteCommentHandler</span><span class="p">,</span> <span class="n">TaskIssueHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.syncer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Syncer</span>
 
 
-<span class="k">class</span> <span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sync Flow Production Tracking Tasks as Jira Issues.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instatiate a new Task/Issue syncer for the given bridge.</span>
 
@@ -1004,7 +1040,7 @@ to Handlers.</p>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a list of :class:`~handlers.SyncHandler` instances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1019,11 +1055,11 @@ to Handlers.</p>
 <h4>Syncer<a class="headerlink" href="#syncer" title="Permalink to this heading"></a></h4>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.Syncer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.</span></span><span class="sig-name descname"><span class="pre">Syncer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Syncer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.</span></span><span class="sig-name descname"><span class="pre">Syncer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hook_class</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Syncer" title="Permalink to this definition"></a></dt>
 <dd><p>A class handling syncing between Flow Production Tracking and Jira.</p>
 <p>All Syncers should define a list of <a class="reference internal" href="#sg_jira.handlers.SyncHandler" title="sg_jira.handlers.SyncHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SyncHandler</span></code></a> which should reject
 or accept and process events.</p>
-<p>Instatiate a new syncer for the given bridge.</p>
+<p>Instantiate a new syncer for the given bridge.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1034,8 +1070,8 @@ or accept and process events.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.Syncer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Syncer.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>Instatiate a new syncer for the given bridge.</p>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hook_class</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/syncer.html#Syncer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.Syncer.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Instantiate a new syncer for the given bridge.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1062,6 +1098,12 @@ or accept and process events.</p>
 <dt class="sig sig-object py" id="sg_jira.Syncer.jira">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jira</span></span><a class="headerlink" href="#sg_jira.Syncer.jira" title="Permalink to this definition"></a></dt>
 <dd><p>Return a connected Jira handle.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sg_jira.Syncer.hook">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><a class="headerlink" href="#sg_jira.Syncer.hook" title="Permalink to this definition"></a></dt>
+<dd><p>Return the <code class="xref py py-class docutils literal notranslate"><span class="pre">Hook</span></code> instance used by this syncer.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1857,7 +1899,7 @@ for the continuous integration and run the following validations:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

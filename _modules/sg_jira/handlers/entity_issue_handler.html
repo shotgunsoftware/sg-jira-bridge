@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.handlers.entity_issue_handler &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>sg_jira.handlers.entity_issue_handler &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -62,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -85,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -134,15 +136,15 @@
 <span class="c1"># this software in either electronic or hard copy form.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
-<span class="kn">import</span> <span class="nn">jira</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jira</span>
 
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">InvalidShotgunValue</span><span class="p">,</span> <span class="n">InvalidJiraValue</span>
-<span class="kn">from</span> <span class="nn">.sync_handler</span> <span class="kn">import</span> <span class="n">SyncHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidJiraValue</span><span class="p">,</span> <span class="n">InvalidShotgunValue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.sync_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">SyncHandler</span>
 
 
-<div class="viewcode-block" id="EntityIssueHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler">[docs]</a><span class="k">class</span> <span class="nc">EntityIssueHandler</span><span class="p">(</span><span class="n">SyncHandler</span><span class="p">):</span>
+<div class="viewcode-block" id="EntityIssueHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">EntityIssueHandler</span><span class="p">(</span><span class="n">SyncHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for handlers syncing a Flow Production Tracking Entity to a Jira Issue.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -157,7 +159,7 @@
     <span class="c1"># https://regex101.com/r/E1ysHQ/1</span>
     <span class="n">ACCOUNT_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^[0-9a-f:-]</span><span class="si">{20}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="EntityIssueHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">):</span>
+<div class="viewcode-block" id="EntityIssueHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate an Entity Issue handler for the given syncer.</span>
 
@@ -175,7 +177,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_server_user_to_shotgun</span></div>
 
-<div class="viewcode-block" id="EntityIssueHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.accept_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="EntityIssueHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.accept_jira_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept or reject the given event for the given Jira resource.</span>
 
@@ -245,7 +247,7 @@
 
         <span class="k">return</span> <span class="kc">True</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_jira_issue_and_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue_key</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_issue_and_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue_key</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load Jira Issue with the given Jira key, validate it exists and is</span>
 <span class="sd">        syncing to the given Flow Production Tracking Entity.</span>
@@ -293,7 +295,7 @@
 
         <span class="k">return</span> <span class="n">jira_issue</span>
 
-    <span class="k">def</span> <span class="nf">_create_jira_issue_for_entity</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_jira_issue_for_entity</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">sg_entity</span><span class="p">,</span>
         <span class="n">jira_project</span><span class="p">,</span>
@@ -358,7 +360,7 @@
             <span class="n">data</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_jira_issue_field_sync_value</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_issue_field_sync_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">jira_project</span><span class="p">,</span>
         <span class="n">jira_issue</span><span class="p">,</span>
@@ -491,7 +493,7 @@
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">jira_field</span><span class="p">,</span> <span class="n">jira_value</span>
 
-    <span class="k">def</span> <span class="nf">_get_jira_issue_field_for_shotgun_field</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_issue_field_for_shotgun_field</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity_type</span><span class="p">,</span> <span class="n">shotgun_field</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -502,7 +504,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="k">def</span> <span class="nf">_get_jira_value_for_shotgun_list_changes</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_value_for_shotgun_list_changes</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">jira_project</span><span class="p">,</span>
         <span class="n">jira_issue</span><span class="p">,</span>
@@ -613,7 +615,7 @@
         <span class="c1"># Return the modified current value</span>
         <span class="k">return</span> <span class="n">current_value</span>
 
-    <span class="k">def</span> <span class="nf">_get_jira_value_for_shotgun_value</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_value_for_shotgun_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">jira_project</span><span class="p">,</span>
         <span class="n">jira_issue</span><span class="p">,</span>
@@ -750,7 +752,7 @@
 
         <span class="k">return</span> <span class="n">jira_value</span>
 
-    <span class="k">def</span> <span class="nf">_sync_shotgun_status_to_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">shotgun_status</span><span class="p">,</span> <span class="n">comment</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sync_shotgun_status_to_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">shotgun_status</span><span class="p">,</span> <span class="n">comment</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the status of the Jira Issue based on the given Flow Production Tracking status.</span>
 
@@ -769,7 +771,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">set_jira_issue_status</span><span class="p">(</span><span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_status</span><span class="p">,</span> <span class="n">comment</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_sync_shotgun_cced_changes_to_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">removed</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sync_shotgun_cced_changes_to_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">removed</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the given Jira Issue watchers from the given Flow Production Tracking changes.</span>
 
@@ -818,7 +820,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">add_watcher</span><span class="p">(</span><span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">accountId</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_supported_shotgun_fields_for_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_supported_shotgun_fields_for_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the list of fields this handler can process for a Jira event.</span>
 
@@ -828,7 +830,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-<div class="viewcode-block" id="EntityIssueHandler.process_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.process_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="EntityIssueHandler.process_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.process_jira_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">process_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process the given Jira event for the given Jira resource.</span>
 
@@ -944,7 +946,7 @@
 
         <span class="k">return</span> <span class="kc">False</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_shotgun_entity_field_sync_value</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_shotgun_entity_field_sync_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_field_id</span><span class="p">,</span> <span class="n">change</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1029,7 +1031,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">shotgun_value</span>
 
-    <span class="k">def</span> <span class="nf">_get_shotgun_entity_field_for_issue_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_field_id</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_shotgun_entity_field_for_issue_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_field_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the Flow Production Tracking field name to use to sync the given Jira Issue field.</span>
 
@@ -1040,7 +1042,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="k">def</span> <span class="nf">_get_shotgun_assignment_from_jira_issue_change</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_shotgun_assignment_from_jira_issue_change</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">shotgun_entity</span><span class="p">,</span>
         <span class="n">shotgun_field</span><span class="p">,</span>
@@ -1164,7 +1166,7 @@
                 <span class="n">current_sg_assignment</span> <span class="o">=</span> <span class="n">sg_user</span>
         <span class="k">return</span> <span class="n">current_sg_assignment</span>
 
-    <span class="k">def</span> <span class="nf">_jira_server_user_to_shotgun</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_jira_server_user_to_shotgun</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1208,7 +1210,7 @@
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">sg_user</span>
 
-    <span class="k">def</span> <span class="nf">_jira_cloud_user_to_shotgun</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_jira_cloud_user_to_shotgun</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1277,7 +1279,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

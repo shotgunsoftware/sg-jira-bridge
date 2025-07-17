@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.errors &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>sg_jira.errors &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -62,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -85,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -135,13 +137,13 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="InvalidSyncValue"><a class="viewcode-back" href="../../developer.html#sg_jira.errors.InvalidSyncValue">[docs]</a><span class="k">class</span> <span class="nc">InvalidSyncValue</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidSyncValue"><a class="viewcode-back" href="../../developer.html#sg_jira.errors.InvalidSyncValue">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">InvalidSyncValue</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for exceptions raised when a value can&#39;t be translated to a valid</span>
 <span class="sd">    value for a given field.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param str field: The Jira or PTR field for which the exception was raised.</span>
 <span class="sd">        :param value: The Jira or PTR value for which the exception was raised.</span>
@@ -151,21 +153,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the field for which the exception was raised.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_field</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the value for which the exception was raised.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span></div>
 
 
-<div class="viewcode-block" id="InvalidShotgunValue"><a class="viewcode-back" href="../../developer.html#sg_jira.errors.InvalidShotgunValue">[docs]</a><span class="k">class</span> <span class="nc">InvalidShotgunValue</span><span class="p">(</span><span class="n">InvalidSyncValue</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidShotgunValue"><a class="viewcode-back" href="../../developer.html#sg_jira.errors.InvalidShotgunValue">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">InvalidShotgunValue</span><span class="p">(</span><span class="n">InvalidSyncValue</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An exception raised when a Flow Production Tracking value can&#39;t be translated to a valid</span>
 <span class="sd">    Jira value for a given field.</span>
@@ -174,7 +176,7 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="InvalidJiraValue"><a class="viewcode-back" href="../../developer.html#sg_jira.errors.InvalidJiraValue">[docs]</a><span class="k">class</span> <span class="nc">InvalidJiraValue</span><span class="p">(</span><span class="n">InvalidSyncValue</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidJiraValue"><a class="viewcode-back" href="../../developer.html#sg_jira.errors.InvalidJiraValue">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">InvalidJiraValue</span><span class="p">(</span><span class="n">InvalidSyncValue</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An exception raised when a Jira value can&#39;t be translated to a valid</span>
 <span class="sd">    Flow Production Tracking value for a given field.</span>
@@ -190,7 +192,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

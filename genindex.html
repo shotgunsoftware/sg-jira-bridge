@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>Index &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -62,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -85,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -181,8 +183,6 @@
         <li><a href="developer.html#sg_jira.Syncer.accept_jira_event">(sg_jira.Syncer method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer.html#sg_jira.handlers.EnableSyncingHandler.accept_shotgun_event">accept_shotgun_event() (sg_jira.handlers.EnableSyncingHandler method)</a>
 
       <ul>
@@ -193,8 +193,16 @@
         <li><a href="developer.html#sg_jira.Syncer.accept_shotgun_event">(sg_jira.Syncer method)</a>
 </li>
       </ul></li>
-      <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.assert_field">assert_field() (sg_jira.shotgun_session.ShotgunSession method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.assert_entity_type">assert_entity_type() (sg_jira.shotgun_session.ShotgunSession method)</a>
 </li>
+      <li><a href="developer.html#sg_jira.jira_session.JiraSession.assert_field">assert_field() (sg_jira.jira_session.JiraSession method)</a>
+
+      <ul>
+        <li><a href="developer.html#sg_jira.shotgun_session.ShotgunSession.assert_field">(sg_jira.shotgun_session.ShotgunSession method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -305,6 +313,8 @@
         <li><a href="developer.html#sg_jira.handlers.SyncHandler.get_jira_user">(sg_jira.handlers.SyncHandler method)</a>
 </li>
       </ul></li>
+      <li><a href="developer.html#sg_jira.jira_session.JiraSession.get_project_issue_type_fields">get_project_issue_type_fields() (sg_jira.jira_session.JiraSession method)</a>
+</li>
       <li><a href="developer.html#sg_jira.handlers.EnableSyncingHandler.get_sg_user">get_sg_user() (sg_jira.handlers.EnableSyncingHandler method)</a>
 
       <ul>
@@ -322,6 +332,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer.html#sg_jira.Syncer.handlers">handlers (sg_jira.Syncer property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="developer.html#sg_jira.Syncer.hook">hook (sg_jira.Syncer property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -526,7 +540,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

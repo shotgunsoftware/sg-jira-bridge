@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>sg_jira.handlers.sync_handler &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -62,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -85,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -134,15 +136,15 @@
 <span class="c1"># this software in either electronic or hard copy form.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
-<span class="kn">from</span> <span class="nn">jira</span> <span class="kn">import</span> <span class="n">JIRAError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jira</span><span class="w"> </span><span class="kn">import</span> <span class="n">JIRAError</span>
 
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">InvalidJiraValue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidJiraValue</span>
 
 
-<div class="viewcode-block" id="SyncHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler">[docs]</a><span class="k">class</span> <span class="nc">SyncHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">SyncHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class to handle a particular sync between Flow Production Tracking and Jira.</span>
 
@@ -163,7 +165,7 @@
     <span class="c1"># https://regex101.com/r/E1ysHQ/1</span>
     <span class="n">ACCOUNT_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^[0-9a-f:-]</span><span class="si">{20}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SyncHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate a handler for the given syncer.</span>
 
@@ -172,35 +174,39 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span> <span class="o">=</span> <span class="n">syncer</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the syncer logger.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">_logger</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_bridge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bridge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~sg_jira.Bridge` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">bridge</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~sg_jira.shotgun_session.ShotgunSession` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">shotgun</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a connected :class:`~sg_jira.jira_session.JiraSession` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">jira</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_sg_jira_status_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">hook</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sg_jira_status_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Needs to be re-implemented in deriving classes and return a dictionary</span>
 <span class="sd">        where keys are Flow Production Tracking status short codes and values are Jira status</span>
@@ -208,7 +214,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-<div class="viewcode-block" id="SyncHandler.get_jira_project"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_project">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_key</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.get_jira_project"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_project">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_jira_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_key</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve the Jira Project with the given key, if any.</span>
 
@@ -216,7 +222,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncer</span><span class="o">.</span><span class="n">get_jira_project</span><span class="p">(</span><span class="n">project_key</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SyncHandler.get_jira_issue"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_issue">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_issue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_key</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.get_jira_issue"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_issue">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_jira_issue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_key</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve the Jira Issue with the given key, if any.</span>
 
@@ -243,7 +249,7 @@
                 <span class="k">raise</span>
         <span class="k">return</span> <span class="n">jira_issue</span></div>
 
-<div class="viewcode-block" id="SyncHandler.get_jira_user"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_jira_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.get_jira_user"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_jira_user">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_jira_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">jira_project</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given an email address, find the associated Jira User in the given Jira Project.</span>
 
@@ -272,7 +278,7 @@
 
         <span class="k">return</span> <span class="n">reporter</span></div>
 
-<div class="viewcode-block" id="SyncHandler.get_sg_user"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_sg_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_sg_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.get_sg_user"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.get_sg_user">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_sg_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resolve the Flow Production Tracking user associated to the JIRA user passed in.</span>
 
@@ -332,7 +338,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">sg_user</span></div>
 
-<div class="viewcode-block" id="SyncHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.setup"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.setup">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method can be re-implemented in deriving classes to Check the Jira</span>
 <span class="sd">        and Flow Production Tracking site, ensure that the sync can safely happen and cache any</span>
@@ -342,7 +348,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="SyncHandler.accept_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.accept_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.accept_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.accept_shotgun_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">accept_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept or reject the given event for the given Flow Production Tracking Entity.</span>
 
@@ -352,7 +358,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-<div class="viewcode-block" id="SyncHandler.process_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.process_shotgun_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.process_shotgun_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.process_shotgun_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">process_shotgun_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process the given Flow Production Tracking event for the given Flow Production Tracking Entity</span>
 
@@ -366,7 +372,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-<div class="viewcode-block" id="SyncHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.accept_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.accept_jira_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accept or reject the given event for the given Jira resource.</span>
 
@@ -379,7 +385,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-<div class="viewcode-block" id="SyncHandler.process_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.process_jira_event">[docs]</a>    <span class="k">def</span> <span class="nf">process_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<div class="viewcode-block" id="SyncHandler.process_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.SyncHandler.process_jira_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">process_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process the given Jira event for the given Jira resource.</span>
 
@@ -393,7 +399,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_shotgun_value_from_jira_change</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_shotgun_value_from_jira_change</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">shotgun_entity</span><span class="p">,</span>
         <span class="n">shotgun_field</span><span class="p">,</span>
@@ -630,7 +636,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

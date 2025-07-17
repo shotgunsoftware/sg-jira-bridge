@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.utils &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>sg_jira.utils &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -62,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -85,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -133,10 +135,10 @@
 <span class="c1"># provided at the time of installation or download, or which otherwise accompanies</span>
 <span class="c1"># this software in either electronic or hard copy form.</span>
 <span class="c1">#</span>
-<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">six</span>
 
 
-<div class="viewcode-block" id="utf8_to_unicode"><a class="viewcode-back" href="../../developer.html#sg_jira.utils.utf8_to_unicode">[docs]</a><span class="k">def</span> <span class="nf">utf8_to_unicode</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="utf8_to_unicode"><a class="viewcode-back" href="../../developer.html#sg_jira.utils.utf8_to_unicode">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">utf8_to_unicode</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert any string in the given input to unicode. Strings are expected to be</span>
 <span class="sd">    in utf-8 encoding.</span>
@@ -189,7 +191,7 @@
     <span class="k">return</span> <span class="n">value</span></div>
 
 
-<div class="viewcode-block" id="unicode_to_utf8"><a class="viewcode-back" href="../../developer.html#sg_jira.utils.unicode_to_utf8">[docs]</a><span class="k">def</span> <span class="nf">unicode_to_utf8</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="unicode_to_utf8"><a class="viewcode-back" href="../../developer.html#sg_jira.utils.unicode_to_utf8">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">unicode_to_utf8</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert any unicode in the given input to an utf8 encoded string value.</span>
 
@@ -250,7 +252,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

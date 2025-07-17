@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.shotgun_session &mdash; sg-jira-bridge v0.5.2 documentation</title>
+  <title>sg_jira.shotgun_session &mdash; sg-jira-bridge v0.6.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -62,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer.html">Developer Resources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../services.html">Installing as a Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generic_syncer.html">Generic Syncer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../known_issues.html">Known Issues &amp; Compatibility Notes</a></li>
 </ul>
@@ -85,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.5.2.<br>
+    <b>sg-jira-bridge</b> v0.6.0.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -134,17 +136,17 @@
 <span class="c1"># this software in either electronic or hard copy form.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">shotgun_api3</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="n">SG_ENTITY_SPECIAL_NAME_FIELDS</span>
-<span class="kn">from</span> <span class="nn">.constants</span> <span class="kn">import</span> <span class="n">SHOTGUN_JIRA_ID_FIELD</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">utf8_to_unicode</span><span class="p">,</span> <span class="n">unicode_to_utf8</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shotgun_api3</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">SG_ENTITY_SPECIAL_NAME_FIELDS</span><span class="p">,</span> <span class="n">SHOTGUN_JIRA_ID_FIELD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">unicode_to_utf8</span><span class="p">,</span> <span class="n">utf8_to_unicode</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ShotgunSession"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession">[docs]</a><span class="k">class</span> <span class="nc">ShotgunSession</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">ShotgunSession</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wraps a :class:`shotgun_api3.shotgun.Shotgun` instance and provide some helpers and</span>
 <span class="sd">    session caches.</span>
@@ -175,7 +177,7 @@
         <span class="s2">&quot;share_thumbnail&quot;</span><span class="p">,</span>
     <span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">script_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">script_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate a :class:`shotgun_api3.shotgun.Shotgun` with the sanitized parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -190,10 +192,12 @@
             <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">base_url</span><span class="p">),</span>
             <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">script_name</span><span class="p">),</span>
             <span class="o">*</span><span class="n">safe_args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">safe_kwargs</span>
+            <span class="o">**</span><span class="n">safe_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_entity_types</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># will be used to store FPT entities list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># will be used to store FPT fields by entity type</span>
+
         <span class="c1"># Retrieve our current login, this does not seem to be available from</span>
         <span class="c1"># the connection?</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
@@ -202,7 +206,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connected to </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">base_url</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the Flow Production Tracking user used for the connection.</span>
 
@@ -210,7 +214,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_user</span>
 
-<div class="viewcode-block" id="ShotgunSession.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.setup"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.setup">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check the Flow Production Tracking site and cache site level values.</span>
 
@@ -219,7 +223,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_field</span><span class="p">(</span><span class="s2">&quot;Project&quot;</span><span class="p">,</span> <span class="n">SHOTGUN_JIRA_ID_FIELD</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.assert_field"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.assert_field">[docs]</a>    <span class="k">def</span> <span class="nf">assert_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_type</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.assert_entity_type"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.assert_entity_type">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">assert_entity_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the given entity exists in Flow Production Tracking site.</span>
+
+<span class="sd">        :param str entity_type: A Flow Production Tracking Entity type.</span>
+<span class="sd">        :raises RuntimeError: if the entity does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_entity_types</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_entity_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">schema_entity_read</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">entity_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_entity_types</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing </span><span class="si">{</span><span class="n">entity_type</span><span class="si">}</span><span class="s2"> entity type in the FPT schema.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ShotgunSession.assert_field"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.assert_field">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">assert_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_type</span><span class="p">,</span> <span class="n">check_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if the given field with the given type exists for the given Flow Production Tracking</span>
 <span class="sd">        Entity type.</span>
@@ -241,7 +257,7 @@
                     <span class="n">field_name</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">field</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">field_type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field_type</span> <span class="ow">and</span> <span class="n">field</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">field_type</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Invalid type &#39;</span><span class="si">%s</span><span class="s2">&#39; for Shotgun field </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">, it must be &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span>
                 <span class="o">%</span> <span class="p">(</span><span class="n">field</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_type</span><span class="p">)</span>
@@ -254,7 +270,7 @@
                     <span class="o">%</span> <span class="p">(</span><span class="n">field</span><span class="p">[</span><span class="s2">&quot;unique&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">)</span>
                 <span class="p">)</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.get_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_field_schema">[docs]</a>    <span class="k">def</span> <span class="nf">get_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.get_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_field_schema">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the Flow Production Tracking schema for the given Entity field.</span>
 
@@ -272,7 +288,7 @@
         <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">field</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.clear_cached_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema">[docs]</a>    <span class="k">def</span> <span class="nf">clear_cached_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.clear_cached_field_schema"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.clear_cached_field_schema">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">clear_cached_field_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clear all cached Flow Production Tracking schema or just the cached schema for the given</span>
 <span class="sd">        Flow Production Tracking Entity type.</span>
@@ -285,10 +301,11 @@
                 <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span><span class="p">[</span><span class="n">entity_type</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Clearing all cached Shotgun schemas&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span> <span class="o">=</span> <span class="p">{}</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_entity_types</span> <span class="o">=</span> <span class="p">[]</span></div>
 
 <div class="viewcode-block" id="ShotgunSession.get_entity_name_field"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_entity_name_field">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_entity_name_field</span><span class="p">(</span><span class="n">entity_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entity_name_field</span><span class="p">(</span><span class="n">entity_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the Flow Production Tracking name field to use for the specified entity type.</span>
 
@@ -298,7 +315,7 @@
         <span class="c1"># Deal with some known special cases and assume &quot;code&quot; for anything else.</span>
         <span class="k">return</span> <span class="n">SG_ENTITY_SPECIAL_NAME_FIELDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="s2">&quot;code&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.is_project_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.is_project_entity">[docs]</a>    <span class="k">def</span> <span class="nf">is_project_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.is_project_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.is_project_entity">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_project_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return `True` if the given Flow Production Tracking Entity type is a project Entity,</span>
 <span class="sd">        that is an Entity linked to a Project, `False` if it is a non-project</span>
@@ -320,7 +337,7 @@
         <span class="c1"># standard field.</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.consolidate_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.consolidate_entity">[docs]</a>    <span class="k">def</span> <span class="nf">consolidate_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">retired_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.consolidate_entity"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.consolidate_entity">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">consolidate_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">retired_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Consolidate the given Flow Production Tracking Entity: collect additional field values,</span>
 <span class="sd">        ensure the Entity name is available under a &quot;name&quot; key.</span>
@@ -375,7 +392,7 @@
             <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="n">name_field</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">shotgun_entity</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.match_entity_by_name"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.match_entity_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">match_entity_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">entity_types</span><span class="p">,</span> <span class="n">shotgun_project</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.match_entity_by_name"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.match_entity_by_name">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">match_entity_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">entity_types</span><span class="p">,</span> <span class="n">shotgun_project</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve a Flow Production Tracking Entity with the given name from the given list of</span>
 <span class="sd">        Entity types.</span>
@@ -403,7 +420,7 @@
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span><span class="n">sg_value</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="ShotgunSession.get_entity_page_url"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_entity_page_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_entity_page_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
+<div class="viewcode-block" id="ShotgunSession.get_entity_page_url"><a class="viewcode-back" href="../../developer.html#sg_jira.shotgun_session.ShotgunSession.get_entity_page_url">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_entity_page_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the Flow Production Tracking page url for the given Entity.</span>
 
@@ -416,7 +433,7 @@
             <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
         <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_wrapped_shotgun_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_wrapped_shotgun_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a wrapped Flow Production Tracking method which encodes all parameters and decodes</span>
 <span class="sd">        the result before returning it.</span>
@@ -425,7 +442,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">method_to_wrap</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="p">,</span> <span class="n">method_name</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="n">safe_args</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
             <span class="n">safe_kwargs</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">method_to_wrap</span><span class="p">(</span><span class="o">*</span><span class="n">safe_args</span><span class="p">,</span> <span class="o">**</span><span class="n">safe_kwargs</span><span class="p">)</span>
@@ -433,7 +450,7 @@
 
         <span class="k">return</span> <span class="n">wrapped</span>
 
-    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Called when an attribute can&#39;t be found on this class instance.</span>
 
@@ -455,7 +472,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    
