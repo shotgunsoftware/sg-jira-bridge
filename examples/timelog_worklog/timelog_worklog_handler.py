@@ -9,12 +9,13 @@ import datetime
 import json
 
 from jira import JIRAError
-from sg_jira.handlers import SyncHandler
+
 from sg_jira.constants import (
     SHOTGUN_JIRA_ID_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
     TIMELOG_FIELDS_MAPPING,
 )
+from sg_jira.handlers import SyncHandler
 
 
 class TimelogWorklogHandler(SyncHandler):

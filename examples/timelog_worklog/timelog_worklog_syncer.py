@@ -6,7 +6,8 @@
 #
 
 from sg_jira import Syncer
-from sg_jira.handlers import TaskIssueHandler, NoteCommentHandler, EnableSyncingHandler
+from sg_jira.handlers import EnableSyncingHandler, NoteCommentHandler, TaskIssueHandler
+
 from .timelog_worklog_handler import TimelogWorklogHandler
 
 

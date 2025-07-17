@@ -5,15 +5,15 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
-import logging
 import datetime
-import requests
+import logging
+import os
+
 import mock
-
+import requests
 from shotgun_api3.lib import mockgun
-
 from test_base import TestBase
+
 from triggers import sg_jira_event_trigger
 
 logger = logging.getLogger(__name__)

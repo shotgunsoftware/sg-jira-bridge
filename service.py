@@ -5,12 +5,13 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
-import logging
-import time
-from daemonize import Daemonize
 import argparse
+import logging
+import os
 import signal
+import time
+
+from daemonize import Daemonize
 
 DESCRIPTION = """
 Run the PTR Jira web app as a Linux service.
