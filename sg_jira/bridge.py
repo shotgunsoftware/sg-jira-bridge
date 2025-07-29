@@ -14,6 +14,7 @@ import logging.config
 import os
 import sys
 import threading
+import urllib.parse
 import uuid
 
 from .constants import (
