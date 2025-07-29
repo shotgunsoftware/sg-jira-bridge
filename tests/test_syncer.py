@@ -7,8 +7,8 @@
 #
 
 import os
+import unittest.mock as mock
 
-import mock
 from mock_jira import JIRA_PROJECT, JIRA_PROJECT_KEY, JIRA_USER, JIRA_USER_2
 from test_sync_base import TestSyncBase
 

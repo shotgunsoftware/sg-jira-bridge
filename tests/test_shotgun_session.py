@@ -6,8 +6,8 @@
 #
 
 import os
+import unittest.mock as mock
 
-import mock
 from mock_shotgun import SG_ASSET, SG_RETIRED_TIMELOG, SG_TASK, SG_USER
 from shotgun_api3.lib import mockgun
 from test_base import TestBase

@@ -5,7 +5,8 @@
 # this software in either electronic or hard copy form.
 #
 
-import mock
+import unittest.mock as mock
+
 from mock_jira import JIRA_PROJECT, JIRA_PROJECT_KEY, JIRA_USER
 from mock_shotgun import SG_USER
 from test_sync_base import TestSyncBase
