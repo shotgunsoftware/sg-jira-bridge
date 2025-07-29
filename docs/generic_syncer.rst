@@ -459,7 +459,7 @@ Here is an example of how you can modify the behavior of the method returning th
                 return None
 
             else:
-                return super(CustomJiraHook, self).get_jira_value_from_sg_value(sg_value, jira_issue, jira_field, jira_field_properties, skip_array_check)
+                return super().get_jira_value_from_sg_value(sg_value, jira_issue, jira_field, jira_field_properties, skip_array_check)
 
 .. code-block:: python
     :caption: How to reference the hook in the settings

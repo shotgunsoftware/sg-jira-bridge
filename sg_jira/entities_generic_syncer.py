@@ -25,7 +25,7 @@ class EntitiesGenericSyncer(Syncer):
         """
 
         # Call base class init with all parameters we do not handle specifically
-        super(EntitiesGenericSyncer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # we need one and only one handler here as everything will be handled within it
         self._entities_handler = EntitiesGenericHandler(
