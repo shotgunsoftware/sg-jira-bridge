@@ -6,9 +6,13 @@
 #
 
 import copy
-from jira.resources import Project as JiraProject
-from jira.resources import IssueType, Issue, User, Comment, IssueLink, Worklog
+import re
+
+import jira
 from jira import JIRAError
+from jira.resources import Comment, Issue, IssueLink, IssueType
+from jira.resources import Project as JiraProject
+from jira.resources import Status, User, Worklog
 
 # Faked Jira Project, Issue, change log and event
 JIRA_PROJECT_KEY = "UTest"
@@ -108,6 +112,30 @@ ISSUE_FIELDS = {
             "type": "string",
         },
     },
+    "customfield_11503": {
+        "hasDefaultValue": False,
+        "key": "customfield_11503",
+        "name": "Shotgun URL",
+        "operations": ["set"],
+        "required": False,
+        "schema": {
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textfield",
+            "customId": 11503,
+            "type": "string",
+        },
+    },
+    "customfield_11504": {
+        "hasDefaultValue": False,
+        "key": "customfield_11504",
+        "name": "Sync in FPTR",
+        "operations": ["set"],
+        "required": False,
+        "schema": {
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 11504,
+            "type": "option",
+        },
+    },
     "description": {
         "hasDefaultValue": False,
         "key": "description",
@@ -161,6 +189,14 @@ ISSUE_FIELDS = {
         "operations": ["add", "set", "remove"],
         "required": False,
         "schema": {"items": "string", "system": "labels", "type": "array"},
+    },
+    "parent": {
+        "required": False,
+        "schema": {"system": "parent", "type": "issuelink"},
+        "name": "Parent",
+        "key": "parent",
+        "hasDefaultValue": False,
+        "operations": ["set"],
     },
     "priority": {
         "allowedValues": [
@@ -371,6 +407,53 @@ RESOURCE_OPTIONS = {
     "rest_path": "api",
 }
 
+ISSUE_CREATED_PAYLOAD = {
+    "webhookEvent": "jira:issue_created",
+    "changelog": {"items": {}},
+    "issue": {"id": "FAKED-01"},
+}
+
+ISSUE_UPDATED_PAYLOAD = {
+    "webhookEvent": "jira:issue_updated",
+    "changelog": {
+        "items": [
+            {
+                "field": "description",
+                "fieldId": "description",
+            },
+        ]
+    },
+    "issue": {"id": "FAKED-01"},
+}
+
+WORKLOG_PAYLOAD = {
+    "webhookEvent": "worklog_deleted",
+    "worklog": {
+        "id": "100001",
+        "issueId": "FAKED-01",
+        "author": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+        "updateAuthor": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+    },
+}
+
+COMMENT_PAYLOAD = {
+    "webhookEvent": "comment_created",
+    "comment": {
+        "id": "100001",
+        "author": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+        "updateAuthor": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+    },
+    "issue": {"id": "FAKED-01", "key": "FAKED-01"},
+}
+
 
 class MockedSession(object):
     def put(self, *args, **kwargs):
@@ -384,6 +467,7 @@ class MockedIssue(Issue):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._worklogs = []
+        self._comments = []
 
     def update(self, fields, *args, **kwargs):
         raw = self.raw
@@ -392,13 +476,15 @@ class MockedIssue(Issue):
 
 
 class MockedComment(Comment):
-    def update(self, fields, *args, **kwargs):
+    def update(self, *args, **kwargs):
         raw = self.raw
-        raw["fields"].update(fields)
+        for k in kwargs:
+            raw[k] = kwargs[k]
         self._parse_raw(raw)
 
-    def delete(self):
-        pass
+    def delete(self, *args, **kwargs):
+        """Mocked Jira method to delete a comment"""
+        self.issue._comments.remove(self)
 
 
 class MockedWorklog(Worklog):
@@ -406,6 +492,9 @@ class MockedWorklog(Worklog):
         """Mocked Jira method to update a worklog"""
         raw = self.raw
         for k in kwargs:
+            if k == "fields":
+                for v in kwargs[k]:
+                    raw[v] = kwargs[k][v]
             raw[k] = kwargs[k]
         self._parse_raw(raw)
 
@@ -878,6 +967,21 @@ class MockedJira(object):
                     "customId": 11517,
                     "type": "string",
                     "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
+                },
+            },
+            {
+                "name": "Sync In FPTR",
+                "searchable": True,
+                "navigable": True,
+                "custom": True,
+                "key": "customfield_11504",
+                "clauseNames": ["cf[11504]", "Sync In FPTR"],
+                "orderable": True,
+                "id": "customfield_11504",
+                "schema": {
+                    "customId": 11504,
+                    "type": "option",
+                    "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
                 },
             },
             {
@@ -1567,6 +1671,16 @@ class MockedJira(object):
                 "id": "votes",
                 "schema": {"type": "votes", "system": "votes"},
             },
+            {
+                "name": "Parent",
+                "searchable": False,
+                "navigable": True,
+                "custom": False,
+                "key": "parent",
+                "clauseNames": ["parent"],
+                "orderable": False,
+                "id": "parent",
+            },
         ]
 
     def create_issue(self, fields, *args, **kwargs):
@@ -1640,24 +1754,41 @@ class MockedJira(object):
         """
         Mocked Jira method.
         """
+        if isinstance(issue_key, jira.resources.Issue):
+            issue_key = issue_key.key
+        if issue_key not in self._issues:
+            raise jira.JIRAError(
+                text="Unable to find Issue %s" % issue_key, status_code=404
+            )
         return self._issues.get(issue_key)
 
     def add_comment(self, issue, body, *args, **kwargs):
         """
         Mocked Jira method.
         """
-        return MockedComment(None, None, raw={"issue": issue, "body": body, "id": 1})
+        if not isinstance(issue, jira.resources.Issue):
+            issue = self.issue(issue)
+        raw = {"issue": issue, "id": str(len(issue._comments) + 1), "body": body}
+        for k in kwargs:
+            raw[k] = kwargs[k]
+        comment = MockedComment(None, None, raw=raw)
+        issue._comments.append(comment)
+        return comment
 
-    def comment(self, issue, *args, **kwargs):
+    def comment(self, issue_key, comment_id, *args, **kwargs):
         """
         Mocked Jira method.
         """
-        return MockedComment(
-            None, None, raw={"issue": issue, "body": "Totally faked", "id": 1}
-        )
+        issue = self.issue(issue_key)
+        for c in issue._comments:
+            if c.id == comment_id:
+                return c
+        return None
 
     def add_worklog(self, issue, *args, **kwargs):
         """Mocked Jira method to add a worklog"""
+        if not isinstance(issue, jira.resources.Issue):
+            issue = self.issue(issue)
         raw = {"issue": issue, "id": str(len(issue._worklogs) + 1)}
         for k in kwargs:
             raw[k] = kwargs[k]
@@ -1667,7 +1798,11 @@ class MockedJira(object):
 
     def worklog(self, issue_key, worklog_key):
         """Mocked Jira method to retrieve a worklog associated with an issue"""
-        issue = self.issue(issue_key)
+        issue = (
+            self.issue(issue_key)
+            if not isinstance(issue_key, jira.resources.Issue)
+            else issue_key
+        )
         for w in issue._worklogs:
             if w.id == worklog_key:
                 return w
@@ -1677,6 +1812,11 @@ class MockedJira(object):
         """Mocked Jira method to retrieve all the worklogs associated with an issue"""
         issue = self.issue(issue_key)
         return issue._worklogs
+
+    def comments(self, issue_key):
+        """Mocked Jira method to retrieve all the comments associated with an issue"""
+        issue = self.issue(issue_key)
+        return issue._comments
 
     def transitions(self, *args, **kwargs):
         """
@@ -1690,8 +1830,12 @@ class MockedJira(object):
             }
         ]
 
-    def transition_issue(self, *args, **kwargs):
-        return ""
+    def transition_issue(self, jira_issue, transition_id, *args, **kwargs):
+        for t in self.transitions():
+            if t["id"] == transition_id:
+                jira_issue.update(
+                    fields={"status": Status(None, None, raw={"name": t["to"]["name"]})}
+                )
 
     def search_assignable_users_for_issues(
         self, username=None, query=None, startAt=0, maxResults=20, *args, **kwargs
@@ -1734,3 +1878,13 @@ class MockedJira(object):
         if id == JIRA_USER_2[payload]:
             return User(options, None, JIRA_USER_2)
         return None
+
+    def search_issues(self, jql_str):
+        """
+        Mocked Jira method
+        """
+
+        result = re.search(r"parent IN \(\'([\w-]+)\'\)", jql_str)
+
+        if result:
+            return [self.issue(result.group(1))]

@@ -9,8 +9,8 @@ DESCRIPTION = """
 A script to generate Flow Production Tracking schema for Mockgun.
 """
 import argparse
-import os
 import getpass
+import os
 
 from shotgun_api3 import Shotgun
 from shotgun_api3.lib import mockgun

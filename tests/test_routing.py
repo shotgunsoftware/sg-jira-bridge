@@ -9,11 +9,11 @@
 
 import os
 import json
-import mock
 import logging
 
 from io import BytesIO
 from test_base import TestBase
+
 import webapp
 
 # Raw POST request template

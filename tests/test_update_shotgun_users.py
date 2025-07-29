@@ -7,13 +7,12 @@
 #
 import os
 
-from shotgun_api3.lib import mockgun
-
-from update_shotgun_users import sync_jira_users_into_shotgun
-from sg_jira.jira_session import JiraSession
-
 from mock_jira import JIRA_PROJECT, JIRA_USER, JIRA_USER_2
+from shotgun_api3.lib import mockgun
 from test_base import TestBase
+
+from sg_jira.jira_session import JiraSession
+from update_shotgun_users import sync_jira_users_into_shotgun
 
 
 class TestUpdateShotgunUsers(TestBase):

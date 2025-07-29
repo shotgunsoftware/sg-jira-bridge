@@ -8,10 +8,10 @@
 import os
 import unittest
 
+from mock_jira import MockedJira
 from shotgun_api3.lib import mockgun
 
 from sg_jira.jira_session import JiraSession
-from mock_jira import MockedJira
 
 
 class TestBase(unittest.TestCase):

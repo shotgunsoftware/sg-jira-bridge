@@ -7,17 +7,18 @@
 """
 Flow Production Tracking Jira sync settings
 """
+import logging
 import os
 import sys
-import logging
-
-# Documentation for these settings are available at
-# https://developer.shotgridsoftware.com/sg-jira-bridge/settings.html
 
 # Allow users to define their sensitive data in a .env file and
 # load it in environment variables with python-dotenv.
 # https://pypi.org/project/python-dotenv/
 from dotenv import load_dotenv
+
+# Documentation for these settings are available at
+# https://developer.shotgridsoftware.com/sg-jira-bridge/settings.html
+
 
 load_dotenv(override=True)
 
@@ -73,12 +74,12 @@ LOGGING = {
     "handlers": {
         # Print out any message to stdout
         "console": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "standard"
         },
         "file": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "standard",
             # this location should be updated to where you store logs
@@ -131,6 +132,67 @@ SYNC = {
         "settings": {
             "log_level": logging.DEBUG
         },
-    }
+    },
+    "entities": {
+        "syncer": "sg_jira.EntitiesGenericSyncer",
+        "settings": {
+            "entity_mapping": [
+                {
+                    "sg_entity": "Task",
+                    "jira_issue_type": "Task",
+                    "field_mapping": [
+                        {
+                            "sg_field": "content",
+                            "jira_field": "summary",
+                        },
+                        {
+                            "sg_field": "sg_description",
+                            "jira_field": "description",
+                        },
+                        {
+                            "sg_field": "task_assignees",
+                            "jira_field": "assignee",
+                        },
+                        {
+                            "sg_field": "tags",
+                            "jira_field": "labels",
+                        },
+                        {
+                            "sg_field": "created_by",
+                            "jira_field": "reporter",
+                        },
+                        {
+                            "sg_field": "due_date",
+                            "jira_field": "duedate",
+                        },
+                        {
+                            "sg_field": "est_in_mins",
+                            "jira_field": "timetracking",
+                        },
+                        {
+                            "sg_field": "addressings_cc",
+                            "jira_field": "watches",
+                        },
+                    ],
+                    "status_mapping": {
+                        "sync_direction": "jira_to_sg",
+                        "sg_field": "sg_status_list",
+                        "mapping": {
+                            "wtg": "To Do",
+                            "rdy": "Open",
+                            "ip": "In Progress",
+                            "fin": "Done",
+                            "hld": "Backlog",
+                            "omt": "Closed",
+                        }
+                    }
+                },
+                {
+                    "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
+                    "sync_deletion_direction": "both_way",
+                },
+            ],
+        },
+    },
 }
 # fmt: on

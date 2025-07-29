@@ -5,13 +5,13 @@
 # this software in either electronic or hard copy form.
 #
 
-import win32serviceutil
+import os
+import time
+
 import servicemanager
 import win32event
 import win32service
-
-import os
-import time
+import win32serviceutil
 
 
 class WindowsService(win32serviceutil.ServiceFramework):
