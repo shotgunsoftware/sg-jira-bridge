@@ -5,7 +5,6 @@
 # this software in either electronic or hard copy form.
 #
 
-import imp
 import importlib
 import importlib.util
 import inspect
@@ -169,20 +168,16 @@ class Bridge(object):
                 "Settings file %s is not a Python file with a .py extension" % full_path
             )
 
-        folder, module_name = os.path.split(full_path)
+        _, module_name = os.path.split(full_path)
+        module_name = os.path.splitext(module_name)[0]
 
-        mfile, pathname, description = imp.find_module(
-            # Strip the .py extension
-            os.path.splitext(module_name)[0],
-            [folder],
-        )
+        spec = importlib.util.spec_from_file_location(module_name, full_path)
+        module = importlib.util.module_from_spec(spec)
         try:
-            module = imp.load_module(
-                "%s.settings" % __name__, mfile, pathname, description
-            )
-        finally:
-            if mfile:
-                mfile.close()
+            spec.loader.exec_module(module)
+        except Exception as e:
+            raise ImportError(f"Could not import module {module_name}: {e}")
+
         # Retrieve all properties we handle and provide empty values if missing
         settings = dict(
             [
