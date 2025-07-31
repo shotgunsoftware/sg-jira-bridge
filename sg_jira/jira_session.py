@@ -46,7 +46,7 @@ class JiraSession(jira.client.JIRA):
         :raises RuntimeError: on Jira connection errors.
         """
         try:
-            super(JiraSession, self).__init__(jira_site, *args, **kwargs)
+            super().__init__(jira_site, *args, **kwargs)
         except JSONDecodeError as e:
             logger.debug("Unable to connect to %s: %s" % (jira_site, e), exc_info=True)
             raise RuntimeError(

@@ -17,5 +17,3 @@ jira==3.5.2
 
 # Allows defining env vars in a .env file that can be loaded at runtime
 python-dotenv==0.13.0
-
-six

@@ -10,7 +10,6 @@ import logging
 import shotgun_api3
 
 from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS, SHOTGUN_JIRA_ID_FIELD
-from .utils import unicode_to_utf8, utf8_to_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +54,7 @@ class ShotgunSession(object):
         # to wrap with some very similar code which would encode all params,
         # blindly call the original method, decode and return the result.
 
-        safe_args = unicode_to_utf8(args)
-        safe_kwargs = unicode_to_utf8(kwargs)
-        self._shotgun = shotgun_api3.Shotgun(
-            unicode_to_utf8(base_url),
-            unicode_to_utf8(script_name),
-            *safe_args,
-            **safe_kwargs,
-        )
+        self._shotgun = shotgun_api3.Shotgun(base_url, script_name, *args, **kwargs)
 
         self._shotgun_entity_types = []  # will be used to store FPT entities list
         self._shotgun_schemas = {}  # will be used to store FPT fields by entity type
@@ -312,10 +304,7 @@ class ShotgunSession(object):
         method_to_wrap = getattr(self._shotgun, method_name)
 
         def wrapped(*args, **kwargs):
-            safe_args = unicode_to_utf8(args)
-            safe_kwargs = unicode_to_utf8(kwargs)
-            result = method_to_wrap(*safe_args, **safe_kwargs)
-            return utf8_to_unicode(result)
+            return method_to_wrap(*args, **kwargs)
 
         return wrapped
 

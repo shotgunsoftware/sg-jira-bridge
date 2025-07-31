@@ -47,7 +47,7 @@ class TestSyncBase(TestBase):
         """
         Test setup.
         """
-        super(TestSyncBase, self).setUp()
+        super().setUp()
         self.set_sg_mock_schema(
             os.path.join(
                 self._fixtures_path,

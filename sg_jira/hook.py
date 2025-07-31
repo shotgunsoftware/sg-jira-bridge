@@ -54,7 +54,7 @@ class JiraHook(object):
 
     def __init__(self, bridge, logger):
         """Class constructor"""
-        super(JiraHook, self).__init__()
+        super().__init__()
         self._bridge = bridge
         self._logger = logger
 

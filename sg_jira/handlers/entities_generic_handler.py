@@ -58,7 +58,7 @@ class EntitiesGenericHandler(SyncHandler):
             Each list entry is a python dictionary where the mapping between FPTR and Jira is done regarding the
             entity type, the fields to sync or the sync direction.
         """
-        super(EntitiesGenericHandler, self).__init__(syncer)
+        super().__init__(syncer)
         self.__entity_mapping = entity_mapping
 
     def setup(self):

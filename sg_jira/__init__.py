@@ -7,12 +7,7 @@
 
 import sys
 
-if sys.version_info[0] == 2:
-    ex_type = ImportError
-else:
-    ex_type = ModuleNotFoundError
-
-IMPORT_MODULES = ["shotgun_api3", "jira", "dotenv", "six"]
+IMPORT_MODULES = ["shotgun_api3", "jira", "dotenv"]
 
 if sys.platform != "win32":
     IMPORT_MODULES.append("daemonize")
@@ -20,7 +15,7 @@ if sys.platform != "win32":
 for module_name in IMPORT_MODULES:
     try:
         __import__(module_name)
-    except ex_type as e:
+    except ModuleNotFoundError as e:
         raise RuntimeError(
             "Could not import '%s' module. Did you install the requirements.txt file? Original error: %s"
             % (module_name, str(e))

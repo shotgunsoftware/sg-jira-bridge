@@ -30,7 +30,7 @@ class AssetHierarchySyncer(Syncer):
         :param str task_issue_type: The Jira Issue type to use for the Issue
                                     representing a Task.
         """
-        super(AssetHierarchySyncer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._task_issue_handler = TaskIssueHandler(self, task_issue_type)
         self._note_comment_handler = NoteCommentHandler(self)
         self._asset_issue_handler = AssetIssueHandler(self, asset_issue_type)

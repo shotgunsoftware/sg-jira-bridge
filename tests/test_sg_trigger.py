@@ -8,8 +8,8 @@
 import datetime
 import logging
 import os
+import unittest.mock as mock
 
-import mock
 import requests
 from shotgun_api3.lib import mockgun
 from test_base import TestBase

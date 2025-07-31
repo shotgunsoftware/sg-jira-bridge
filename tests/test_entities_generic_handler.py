@@ -7,9 +7,9 @@
 import copy
 import os
 import sys
+import unittest.mock as mock
 
 import jira
-import mock
 import mock_jira
 import mock_shotgun
 from shotgun_api3.lib import mockgun

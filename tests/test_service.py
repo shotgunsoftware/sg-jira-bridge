@@ -5,8 +5,6 @@
 # this software in either electronic or hard copy form.
 #
 
-from __future__ import print_function
-
 import os
 import sys
 import tempfile
@@ -21,7 +19,7 @@ if not sys.platform.startswith("win"):
 @unittest.skipIf(sys.platform.startswith("win"), "Requires Linux/Osx")
 class TestService(unittest.TestCase):
     def setUp(self):
-        super(TestService, self).setUp()
+        super().setUp()
         self._fixtures_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "fixtures")
         )

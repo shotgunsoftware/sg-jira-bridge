@@ -7,8 +7,8 @@
 
 import datetime
 import json
+import unittest.mock as mock
 
-import mock
 from mock_jira import JIRA_PROJECT, JIRA_USER_2
 from mock_shotgun import (
     SG_PROJECT,
@@ -35,7 +35,7 @@ class TestTimelogWorklogHandler(TestSyncBase):
     def setUp(self):
         """Test setup."""
 
-        super(TestTimelogWorklogHandler, self).setUp()
+        super().setUp()
 
     def test_sg_to_jira_add_timelog(self, mocked_sg):
         """Test adding a new timelog in Flow Production Tracking"""

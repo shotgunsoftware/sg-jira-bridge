@@ -6,8 +6,8 @@
 #
 
 import os
+import unittest.mock as mock
 
-import mock
 from mock_shotgun import SG_ASSET, SG_RETIRED_TIMELOG, SG_TASK, SG_USER
 from shotgun_api3.lib import mockgun
 from test_base import TestBase
@@ -23,7 +23,7 @@ class TestShotgunSession(TestBase):
 
     def setUp(self):
         """Test setup."""
-        super(TestShotgunSession, self).setUp()
+        super().setUp()
 
         # Set up the PTR database
         self.set_sg_mock_schema(
