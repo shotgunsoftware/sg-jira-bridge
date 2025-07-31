@@ -7,6 +7,5 @@
 
 
 # List of Python packages needed to run the tests
-mock==2.0.0
 unittest-xml-reporting==2.2.0
 xmlrunner

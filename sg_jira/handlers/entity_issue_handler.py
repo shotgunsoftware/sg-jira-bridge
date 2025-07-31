@@ -9,7 +9,7 @@ import re
 
 import jira
 
-from ..errors import InvalidShotgunValue, InvalidJiraValue
+from ..errors import InvalidJiraValue, InvalidShotgunValue
 from .sync_handler import SyncHandler
 
 

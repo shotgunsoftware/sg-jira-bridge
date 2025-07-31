@@ -6,13 +6,16 @@
 # this software in either electronic or hard copy form.
 #
 
-import mock
+import unittest.mock as mock
 
-from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
-from sg_jira.constants import SHOTGUN_JIRA_URL_FIELD
-
+from mock_jira import JIRA_PROJECT, JIRA_PROJECT_KEY, JIRA_USER
 from test_sync_base import TestSyncBase
-from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER
+
+from sg_jira.constants import (
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+)
 
 # A list of Shotgun Projects
 SG_PROJECTS = [

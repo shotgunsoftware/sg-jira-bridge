@@ -7,13 +7,17 @@
 #
 
 import os
-import mock
+import unittest.mock as mock
 
+from mock_jira import JIRA_PROJECT, JIRA_PROJECT_KEY, JIRA_USER, JIRA_USER_2
 from test_sync_base import TestSyncBase
-from mock_jira import JIRA_PROJECT_KEY, JIRA_PROJECT, JIRA_USER, JIRA_USER_2
+
 import sg_jira
-from sg_jira.constants import SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD
-from sg_jira.constants import SHOTGUN_JIRA_URL_FIELD
+from sg_jira.constants import (
+    SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_JIRA_URL_FIELD,
+    SHOTGUN_SYNC_IN_JIRA_FIELD,
+)
 from sg_jira.handlers.note_comment_handler import COMMENT_BODY_TEMPLATE
 
 # A list of Shotgun Projects

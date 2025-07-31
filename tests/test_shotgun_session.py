@@ -5,13 +5,14 @@
 # this software in either electronic or hard copy form.
 #
 
-import mock
 import os
+import unittest.mock as mock
 
-import sg_jira
+from mock_shotgun import SG_ASSET, SG_RETIRED_TIMELOG, SG_TASK, SG_USER
 from shotgun_api3.lib import mockgun
 from test_base import TestBase
-from mock_shotgun import SG_USER, SG_ASSET, SG_TASK, SG_RETIRED_TIMELOG
+
+import sg_jira
 
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
@@ -61,7 +62,7 @@ class TestShotgunSession(TestBase):
         self.assertEqual(consolidated_task["name"], SG_TASK["content"])
         self.assertEqual(consolidated_task["task_assignees"], SG_TASK["task_assignees"])
         self.assertEqual(consolidated_task["project"]["id"], SG_TASK["project"]["id"])
-        self.assertNotIn("description", consolidated_task)
+        self.assertNotIn("sg_description", consolidated_task)
 
     def test_consolidate_human_user_entity(self, mocked_sg):
         """Test the HumanUser entity consolidation"""
@@ -99,11 +100,11 @@ class TestShotgunSession(TestBase):
 
         self.add_to_sg_mock_db(sg_session, SG_TASK)
         consolidated_task = sg_session.consolidate_entity(
-            {"type": SG_TASK["type"], "id": SG_TASK["id"]}, fields=["description"]
+            {"type": SG_TASK["type"], "id": SG_TASK["id"]}, fields=["sg_description"]
         )
 
-        self.assertIn("description", consolidated_task)
-        self.assertEqual(consolidated_task["description"], SG_TASK["description"])
+        self.assertIn("sg_description", consolidated_task)
+        self.assertEqual(consolidated_task["sg_description"], SG_TASK["sg_description"])
 
     def test_consolidate_retired_entity_1(self, mocked_sg):
         """Test the retired entity consolidation"""

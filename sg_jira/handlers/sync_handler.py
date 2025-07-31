@@ -71,6 +71,10 @@ class SyncHandler(object):
         return self._syncer.jira
 
     @property
+    def _hook(self):
+        return self._syncer.hook
+
+    @property
     def _sg_jira_status_mapping(self):
         """
         Needs to be re-implemented in deriving classes and return a dictionary

@@ -6,10 +6,10 @@
 #
 
 import logging
+
 import shotgun_api3
 
-from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS
-from .constants import SHOTGUN_JIRA_ID_FIELD
+from .constants import SG_ENTITY_SPECIAL_NAME_FIELDS, SHOTGUN_JIRA_ID_FIELD
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,9 @@ class ShotgunSession(object):
 
         self._shotgun = shotgun_api3.Shotgun(base_url, script_name, *args, **kwargs)
 
-        self._shotgun_schemas = {}
+        self._shotgun_entity_types = []  # will be used to store FPT entities list
+        self._shotgun_schemas = {}  # will be used to store FPT fields by entity type
+
         # Retrieve our current login, this does not seem to be available from
         # the connection?
         self._shotgun_user = self.find_one(
@@ -82,6 +84,18 @@ class ShotgunSession(object):
         """
         self.assert_field("Project", SHOTGUN_JIRA_ID_FIELD, "text", check_unique=True)
 
+    def assert_entity_type(self, entity_type):
+        """
+        Check if the given entity exists in Flow Production Tracking site.
+
+        :param str entity_type: A Flow Production Tracking Entity type.
+        :raises RuntimeError: if the entity does not exist.
+        """
+        if not self._shotgun_entity_types:
+            self._shotgun_entity_types = self._shotgun.schema_entity_read().keys()
+        if entity_type not in self._shotgun_entity_types:
+            raise RuntimeError(f"Missing {entity_type} entity type in the FPT schema.")
+
     def assert_field(self, entity_type, field_name, field_type, check_unique=False):
         """
         Check if the given field with the given type exists for the given Flow Production Tracking
@@ -104,7 +118,7 @@ class ShotgunSession(object):
                     field_name,
                 )
             )
-        if field["data_type"]["value"] != field_type:
+        if field_type and field["data_type"]["value"] != field_type:
             raise RuntimeError(
                 "Invalid type '%s' for Shotgun field %s.%s, it must be '%s'"
                 % (field["data_type"]["value"], entity_type, field_name, field_type)
@@ -149,6 +163,7 @@ class ShotgunSession(object):
         else:
             logger.debug("Clearing all cached Shotgun schemas")
             self._shotgun_schemas = {}
+            self._shotgun_entity_types = []
 
     @staticmethod
     def get_entity_name_field(entity_type):

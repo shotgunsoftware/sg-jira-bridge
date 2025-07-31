@@ -5,19 +5,27 @@
 # this software in either electronic or hard copy form.
 #
 
-import os
-import logging
-import logging.config
 import importlib
 import importlib.util
-import urllib
+import inspect
+import logging
+import logging.config
+import os
+import sys
 import threading
+import urllib.parse
+import uuid
 
-from .shotgun_session import ShotgunSession
+from .constants import (
+    ALL_SETTINGS_KEYS,
+    JIRA_SETTINGS_KEY,
+    LOGGING_SETTINGS_KEY,
+    SHOTGUN_SETTINGS_KEY,
+    SYNC_SETTINGS_KEY,
+)
+from .hook import JiraHook
 from .jira_session import JiraSession
-from .constants import ALL_SETTINGS_KEYS
-from .constants import LOGGING_SETTINGS_KEY, SYNC_SETTINGS_KEY
-from .constants import SHOTGUN_SETTINGS_KEY, JIRA_SETTINGS_KEY
+from .shotgun_session import ShotgunSession
 
 logger = logging.getLogger(__name__)
 # Ensure basic logging is always enabled
@@ -297,6 +305,8 @@ class Bridge(object):
                 raise ValueError(
                     "Invalid sync settings for %s, it must be dictionary." % name
                 )
+            # Retrieve the hook
+            hook_class = self.__get_hook_class(sync_settings.get("hook"))
             # Retrieve the syncer
             syncer_name = sync_settings.get("syncer")
             if not syncer_name:
@@ -323,7 +333,9 @@ class Bridge(object):
             settings = sync_settings.get("settings") or {}
             # Instantiate the syncer with our standard parameters and any
             # additional settings as parameters.
-            self._syncers[name] = syncer_class(name=name, bridge=self, **settings)
+            self._syncers[name] = syncer_class(
+                name=name, bridge=self, hook_class=hook_class, **settings
+            )
             self._syncers[name].setup()
         return self._syncers[name]
 
@@ -381,3 +393,18 @@ class Bridge(object):
             logger.exception(e)
             raise
         return synced
+
+    @staticmethod
+    def __get_hook_class(hook_path):
+        """Given the path to a hook file, get the associated class object."""
+        if not hook_path or not os.path.exists(hook_path) or os.path.isdir(hook_path):
+            return JiraHook
+        file_name = os.path.splitext(os.path.basename(hook_path))[0]
+        module_name = f"{uuid.uuid4().hex}.{file_name}"
+        spec = importlib.util.spec_from_file_location(module_name, hook_path)
+        module_obj = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module_obj
+        spec.loader.exec_module(module_obj)
+        for obj_name, obj_value in inspect.getmembers(module_obj, inspect.isclass):
+            if obj_value.__module__ == module_name:
+                return getattr(module_obj, obj_name)
