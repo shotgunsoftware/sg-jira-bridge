@@ -8,6 +8,14 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: shotgunsoftware/tk-ci-tools
+      ref: refs/heads/ticket/SG-41463
+      endpoint: shotgunsoftware
+
 trigger:
   branches:
     include:
@@ -21,7 +29,11 @@ pr:
     - "*"
 
 jobs:
-- template: azure-pipelines/flake8.yml
+- template: build-pipeline.yml@templates
+  parameters:
+    has_unit_tests: false # Jira Bridge does not follow the same Python version  lifecycle than Toolkit
+    has_ui_resources: false
+
 - template: azure-pipelines/tests.yml
   parameters:
     name: Linux
