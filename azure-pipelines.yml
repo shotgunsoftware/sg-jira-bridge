@@ -21,20 +21,24 @@ pr:
     - "*"
 
 parameters:
-  python_versions:
-    - '3.9'
-    - '3.10'
-    - '3.11'
+  - name: python_versions
+    type: object
+    default:
+      - '3.9'
+      - '3.10'
+      - '3.11'
 
-  os_versions:
-    - name: Linux
-      vm_image: ubuntu-latest
+  - name: os_versions
+    type: object
+    default:
+      - name: Linux
+        vm_image: ubuntu-latest
 
-    - name: macOS
-      vm_image: macOS-latest
+      - name: macOS
+        vm_image: macOS-latest
 
-    - name: Windows
-      vm_image: windows-latest
+      - name: Windows
+        vm_image: windows-latest
 
 jobs:
 - template: azure-pipelines/flake8.yml
