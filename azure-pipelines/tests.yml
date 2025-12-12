@@ -7,17 +7,9 @@
 # This is the list of parameters for this template and their default values.
 
 parameters:
-  - name: name
-    type: string
-    default: ''
-
-  - name: vm_image
-    type: string
-    default: ''
-
-  - name: python_version
-    type: string
-    default: ''
+  name: ''
+  vm_image: ''
+  python_version: ''
 
 jobs:
 - job:
