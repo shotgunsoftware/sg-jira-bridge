@@ -7,5 +7,4 @@
 
 
 # List of Python packages needed to run the tests
-unittest-xml-reporting==2.2.0
-xmlrunner
+unittest-xml-reporting
