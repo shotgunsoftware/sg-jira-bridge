@@ -15,6 +15,7 @@ resources:
       name: shotgunsoftware/tk-ci-tools
       ref: refs/heads/ticket/SG-41463
       endpoint: shotgunsoftware
+      ### Yes, this is not Toolkit but tk-ci-tools is a useful utility that we can use to avoid duplicating and maintaing CI pipelines
 
 trigger:
   branches:
