@@ -13,9 +13,10 @@ resources:
     - repository: templates
       type: github
       name: shotgunsoftware/tk-ci-tools
-      ref: refs/heads/ticket/SG-41463
+      ref: refs/heads/master
       endpoint: shotgunsoftware
-      ### Yes, this is not Toolkit but tk-ci-tools is a useful utility that we can use to avoid duplicating and maintaing CI pipelines
+      # tk-ci-tools, despites using the tk- prefix, is not a Toolkit only tool
+      # that we use to avoid duplicating and maintaining CI pipeline code.
 
 trigger:
   branches:
@@ -32,7 +33,10 @@ pr:
 jobs:
 - template: build-pipeline.yml@templates
   parameters:
-    has_unit_tests: false # Jira Bridge does not follow the same Python version  lifecycle than Toolkit
+    # Jira Bridge does not follow the exact same Python version lifecycle than
+    # Toolkit. So we prefer to control the test execution here instead.
+    has_unit_tests: false
+
     has_ui_resources: false
 
 - template: azure-pipelines/tests.yml
