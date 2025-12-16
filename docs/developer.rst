@@ -282,11 +282,6 @@ Utils
 =====
 .. currentmodule:: sg_jira
 
-Common utility functions.
-
-.. automodule:: sg_jira.utils
-    :members:
-
 Errors
 ======
 .. automodule:: sg_jira.errors

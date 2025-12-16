@@ -33,6 +33,12 @@ repos:
     - id: requirements-txt-fixer
     # Removes trailing whitespaces.
     - id: trailing-whitespace
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+    - id: flake8
+
   # Leave black at the bottom so all touchups are done before it is run.
   - repo: https://github.com/psf/black
     rev: 25.1.0
