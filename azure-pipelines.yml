@@ -15,8 +15,8 @@ resources:
       name: shotgunsoftware/tk-ci-tools
       ref: refs/heads/master
       endpoint: shotgunsoftware
-      # tk-ci-tools, despites using the tk- prefix, is not a Toolkit only tool
-      # that we use to avoid duplicating and maintaining CI pipeline code.
+      # Despite using the "tk-" prefix, tk-ci-tools is not a Toolkit only tool.
+      # We use it to avoid duplicating and maintaining CI pipeline code.
 
 trigger:
   branches:
