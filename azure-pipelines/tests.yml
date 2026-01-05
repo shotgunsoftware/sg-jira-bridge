@@ -1,52 +1,47 @@
-# Copyright 2018 Autodesk, Inc.  All rights reserved.
+# Copyright 2025 Autodesk, Inc.  All rights reserved.
 #
 # Use of this software is subject to the terms of the Autodesk license agreement
 # provided at the time of installation or download, or which otherwise accompanies
 # this software in either electronic or hard copy form.
 
 # This is the list of parameters for this template and their default values.
+
 parameters:
-  - name: name
-    type: string
-    default: ''
-  - name: vm_image
-    type: string
-    default: ''
+  os_name: ''
+  vm_image: ''
+  python_version: ''
 
 jobs:
-
-- job: ${{ parameters.name }}
+- job:
+  displayName: "${{ parameters.os_name }} Python ${{ parameters.python_version }}"
   pool:
     vmImage: ${{ parameters.vm_image }}
-  strategy:
-    matrix:
-      Python 3.9:
-        python.version: '3.9'
-      Python 3.10:
-        python.version: '3.10'
-      Python 3.11:
-        python.version: '3.11'
-    maxParallel: 3
 
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '$(python.version)'
-      addToPath: True
-      architecture: 'x64'
+      versionSpec: ${{ parameters.python_version }}
 
-  - script: |
-      pip install --upgrade pip
-      pip install -r requirements.txt -r tests/requirements.txt
+  - task: Bash@3
     displayName: Install dependencies
+    inputs:
+      targetType: inline
+      script: |
+        pip install --upgrade pip
+        pip install --upgrade \
+          --requirement requirements.txt \
+          --requirement tests/requirements.txt
 
-  - script: |
-      python tests/run_tests.py --xmlout test-results
-    displayName: Test PTR Jira
-    env: { 'LANG': 'en_US.UTF-8' }
+  - task: Bash@3
+    displayName: Run tests
+    env:
+      LANG: en_US.UTF-8
+    inputs:
+      targetType: inline
+      script: python tests/run_tests.py --xmlout test-results
 
   - task: PublishTestResults@2
     inputs:
       testResultsFiles: 'test-results/**.xml'
-      testRunTitle: ${{ parameters.name }} Python $(python.version)
+      testRunTitle: "${{ parameters.os_name }} Python ${{ parameters.python_version }}"
     condition: succeededOrFailed()
