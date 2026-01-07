@@ -7,7 +7,7 @@ The instructions below will help you get up and running quickly.
 
 Requirements
 ************
-- Python 3.9
+- Python - supported versions: `3.9`, `3.10`, `3.11`, `3.13`
 - A Flow Production Tracking site
 - A Jira site
 
