@@ -1,13 +1,14 @@
 # Running the tests
 
-To run all of these tests you must call `python run_test.py`.
+To run all of these tests you must call `pytest`.
 Out of the box that will run a bunch of the tests, but the `test_integration.py` and `test_service.py` tests will be skipped without further setup (See bellow).
 
 ## Running test_service.py
 
 You just need to have the [standard setup env variables](https://developer.shotgridsoftware.com/sg-jira-bridge/quickstart.html#authentication).
 
-## Running the integration test for the bridge.
+## Running the integration test for the bridge
+
 This test uses actual JIRA and Flow Production Tracking servers.
 
 This test expects a project to have been configured in JIRA and Flow Production Tracking
