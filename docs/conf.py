@@ -61,8 +61,8 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/2", None),
-    "jira": ("https://jira.readthedocs.io/en/master", None),
+    "python": ("https://docs.python.org/", None),
+    "jira": ("https://jira.readthedocs.io/", None),
     "shotgun_api3": ("https://developer.shotgridsoftware.com/python-api", None),
 }
 

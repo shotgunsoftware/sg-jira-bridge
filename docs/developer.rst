@@ -303,7 +303,7 @@ Continuous Integration (CI)
 for the continuous integration and run the following validations:
 
 - Enforce reasonable PEP-8 conventions with Flake8.
-- Run unit tests on Linux, Mac and Windows with Python 3.9.
+- Run unit tests on Linux, macOS and Windows with Python 3.9, 3.10, 3.11, and 3.13.
 
 Azure Pipelines jobs are defined by the description files in the
 ``/azure-pipelines`` folder.
