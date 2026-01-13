@@ -48,8 +48,7 @@ jobs:
       targetType: inline
       script: |
         python -m pytest \
-          --cov \
-          --cov-report xml \
+          --cov-report xml:coverage.xml \
           --nunit-xml=test-results.xml \
           --verbose \
 
