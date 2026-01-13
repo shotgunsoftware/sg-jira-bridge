@@ -78,5 +78,5 @@ jobs:
         chmod +x codecov
         ./codecov  \
           --file coverage.xml \
-          --flags "${{ parameters.os_name }},Python-${{ parameters.python_version }}" \
+          --flags "${{ parameters.os_name }},python${{ parameters.python_version }}" \
           --name "Tested on ${{ parameters.os_name }} with Python ${{ parameters.python_version }}" \
