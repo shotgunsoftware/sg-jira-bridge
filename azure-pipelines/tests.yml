@@ -53,7 +53,7 @@ jobs:
         python -m pytest \
           --cov \
           --cov-report xml:coverage.xml \
-          --duration=0 \
+          --durations=0 \
           --nunit-xml=test-results.xml \
           --verbose \
 
