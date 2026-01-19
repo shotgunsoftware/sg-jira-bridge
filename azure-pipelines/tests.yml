@@ -4,9 +4,11 @@
 # provided at the time of installation or download, or which otherwise accompanies
 # this software in either electronic or hard copy form.
 
-# This is the list of parameters for this template and their default values.
-
 parameters:
+  # Using the most formal way of defining parameters so we don't define a
+  # default value for mandatory parameters. This way, CI will fail if we forget
+  # to pass it when invoking the template.
+
   - name: codecov_download_url
     type: string
 
@@ -36,9 +38,10 @@ jobs:
       targetType: inline
       script: |
         pip install --upgrade pip
+        pip install --upgrade setuptools wheel
         pip install --upgrade \
           --requirement requirements.txt \
-          --requirement tests/requirements.txt
+          --requirement tests/requirements.txt \
 
   - task: Bash@3
     displayName: Run tests
@@ -50,17 +53,18 @@ jobs:
         python -m pytest \
           --cov \
           --cov-report xml:coverage.xml \
+          --duration=0 \
           --nunit-xml=test-results.xml \
           --verbose \
 
   - task: PublishTestResults@2
     displayName: Publish test results
     inputs:
-      testResultsFormat: NUnit
-      testResultsFiles: test-results.xml
-      testRunTitle: "${{ parameters.os_name }} - Python ${{ parameters.python_version }}"
       failTaskOnFailureToPublishResults: true
       failTaskOnMissingResultsFile: true
+      testResultsFiles: test-results.xml
+      testResultsFormat: NUnit
+      testRunTitle: "${{ parameters.os_name }} - Python ${{ parameters.python_version }}"
     condition: succeededOrFailed()
 
   - task: PublishCodeCoverageResults@2
@@ -78,6 +82,6 @@ jobs:
         chmod +x codecov
         ./codecov  \
           --file coverage.xml \
-          -F "${{ parameters.os_name }}" \
-          -F "python${{ parameters.python_version }}" \
+          --flags "${{ parameters.os_name }}" \
+          --flags "Python-${{ parameters.python_version }}" \
           --name "Tested on ${{ parameters.os_name }} with Python ${{ parameters.python_version }}" \
