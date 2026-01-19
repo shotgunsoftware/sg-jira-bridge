@@ -37,6 +37,7 @@ jobs:
     inputs:
       targetType: inline
       script: |
+        set -e
         pip install --upgrade pip
         pip install --upgrade setuptools wheel
         pip install --upgrade \
@@ -46,6 +47,9 @@ jobs:
   - task: Bash@3
     displayName: Run tests
     env:
+      # Tell Pytest that we're running in a CI environment
+      CI: 1
+
       LANG: en_US.UTF-8
     inputs:
       targetType: inline
@@ -56,6 +60,12 @@ jobs:
           --durations=0 \
           --nunit-xml=test-results.xml \
           --verbose \
+
+  # Explicit call to PublishTestResults@2 and PublishCodeCoverageResults@2 here
+  # instead of relying on pytest-azurepipelines because pytest-azurepipelines
+  # does not seem to be maintained anymore and is still using earlier versions
+  # of the PublishTestResults and PublishCodeCoverageResults Azure Pipelines
+  # jobs.
 
   - task: PublishTestResults@2
     displayName: Publish test results
@@ -78,6 +88,7 @@ jobs:
     inputs:
       targetType: inline
       script: |
+        set -e
         curl -Os "${{ parameters.codecov_download_url }}"
         chmod +x codecov
         ./codecov  \
