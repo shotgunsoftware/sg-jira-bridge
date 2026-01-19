@@ -7,6 +7,7 @@
 """
 Flow Production Tracking Jira sync settings
 """
+
 import logging
 import os
 import sys

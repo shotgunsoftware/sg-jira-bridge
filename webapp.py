@@ -58,9 +58,7 @@ HMTL_TEMPLATE = """
         </div>
     </body>
 </html>
-""".format(
-    style=CSS_TEMPLATE
-)
+""".format(style=CSS_TEMPLATE)
 
 # We overriding the default html error template to render errors to the user.
 # This template *requires* the following format tokens:
@@ -82,9 +80,7 @@ HTML_ERROR_TEMPLATE = """
             <p><strong>Details: </strong> <pre>%(message)s</pre></p>
         </div>
     </body>
-""".format(
-    style=CSS_TEMPLATE
-)
+""".format(style=CSS_TEMPLATE)
 
 # Please note that we can't use __name__ here as it would be __main__
 logger = logging.getLogger("webapp")
