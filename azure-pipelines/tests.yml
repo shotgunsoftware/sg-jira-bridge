@@ -46,6 +46,7 @@ jobs:
 
   - task: Bash@3
     displayName: Run tests
+    # Runs the tests and generates both test report and code coverage
     env:
       # Tell Pytest that we're running in a CI environment
       CI: 1
@@ -89,7 +90,7 @@ jobs:
       targetType: inline
       script: |
         set -e
-        curl -Os "${{ parameters.codecov_download_url }}"
+        curl --remote-name --silent "${{ parameters.codecov_download_url }}"
         chmod +x codecov
         ./codecov  \
           --file coverage.xml \
