@@ -7,13 +7,14 @@
 # List of Python packages needed by this stack
 
 # Needed to run the Linux service.
-daemonize==2.4.7; sys.platform != 'win32'
+daemonize==2.5.0; sys.platform != 'win32'
 
 # Install Shotgun API 3 from archive
-https://github.com/shotgunsoftware/python-api/archive/v3.6.2.zip
+https://github.com/shotgunsoftware/python-api/archive/v3.9.2.zip
 
 # Python Jira client.
-jira==3.5.2
+jira==3.8.0;  python_version <  '3.10'
+jira==3.10.5; python_version >= '3.10'
 
 # Allows defining env vars in a .env file that can be loaded at runtime
-python-dotenv==0.13.0
+python-dotenv==1.2.1
