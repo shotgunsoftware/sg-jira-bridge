@@ -4,16 +4,26 @@
 # provided at the time of installation or download, or which otherwise accompanies
 # this software in either electronic or hard copy form.
 
-# This is the list of parameters for this template and their default values.
-
 parameters:
-  os_name: ''
-  vm_image: ''
-  python_version: ''
+  # Using the most formal way of defining parameters so we don't define a
+  # default value for mandatory parameters. This way, CI will fail if we forget
+  # to pass it when invoking the template.
+
+  - name: codecov_download_url
+    type: string
+
+  - name: os_name
+    type: string
+
+  - name: python_version
+    type: string
+
+  - name: vm_image
+    type: string
 
 jobs:
 - job:
-  displayName: "${{ parameters.os_name }} Python ${{ parameters.python_version }}"
+  displayName: "${{ parameters.os_name }} - Python ${{ parameters.python_version }}"
   pool:
     vmImage: ${{ parameters.vm_image }}
 
@@ -27,21 +37,63 @@ jobs:
     inputs:
       targetType: inline
       script: |
+        set -e
         pip install --upgrade pip
+        pip install --upgrade setuptools wheel
         pip install --upgrade \
           --requirement requirements.txt \
-          --requirement tests/requirements.txt
+          --requirement tests/requirements.txt \
 
   - task: Bash@3
     displayName: Run tests
+    # Runs the tests and generates both test report and code coverage
     env:
+      # Tell Pytest that we're running in a CI environment
+      CI: 1
+
       LANG: en_US.UTF-8
     inputs:
       targetType: inline
-      script: python tests/run_tests.py --xmlout test-results
+      script: |
+        python -m pytest \
+          --cov \
+          --cov-report xml:coverage.xml \
+          --durations=0 \
+          --nunit-xml=test-results.xml \
+          --verbose \
+
+  # Explicit call to PublishTestResults@2 and PublishCodeCoverageResults@2 here
+  # instead of relying on pytest-azurepipelines because pytest-azurepipelines
+  # does not seem to be maintained anymore and is still using earlier versions
+  # of the PublishTestResults and PublishCodeCoverageResults Azure Pipelines
+  # jobs.
 
   - task: PublishTestResults@2
+    displayName: Publish test results
     inputs:
-      testResultsFiles: 'test-results/**.xml'
-      testRunTitle: "${{ parameters.os_name }} Python ${{ parameters.python_version }}"
+      failTaskOnFailureToPublishResults: true
+      failTaskOnMissingResultsFile: true
+      testResultsFiles: test-results.xml
+      testResultsFormat: NUnit
+      testRunTitle: "${{ parameters.os_name }} - Python ${{ parameters.python_version }}"
     condition: succeededOrFailed()
+
+  - task: PublishCodeCoverageResults@2
+    displayName: Publish code coverage
+    inputs:
+      summaryFileLocation: coverage.xml
+      failIfCoverageEmpty: true
+
+  - task: Bash@3
+    displayName: Uploading coverage to Codecov.io
+    inputs:
+      targetType: inline
+      script: |
+        set -e
+        curl --remote-name --silent "${{ parameters.codecov_download_url }}"
+        chmod +x codecov
+        ./codecov  \
+          --file coverage.xml \
+          --flags "${{ parameters.os_name }}" \
+          --flags "Python-${{ parameters.python_version }}" \
+          --name "Tested on ${{ parameters.os_name }} with Python ${{ parameters.python_version }}" \
