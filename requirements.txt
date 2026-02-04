@@ -10,7 +10,7 @@
 daemonize==2.5.0; sys.platform != 'win32'
 
 # Install Shotgun API 3 from archive
-https://github.com/shotgunsoftware/python-api/archive/v3.9.2.zip
+https://github.com/shotgunsoftware/python-api/archive/v3.10.0.zip
 
 # Python Jira client.
 jira==3.8.0;  python_version <  '3.10'

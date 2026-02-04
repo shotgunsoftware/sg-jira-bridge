@@ -10,7 +10,7 @@
 # Note: It is recommended you replace this version with the latest
 #       version release. These can be found at
 #       https://github.com/shotgunsoftware/python-api/releases
-https://github.com/shotgunsoftware/python-api/archive/v3.6.2.zip ## TODO - update to latest version when latest release support 3.13
+https://github.com/shotgunsoftware/python-api/archive/v3.10.0.zip
 
 # Allows defining env vars in a .env file that can be loaded at runtime
 python-dotenv==0.13.0
