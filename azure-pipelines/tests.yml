@@ -38,11 +38,12 @@ jobs:
       targetType: inline
       script: |
         set -e
-        pip install --upgrade pip
-        pip install --upgrade setuptools wheel
-        pip install --upgrade \
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade setuptools wheel
+        python -m pip install --upgrade \
           --requirement requirements.txt \
           --requirement tests/requirements.txt \
+      # Need to use the "python -m" prefix to make Windows happy.
 
   - task: Bash@3
     displayName: Run tests
