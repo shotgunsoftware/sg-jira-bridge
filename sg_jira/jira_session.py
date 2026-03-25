@@ -344,7 +344,7 @@ class JiraSession(jira.client.JIRA):
         # Direct user search with their email
         logger.debug("Looking up %s in assignable users" % user_email)
         search_params = dict(
-            project=jira_project,
+            project=jira_project.key,
             issueKey=jira_issue.key if jira_issue else None,
             maxResults=JIRA_RESULT_PAGING,
         )
