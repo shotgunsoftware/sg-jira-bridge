@@ -6,13 +6,14 @@
 # this software in either electronic or hard copy form.
 #
 import os
+from unittest import mock
 
 from mock_jira import JIRA_PROJECT, JIRA_USER, JIRA_USER_2
 from shotgun_api3.lib import mockgun
 from test_base import TestBase
 
 from sg_jira.jira_session import JiraSession
-from update_shotgun_users import sync_jira_users_into_shotgun
+from update_shotgun_users import main, sync_jira_users_into_shotgun
 
 
 class TestUpdateShotgunUsers(TestBase):
@@ -106,6 +107,28 @@ class TestUpdateShotgunUsers(TestBase):
         )
         sync_jira_users_into_shotgun(self._shotgun, self._jira, "UTest")
         self._assert_sg_users_account_ids(None, JIRA_USER, JIRA_USER_2, None)
+
+    @mock.patch("update_shotgun_users.sync_jira_users_into_shotgun")
+    @mock.patch("update_shotgun_users.JiraSession")
+    @mock.patch("update_shotgun_users.Shotgun")
+    @mock.patch("update_shotgun_users._get_settings")
+    def test_user_agent_is_set(self, mock_settings, mock_shotgun, mock_jira, mock_sync):
+        """Test that JIRABRIDGE User-Agent identifier is added to the Shotgun connection."""
+        mock_settings.return_value = (
+            None,
+            {"site": "https://test.shotgunstudio.com", "script_name": "test", "script_key": "key"},
+            {"site": "https://test.atlassian.net", "user": "user", "secret": "secret"},
+            None,
+        )
+        mock_sg_instance = mock.Mock()
+        mock_shotgun.return_value = mock_sg_instance
+        mock_jira_instance = mock.Mock()
+        mock_jira_instance.is_jira_cloud = True
+        mock_jira.return_value = mock_jira_instance
+
+        main()
+
+        mock_sg_instance.add_user_agent.assert_called_once_with("JIRABRIDGE")
 
     def _assert_sg_users_account_ids(self, *jira_users):
         """
