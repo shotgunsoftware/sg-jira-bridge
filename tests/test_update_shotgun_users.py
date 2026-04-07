@@ -116,7 +116,11 @@ class TestUpdateShotgunUsers(TestBase):
         """Test that JIRABRIDGE User-Agent identifier is added to the Shotgun connection."""
         mock_settings.return_value = (
             None,
-            {"site": "https://test.shotgunstudio.com", "script_name": "test", "script_key": "key"},
+            {
+                "site": "https://test.shotgunstudio.com",
+                "script_name": "test",
+                "script_key": "key",
+            },
             {"site": "https://test.atlassian.net", "user": "user", "secret": "secret"},
             None,
         )
