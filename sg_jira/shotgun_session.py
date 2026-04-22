@@ -56,6 +56,9 @@ class ShotgunSession(object):
 
         self._shotgun = shotgun_api3.Shotgun(base_url, script_name, *args, **kwargs)
 
+        # Add custom User-Agent identifier
+        self._shotgun.add_user_agent("JIRABRIDGE")
+
         self._shotgun_entity_types = []  # will be used to store FPT entities list
         self._shotgun_schemas = {}  # will be used to store FPT fields by entity type
 
