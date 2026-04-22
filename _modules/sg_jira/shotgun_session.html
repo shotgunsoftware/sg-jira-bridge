@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.shotgun_session &mdash; sg-jira-bridge v0.6.0 documentation</title>
+  <title>sg_jira.shotgun_session &mdash; sg-jira-bridge v0.7.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -87,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.6.0.<br>
+    <b>sg-jira-bridge</b> v0.7.1.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -141,7 +141,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">shotgun_api3</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">SG_ENTITY_SPECIAL_NAME_FIELDS</span><span class="p">,</span> <span class="n">SHOTGUN_JIRA_ID_FIELD</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">unicode_to_utf8</span><span class="p">,</span> <span class="n">utf8_to_unicode</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -186,14 +185,10 @@
         <span class="c1"># to wrap with some very similar code which would encode all params,</span>
         <span class="c1"># blindly call the original method, decode and return the result.</span>
 
-        <span class="n">safe_args</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-        <span class="n">safe_kwargs</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span> <span class="o">=</span> <span class="n">shotgun_api3</span><span class="o">.</span><span class="n">Shotgun</span><span class="p">(</span>
-            <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">base_url</span><span class="p">),</span>
-            <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">script_name</span><span class="p">),</span>
-            <span class="o">*</span><span class="n">safe_args</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">safe_kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span> <span class="o">=</span> <span class="n">shotgun_api3</span><span class="o">.</span><span class="n">Shotgun</span><span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="n">script_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Add custom User-Agent identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">add_user_agent</span><span class="p">(</span><span class="s2">&quot;JIRABRIDGE&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_entity_types</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># will be used to store FPT entities list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun_schemas</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># will be used to store FPT fields by entity type</span>
@@ -443,10 +438,7 @@
         <span class="n">method_to_wrap</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="p">,</span> <span class="n">method_name</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">safe_args</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-            <span class="n">safe_kwargs</span> <span class="o">=</span> <span class="n">unicode_to_utf8</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">method_to_wrap</span><span class="p">(</span><span class="o">*</span><span class="n">safe_args</span><span class="p">,</span> <span class="o">**</span><span class="n">safe_kwargs</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">utf8_to_unicode</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">method_to_wrap</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">wrapped</span>
 
@@ -472,7 +464,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Autodesk.</p>
+    <p>&#169; Copyright 2026, Autodesk.</p>
   </div>
 
    

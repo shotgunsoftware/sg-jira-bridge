@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Resources &mdash; sg-jira-bridge v0.6.0 documentation</title>
+  <title>Developer Resources &mdash; sg-jira-bridge v0.7.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -98,11 +98,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#enablesyncinghandler">EnableSyncingHandler</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#utils">Utils</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#sg_jira.utils.utf8_to_unicode"><code class="docutils literal notranslate"><span class="pre">utf8_to_unicode()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#sg_jira.utils.unicode_to_utf8"><code class="docutils literal notranslate"><span class="pre">unicode_to_utf8()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#utils">Utils</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-sg_jira.errors">Errors</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#sg_jira.errors.InvalidSyncValue"><code class="docutils literal notranslate"><span class="pre">InvalidSyncValue</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#sg_jira.errors.InvalidShotgunValue"><code class="docutils literal notranslate"><span class="pre">InvalidShotgunValue</span></code></a></li>
@@ -142,7 +138,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.6.0.<br>
+    <b>sg-jira-bridge</b> v0.7.1.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -250,7 +246,7 @@ well, to pass on to Handlers:</p>
 <span class="sd">        :param str issue_type: Jira Issue type to use when creating new Issues.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span> <span class="o">=</span> <span class="n">issue_type</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">TaskIssueSyncer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task_issue_handler</span> <span class="o">=</span> <span class="n">TaskIssueHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_note_comment_handler</span> <span class="o">=</span> <span class="n">NoteCommentHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1"># A handler combining the Task &lt;-&gt; Issue handler and the Note &lt;-&gt; Comment</span>
@@ -366,11 +362,11 @@ must be overridden <em>in addition to the ones required by</em>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.shotgun_session.</span></span><span class="sig-name descname"><span class="pre">ShotgunSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition"></a></dt>
-<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.8.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.10.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
 <p>Ensures all the values we get from Flow Production Tracking are unicode and not utf-8 encoded
 strings. Utf-8 encodes unicode values before sending them to Flow Production Tracking.</p>
-<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.8.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
+<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.10.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.current_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_user</span></span><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition"></a></dt>
@@ -1027,7 +1023,7 @@ to Handlers.</p>
 <span class="sd">        :param str issue_type: Jira Issue type to use when creating new Issues.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span> <span class="o">=</span> <span class="n">issue_type</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">TaskIssueSyncer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task_issue_handler</span> <span class="o">=</span> <span class="n">TaskIssueHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_note_comment_handler</span> <span class="o">=</span> <span class="n">NoteCommentHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1"># A handler combining the Task &lt;-&gt; Issue handler and the Note &lt;-&gt; Comment</span>
@@ -1721,46 +1717,6 @@ sync didn’t happen for any reason.</p>
 </section>
 <section id="utils">
 <h3>Utils<a class="headerlink" href="#utils" title="Permalink to this heading"></a></h3>
-<p>Common utility functions.</p>
-<span class="target" id="module-sg_jira.utils"></span><dl class="py function">
-<dt class="sig sig-object py" id="sg_jira.utils.utf8_to_unicode">
-<span class="sig-prename descclassname"><span class="pre">sg_jira.utils.</span></span><span class="sig-name descname"><span class="pre">utf8_to_unicode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/utils.html#utf8_to_unicode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.utils.utf8_to_unicode" title="Permalink to this definition"></a></dt>
-<dd><p>Convert any string in the given input to unicode. Strings are expected to be
-in utf-8 encoding.</p>
-<p>Treat containers by recursively iterating over all the values they contain.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> – A string, a list, a tuple, or a dictionary.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The value with all strings converted to unicode.</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if a converted UTF-8 decoded key is already present in the
-original value of a dictionary.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="sg_jira.utils.unicode_to_utf8">
-<span class="sig-prename descclassname"><span class="pre">sg_jira.utils.</span></span><span class="sig-name descname"><span class="pre">unicode_to_utf8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/utils.html#unicode_to_utf8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.utils.unicode_to_utf8" title="Permalink to this definition"></a></dt>
-<dd><p>Convert any unicode in the given input to an utf8 encoded string value.</p>
-<p>Treat containers by recursively iterating over all the values they contain.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value</strong> – A string, a list, a tuple, or a dictionary.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The value with all unicode values converted to strings.</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – if a converted UTF-8 encoded key is already present in the
-original value of a dictionary.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="module-sg_jira.errors">
 <span id="errors"></span><h3>Errors<a class="headerlink" href="#module-sg_jira.errors" title="Permalink to this heading"></a></h3>
@@ -1880,7 +1836,7 @@ tests.</p>
 for the continuous integration and run the following validations:</p>
 <ul class="simple">
 <li><p>Enforce reasonable PEP-8 conventions with Flake8.</p></li>
-<li><p>Run unit tests on Linux, Mac and Windows with Python 3.9.</p></li>
+<li><p>Run unit tests on Linux, macOS and Windows with Python 3.9, 3.10, 3.11, and 3.13.</p></li>
 </ul>
 <p>Azure Pipelines jobs are defined by the description files in the
 <code class="docutils literal notranslate"><span class="pre">/azure-pipelines</span></code> folder.</p>
@@ -1899,7 +1855,7 @@ for the continuous integration and run the following validations:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Autodesk.</p>
+    <p>&#169; Copyright 2026, Autodesk.</p>
   </div>
 
    

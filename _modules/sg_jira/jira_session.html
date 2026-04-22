@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.6.0 documentation</title>
+  <title>sg_jira.jira_session &mdash; sg-jira-bridge v0.7.1 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -87,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.6.0.<br>
+    <b>sg-jira-bridge</b> v0.7.1.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -177,7 +177,7 @@
 <span class="sd">        :raises RuntimeError: on Jira connection errors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="nb">super</span><span class="p">(</span><span class="n">JiraSession</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Unable to connect to </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="n">e</span><span class="p">),</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -475,7 +475,7 @@
         <span class="c1"># Direct user search with their email</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Looking up </span><span class="si">%s</span><span class="s2"> in assignable users&quot;</span> <span class="o">%</span> <span class="n">user_email</span><span class="p">)</span>
         <span class="n">search_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-            <span class="n">project</span><span class="o">=</span><span class="n">jira_project</span><span class="p">,</span>
+            <span class="n">project</span><span class="o">=</span><span class="n">jira_project</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
             <span class="n">issueKey</span><span class="o">=</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">key</span> <span class="k">if</span> <span class="n">jira_issue</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">maxResults</span><span class="o">=</span><span class="n">JIRA_RESULT_PAGING</span><span class="p">,</span>
         <span class="p">)</span>
@@ -897,7 +897,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Autodesk.</p>
+    <p>&#169; Copyright 2026, Autodesk.</p>
   </div>
 
    

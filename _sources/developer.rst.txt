@@ -75,7 +75,7 @@ well, to pass on to Handlers::
             :param str issue_type: Jira Issue type to use when creating new Issues.
             """
             self._issue_type = issue_type
-            super(TaskIssueSyncer, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self._task_issue_handler = TaskIssueHandler(self, self._issue_type)
             self._note_comment_handler = NoteCommentHandler(self)
             # A handler combining the Task <-> Issue handler and the Note <-> Comment
@@ -282,11 +282,6 @@ Utils
 =====
 .. currentmodule:: sg_jira
 
-Common utility functions.
-
-.. automodule:: sg_jira.utils
-    :members:
-
 Errors
 ======
 .. automodule:: sg_jira.errors
@@ -308,7 +303,7 @@ Continuous Integration (CI)
 for the continuous integration and run the following validations:
 
 - Enforce reasonable PEP-8 conventions with Flake8.
-- Run unit tests on Linux, Mac and Windows with Python 3.9.
+- Run unit tests on Linux, macOS and Windows with Python 3.9, 3.10, 3.11, and 3.13.
 
 Azure Pipelines jobs are defined by the description files in the
 ``/azure-pipelines`` folder.
