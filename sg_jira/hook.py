@@ -295,11 +295,19 @@ class JiraHook(object):
         if data_type in ["duration", "number"]:
             if not jira_value:
                 return 0
-            elif isinstance(jira_entity, jira.resources.Worklog):
-                jira_value = jira_value / 60
+            # Issue.timetracking returns a TimeTracking resource, not a scalar.
+            # originalEstimateSeconds is the canonical numeric attribute.
+            if isinstance(jira_value, jira.resources.TimeTracking):
+                seconds = getattr(jira_value, "originalEstimateSeconds", 0) or 0
+                return int(seconds) // 60
+            # Worklog.timeSpent is a display string ("1h 30m"); the numeric
+            # value lives on timeSpentSeconds on the Worklog itself.
+            if isinstance(jira_entity, jira.resources.Worklog):
+                seconds = getattr(jira_entity, "timeSpentSeconds", 0) or 0
+                return int(seconds) // 60
             try:
                 return int(jira_value)
-            except ValueError:
+            except (TypeError, ValueError):
                 raise InvalidJiraValue(
                     sg_field, jira_value, "Unable to parse Jira value as integer"
                 )

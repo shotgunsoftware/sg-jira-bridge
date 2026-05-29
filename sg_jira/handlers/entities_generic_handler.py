@@ -10,6 +10,7 @@ import re
 import jira
 
 from sg_jira.constants import (
+    JIRA_EVENT_AUTOMATION_FULL_SYNC,
     JIRA_SHOTGUN_ID_FIELD,
     JIRA_SHOTGUN_TYPE_FIELD,
     JIRA_SYNC_IN_FPTR_FIELD,
@@ -453,10 +454,13 @@ class EntitiesGenericHandler(SyncHandler):
 
         else:
 
-            changelog = event.get("changelog")
-            if not changelog:
-                self._logger.debug("Rejecting Jira event without a changelog.")
-                return False
+            # Automation-driven full-sync events arrive without a Jira changelog;
+            # they trigger a sync of every mapped field instead.
+            if not event.get(JIRA_EVENT_AUTOMATION_FULL_SYNC):
+                changelog = event.get("changelog")
+                if not changelog:
+                    self._logger.debug("Rejecting Jira event without a changelog.")
+                    return False
 
             jira_issue = self.get_jira_issue(jira_entity["id"])
 
@@ -1250,6 +1254,13 @@ class EntitiesGenericHandler(SyncHandler):
             jira_fields[jira_field] = jira_value
 
         if jira_fields:
+            # Refresh the Shotgun URL bookkeeping field whenever we're already
+            # updating the Issue, so it heals if the entity was relinked or
+            # created outside the bridge's create-time path.
+            if isinstance(jira_entity, jira.resources.Issue):
+                jira_fields[self._jira.jira_shotgun_url_field] = (
+                    self._shotgun.get_entity_page_url(sg_entity)
+                )
             self._logger.debug(f"Updating Jira fields: {jira_fields}")
             jira_entity.update(fields=jira_fields)
 
@@ -1747,7 +1758,7 @@ class EntitiesGenericHandler(SyncHandler):
                 sg_value = []
                 for w in self._jira.watchers(jira_issue).watchers:
                     sg_user = self._hook.get_sg_user_from_jira_user(w)
-                    sg_value.append(sg_user)
+                    if sg_user: sg_value.append(sg_user)
 
             elif jira_field == "status":
                 sg_value = (
@@ -1783,7 +1794,7 @@ class EntitiesGenericHandler(SyncHandler):
                 except Exception as e:
                     self._logger.warning(
                         f"Not syncing Jira {issue_type}.{jira_field} to Flow Production Tracking . "
-                        f"Error occurred when trying to convert FPTR value to Jira value: {e}"
+                        f"Error occurred when trying to convert Jira value to FPTR value: {e}"
                     )
                     sync_with_errors = True
                     continue
@@ -1799,6 +1810,13 @@ class EntitiesGenericHandler(SyncHandler):
                 sync_with_errors = True
 
         if sg_data:
+            # Refresh the Jira URL bookkeeping field whenever we're already
+            # updating the FPTR entity (mirror of the SG -> Jira side).
+            if isinstance(jira_entity, jira.resources.Issue):
+                sg_data[SHOTGUN_JIRA_URL_FIELD] = {
+                    "url": jira_entity.permalink(),
+                    "name": "View in Jira",
+                }
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
         return not sync_with_errors
