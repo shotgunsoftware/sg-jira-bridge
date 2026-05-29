@@ -192,6 +192,24 @@ SYNC = {
                     "sg_entity": "Note",    # Note is a special entity, we only need to add the "sg_entity" key if we want to sync the changes
                     "sync_deletion_direction": "both_way",
                 },
+                {
+                    "sg_entity": "TimeLog",
+                    "field_mapping": [
+                        {
+                            "sg_field": "description",
+                            "jira_field": "comment",
+                        },
+                        {
+                            "sg_field": "duration",
+                            "jira_field": "timeSpentSeconds",
+                        },
+                        {
+                            "sg_field": "date",
+                            "jira_field": "started",
+                        },
+                    ],
+                    "sync_deletion_direction": "both_way",
+                },
             ],
         },
     },
