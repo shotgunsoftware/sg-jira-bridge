@@ -97,7 +97,7 @@ class TestJiraAutomationPayload(TestSyncBase):
                 "fields": fields if fields is not None else {"summary": "hello"},
             }
         }
- 
+
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`

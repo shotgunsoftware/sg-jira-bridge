@@ -142,7 +142,8 @@ def _normalize_native(
     webhook_event = _resolve_webhook_event(payload)
     logger.debug(
         "Adapted native automation request for %s as %s",
-        issue_block["key"], webhook_event,
+        issue_block["key"],
+        webhook_event,
     )
     return _build_event(webhook_event, issue_block, payload)
 
@@ -173,7 +174,9 @@ def _resolve_issue_key(body_value: Any, url_issue_key: str | None) -> str:
 def _resolve_webhook_event(payload: dict[str, Any]) -> str:
     webhook_event = payload.get("webhook_event", _DEFAULT_WEBHOOK_EVENT)
     if not isinstance(webhook_event, str):
-        raise JiraAutomationPayloadError("webhook_event must be a string when provided.")
+        raise JiraAutomationPayloadError(
+            "webhook_event must be a string when provided."
+        )
     if webhook_event not in _ALLOWED_WEBHOOK_EVENTS:
         allowed = ", ".join(sorted(_ALLOWED_WEBHOOK_EVENTS))
         raise JiraAutomationPayloadError(f"webhook_event must be one of: {allowed}")

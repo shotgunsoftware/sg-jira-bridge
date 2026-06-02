@@ -1758,7 +1758,8 @@ class EntitiesGenericHandler(SyncHandler):
                 sg_value = []
                 for w in self._jira.watchers(jira_issue).watchers:
                     sg_user = self._hook.get_sg_user_from_jira_user(w)
-                    if sg_user: sg_value.append(sg_user)
+                    if sg_user:
+                        sg_value.append(sg_user)
 
             elif jira_field == "status":
                 sg_value = (
