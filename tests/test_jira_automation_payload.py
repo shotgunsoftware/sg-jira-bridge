@@ -87,17 +87,6 @@ class TestJiraAutomationPayload(TestSyncBase):
         payload.update(extra)
         return payload
 
-    def _native_payload(self, key="DEV-25", issue_id="10001", fields=None):
-        """Helper method to mock a "Issue data (Jira format)" native payload."""
-        return {
-            "issue": {
-                "id": issue_id,
-                "key": key,
-                "self": "https://mocked.faked.com/rest/api/2/issue/%s" % issue_id,
-                "fields": fields if fields is not None else {"summary": "hello"},
-            }
-        }
-
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
 # and does not `from shotgun_api3 import Shotgun` and then `sg = Shotgun(...)`
@@ -130,8 +119,8 @@ class TestJiraAutomationPayloadPassthrough(TestJiraAutomationPayload):
 
     def test_event_daemon_payload_with_meta_left_alone(self, mocked_sg):
         """
-        PTR Event Daemon payloads carry `meta` and must never be treated as
-        native automation payloads.
+        PTR Event Daemon payloads carry `meta` and no `source` sentinel, so they
+        must be returned untouched.
         """
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
@@ -295,6 +284,40 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
         with self.assertRaises(JiraAutomationPayloadError):
             adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
 
+    def test_api_response_with_non_dict_fields_rejected(self, mocked_sg):
+        """A Jira response whose `fields` is not an object is rejected."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        jira_issue = self._mock_jira_data(bridge)
+        jira_issue.raw["fields"] = "not-an-object"
+
+        payload = self._automation_payload()
+        with self.assertRaises(JiraAutomationPayloadError):
+            adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+
+    def test_api_response_missing_id_rejected(self, mocked_sg):
+        """A Jira response missing the issue id is rejected."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        jira_issue = self._mock_jira_data(bridge)
+        del jira_issue.raw["id"]
+
+        payload = self._automation_payload()
+        with self.assertRaises(JiraAutomationPayloadError):
+            adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+
+    def test_api_response_with_invalid_key_rejected(self, mocked_sg):
+        """A Jira response whose key is not a Jira issue key is rejected."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        jira_issue = self._mock_jira_data(bridge)
+        issue_key = jira_issue.key
+        jira_issue.raw["key"] = "nope"
+
+        payload = self._automation_payload()
+        with self.assertRaises(JiraAutomationPayloadError):
+            adapt_automation_request(bridge, "Issue", issue_key, payload)
+
     def test_non_issue_resource_rejected(self, mocked_sg):
         """Only the Issue resource type is supported."""
 
@@ -303,69 +326,3 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
             adapt_automation_request(bridge, "Project", "DEV", payload)
-
-
-@mock.patch("shotgun_api3.Shotgun")
-class TestJiraAutomationPayloadNativeFormat(TestJiraAutomationPayload):
-    """The "Issue data (Jira format)" native template path (no API call)."""
-
-    def test_native_payload_coerced_without_api_call(self, mocked_sg):
-        """A native payload is coerced without a Jira API lookup."""
-
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-
-        # DEV-25 was never created in the mocked Jira, so a lookup would raise;
-        # the native path succeeding proves no lookup happened.
-        payload = self._native_payload(fields={"summary": "native"})
-        event = adapt_automation_request(bridge, "Issue", None, payload)
-
-        self.assertEqual(event["webhookEvent"], "jira:issue_updated")
-        self.assertTrue(event[JIRA_EVENT_AUTOMATION_FULL_SYNC])
-        self.assertEqual(event["issue"]["key"], "DEV-25")
-        self.assertEqual(event["issue"]["fields"], {"summary": "native"})
-
-    def test_native_payload_event_override(self, mocked_sg):
-        """The webhook_event can be overridden in a native payload."""
-
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-
-        payload = self._native_payload()
-        payload["webhook_event"] = "jira:issue_created"
-        event = adapt_automation_request(bridge, "Issue", None, payload)
-        self.assertEqual(event["webhookEvent"], "jira:issue_created")
-
-    def test_native_payload_url_key_must_match(self, mocked_sg):
-        """A native payload whose key differs from the URL path is rejected."""
-
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-
-        payload = self._native_payload(key="DEV-25")
-        with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", "DEV-99", payload)
-
-    def test_native_payload_matching_url_key_ok(self, mocked_sg):
-        """A native payload whose key matches the URL path is accepted."""
-
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-
-        payload = self._native_payload(key="DEV-25")
-        event = adapt_automation_request(bridge, "Issue", "DEV-25", payload)
-        self.assertEqual(event["issue"]["key"], "DEV-25")
-
-    def test_native_payload_missing_id_rejected(self, mocked_sg):
-        """A native payload whose issue is missing its id is rejected."""
-
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-
-        payload = {"issue": {"key": "DEV-25", "fields": {}}}
-        with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", None, payload)
-
-    def test_native_payload_bad_key_rejected(self, mocked_sg):
-        """A native payload whose key is not a Jira issue key is rejected."""
-
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-
-        payload = {"issue": {"id": "1", "key": "nope", "fields": {}}}
-        with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", None, payload)

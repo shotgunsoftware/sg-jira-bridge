@@ -9,14 +9,19 @@
 Normalize Jira Project Automation "Send web request" bodies into the
 webhook-shaped events the existing handlers expect.
 
-Two opt-in shapes are accepted; any other payload is returned unchanged so
-plain Jira webhooks keep working:
+A request opts in by setting the ``source`` sentinel; any other payload is
+returned unchanged so plain Jira webhooks keep working::
 
-1. **automation** — ``{"source": "jira_project_automation", "issue_key": "DEV-25"}``.
-   The bridge fetches the issue from Jira and builds a webhook-shaped event.
-2. **Native Jira format** — the default "Issue data (Jira format)" template
-   (top-level ``issue`` with ``fields``, no ``webhookEvent``). Coerced without
-   a Jira API call.
+    {
+        "source": "jira_project_automation",
+        "user": {"accountId": "{{initiator.accountId}}"}
+    }
+
+The issue key comes from the URL path (``{{issue.key}}``); the bridge fetches
+the issue from Jira and builds a webhook-shaped event. The optional ``user``
+block is forwarded so loop-suppression can run, and an optional
+``webhook_event`` (defaulting to ``jira:issue_updated``) selects the event type
+for issue-created rules.
 """
 
 from __future__ import annotations
@@ -44,11 +49,6 @@ _DEFAULT_WEBHOOK_EVENT = "jira:issue_updated"
 # Resource type expected in the URL path. Compared case-insensitively.
 _SUPPORTED_RESOURCE_TYPE = "issue"
 
-# Detected payload kinds. Kept as plain strings — only two values, only used
-# locally, so a full Enum is more ceremony than this earns.
-_KIND_AUTOMATION = "automation"
-_KIND_NATIVE = "native"
-
 
 class JiraAutomationPayloadError(Exception):
     """Raised when a Jira Project Automation payload is malformed (HTTP 400)."""
@@ -71,8 +71,7 @@ def adapt_automation_request(
     if not isinstance(payload, dict):
         return payload
 
-    kind = _classify_payload(payload)
-    if kind is None:
+    if payload.get("source") != JIRA_PROJECT_AUTOMATION_SOURCE:
         return payload
 
     if resource_type.lower() != _SUPPORTED_RESOURCE_TYPE:
@@ -81,30 +80,7 @@ def adapt_automation_request(
         )
 
     url_issue_key = (resource_id or "").strip() or None
-    if kind == _KIND_AUTOMATION:
-        return _normalize_automation(bridge, url_issue_key, payload)
-    return _normalize_native(url_issue_key, payload)
-
-
-def _classify_payload(payload: dict[str, Any]) -> str | None:
-    """Return ``_KIND_AUTOMATION``, ``_KIND_NATIVE``, or ``None``."""
-    if payload.get("source") == JIRA_PROJECT_AUTOMATION_SOURCE:
-        return _KIND_AUTOMATION
-    if _looks_like_native_issue_payload(payload):
-        return _KIND_NATIVE
-    return None
-
-
-def _looks_like_native_issue_payload(payload: dict[str, Any]) -> bool:
-    """Heuristic for Atlassian's "Issue data (Jira format)" template."""
-    # A real webhook already has webhookEvent; don't reshape it.
-    if payload.get("webhookEvent"):
-        return False
-    # PTR Event Daemon payloads include `meta`; never treat as automation.
-    if payload.get("meta") is not None:
-        return False
-    issue = payload.get("issue")
-    return isinstance(issue, dict) and isinstance(issue.get("fields"), dict)
+    return _normalize_automation(bridge, url_issue_key, payload)
 
 
 def _normalize_automation(
@@ -128,23 +104,6 @@ def _normalize_automation(
 
     issue_block = _build_issue_block(raw)
     logger.debug("Adapted automation request for %s", issue_key)
-    return _build_event(webhook_event, issue_block, payload)
-
-
-def _normalize_native(
-    url_issue_key: str | None, payload: dict[str, Any]
-) -> dict[str, Any]:
-    issue_block = _build_issue_block(payload["issue"])
-    if url_issue_key and url_issue_key != issue_block["key"]:
-        raise JiraAutomationPayloadError(
-            "issue key in the body must match the issue key in the URL path."
-        )
-    webhook_event = _resolve_webhook_event(payload)
-    logger.debug(
-        "Adapted native automation request for %s as %s",
-        issue_block["key"],
-        webhook_event,
-    )
     return _build_event(webhook_event, issue_block, payload)
 
 
@@ -183,10 +142,8 @@ def _resolve_webhook_event(payload: dict[str, Any]) -> str:
     return webhook_event
 
 
-def _build_issue_block(issue_raw: Any) -> dict[str, Any]:
+def _build_issue_block(issue_raw: dict[str, Any]) -> dict[str, Any]:
     """Coerce a Jira ``issue`` object into the webhook shape downstream needs."""
-    if not isinstance(issue_raw, dict):
-        raise JiraAutomationPayloadError("issue must be an object.")
     fields = issue_raw.get("fields")
     if not isinstance(fields, dict):
         raise JiraAutomationPayloadError("issue.fields must be an object.")
