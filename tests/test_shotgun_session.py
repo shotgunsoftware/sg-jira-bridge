@@ -13,6 +13,7 @@ from shotgun_api3.lib import mockgun
 from test_base import TestBase
 
 import sg_jira
+from sg_jira.shotgun_session import ShotgunSession
 
 
 # Mock Flow Production Tracking with mockgun, this works only if the code uses shotgun_api3.Shotgun
@@ -130,3 +131,15 @@ class TestShotgunSession(TestBase):
         )
 
         self.assertEqual(consolidated_timelog, None)
+
+    def test_user_agent_is_set(self, mocked_sg):
+        """Test that JIRABRIDGE User-Agent identifier is added"""
+
+        mock_sg_instance = mock.Mock()
+        mocked_sg.return_value = mock_sg_instance
+
+        ShotgunSession("https://test.shotgunstudio.com", "test_script", "test_key")
+
+        mock_sg_instance.add_user_agent.assert_called_once()
+        user_agent_arg = mock_sg_instance.add_user_agent.call_args[0][0]
+        self.assertIn("JIRABRIDGE", user_agent_arg.upper())

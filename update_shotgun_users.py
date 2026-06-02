@@ -147,6 +147,7 @@ def main():
         script_name=shotgun_settings["script_name"],
         api_key=shotgun_settings["script_key"],
     )
+    sg.add_user_agent("JIRABRIDGE")
 
     sync_jira_users_into_shotgun(sg, jira, project)
 
