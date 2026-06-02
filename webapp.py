@@ -527,19 +527,19 @@ def main():
         default=9090,
         help="The port number to listen to.",
     )
-    # parser.add_argument("--settings", help="Full path to settings file.", required=True)
-    # parser.add_argument(
-    #     "--ssl_context",
-    #     help="A key and certificate file pair to run the server in HTTPS mode.",
-    #     nargs=2,
-    # )
-    #
+    parser.add_argument("--settings", help="Full path to settings file.", required=True)
+    parser.add_argument(
+        "--ssl_context",
+        help="A key and certificate file pair to run the server in HTTPS mode.",
+        nargs=2,
+    )
+
     args = parser.parse_args()
 
     keyfile = None
     certfile = None
-    # if args.ssl_context:
-    #     keyfile, certfile = args.ssl_context
+    if args.ssl_context:
+        keyfile, certfile = args.ssl_context
 
     try:
         socket.inet_aton(args.listen_address)
@@ -550,7 +550,7 @@ def main():
     run_server(
         listen_address=args.listen_address,
         port=args.port,
-        settings="/Users/gudekak/projects/sg-jira-bridge/settings.py",
+        settings=args.settings,
         keyfile=keyfile,
         certfile=certfile,
     )

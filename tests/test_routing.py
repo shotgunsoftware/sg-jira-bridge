@@ -32,10 +32,31 @@ Content-Length: {content_length}
 UNICODE_STRING = "unicode_îéö_😀"
 
 
+class MockJiraIssue(object):
+    """Mimics ``jira.Issue``: only the ``raw`` dict is read by the bridge."""
+
+    def __init__(self, key):
+        self.raw = {"id": "10001", "key": key, "fields": {"summary": "hi"}}
+
+
+class MockJira(object):
+    def issue(self, key):
+        return MockJiraIssue(key)
+
+
+class MockBridge(object):
+    """Stand-in for the SgJiraBridge exposed as ``server._sg_jira``."""
+
+    jira = MockJira()
+
+
 class MockServer(object):
     """
     Mock some of the web server methods.
     """
+
+    # The Jira->PTR route hands this to adapt_automation_request().
+    _sg_jira = MockBridge()
 
     @property
     def sync_settings_names(self):
@@ -303,6 +324,48 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"200 POST request successful" in raw_response)
+
+    def test_jira_route_project_automation_payload(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """
+        A Jira Project Automation payload is normalized by the webapp before
+        being handed to sync_in_shotgun, and the route succeeds.
+        """
+        server = MockServer()
+
+        automation_payload = {
+            "source": "jira_project_automation",
+            "user": {"accountId": "initiator-123"},
+        }
+        handler = webapp.RequestHandler(
+            MockRequest("/jira2sg/valid/issue/DEV-1", automation_payload),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"200 POST request successful" in raw_response)
+
+    def test_jira_route_bad_project_automation_payload(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """
+        A malformed automation payload raises JiraAutomationPayloadError, which
+        the webapp maps to an HTTP 400 response.
+        """
+        server = MockServer()
+
+        bad_payload = {
+            "source": "jira_project_automation",
+            "issue_key": "not a valid key",
+        }
+        handler = webapp.RequestHandler(
+            MockRequest("/jira2sg/valid/issue/DEV-1", bad_payload),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"HTTP/1.1 400" in raw_response)
 
     def test_admin_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
