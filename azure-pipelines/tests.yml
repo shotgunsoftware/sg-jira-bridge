@@ -42,8 +42,9 @@ jobs:
         python -m pip install --upgrade setuptools wheel
         python -m pip install --upgrade \
           --requirement requirements.txt \
-          --requirement tests/requirements.txt \
+          --requirement tests/requirements.txt
       # Need to use the "python -m" prefix to make Windows happy.
+      # Do not add a trailing "\" on the last line — Git Bash on Windows passes "\" to pip.
 
   - task: Bash@3
     displayName: Run tests
@@ -61,7 +62,7 @@ jobs:
           --cov-report xml:coverage.xml \
           --durations=0 \
           --nunit-xml=test-results.xml \
-          --verbose \
+          --verbose
 
   # Explicit call to PublishTestResults@2 and PublishCodeCoverageResults@2 here
   # instead of relying on pytest-azurepipelines because pytest-azurepipelines
