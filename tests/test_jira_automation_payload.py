@@ -21,7 +21,7 @@ from sg_jira.constants import (
 )
 from sg_jira.jira_automation_payload import (
     JiraAutomationPayloadError,
-    adapt_automation_request,
+    normalize_automation_request,
 )
 
 
@@ -101,7 +101,7 @@ class TestJiraAutomationPayloadPassthrough(TestJiraAutomationPayload):
 
         for payload in ([], "string", 42, None):
             self.assertIs(
-                adapt_automation_request(bridge, "Issue", "DEV-1", payload), payload
+                normalize_automation_request(bridge, "Issue", "DEV-1", payload), payload
             )
 
     def test_real_webhook_payload_left_alone(self, mocked_sg):
@@ -114,7 +114,7 @@ class TestJiraAutomationPayloadPassthrough(TestJiraAutomationPayload):
             "issue": {"key": "DEV-1", "fields": {}},
         }
         self.assertIs(
-            adapt_automation_request(bridge, "Issue", "DEV-1", payload), payload
+            normalize_automation_request(bridge, "Issue", "DEV-1", payload), payload
         )
 
     def test_event_daemon_payload_with_meta_left_alone(self, mocked_sg):
@@ -127,7 +127,7 @@ class TestJiraAutomationPayloadPassthrough(TestJiraAutomationPayload):
 
         payload = {"meta": {"type": "attribute_change"}, "issue": {"fields": {}}}
         self.assertIs(
-            adapt_automation_request(bridge, "Issue", "DEV-1", payload), payload
+            normalize_automation_request(bridge, "Issue", "DEV-1", payload), payload
         )
 
     def test_unrelated_payload_left_alone(self, mocked_sg):
@@ -137,7 +137,7 @@ class TestJiraAutomationPayloadPassthrough(TestJiraAutomationPayload):
 
         payload = {"foo": "bar"}
         self.assertIs(
-            adapt_automation_request(bridge, "Issue", "DEV-1", payload), payload
+            normalize_automation_request(bridge, "Issue", "DEV-1", payload), payload
         )
 
 
@@ -155,7 +155,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
         jira_issue = self._mock_jira_data(bridge)
 
         payload = self._automation_payload(account_id="initiator-123")
-        event = adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+        event = normalize_automation_request(bridge, "Issue", jira_issue.key, payload)
 
         self.assertEqual(event["webhookEvent"], "jira:issue_updated")
         self.assertTrue(event[JIRA_EVENT_AUTOMATION_FULL_SYNC])
@@ -172,7 +172,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
         jira_issue = self._mock_jira_data(bridge)
 
         payload = self._automation_payload(issue_key=jira_issue.key)
-        event = adapt_automation_request(bridge, "Issue", None, payload)
+        event = normalize_automation_request(bridge, "Issue", None, payload)
 
         self.assertEqual(event["issue"]["key"], jira_issue.key)
         self.assertEqual(event["user"], {"accountId": "initiator-123"})
@@ -184,7 +184,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
         jira_issue = self._mock_jira_data(bridge)
 
         payload = self._automation_payload(webhook_event="jira:issue_created")
-        event = adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+        event = normalize_automation_request(bridge, "Issue", jira_issue.key, payload)
         self.assertEqual(event["webhookEvent"], "jira:issue_created")
 
     def test_user_block_passed_through(self, mocked_sg):
@@ -194,7 +194,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
         jira_issue = self._mock_jira_data(bridge)
 
         payload = self._automation_payload(account_id="abc")
-        event = adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+        event = normalize_automation_request(bridge, "Issue", jira_issue.key, payload)
         self.assertEqual(event["user"], {"accountId": "abc"})
 
     def test_non_dict_user_block_dropped(self, mocked_sg):
@@ -205,7 +205,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         payload["user"] = "not-a-dict"
-        event = adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+        event = normalize_automation_request(bridge, "Issue", jira_issue.key, payload)
         self.assertNotIn("user", event)
 
     def test_invalid_webhook_event_rejected(self, mocked_sg):
@@ -215,7 +215,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload(webhook_event="jira:issue_deleted")
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", "DEV-25", payload)
+            normalize_automation_request(bridge, "Issue", "DEV-25", payload)
 
     def test_non_string_webhook_event_rejected(self, mocked_sg):
         """A non-string webhook_event value is rejected."""
@@ -224,7 +224,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload(webhook_event=123)
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", "DEV-25", payload)
+            normalize_automation_request(bridge, "Issue", "DEV-25", payload)
 
     def test_missing_issue_key_rejected(self, mocked_sg):
         """An automation payload without an issue key (body or URL) is rejected."""
@@ -233,7 +233,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", None, payload)
+            normalize_automation_request(bridge, "Issue", None, payload)
 
     def test_non_string_issue_key_rejected(self, mocked_sg):
         """A non-string issue_key value in the body is rejected."""
@@ -242,7 +242,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload(issue_key=25)
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", None, payload)
+            normalize_automation_request(bridge, "Issue", None, payload)
 
     def test_invalid_issue_key_format_rejected(self, mocked_sg):
         """An issue key (from the URL path) that isn't a Jira key is rejected."""
@@ -251,7 +251,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", "not a key", payload)
+            normalize_automation_request(bridge, "Issue", "not a key", payload)
 
     def test_body_url_key_mismatch_rejected(self, mocked_sg):
         """An issue key in the body that differs from the URL path is rejected."""
@@ -260,7 +260,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload(issue_key="DEV-25")
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", "DEV-99", payload)
+            normalize_automation_request(bridge, "Issue", "DEV-99", payload)
 
     def test_jira_lookup_error_wrapped(self, mocked_sg):
         """A Jira lookup failure is wrapped in a JiraAutomationPayloadError."""
@@ -271,7 +271,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
         # DEV-404 is a valid key shape but was never created in the mocked Jira.
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", "DEV-404", payload)
+            normalize_automation_request(bridge, "Issue", "DEV-404", payload)
 
     def test_unexpected_api_response_rejected(self, mocked_sg):
         """A Jira response without a `fields` block is rejected."""
@@ -282,7 +282,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+            normalize_automation_request(bridge, "Issue", jira_issue.key, payload)
 
     def test_api_response_with_non_dict_fields_rejected(self, mocked_sg):
         """A Jira response whose `fields` is not an object is rejected."""
@@ -293,7 +293,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+            normalize_automation_request(bridge, "Issue", jira_issue.key, payload)
 
     def test_api_response_missing_id_rejected(self, mocked_sg):
         """A Jira response missing the issue id is rejected."""
@@ -304,7 +304,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", jira_issue.key, payload)
+            normalize_automation_request(bridge, "Issue", jira_issue.key, payload)
 
     def test_api_response_with_invalid_key_rejected(self, mocked_sg):
         """A Jira response whose key is not a Jira issue key is rejected."""
@@ -316,7 +316,7 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Issue", issue_key, payload)
+            normalize_automation_request(bridge, "Issue", issue_key, payload)
 
     def test_non_issue_resource_rejected(self, mocked_sg):
         """Only the Issue resource type is supported."""
@@ -325,4 +325,4 @@ class TestJiraAutomationPayloadMinimalBody(TestJiraAutomationPayload):
 
         payload = self._automation_payload()
         with self.assertRaises(JiraAutomationPayloadError):
-            adapt_automation_request(bridge, "Project", "DEV", payload)
+            normalize_automation_request(bridge, "Project", "DEV", payload)

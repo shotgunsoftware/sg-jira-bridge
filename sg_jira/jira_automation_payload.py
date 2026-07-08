@@ -24,11 +24,8 @@ block is forwarded so loop-suppression can run, and an optional
 for issue-created rules.
 """
 
-from __future__ import annotations
-
 import logging
 import re
-from typing import Any
 
 from jira import JIRAError
 
@@ -44,22 +41,13 @@ logger = logging.getLogger(__name__)
 _ISSUE_KEY_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_]*-\d+$")
 
 _ALLOWED_WEBHOOK_EVENTS = frozenset({"jira:issue_updated", "jira:issue_created"})
-_DEFAULT_WEBHOOK_EVENT = "jira:issue_updated"
-
-# Resource type expected in the URL path. Compared case-insensitively.
-_SUPPORTED_RESOURCE_TYPE = "issue"
 
 
 class JiraAutomationPayloadError(Exception):
     """Raised when a Jira Project Automation payload is malformed (HTTP 400)."""
 
 
-def adapt_automation_request(
-    bridge: Any,
-    resource_type: str,
-    resource_id: str | None,
-    payload: Any,
-) -> Any:
+def normalize_automation_request(bridge, resource_type, resource_id, payload):
     """
     Return a webhook-shaped event if ``payload`` is a Jira Project Automation
     request; otherwise return ``payload`` unchanged.
@@ -74,18 +62,16 @@ def adapt_automation_request(
     if payload.get("source") != JIRA_PROJECT_AUTOMATION_SOURCE:
         return payload
 
-    if resource_type.lower() != _SUPPORTED_RESOURCE_TYPE:
+    if resource_type.lower() != "issue":
         raise JiraAutomationPayloadError(
             "Jira Project Automation sync only supports the Issue resource."
         )
 
-    url_issue_key = (resource_id or "").strip() or None
-    return _normalize_automation(bridge, url_issue_key, payload)
+    url_issue_key = resource_id or None
+    return _build_automation_event(bridge, url_issue_key, payload)
 
 
-def _normalize_automation(
-    bridge: Any, url_issue_key: str | None, payload: dict[str, Any]
-) -> dict[str, Any]:
+def _build_automation_event(bridge, url_issue_key, payload):
     issue_key = _resolve_issue_key(payload.get("issue_key"), url_issue_key)
     webhook_event = _resolve_webhook_event(payload)
 
@@ -97,20 +83,20 @@ def _normalize_automation(
         ) from e
 
     raw = getattr(jira_issue, "raw", None)
-    if not isinstance(raw, dict) or raw.get("fields") is None:
+    if not isinstance(raw, dict):
         raise JiraAutomationPayloadError(
             f"Unexpected Jira API response for {issue_key}."
         )
 
     issue_block = _build_issue_block(raw)
-    logger.debug("Adapted automation request for %s", issue_key)
+    logger.debug("Normalized automation request for %s", issue_key)
     return _build_event(webhook_event, issue_block, payload)
 
 
 # --- Field-level resolvers -------------------------------------------------
 
 
-def _resolve_issue_key(body_value: Any, url_issue_key: str | None) -> str:
+def _resolve_issue_key(body_value, url_issue_key):
     """Resolve and validate the issue key from the body or URL path."""
     if body_value is not None and not isinstance(body_value, str):
         raise JiraAutomationPayloadError("issue_key must be a string when provided.")
@@ -123,15 +109,15 @@ def _resolve_issue_key(body_value: Any, url_issue_key: str | None) -> str:
         raise JiraAutomationPayloadError(
             "Invalid issue_key; expected a Jira key such as PROJ-123."
         )
-    if url_issue_key and candidate != url_issue_key:
+    if url_issue_key and candidate != url_issue_key.strip():
         raise JiraAutomationPayloadError(
             "issue key in the body must match the issue key in the URL path."
         )
     return candidate
 
 
-def _resolve_webhook_event(payload: dict[str, Any]) -> str:
-    webhook_event = payload.get("webhook_event", _DEFAULT_WEBHOOK_EVENT)
+def _resolve_webhook_event(payload):
+    webhook_event = payload.get("webhook_event", "jira:issue_updated")
     if not isinstance(webhook_event, str):
         raise JiraAutomationPayloadError(
             "webhook_event must be a string when provided."
@@ -142,7 +128,7 @@ def _resolve_webhook_event(payload: dict[str, Any]) -> str:
     return webhook_event
 
 
-def _build_issue_block(issue_raw: dict[str, Any]) -> dict[str, Any]:
+def _build_issue_block(issue_raw):
     """Coerce a Jira ``issue`` object into the webhook shape downstream needs."""
     fields = issue_raw.get("fields")
     if not isinstance(fields, dict):
@@ -165,10 +151,8 @@ def _build_issue_block(issue_raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _build_event(
-    webhook_event: str, issue_block: dict[str, Any], payload: dict[str, Any]
-) -> dict[str, Any]:
-    event: dict[str, Any] = {
+def _build_event(webhook_event, issue_block, payload):
+    event = {
         "webhookEvent": webhook_event,
         "issue": issue_block,
         JIRA_EVENT_AUTOMATION_FULL_SYNC: True,

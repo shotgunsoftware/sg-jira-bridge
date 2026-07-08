@@ -55,7 +55,7 @@ class MockServer(object):
     Mock some of the web server methods.
     """
 
-    # The Jira->PTR route hands this to adapt_automation_request().
+    # The Jira->PTR route hands this to normalize_automation_request().
     _sg_jira = MockBridge()
 
     @property

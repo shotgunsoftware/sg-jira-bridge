@@ -1757,7 +1757,7 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         mocked_jira_event = self._mock_jira_event(
             jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
         )
-        # Mimic what jira_automation_payload.adapt_automation_request produces:
+        # Mimic what jira_automation_payload.normalize_automation_request produces:
         # no changelog, but the full-sync sentinel set.
         del mocked_jira_event["changelog"]
         mocked_jira_event[JIRA_EVENT_AUTOMATION_FULL_SYNC] = True
