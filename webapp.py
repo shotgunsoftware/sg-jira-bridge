@@ -20,7 +20,7 @@ from urllib import parse
 import sg_jira
 from sg_jira.jira_automation_payload import (
     JiraAutomationPayloadError,
-    adapt_automation_request,
+    normalize_automation_request,
 )
 
 DESCRIPTION = """
@@ -416,7 +416,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "type and its key" % self.path
                 )
 
-            payload = adapt_automation_request(
+            payload = normalize_automation_request(
                 self.server._sg_jira, entity_type, entity_key, payload
             )
 
