@@ -980,9 +980,10 @@ class EntitiesGenericHandler(SyncHandler):
                 SHOTGUN_JIRA_ID_FIELD: jira_entity_key,
             }
             if isinstance(jira_entity, jira.resources.Issue):
-                sg_data[SHOTGUN_JIRA_URL_FIELD] = self._jira_url_field_value(
-                    jira_entity
-                )
+                sg_data[SHOTGUN_JIRA_URL_FIELD] = {
+                    "url": jira_entity.permalink(),
+                    "name": "View in Jira",
+                }
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
         return jira_entity
@@ -1253,13 +1254,6 @@ class EntitiesGenericHandler(SyncHandler):
             jira_fields[jira_field] = jira_value
 
         if jira_fields:
-            # Refresh the Shotgun URL bookkeeping field whenever we're already
-            # updating the Issue, so it heals if the entity was relinked or
-            # created outside the bridge's create-time path.
-            if isinstance(jira_entity, jira.resources.Issue):
-                jira_fields[self._jira.jira_shotgun_url_field] = (
-                    self._shotgun.get_entity_page_url(sg_entity)
-                )
             self._logger.debug(f"Updating Jira fields: {jira_fields}")
             jira_entity.update(fields=jira_fields)
 
@@ -1553,7 +1547,10 @@ class EntitiesGenericHandler(SyncHandler):
                 "project": sg_project,
                 sg_entity_name_field: getattr(jira_issue.fields, jira_name_field),
                 SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
-                SHOTGUN_JIRA_URL_FIELD: self._jira_url_field_value(jira_issue),
+                SHOTGUN_JIRA_URL_FIELD: {
+                    "url": jira_issue.permalink(),
+                    "name": "View in Jira",
+                },
                 SHOTGUN_SYNC_IN_JIRA_FIELD: sync_in_jira,
             }
 
@@ -1673,20 +1670,6 @@ class EntitiesGenericHandler(SyncHandler):
             self._shotgun.delete(sg_entity_type, sg_entities[0]["id"])
 
         return sg_entities[0]
-
-    @staticmethod
-    def _jira_url_field_value(jira_issue):
-        """
-        Build the Flow Production Tracking URL-field payload pointing at a Jira Issue.
-
-        :param jira_issue: The Jira Issue to link to.
-        :type jira_issue: jira.resources.Issue
-        :returns: A dict suitable for a FPTR url field.
-        """
-        return {
-            "url": jira_issue.permalink(),
-            "name": "View in Jira",
-        }
 
     def _sync_jira_fields_to_sg(
         self, jira_issue, jira_key, sg_entity, jira_fields=None
@@ -1821,12 +1804,6 @@ class EntitiesGenericHandler(SyncHandler):
                 sync_with_errors = True
 
         if sg_data:
-            # Refresh the Jira URL bookkeeping field whenever we're already
-            # updating the FPTR entity (mirror of the SG -> Jira side).
-            if isinstance(jira_entity, jira.resources.Issue):
-                sg_data[SHOTGUN_JIRA_URL_FIELD] = self._jira_url_field_value(
-                    jira_entity
-                )
             self._shotgun.update(sg_entity["type"], sg_entity["id"], sg_data)
 
         return not sync_with_errors
@@ -1900,6 +1877,10 @@ class EntitiesGenericHandler(SyncHandler):
                 jira_issue, jira_comment.id, "Note", None
             )
             if not sg_entity:
+                sync_with_errors = True
+            if not self._sync_jira_fields_to_sg(
+                jira_issue, jira_comment.id, sg_entity, None
+            ):
                 sync_with_errors = True
 
         # then, if the sync deletion flag is enabled, remove the notes that doesn't exist anymore in Jira

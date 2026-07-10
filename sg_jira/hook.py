@@ -35,7 +35,7 @@ class JiraHook(object):
     """
 
     # Associated regex used to get FPTR Note information from Jira comment body
-    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*?)\*\n\n(?:_Note created from FPTR by ([\w\s]+)_\n)?(.*)\n{panel}"
 
     # Template used to build Jira worklogs content from a TimeLog.
     WORKLOG_BODY_TEMPLATE = """
@@ -353,17 +353,18 @@ class JiraHook(object):
         # so the data will be found from the comment itself rather than its body
         if not result:
             return None, jira_comment_body, None
-
-        author = result.group(2).strip()
-        # we need to make sure the author is associated with a current FPTR user
-        sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
-        if not sg_user:
-            raise InvalidJiraValue(
-                "content",
-                jira_comment_body,
-                "Invalid Jira Comment panel formatting. Unable to parse FPTR "
-                "author from '%s'" % author,
-            )
+        sg_user = None
+        if result.group(2):
+            author = result.group(2).strip()
+            # we need to make sure the author is associated with a current FPTR user
+            sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
+            if not sg_user:
+                raise InvalidJiraValue(
+                    "content",
+                    jira_comment_body,
+                    "Invalid Jira Comment panel formatting. Unable to parse FPTR "
+                    "author from '%s'" % author,
+                )
 
         subject = result.group(1).strip()
         # if we have any { or } in the title reject the value as it is likely

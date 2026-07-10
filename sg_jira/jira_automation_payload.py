@@ -1,4 +1,4 @@
-# Copyright 2024 Autodesk, Inc.  All rights reserved.
+# Copyright 2026 Autodesk, Inc.  All rights reserved.
 #
 # Use of this software is subject to the terms of the Autodesk license agreement
 # provided at the time of installation or download, or which otherwise accompanies
@@ -31,7 +31,6 @@ from jira import JIRAError
 
 from .constants import (
     JIRA_EVENT_AUTOMATION_FULL_SYNC,
-    JIRA_PROJECT_AUTOMATION_SOURCE,
 )
 
 logger = logging.getLogger(__name__)
@@ -56,10 +55,8 @@ def normalize_automation_request(bridge, resource_type, resource_id, payload):
     raises :class:`JiraAutomationPayloadError`; the caller should map it to
     HTTP 400.
     """
-    if not isinstance(payload, dict):
-        return payload
 
-    if payload.get("source") != JIRA_PROJECT_AUTOMATION_SOURCE:
+    if payload.get("source") != "jira_project_automation":
         return payload
 
     if resource_type.lower() != "issue":
@@ -67,12 +64,21 @@ def normalize_automation_request(bridge, resource_type, resource_id, payload):
             "Jira Project Automation sync only supports the Issue resource."
         )
 
-    url_issue_key = resource_id or None
-    return _build_automation_event(bridge, url_issue_key, payload)
+    return _build_automation_event(bridge, resource_id, payload)
 
 
-def _build_automation_event(bridge, url_issue_key, payload):
-    issue_key = _resolve_issue_key(payload.get("issue_key"), url_issue_key)
+def _build_automation_event(bridge, issue_key, payload):
+
+    if not issue_key:
+        raise JiraAutomationPayloadError(
+            "Missing issue key: set issue_key in the URL path."
+        )
+
+    if not _ISSUE_KEY_PATTERN.match(issue_key):
+        raise JiraAutomationPayloadError(
+            "Invalid issue_key; expected a Jira key such as PROJ-123."
+        )
+
     webhook_event = _resolve_webhook_event(payload)
 
     try:
@@ -96,26 +102,6 @@ def _build_automation_event(bridge, url_issue_key, payload):
 # --- Field-level resolvers -------------------------------------------------
 
 
-def _resolve_issue_key(body_value, url_issue_key):
-    """Resolve and validate the issue key from the body or URL path."""
-    if body_value is not None and not isinstance(body_value, str):
-        raise JiraAutomationPayloadError("issue_key must be a string when provided.")
-    candidate = (body_value or url_issue_key or "").strip()
-    if not candidate:
-        raise JiraAutomationPayloadError(
-            "Missing issue key: set issue_key in the body or use it in the URL path."
-        )
-    if not _ISSUE_KEY_PATTERN.match(candidate):
-        raise JiraAutomationPayloadError(
-            "Invalid issue_key; expected a Jira key such as PROJ-123."
-        )
-    if url_issue_key and candidate != url_issue_key.strip():
-        raise JiraAutomationPayloadError(
-            "issue key in the body must match the issue key in the URL path."
-        )
-    return candidate
-
-
 def _resolve_webhook_event(payload):
     webhook_event = payload.get("webhook_event", "jira:issue_updated")
     if not isinstance(webhook_event, str):
@@ -133,13 +119,15 @@ def _build_issue_block(issue_raw):
     fields = issue_raw.get("fields")
     if not isinstance(fields, dict):
         raise JiraAutomationPayloadError("issue.fields must be an object.")
-    for required in ("id", "key"):
-        if required not in issue_raw:
-            raise JiraAutomationPayloadError(
-                f"issue is missing required key {required}."
-            )
+
+    missing = {"id", "key"} - issue_raw.keys()
+    if missing:
+        raise JiraAutomationPayloadError(
+            f"issue is missing required key(s): {', '.join(sorted(missing))}."
+        )
+
     issue_key = issue_raw["key"]
-    if not isinstance(issue_key, str) or not _ISSUE_KEY_PATTERN.match(issue_key):
+    if not _ISSUE_KEY_PATTERN.match(issue_key):
         raise JiraAutomationPayloadError(
             "issue.key must be a Jira issue key (e.g. PROJ-123)."
         )
