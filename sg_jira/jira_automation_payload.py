@@ -56,6 +56,9 @@ def normalize_automation_request(bridge, resource_type, resource_id, payload):
     HTTP 400.
     """
 
+    if not isinstance(payload, dict):
+        return payload
+
     if payload.get("source") != "jira_project_automation":
         return payload
 

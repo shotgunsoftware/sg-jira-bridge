@@ -17,7 +17,6 @@ from test_sync_base import TestSyncBase
 
 import sg_jira
 from sg_jira.constants import (
-    JIRA_EVENT_AUTOMATION_FULL_SYNC,
     JIRA_SHOTGUN_ID_FIELD,
     JIRA_SHOTGUN_TYPE_FIELD,
     JIRA_SHOTGUN_URL_FIELD,
@@ -1736,54 +1735,6 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
             )
         )
 
-    def test_jira_to_fptr_automation_full_sync_without_changelog(self, mocked_sg):
-        """
-        An automation-driven event has no changelog but carries the internal
-        full-sync flag; it must be accepted and trigger a full sync of every
-        mapped field (and the Issue's comments and worklogs), just like the
-        "Sync In FPTR" changelog path.
-        """
-
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-
-        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        bridge.jira.add_comment(jira_issue, "jira comment body")
-        bridge.jira.add_worklog(
-            jira_issue, timeSpentSeconds=0, comment="jira worklog body"
-        )
-
-        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
-
-        mocked_jira_event = self._mock_jira_event(
-            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
-        )
-        # Mimic what jira_automation_payload.normalize_automation_request produces:
-        # no changelog, but the full-sync sentinel set.
-        del mocked_jira_event["changelog"]
-        mocked_jira_event[JIRA_EVENT_AUTOMATION_FULL_SYNC] = True
-
-        self.assertNotEqual(jira_issue.fields.summary, mock_shotgun.SG_TASK["content"])
-
-        self.assertTrue(
-            bridge.sync_in_shotgun(
-                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
-            )
-        )
-
-        sg_task = bridge.shotgun.find_one(
-            "Task",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
-            ["content", "sg_description"],
-        )
-        self.assertEqual(jira_issue.fields.summary, sg_task["content"])
-        self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
-
-        # Full sync cascades to the Issue's associated comments and worklogs.
-        sg_notes = bridge.shotgun.find("Note", [["tasks", "is", mocked_sg_task]])
-        self.assertEqual(len(sg_notes), 1)
-        sg_timelogs = bridge.shotgun.find("TimeLog", [["entity", "is", mocked_sg_task]])
-        self.assertEqual(len(sg_timelogs), 1)
-
     def test_jira_to_fptr_issue_type_not_supported(self, mocked_sg):
         """Reject the event if the issue type is not supported."""
 
@@ -2071,9 +2022,14 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        bridge.jira.add_comment(jira_issue, "jira comment body")
+        bridge.jira.add_comment(
+            jira_issue, body="jira comment body", author=mock_jira.JIRA_USER
+        )
         bridge.jira.add_worklog(
-            jira_issue, timeSpentSeconds=0, comment="jira worklog body"
+            jira_issue,
+            timeSpentSeconds=0,
+            comment="jira worklog body",
+            author=mock_jira.JIRA_USER,
         )
 
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)

@@ -37,11 +37,6 @@ SHOTGUN_SYNC_IN_JIRA_FIELD = "sg_sync_in_jira"
 # A Jira check box field used to specify which entities should be synced.
 JIRA_SYNC_IN_FPTR_FIELD = "Sync In FPTR"
 
-# Sentinel value used in the JSON body of a Jira Project Automation
-# "Send web request" action to opt into the minimal-payload path (the bridge
-# fetches the issue from Jira instead of relying on the body).
-JIRA_PROJECT_AUTOMATION_SOURCE = "jira_project_automation"
-
 # Internal flag added to normalized automation events so downstream handlers know
 # to sync all mapped fields instead of relying on a webhook changelog.
 JIRA_EVENT_AUTOMATION_FULL_SYNC = "_bridge_automation_full_sync"
