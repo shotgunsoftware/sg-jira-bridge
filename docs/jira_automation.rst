@@ -7,15 +7,20 @@ Jira **Project Automation** rules let project admins (not just site admins) driv
 the bridge. The bridge supports two ways of doing this, summarised here and
 detailed below:
 
-================================ ==================================================
-Approach                         When to use
-================================ ==================================================
-**1. Bridge-side normalization** You want a minimal automation rule and let the
-(this page, top section)         bridge fetch the issue and build the event for you.
-**2. Webhook-shaped custom JSON** You don't want to change the bridge at all and are
-(this page, bottom section)      happy to hand-craft the JSON body using smart
-                                 values so it mimics a Jira webhook.
-================================ ==================================================
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Approach
+     - When to use
+   * - | **1. Bridge-side normalization**
+       | (this page, top section)
+     - You want a minimal automation rule and let the bridge fetch the issue
+       and build the event for you.
+   * - | **2. Webhook-shaped custom JSON**
+       | (this page, bottom section)
+     - You don't want to change the bridge at all and are happy to hand-craft
+       the JSON body using smart values so it mimics a Jira webhook.
 
 Both approaches only work with the
 :class:`~sg_jira.handlers.entities_generic_handler.EntitiesGenericHandler` (i.e.
@@ -62,7 +67,7 @@ Approach 1 — Bridge-side normalization
 
 A request opts in by setting the ``source`` sentinel; the bridge then looks up
 the issue via the Jira REST API and synthesizes a webhook-shaped event. See
-:func:`sg_jira.jira_automation_payload.adapt_automation_request`. Events
+:func:`sg_jira.jira_automation_payload.normalize_automation_request`. Events
 produced this way always trigger a full sync of the Issue (see
 :ref:`jira_automation_sync_scope`).
 
@@ -82,12 +87,8 @@ The issue key comes from the ``{{issue.key}}`` smart value in the URL path. The
 ``user`` block is optional but recommended: it lets the bridge's loop-suppression
 check compare ``user.accountId`` against the bridge user (see Approach 2 below).
 
-Two optional keys tune the behaviour:
-
-* ``webhook_event`` defaults to ``jira:issue_updated``; set it to
-  ``jira:issue_created`` for rules that fire on issue creation.
-* ``issue_key`` may be supplied in the body instead of relying on the URL path
-  (it must match the path when both are present).
+The optional ``webhook_event`` key defaults to ``jira:issue_updated``; set it to
+``jira:issue_created`` for rules that fire on issue creation.
 
 Approach 2 — Webhook-shaped custom JSON (no bridge changes)
 ===========================================================
@@ -97,9 +98,11 @@ body in the automation rule that exactly mimics a Jira webhook payload. The
 bridge then handles it through the same code path as a real webhook.
 
 In the *Send web request* action, set **Web request body** to *Custom data* and
-paste:
+paste (this is not strict JSON — it embeds Jira smart values such as
+``{{issue.asJsonString}}`` that Jira expands before sending):
 
 .. code-block:: json
+   :force:
 
     {
         "webhookEvent": "jira:issue_updated",
