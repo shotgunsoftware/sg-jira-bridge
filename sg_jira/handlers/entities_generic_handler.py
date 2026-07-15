@@ -1831,7 +1831,7 @@ class EntitiesGenericHandler(SyncHandler):
             )
             if not sg_entity:
                 sync_with_errors = True
-            if not self._sync_jira_fields_to_sg(
+            elif not self._sync_jira_fields_to_sg(
                 jira_issue, jira_worklog.id, sg_entity, None
             ):
                 sync_with_errors = True
@@ -1878,7 +1878,7 @@ class EntitiesGenericHandler(SyncHandler):
             )
             if not sg_entity:
                 sync_with_errors = True
-            if not self._sync_jira_fields_to_sg(
+            elif not self._sync_jira_fields_to_sg(
                 jira_issue, jira_comment.id, sg_entity, None
             ):
                 sync_with_errors = True

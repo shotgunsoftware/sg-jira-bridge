@@ -325,6 +325,44 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"200 POST request successful" in raw_response)
 
+    def test_jira_automation_route(self, mocked_finish, mocked_jira, mocked_sg):
+        """
+        Jira Project Automation "Send web request" bodies are normalized on the
+        jira2sg route: a valid body is synced (200), a malformed one is a 400.
+        """
+        server = MockServer()
+
+        # Valid automation body: normalized against the mocked Jira issue and synced.
+        handler = webapp.RequestHandler(
+            MockRequest(
+                "/jira2sg/valid/issue/PROJ-1",
+                {
+                    "source": "jira_project_automation",
+                    "user": {"accountId": "initiator-123"},
+                },
+            ),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"200 POST request successful" in raw_response)
+
+        # Malformed automation body: an unsupported webhook_event is rejected as
+        # a JiraAutomationPayloadError, which the handler maps to HTTP 400.
+        handler = webapp.RequestHandler(
+            MockRequest(
+                "/jira2sg/valid/issue/PROJ-1",
+                {
+                    "source": "jira_project_automation",
+                    "webhook_event": "jira:issue_deleted",
+                },
+            ),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"HTTP/1.1 400" in raw_response)
+
     def test_admin_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
         Test routing to Admin

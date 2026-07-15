@@ -2072,6 +2072,43 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         sg_timelogs = bridge.shotgun.find("TimeLog", [["entity", "is", mocked_sg_task]])
         self.assertEqual(len(sg_timelogs), 1)
 
+    def test_jira_to_fptr_full_sync_continues_when_comment_unresolved(self, mocked_sg):
+        """
+        During a full sync, a Jira comment that can't be resolved to a single FPTR
+        Note must not abort the sync.
+        - the sync completes without raising and reports the error (returns False)
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(
+            jira_issue, body="jira comment body", author=mock_jira.JIRA_USER
+        )
+
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        # Two Notes sharing the comment's Jira key make the comment ambiguous.
+        sg_jira_key = "%s/%s" % (jira_issue.key, jira_comment.id)
+        for note_id in (101, 102):
+            mocked_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+            mocked_note["id"] = note_id
+            mocked_note["tasks"] = [mocked_sg_task]
+            mocked_note[SHOTGUN_JIRA_ID_FIELD] = sg_jira_key
+            self.add_to_sg_mock_db(bridge.shotgun, mocked_note)
+
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
+        mocked_jira_event["changelog"]["items"][0]["field"] = "Sync In FPTR"
+        mocked_jira_event["changelog"]["items"][0]["fieldId"] = "customfield_11504"
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
+            )
+        )
+
     def test_jira_to_fptr_sync_existing_entity_parent_not_synced(self, mocked_sg):
         """
         Check that is a parent entity not synced is linked to a sync entity, it won't be synced in FPTR.
