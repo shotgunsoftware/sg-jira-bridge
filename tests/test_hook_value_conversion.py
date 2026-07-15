@@ -70,5 +70,47 @@ class TestDurationConversion(unittest.TestCase):
             self._convert([1, 2], data_type="number")
 
 
+class TestExtractJiraCommentData(unittest.TestCase):
+    """``extract_jira_comment_data`` panel parsing and author resolution."""
+
+    def setUp(self):
+        self.bridge = mock.Mock()
+        self.hook = JiraHook(bridge=self.bridge, logger=logging.getLogger("test"))
+
+    def _body(self, author_line=True, subject="My Subject", content="The content"):
+        """Build a Jira comment body matching the FPTR panel format."""
+        lines = ["{panel:bgColor=#123456}", "*%s*" % subject, ""]
+        if author_line:
+            lines.append("_Note created from FPTR by John Doe_")
+        lines.append(content)
+        lines.append("{panel}")
+        return "\n".join(lines)
+
+    def test_author_line_present_and_user_found(self):
+        sg_user = {"type": "HumanUser", "id": 1}
+        self.bridge.shotgun.find_one.return_value = sg_user
+        subject, content, resolved_user = self.hook.extract_jira_comment_data(
+            self._body()
+        )
+        self.assertEqual(subject, "My Subject")
+        self.assertEqual(content, "The content")
+        self.assertEqual(resolved_user, sg_user)
+
+    def test_author_line_absent_skips_user_lookup(self):
+        # The author line is optional (comment created directly in Jira). When
+        # it is missing, no user is resolved and no FPTR lookup is attempted.
+        subject, content, resolved_user = self.hook.extract_jira_comment_data(
+            self._body(author_line=False)
+        )
+        self.assertEqual(subject, "My Subject")
+        self.assertEqual(content, "The content")
+        self.assertIsNone(resolved_user)
+
+    def test_author_line_present_but_user_not_found_raises(self):
+        self.bridge.shotgun.find_one.return_value = None
+        with self.assertRaises(InvalidJiraValue):
+            self.hook.extract_jira_comment_data(self._body())
+
+
 if __name__ == "__main__":
     unittest.main()
