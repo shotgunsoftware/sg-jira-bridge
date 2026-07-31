@@ -328,9 +328,11 @@ class TestRouting(TestBase):
     def test_jira_automation_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
         Jira Project Automation "Send web request" bodies are normalized on the
-        jira2sg route: a valid body is synced (200), a malformed one is a 400.
+        jira2sg route: a valid body is dispatched to
+        sync_in_shotgun (200), a malformed one is a 400.
         """
         server = MockServer()
+        server.sync_in_shotgun = mock.MagicMock(return_value=True)
 
         # Valid automation body: normalized against the mocked Jira issue and synced.
         handler = webapp.RequestHandler(
@@ -346,6 +348,15 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"200 POST request successful" in raw_response)
+
+        # The normalized event must be the one dispatched to the bridge
+        # the issue is built from the mocked Jira issue, and the forwarded initiator.
+
+        server.sync_in_shotgun.assert_called_once()
+        event = server.sync_in_shotgun.call_args.kwargs["event"]
+        self.assertTrue(event["_bridge_automation_full_sync"])
+        self.assertEqual(event["issue"]["key"], "PROJ-1")
+        self.assertEqual(event["user"], {"accountId": "initiator-123"})
 
         # Malformed automation body: an unsupported webhook_event is rejected as
         # a JiraAutomationPayloadError, which the handler maps to HTTP 400.

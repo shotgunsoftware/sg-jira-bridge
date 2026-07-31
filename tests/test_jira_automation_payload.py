@@ -98,6 +98,43 @@ class TestJiraAutomationPayload(TestSyncBase):
                     payload,
                 )
 
+    def test_for_full_sync_without_flag_in_non_automation_body(self, mocked_sg):
+        """
+
+        A crafted webhook that lacks the ``source`` sentinel but sets the
+        full-sync flag would otherwise pass through untouched and bypass the
+        changelog requirement downstream. The flag must be stripped.
+
+        """
+        bridge = self._get_bridge(mocked_sg)
+        payload = {
+            "webhookEvent": "jira:issue_updated",
+            "issue": {"key": "DEV-1", "fields": {}},
+            JIRA_EVENT_AUTOMATION_FULL_SYNC: True,
+        }
+
+        result = normalize_automation_request(bridge, "Issue", "DEV-1", payload)
+
+        self.assertNotIn(JIRA_EVENT_AUTOMATION_FULL_SYNC, result)
+
+    def test_forged_full_sync_flag_overwritten_on_automation_request(self, mocked_sg):
+        """
+        A forged flag in a genuine automation body cannot pre-empt validation.
+
+        Even a falsy forged value must be stripped and then set server-side, so
+        acceptance never depends on the client-supplied flag.
+        """
+        bridge, issue = self._bridge_with_issue(mocked_sg)
+
+        event = normalize_automation_request(
+            bridge,
+            "Issue",
+            issue.key,
+            self._payload(**{JIRA_EVENT_AUTOMATION_FULL_SYNC: False}),
+        )
+
+        self.assertTrue(event[JIRA_EVENT_AUTOMATION_FULL_SYNC])
+
     def test_non_dict_payload_returned_unchanged(self, mocked_sg):
         """A payload that is not a dictionary (malformed body) is untouched."""
         bridge = self._get_bridge(mocked_sg)
@@ -119,10 +156,26 @@ class TestJiraAutomationPayload(TestSyncBase):
         )
 
         self.assertTrue(event[JIRA_EVENT_AUTOMATION_FULL_SYNC])
+        # Without an explicit webhook_event, the event defaults to issue_updated.
+        self.assertEqual(event["webhookEvent"], "jira:issue_updated")
         self.assertEqual(event["issue"]["id"], issue.raw["id"])
         self.assertEqual(event["issue"]["key"], issue.key)
         self.assertIsInstance(event["issue"]["fields"], dict)
         self.assertEqual(event["user"], {"accountId": "initiator-123"})
+
+    def test_issue_created_webhook_event_honored(self, mocked_sg):
+        """An explicit webhook_event of jira:issue_created is carried through."""
+        bridge, issue = self._bridge_with_issue(mocked_sg)
+
+        event = normalize_automation_request(
+            bridge,
+            "Issue",
+            issue.key,
+            self._payload(webhook_event="jira:issue_created"),
+        )
+
+        self.assertEqual(event["webhookEvent"], "jira:issue_created")
+        self.assertTrue(event[JIRA_EVENT_AUTOMATION_FULL_SYNC])
 
     def test_non_dict_user_block_dropped(self, mocked_sg):
         """A ``user`` block that is not a dictionary is not forwarded."""

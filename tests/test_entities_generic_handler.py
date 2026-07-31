@@ -17,6 +17,7 @@ from test_sync_base import TestSyncBase
 
 import sg_jira
 from sg_jira.constants import (
+    JIRA_EVENT_AUTOMATION_FULL_SYNC,
     JIRA_SHOTGUN_ID_FIELD,
     JIRA_SHOTGUN_TYPE_FIELD,
     JIRA_SHOTGUN_URL_FIELD,
@@ -25,6 +26,7 @@ from sg_jira.constants import (
     SHOTGUN_JIRA_URL_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
 )
+from sg_jira.jira_automation_payload import normalize_automation_request
 
 # TODO:
 #  - see if we can mockup the Jira Bridge schema (aka fields) to check against the field existence
@@ -2072,11 +2074,84 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         sg_timelogs = bridge.shotgun.find("TimeLog", [["entity", "is", mocked_sg_task]])
         self.assertEqual(len(sg_timelogs), 1)
 
-    def test_jira_to_fptr_full_sync_continues_when_comment_unresolved(self, mocked_sg):
+    def test_jira_automation_full_sync(self, mocked_sg):
         """
-        During a full sync, a Jira comment that can't be resolved to a single FPTR
-        Note must not abort the sync.
-        - the sync completes without raising and reports the error (returns False)
+        A Jira Project Automation full sync.
+        """
+        _, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        bridge.jira.add_comment(
+            jira_issue, body="My comment in jira", author=mock_jira.JIRA_USER
+        )
+        bridge.jira.add_worklog(
+            jira_issue,
+            timeSpentSeconds=240,
+            comment="My comment in timelog",
+            author=mock_jira.JIRA_USER,
+        )
+
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        payload = {
+            "source": "jira_project_automation",
+            "user": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+            JIRA_EVENT_AUTOMATION_FULL_SYNC: True,
+        }
+
+        normalized_event = normalize_automation_request(
+            bridge, "Issue", jira_issue.key, payload
+        )
+
+        # The normalizer builds a full-sync, changelog-less event.
+        self.assertTrue(normalized_event.get(JIRA_EVENT_AUTOMATION_FULL_SYNC))
+        self.assertNotIn("changelog", normalized_event)
+
+        # The handler re-fetches the issue by event["issue"]["id"]. Real Jira
+        # resolves issues by their numeric id, but the mock only looks them up
+        # by key, so mirror _mock_jira_event and use the key here.
+        normalized_event["issue"]["id"] = jira_issue.key
+
+        sg_notes = bridge.shotgun.find("Note", [["tasks", "is", mocked_sg_task]])
+        self.assertEqual(len(sg_notes), 0)
+
+        sg_timelogs = bridge.shotgun.find("TimeLog", [["entity", "is", mocked_sg_task]])
+        self.assertEqual(len(sg_timelogs), 0)
+
+        self.assertTrue(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME, "Issue", jira_issue.key, normalized_event
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
+            ["content", "sg_description"],
+        )
+
+        self.assertEqual(jira_issue.fields.summary, sg_task["content"])
+        self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
+
+        sg_note = bridge.shotgun.find_one(
+            "Note", [["tasks", "is", mocked_sg_task]], ["content"]
+        )
+        self.assertEqual(sg_note["content"], "My comment in jira")
+
+        # duration is stored in minutes: 240s / 60 == 4.
+        sg_timelog = bridge.shotgun.find_one(
+            "TimeLog", [["entity", "is", mocked_sg_task]], ["duration"]
+        )
+        self.assertEqual(sg_timelog["duration"], 4)
+
+    def test_full_sync_continues_when_comment_maps_to_duplicate_notes(self, mocked_sg):
+        """
+        During a full sync, a Jira comment that resolves to more than one FPTR
+        Note (duplicate entities sharing the same Jira key) is ambiguous and
+        can't be synced, but this must not abort the whole sync. The sync
+        completes without raising and reports the error (returns False).
+
+        Covered for both full-sync entry points: a "Sync In FPTR" changelog and
+        a Jira Project Automation payload normalized without a changelog.
         """
 
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
@@ -2089,6 +2164,8 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
 
         # Two Notes sharing the comment's Jira key make the comment ambiguous.
+        # This simulates corrupted FPTR data (a duplicated entity), not normal
+        # operation: the comment should normally map to a single Note.
         sg_jira_key = "%s/%s" % (jira_issue.key, jira_comment.id)
         for note_id in (101, 102):
             mocked_note = copy.deepcopy(mock_shotgun.SG_NOTE)
@@ -2108,6 +2185,70 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
                 self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
+
+        payload = {
+            "source": "jira_project_automation",
+            "user": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+        }
+
+        normalized_event = normalize_automation_request(
+            bridge, "Issue", jira_issue.key, payload
+        )
+
+        # The handler re-fetches the issue by event["issue"]["id"]. Real Jira
+        # resolves issues by their numeric id, but the mock only looks them up
+        # by key, so mirror _mock_jira_event and use the key here.
+        normalized_event["issue"]["id"] = jira_issue.key
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME, "Issue", jira_issue.key, normalized_event
+            )
+        )
+
+    def test_sync_jira_fields_to_sg(self, mocked_sg):
+        """
+        Directly exercise _sync_jira_fields_to_sg.
+
+        - happy path: a full sync writes every mapped Task field onto the FPTR
+          Task (the summary/description field mappings and the status mapping)
+          and returns True.
+        - error branch: when a target FPTR field is not editable, the field is
+          skipped, nothing is written, and the method reports the error by
+          returning False.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        handler = syncer.handlers[0]
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        # Happy path: full sync (jira_fields=None) of every mapped Task field.
+        self.assertTrue(
+            handler._sync_jira_fields_to_sg(jira_issue, jira_issue.key, mocked_sg_task)
+        )
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", mocked_sg_task["id"]]],
+            ["content", "sg_description", "sg_status_list"],
+        )
+        self.assertEqual(sg_task["content"], jira_issue.fields.summary)
+        self.assertEqual(sg_task["sg_description"], jira_issue.fields.description)
+        self.assertEqual(sg_task["sg_status_list"], "ip")
+
+        # Error branch: a non-editable target FPTR field is skipped and
+        # reported. jira_fields is explicit so this stays a fields-only sync.
+        with mock.patch.object(
+            handler._shotgun,
+            "get_field_schema",
+            return_value={"editable": {"value": False}},
+        ):
+            self.assertFalse(
+                handler._sync_jira_fields_to_sg(
+                    jira_issue, jira_issue.key, mocked_sg_task, jira_fields=["summary"]
+                )
+            )
 
     def test_jira_to_fptr_sync_existing_entity_parent_not_synced(self, mocked_sg):
         """

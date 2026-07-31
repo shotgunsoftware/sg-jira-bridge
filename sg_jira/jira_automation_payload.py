@@ -51,13 +51,34 @@ def normalize_automation_request(bridge, resource_type, resource_id, payload):
     Return a webhook-shaped event if ``payload`` is a Jira Project Automation
     request; otherwise return ``payload`` unchanged.
 
-    Only ``Issue`` resources are supported. A malformed automation payload
-    raises :class:`JiraAutomationPayloadError`; the caller should map it to
-    HTTP 400.
+    A request opts in by setting ``source`` to ``"jira_project_automation"``.
+    For such requests the Jira issue is fetched and coerced into a webhook-shaped
+    event; only ``Issue`` resources are supported. Any other payload is returned
+    untouched so plain Jira webhooks keep working. In all cases the trusted
+    full-sync flag is stripped from the inbound body so a client can never set
+    it; it is only ever added server-side for genuine automation requests.
+
+    :param bridge: The :class:`~sg_jira.Bridge` used to load the Jira issue.
+    :param str resource_type: The Jira resource type from the URL path; must be
+        ``Issue`` (case-insensitive) for automation requests.
+    :param str resource_id: The Jira issue key from the URL path, e.g.
+        ``PROJ-123``.
+    :param payload: The parsed request body. Only a ``dict`` can be an
+        automation request; any other type is returned unchanged.
+    :returns: A webhook-shaped event ``dict`` for automation requests, otherwise
+        the original ``payload`` unchanged.
+    :raises JiraAutomationPayloadError: if the payload is a Jira Project
+        Automation request but is malformed (unsupported resource type, missing
+        or invalid issue key, unloadable issue, or bad ``webhook_event``). The
+        caller should map it to HTTP 400.
     """
 
     if not isinstance(payload, dict):
         return payload
+
+    # The full-sync flag is trusted downstream to bypass the changelog
+    # requirement, so it must never be honored from an inbound body.
+    payload.pop(JIRA_EVENT_AUTOMATION_FULL_SYNC, None)
 
     if payload.get("source") != "jira_project_automation":
         return payload
@@ -71,6 +92,21 @@ def normalize_automation_request(bridge, resource_type, resource_id, payload):
 
 
 def _build_automation_event(bridge, issue_key, payload):
+    """
+    Build a webhook-shaped event from a validated Jira Project Automation body.
+
+    The issue key comes from the URL path; the Jira issue is fetched from the
+    bridge and coerced into the ``issue`` block the handlers expect. The event
+    type is resolved from the optional ``webhook_event`` (defaulting to
+    ``jira:issue_updated``) and the trusted full-sync flag is set server-side.
+
+    :param bridge: The :class:`~sg_jira.Bridge` used to load the Jira issue.
+    :param str issue_key: The Jira issue key, e.g. ``PROJ-123``.
+    :param dict payload: The (source-validated) automation request body.
+    :returns: A webhook-shaped event dictionary.
+    :raises JiraAutomationPayloadError: if the issue key is missing or malformed,
+        the Jira issue can't be loaded, or the Jira API response is unexpected.
+    """
 
     if not issue_key:
         raise JiraAutomationPayloadError(
@@ -106,6 +142,14 @@ def _build_automation_event(bridge, issue_key, payload):
 
 
 def _resolve_webhook_event(payload):
+    """
+    Resolve the webhook event type from an automation body.
+
+    :param dict payload: The automation request body.
+    :returns: The resolved webhook event type as a string.
+    :raises JiraAutomationPayloadError: if ``webhook_event`` is not a string or
+        is not an allowed value.
+    """
     webhook_event = payload.get("webhook_event", "jira:issue_updated")
     if not isinstance(webhook_event, str):
         raise JiraAutomationPayloadError(
@@ -143,6 +187,15 @@ def _build_issue_block(issue_raw):
 
 
 def _build_event(webhook_event, issue_block, payload):
+    """
+    Assemble the final webhook-shaped event.
+
+    Sets the trusted full-sync flag server-side
+    :param str webhook_event: The resolved webhook event type.
+    :param dict issue_block: The coerced Jira ``issue`` block.
+    :param dict payload: The automation request body.
+    :returns: A webhook-shaped event dictionary.
+    """
     event = {
         "webhookEvent": webhook_event,
         "issue": issue_block,
