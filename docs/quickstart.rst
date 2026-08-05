@@ -104,6 +104,10 @@ The following fields must be created in Jira and made available in Boards:
 Jira Webhook
 ============
 
+.. note::
+    Using Jira Project Automation instead of site webhooks? See
+    :doc:`jira_automation`.
+
 - Navigate to the Jira system settings (*Settings > System > WebHooks*)
 - Click "Create Webhook"
 - Add the values for the following:
