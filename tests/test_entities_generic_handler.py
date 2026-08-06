@@ -3426,3 +3426,1376 @@ class TestEntitiesGenericHandlerHook(TestEntitiesGenericHandler):
 
         self.assertEqual(hook_path, module_path)
         self.assertEqual(syncer.hook.format_sg_date(self.JIRA_DATE), "fixture_date")
+
+
+class TestEntitiesGenericHandlerEdgeCases(TestEntitiesGenericHandler):
+    """
+    The tests below cover the guard clauses and
+    error paths that the bridge can't produce inputs for, so they call the
+    handler directly and assert on the resulting Jira/FPTR state.
+    """
+
+    def _get_handler(self, mocked_sg, name=None):
+        """Return the (handler, bridge) pair for the given settings name."""
+        syncer, bridge = self._get_syncer(mocked_sg, name=name or self.HANDLER_NAME)
+        return syncer.handlers[0], bridge
+
+    def _add_field_mapping(self, handler, sg_entity_type, field_mapping):
+        """
+        Give the handler its own copy of the settings with an extra field mapping.
+
+        The settings are deep-copied first so the fixture module, which is shared
+        by every test, is left untouched.
+        """
+        entity_mapping = copy.deepcopy(handler._EntitiesGenericHandler__entity_mapping)
+        for m in entity_mapping:
+            if m["sg_entity"] == sg_entity_type:
+                m["field_mapping"].append(field_mapping)
+        setattr(handler, "_EntitiesGenericHandler__entity_mapping", entity_mapping)
+
+    def _replace_field_mapping(self, handler, sg_entity_type, field_mapping):
+        """Give the handler its own copy of the settings with a new field mapping."""
+        entity_mapping = copy.deepcopy(handler._EntitiesGenericHandler__entity_mapping)
+        for m in entity_mapping:
+            if m["sg_entity"] == sg_entity_type:
+                m["field_mapping"] = field_mapping
+        setattr(handler, "_EntitiesGenericHandler__entity_mapping", entity_mapping)
+
+    def _drop_entity_mapping(self, handler, sg_entity_type):
+        """Give the handler its own copy of the settings without an entity type."""
+        entity_mapping = [
+            copy.deepcopy(m)
+            for m in handler._EntitiesGenericHandler__entity_mapping
+            if m["sg_entity"] != sg_entity_type
+        ]
+        setattr(handler, "_EntitiesGenericHandler__entity_mapping", entity_mapping)
+
+
+@mock.patch("shotgun_api3.Shotgun")
+class TestEntitiesGenericHandlerHelpers(TestEntitiesGenericHandlerEdgeCases):
+    """Test the handler's settings lookups, key parsing and Jira entity loading."""
+
+    def test_get_field_mapping_requires_exactly_one_field(self, mocked_sg):
+        """__get_field_mapping() rejects being called with neither or both fields."""
+
+        handler, _ = self._get_handler(mocked_sg)
+        get_field_mapping = handler._EntitiesGenericHandler__get_field_mapping
+
+        with self.assertRaises(ValueError) as raised:
+            get_field_mapping("Task")
+        self.assertEqual(
+            str(raised.exception), "jira_field or sg_field must be provided"
+        )
+
+        with self.assertRaises(ValueError) as raised:
+            get_field_mapping("Task", jira_field="summary", sg_field="content")
+        self.assertEqual(
+            str(raised.exception),
+            "Only jira_field or sg_field must be provided, but not both of them",
+        )
+
+        # sanity check: the mapping resolves in both directions
+        self.assertEqual(
+            get_field_mapping("Task", jira_field="summary")["sg_field"], "content"
+        )
+        self.assertEqual(
+            get_field_mapping("Task", sg_field="content")["jira_field"], "summary"
+        )
+
+    def test_get_status_mapping_requires_exactly_one_status(self, mocked_sg):
+        """__get_status_mapping() rejects being called with neither or both statuses."""
+
+        handler, _ = self._get_handler(mocked_sg)
+        get_status_mapping = handler._EntitiesGenericHandler__get_status_mapping
+
+        with self.assertRaises(ValueError) as raised:
+            get_status_mapping("Task")
+        self.assertEqual(
+            str(raised.exception), "sg_status or jira_status must be provided"
+        )
+
+        with self.assertRaises(ValueError) as raised:
+            get_status_mapping("Task", jira_status="To Do", sg_status="wtg")
+        self.assertEqual(
+            str(raised.exception),
+            "Only sg_status or jira_status must be provided, but not both of them",
+        )
+
+        # sanity check: the mapping resolves in both directions
+        self.assertEqual(get_status_mapping("Task", sg_status="wtg"), "To Do")
+        self.assertEqual(get_status_mapping("Task", jira_status="To Do"), "wtg")
+
+    # -------------------------------------------------------------------------------
+    # Jira key parsing
+    # -------------------------------------------------------------------------------
+
+    def test_parse_jira_key_from_sg_entity(self, mocked_sg):
+        """
+        An entity synced as an Issue has no sub-entity id in its Jira key, while a
+        Note/TimeLog key is split into its Issue key and entity id.
+        """
+
+        handler, _ = self._get_handler(mocked_sg)
+        parse = handler._EntitiesGenericHandler__parse_jira_key_from_sg_entity
+
+        self.assertEqual(
+            parse({"type": "Task", "id": 1, SHOTGUN_JIRA_ID_FIELD: "FAKED-001"}),
+            ("FAKED-001", None),
+        )
+        self.assertEqual(
+            parse({"type": "Note", "id": 1, SHOTGUN_JIRA_ID_FIELD: "FAKED-001/12"}),
+            ("FAKED-001", "12"),
+        )
+
+    def test_parse_jira_key_rejects_malformed_key(self, mocked_sg):
+        """A Note/TimeLog Jira key must be "<issue key>/<entity id>"."""
+
+        handler, _ = self._get_handler(mocked_sg)
+        parse = handler._EntitiesGenericHandler__parse_jira_key_from_sg_entity
+
+        for bad_key in ["FAKED-001", "FAKED-001/", "/12", "FAKED-001/12/34"]:
+            with self.assertRaises(ValueError) as raised:
+                parse({"type": "Note", "id": 1, SHOTGUN_JIRA_ID_FIELD: bad_key})
+            self.assertEqual(
+                str(raised.exception),
+                f"Invalid Jira key {bad_key}, it must be in the format "
+                "'<jira issue key>/<jira entity id>'",
+            )
+
+    def test_parse_jira_webhook_event(self, mocked_sg):
+        """A webhook event is split into the Jira entity and the action."""
+
+        handler, _ = self._get_handler(mocked_sg)
+        parse = handler._EntitiesGenericHandler__parse_jira_webhook_event
+
+        self.assertEqual(parse("comment_created"), ("comment", "created"))
+        self.assertEqual(parse("worklog_deleted"), ("worklog", "deleted"))
+        # an event without an "<entity>_<action>" shape can't be parsed
+        self.assertEqual(parse("nomatch"), (None, None))
+
+    # -------------------------------------------------------------------------------
+    # Linked entity helpers
+    # -------------------------------------------------------------------------------
+
+    def test_can_sync_to_fptr(self, mocked_sg):
+        """Only an Issue whose "Sync In FPTR" field is "True" can be synced."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        can_sync_to_fptr = handler._EntitiesGenericHandler__can_sync_to_fptr
+
+        self.assertTrue(
+            can_sync_to_fptr(self._mock_jira_data(bridge, sync_in_fptr="True"))
+        )
+        self.assertFalse(
+            can_sync_to_fptr(self._mock_jira_data(bridge, sync_in_fptr="False"))
+        )
+
+        # the field exists but has never been set
+        empty_issue = bridge.jira.create_issue(
+            fields={
+                "issuetype": bridge.jira.issue_type_by_name("Task"),
+                bridge.jira.get_jira_issue_field_id(
+                    JIRA_SYNC_IN_FPTR_FIELD.lower()
+                ): None,
+            }
+        )
+        self.assertFalse(can_sync_to_fptr(empty_issue))
+
+
+@mock.patch("shotgun_api3.Shotgun")
+class TestEntitiesGenericHandlerFPTRToJiraEdgeCases(
+    TestEntitiesGenericHandlerEdgeCases
+):
+    """Test the guard clauses and error paths of the FPTR to Jira sync."""
+
+    # -------------------------------------------------------------------------------
+    # accept_shotgun_event()
+    # -------------------------------------------------------------------------------
+
+    def test_accept_sg_event_rejects_already_handled_creation_event(self, mocked_sg):
+        """
+        Creating an entity in FPTR emits one event per field. The first one creates
+        the Jira Issue with every value, so the remaining "in_create" events are
+        redundant and must not create a second Issue.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        sg_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_event["meta"]["in_create"] = True
+
+        self.assertFalse(
+            bridge.sync_in_jira(self.HANDLER_NAME, "Task", sg_task["id"], sg_event)
+        )
+
+    def test_accept_sg_event_for_entity_unlinked_from_a_synced_entity(self, mocked_sg):
+        """
+        A TimeLog/Note unlinked from its synced entity is still accepted, so the
+        matching Jira worklog/comment can be cleaned up. If the entity it was
+        unlinked from was never synced there is nothing to do.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        accept = (
+            handler._EntitiesGenericHandler__accept_shotgun_event_for_entities_not_flagged_as_synced
+        )
+
+        self._mock_sg_data(bridge.shotgun, sync_in_jira=False)
+        sg_timelog = {"type": "TimeLog", "id": 1, "entity": None}
+        previous_task = {"type": "Task", "id": 1}
+
+        # single entity fields report the change as "old_value"
+        self.assertFalse(accept(sg_timelog, "entity", {"old_value": previous_task}))
+
+        bridge.shotgun.update("Task", 1, {SHOTGUN_SYNC_IN_JIRA_FIELD: True})
+        self.assertTrue(accept(sg_timelog, "entity", {"old_value": previous_task}))
+
+        # multi entity fields report it as "removed"
+        self.assertTrue(accept(sg_timelog, "entity", {"removed": [previous_task]}))
+
+    def test_accept_sg_event_for_entity_not_flagged_as_synced(self, mocked_sg):
+        """An entity that isn't flagged as ready-to-sync is rejected."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        accept = (
+            handler._EntitiesGenericHandler__accept_shotgun_event_for_entities_synced_as_issues
+        )
+
+        self.assertFalse(
+            accept({"type": "Task", "id": 1, SHOTGUN_SYNC_IN_JIRA_FIELD: False}, "Task")
+        )
+
+    def test_accept_sg_event_for_issue_type_not_enabled_in_project(self, mocked_sg):
+        """
+        An issue type the Jira project doesn't offer is rejected: Jira raises a
+        KeyError when the type isn't enabled for the project.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        accept = (
+            handler._EntitiesGenericHandler__accept_shotgun_event_for_entities_synced_as_issues
+        )
+
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        sg_entity = {
+            "type": "Task",
+            "id": 1,
+            SHOTGUN_SYNC_IN_JIRA_FIELD: True,
+            f"project.Project.{SHOTGUN_JIRA_ID_FIELD}": mock_jira.JIRA_PROJECT_KEY,
+        }
+
+        with mock.patch.object(
+            bridge.jira, "issue_type_by_name", side_effect=KeyError("Unknown")
+        ):
+            self.assertFalse(accept(sg_entity, "Unknown Issue Type"))
+
+    def test_accept_sg_event_when_required_jira_fields_are_not_enabled(self, mocked_sg):
+        """
+        The Jira issue type must expose the "Shotgun Type"/"Shotgun ID" fields,
+        otherwise there is nowhere to record which FPTR entity the Issue mirrors.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        accept = (
+            handler._EntitiesGenericHandler__accept_shotgun_event_for_entities_synced_as_issues
+        )
+
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        sg_entity = {
+            "type": "Task",
+            "id": 1,
+            SHOTGUN_SYNC_IN_JIRA_FIELD: True,
+            f"project.Project.{SHOTGUN_JIRA_ID_FIELD}": mock_jira.JIRA_PROJECT_KEY,
+        }
+
+        # the issue type is enabled but exposes none of the required fields
+        with mock.patch.object(
+            bridge.jira, "get_project_issue_type_fields", return_value={}
+        ):
+            self.assertFalse(accept(sg_entity, "Task"))
+
+        self.assertTrue(accept(sg_entity, "Task"))
+
+    # -------------------------------------------------------------------------------
+    # process_shotgun_event()
+    # -------------------------------------------------------------------------------
+
+    def test_process_sg_event_with_unresolvable_jira_issue(self, mocked_sg):
+        """
+        An entity recording a Jira Issue that can't be loaded is left untouched: we
+        must not create a second Issue behind the user's back.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        self._mock_sg_data(bridge.shotgun)
+        bridge.shotgun.update("Task", 1, {SHOTGUN_JIRA_ID_FIELD: "FAKED-999"})
+
+        self.assertFalse(
+            handler.process_shotgun_event(
+                "Task", 1, copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task", [["id", "is", 1]], [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertEqual(sg_task[SHOTGUN_JIRA_ID_FIELD], "FAKED-999")
+
+    def test_process_sg_event_relinks_timelog_to_another_entity(self, mocked_sg):
+        """
+        When a TimeLog is moved to another entity, the worklog on the old Issue is
+        deleted and a new one is created against the newly linked Issue.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        stale_worklog = bridge.jira.add_worklog(jira_issue, timeSpentSeconds=60)
+
+        sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        sg_timelog["entity"] = sg_task
+        sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, stale_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, sg_timelog)
+
+        sg_event = copy.deepcopy(mock_shotgun.SG_TIMELOG_CHANGE_EVENT)
+        sg_event["meta"]["attribute_name"] = "entity"
+        sg_event["meta"]["old_value"] = {"type": "Task", "id": sg_task["id"]}
+        sg_event["meta"]["new_value"] = {"type": "Task", "id": sg_task["id"]}
+
+        self.assertTrue(
+            handler.process_shotgun_event("TimeLog", sg_timelog["id"], sg_event)
+        )
+
+        # exactly one worklog, carrying the TimeLog duration, and FPTR points at it
+        self.assertEqual(len(jira_issue._worklogs), 1)
+        new_worklog = jira_issue._worklogs[0]
+        self.assertEqual(
+            new_worklog.timeSpentSeconds, mock_shotgun.SG_TIMELOG["duration"] * 60
+        )
+
+        sg_timelog = bridge.shotgun.find_one(
+            "TimeLog", [["id", "is", sg_timelog["id"]]], [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertEqual(
+            sg_timelog[SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, new_worklog.id),
+        )
+
+    def test_process_sg_event_relinks_note_to_another_entity(self, mocked_sg):
+        """
+        Same as above for a Note, whose multi-entity "tasks" field reports its
+        changes as "removed"/"added" rather than "old_value"/"new_value".
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        stale_comment = bridge.jira.add_comment(jira_issue, "Stale comment")
+
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+        sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, stale_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, sg_note)
+
+        sg_event = copy.deepcopy(mock_shotgun.SG_NOTE_CHANGE_EVENT)
+        sg_event["meta"]["attribute_name"] = "tasks"
+        sg_event["meta"]["removed"] = [{"type": "Task", "id": sg_task["id"]}]
+        sg_event["meta"]["added"] = [{"type": "Task", "id": sg_task["id"]}]
+
+        self.assertTrue(handler.process_shotgun_event("Note", sg_note["id"], sg_event))
+
+        self.assertEqual(len(jira_issue._comments), 1)
+        new_comment = jira_issue._comments[0]
+        self.assertIn(mock_shotgun.SG_NOTE["content"], new_comment.body)
+
+        sg_note = bridge.shotgun.find_one(
+            "Note", [["id", "is", sg_note["id"]]], [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertEqual(
+            sg_note[SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, new_comment.id),
+        )
+
+    # -------------------------------------------------------------------------------
+    # Jira entity creation and deletion
+    # -------------------------------------------------------------------------------
+
+    def test_create_jira_comment_for_note_linked_to_several_tasks(self, mocked_sg):
+        """
+        A Note can be linked to several Tasks in FPTR but a Jira comment belongs to
+        a single Issue, so only one comment is created.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        second_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        second_task["id"] = 2
+        second_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        self.add_to_sg_mock_db(bridge.shotgun, second_task)
+
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task, second_task]
+
+        jira_comment, jira_comment_key = handler._create_jira_comment(sg_note)
+
+        self.assertEqual(len(jira_issue._comments), 1)
+        self.assertEqual(jira_comment_key, "%s/%s" % (jira_issue.key, jira_comment.id))
+        self.assertIn(mock_shotgun.SG_NOTE["subject"], jira_comment.body)
+        self.assertIn(mock_shotgun.SG_NOTE["content"], jira_comment.body)
+
+    def test_create_jira_comment_without_a_jira_issue(self, mocked_sg):
+        """No comment is created when the linked Issue can't be loaded from Jira."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        self._mock_sg_data(bridge.shotgun)
+        bridge.shotgun.update("Task", 1, {SHOTGUN_JIRA_ID_FIELD: "FAKED-999"})
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, "content"],
+        )
+
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+
+        self.assertEqual(handler._create_jira_comment(sg_note), (None, None))
+
+    def test_create_jira_worklog_without_a_jira_issue(self, mocked_sg):
+        """No worklog is created when the linked Issue can't be loaded from Jira."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        self._mock_sg_data(bridge.shotgun)
+        bridge.shotgun.update("Task", 1, {SHOTGUN_JIRA_ID_FIELD: "FAKED-999"})
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [["id", "is", 1]],
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_SYNC_IN_JIRA_FIELD, "content"],
+        )
+
+        sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        sg_timelog["entity"] = sg_task
+
+        self.assertEqual(handler._create_jira_worklog(sg_timelog), (None, None))
+
+    def test_create_jira_issue_reported_by_a_non_human_user(self, mocked_sg):
+        """
+        An entity created by a script user has no Jira counterpart, so the Issue is
+        reported by the Jira user the bridge runs as.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        jira_project = handler.get_jira_project(mock_jira.JIRA_PROJECT_KEY)
+
+        sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        sg_task["name"] = sg_task["content"]
+        sg_task["created_by"] = {"type": "ApiUser", "id": 7}
+
+        jira_issue, jira_issue_key = handler._create_jira_issue(sg_task, jira_project)
+
+        self.assertEqual(jira_issue.key, jira_issue_key)
+        self.assertEqual(
+            jira_issue.fields.reporter.accountId, mock_jira.JIRA_USER["accountId"]
+        )
+
+    def test_create_jira_issue_without_a_summary_mapping(self, mocked_sg):
+        """With no FPTR field mapped to "summary", the entity name field is used."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._replace_field_mapping(
+            handler,
+            "Task",
+            [{"sg_field": "sg_description", "jira_field": "description"}],
+        )
+
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        jira_project = handler.get_jira_project(mock_jira.JIRA_PROJECT_KEY)
+        self._mock_sg_data(bridge.shotgun)
+
+        sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        sg_task["name"] = sg_task["content"]
+        sg_task["created_by"] = mock_shotgun.SG_USER
+
+        jira_issue, _ = handler._create_jira_issue(sg_task, jira_project)
+
+        self.assertEqual(jira_issue.fields.summary, mock_shotgun.SG_TASK["content"])
+
+    # -------------------------------------------------------------------------------
+    # _sync_sg_fields_to_jira()
+    # -------------------------------------------------------------------------------
+
+    def test_sync_sg_fields_to_jira_skips_note_task_field(self, mocked_sg):
+        """
+        The Note/Issue association is handled while processing the event, so the
+        "tasks" field itself has nothing to push to the Jira comment.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+        self.add_to_sg_mock_db(bridge.shotgun, sg_note)
+
+        jira_comment = bridge.jira.add_comment(jira_issue, "Untouched comment")
+
+        self.assertTrue(
+            handler._sync_sg_fields_to_jira(sg_note, jira_comment, field_name="tasks")
+        )
+        self.assertEqual(jira_comment.body, "Untouched comment")
+
+    def test_sync_sg_fields_to_jira_syncs_watchers(self, mocked_sg):
+        """
+        A FPTR field mapped to "watches" is routed to the watcher sync rather than
+        being pushed as a regular field value.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._add_field_mapping(
+            handler, "Task", {"sg_field": "addressings_cc", "jira_field": "watches"}
+        )
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(
+            bridge.shotgun,
+            jira_issue=jira_issue,
+            extra_fields={"addressings_cc": [mock_shotgun.SG_USER]},
+        )
+
+        # the Jira mock has no watcher endpoints, so assert on the calls made
+        with mock.patch.object(
+            bridge.jira,
+            "find_jira_user",
+            return_value=mock.Mock(
+                accountId=mock_jira.JIRA_USER["accountId"],
+                displayName=mock_jira.JIRA_USER["displayName"],
+            ),
+        ), mock.patch.object(
+            bridge.jira,
+            "watchers",
+            create=True,
+            return_value=mock.Mock(watchers=[]),
+        ), mock.patch.object(
+            bridge.jira, "add_watcher", create=True
+        ) as add_watcher:
+            self.assertTrue(
+                handler._sync_sg_fields_to_jira(
+                    sg_task, jira_issue, field_name="addressings_cc"
+                )
+            )
+
+        add_watcher.assert_called_once_with(
+            jira_issue, mock_jira.JIRA_USER["accountId"]
+        )
+
+    def test_sync_sg_watchers_to_jira(self, mocked_sg):
+        """
+        FPTR users are added to the Jira watch list, Jira watchers that are no
+        longer in FPTR are removed and non-user entities are ignored.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        sg_task = self._mock_sg_data(bridge.shotgun)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=sg_task)
+
+        jira_user = mock.Mock(
+            accountId=mock_jira.JIRA_USER["accountId"],
+            displayName=mock_jira.JIRA_USER["displayName"],
+        )
+        stale_watcher = mock.Mock(accountId="stale-account", displayName="Zaphod")
+
+        # the Jira mock has no watcher endpoints, so assert on the calls made
+        with mock.patch.object(
+            bridge.jira, "find_jira_user", return_value=jira_user
+        ), mock.patch.object(
+            bridge.jira,
+            "watchers",
+            create=True,
+            return_value=mock.Mock(watchers=[jira_user, stale_watcher]),
+        ), mock.patch.object(
+            bridge.jira, "add_watcher", create=True
+        ) as add_watcher, mock.patch.object(
+            bridge.jira, "remove_watcher", create=True
+        ) as remove_watcher:
+            self.assertTrue(
+                handler._sync_sg_watchers_to_jira(
+                    [mock_shotgun.SG_USER, {"type": "Group", "id": 3}], jira_issue
+                )
+            )
+
+        # the FPTR user is added, the watcher that is no longer in FPTR is removed
+        # and the Group never reaches Jira
+        add_watcher.assert_called_once_with(
+            jira_issue, mock_jira.JIRA_USER["accountId"]
+        )
+        remove_watcher.assert_called_once_with(jira_issue, "Zaphod")
+
+    def test_sync_sg_watchers_to_jira_from_single_entity_field(self, mocked_sg):
+        """A single-entity FPTR field is accepted as well as a multi-entity one."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        sg_task = self._mock_sg_data(bridge.shotgun)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=sg_task)
+
+        jira_user = mock.Mock(
+            accountId=mock_jira.JIRA_USER["accountId"],
+            displayName=mock_jira.JIRA_USER["displayName"],
+        )
+
+        with mock.patch.object(
+            bridge.jira, "find_jira_user", return_value=jira_user
+        ), mock.patch.object(
+            bridge.jira,
+            "watchers",
+            create=True,
+            return_value=mock.Mock(watchers=[jira_user]),
+        ), mock.patch.object(
+            bridge.jira, "add_watcher", create=True
+        ) as add_watcher, mock.patch.object(
+            bridge.jira, "remove_watcher", create=True
+        ) as remove_watcher:
+            self.assertTrue(
+                handler._sync_sg_watchers_to_jira(mock_shotgun.SG_USER, jira_issue)
+            )
+
+        add_watcher.assert_called_once_with(
+            jira_issue, mock_jira.JIRA_USER["accountId"]
+        )
+        # the only watcher is still in FPTR, nothing to remove
+        remove_watcher.assert_not_called()
+
+    def test_sync_sg_status_to_jira_without_mapping(self, mocked_sg):
+        """A FPTR status with no Jira counterpart leaves the Jira status alone."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        original_status = jira_issue.fields.status
+
+        self.assertFalse(
+            handler._sync_sg_status_to_jira("unmapped_status", "Task", jira_issue)
+        )
+        self.assertEqual(jira_issue.fields.status, original_status)
+
+    def test_sync_sg_fields_to_jira_skips_non_editable_jira_field(self, mocked_sg):
+        """
+        A Jira field the issue type doesn't allow editing is reported as a failed
+        sync instead of raising when Jira refuses the update.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        # "duedate" is a valid Jira field but is not part of the Issue edit meta
+        self._add_field_mapping(
+            handler, "Task", {"sg_field": "due_date", "jira_field": "duedate"}
+        )
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        original_duedate = getattr(jira_issue.fields, "duedate", None)
+
+        self.assertFalse(
+            handler._sync_sg_fields_to_jira(sg_task, jira_issue, field_name="due_date")
+        )
+        self.assertEqual(getattr(jira_issue.fields, "duedate", None), original_duedate)
+        self.assertNotEqual(
+            getattr(jira_issue.fields, "duedate", None),
+            mock_shotgun.SG_TASK["due_date"],
+        )
+
+    def test_sync_sg_fields_to_jira_converts_list_values(self, mocked_sg):
+        """A multi-value FPTR field is converted to a Jira array value."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._add_field_mapping(
+            handler, "Task", {"sg_field": "tags", "jira_field": "labels"}
+        )
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(
+            bridge.shotgun,
+            jira_issue=jira_issue,
+            extra_fields={"tags": [{"type": "Tag", "id": 1, "name": "urgent"}]},
+        )
+
+        self.assertTrue(
+            handler._sync_sg_fields_to_jira(sg_task, jira_issue, field_name="tags")
+        )
+        self.assertEqual(jira_issue.fields.labels, ["urgent"])
+
+    def test_sync_sg_fields_to_jira_when_value_has_no_jira_equivalent(self, mocked_sg):
+        """
+        A FPTR value that can't be translated is reported rather than clearing the
+        Jira field with an empty value.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        original_summary = jira_issue.fields.summary
+
+        with mock.patch.object(
+            handler._hook, "get_jira_value_from_sg_value", return_value=None
+        ):
+            self.assertFalse(
+                handler._sync_sg_fields_to_jira(
+                    sg_task, jira_issue, field_name="content"
+                )
+            )
+
+        self.assertEqual(jira_issue.fields.summary, original_summary)
+
+    def test_sync_sg_fields_to_jira_reports_linked_entity_errors(self, mocked_sg):
+        """
+        A full sync fails when one of the entity's TimeLogs can't be synced, even
+        though the Issue fields themselves went through.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(
+            bridge.shotgun, jira_issue=jira_issue, extra_fields={"entity": None}
+        )
+
+        # this TimeLog claims a worklog that doesn't exist on the Issue
+        sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        sg_timelog["entity"] = sg_task
+        sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/999" % jira_issue.key
+        self.add_to_sg_mock_db(bridge.shotgun, sg_timelog)
+
+        self.assertFalse(handler._sync_sg_fields_to_jira(sg_task, jira_issue))
+        # the Issue fields were still synced
+        self.assertEqual(jira_issue.fields.summary, mock_shotgun.SG_TASK["content"])
+
+    # -------------------------------------------------------------------------------
+    # Linked entities and hierarchy
+    # -------------------------------------------------------------------------------
+
+    def test_sync_sg_linked_entities_for_unsupported_entity_type(self, mocked_sg):
+        """Nothing is synced for an entity type that isn't in the settings."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._drop_entity_mapping(handler, "TimeLog")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        sg_timelog["entity"] = sg_task
+        self.add_to_sg_mock_db(bridge.shotgun, sg_timelog)
+
+        self.assertFalse(
+            handler._sync_sg_linked_entities_to_jira(sg_task, "TimeLog", jira_issue)
+        )
+        self.assertEqual(jira_issue._worklogs, [])
+
+    def test_sync_sg_linked_entities_skips_entities_synced_elsewhere(self, mocked_sg):
+        """
+        A TimeLog already synced to another Jira Issue is left alone rather than
+        being duplicated onto this one.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        sg_timelog["entity"] = sg_task
+        sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "OTHER-001/1"
+        self.add_to_sg_mock_db(bridge.shotgun, sg_timelog)
+
+        self.assertFalse(
+            handler._sync_sg_linked_entities_to_jira(sg_task, "TimeLog", jira_issue)
+        )
+
+        self.assertEqual(jira_issue._worklogs, [])
+        sg_timelog = bridge.shotgun.find_one(
+            "TimeLog", [["id", "is", sg_timelog["id"]]], [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertEqual(sg_timelog[SHOTGUN_JIRA_ID_FIELD], "OTHER-001/1")
+
+    def test_sync_hierarchy_with_unmapped_linked_entity(self, mocked_sg):
+        """A parent whose entity type isn't in the settings is skipped."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertFalse(
+            handler._sync_hierarchy_to_jira(
+                {"type": "Shot", "id": 1}, jira_issue, "parent"
+            )
+        )
+        self.assertIsNone(getattr(jira_issue.fields, "parent", None))
+
+    def test_sync_hierarchy_with_linked_entity_not_synced(self, mocked_sg):
+        """A parent that has no Jira Issue of its own yet is skipped."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun)
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_ASSET)
+
+        self.assertFalse(
+            handler._sync_hierarchy_to_jira(
+                {"type": "Asset", "id": 1}, jira_issue, "parent"
+            )
+        )
+        self.assertIsNone(getattr(jira_issue.fields, "parent", None))
+
+    def test_sync_hierarchy_with_unloadable_jira_issue(self, mocked_sg):
+        """A parent whose Jira Issue can't be loaded is skipped."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun)
+
+        sg_asset = copy.deepcopy(mock_shotgun.SG_ASSET)
+        sg_asset[SHOTGUN_JIRA_ID_FIELD] = "FAKED-999"
+        self.add_to_sg_mock_db(bridge.shotgun, sg_asset)
+
+        with mock.patch.object(bridge.jira, "issue", return_value=None):
+            self.assertFalse(
+                handler._sync_hierarchy_to_jira(
+                    {"type": "Asset", "id": 1}, jira_issue, "parent"
+                )
+            )
+
+        self.assertIsNone(getattr(jira_issue.fields, "parent", None))
+
+
+@mock.patch("shotgun_api3.Shotgun")
+class TestEntitiesGenericHandlerJiraToFPTREdgeCases(
+    TestEntitiesGenericHandlerEdgeCases
+):
+    """Test the guard clauses and error paths of the Jira to FPTR sync."""
+
+    # -------------------------------------------------------------------------------
+    # accept_jira_event()
+    # -------------------------------------------------------------------------------
+
+    def test_accept_jira_event_rejects_event_without_its_entity(self, mocked_sg):
+        """A comment event that carries no "comment" block can't be processed."""
+
+        handler, _ = self._get_handler(mocked_sg)
+
+        self.assertFalse(
+            handler.accept_jira_event(
+                "Issue", "FAKED-001", {"webhookEvent": "comment_created"}
+            )
+        )
+
+    def test_accept_jira_event_rejects_comment_without_an_issue(self, mocked_sg):
+        """
+        A Jira comment only exists as part of an Issue, so an event that references
+        none can't be matched to a FPTR entity.
+        """
+
+        handler, _ = self._get_handler(mocked_sg)
+
+        comment_event = copy.deepcopy(mock_jira.COMMENT_PAYLOAD)
+        del comment_event["issue"]
+
+        self.assertFalse(handler.accept_jira_event("Issue", "FAKED-001", comment_event))
+
+    def test_accept_jira_event_rejects_issue_without_a_project(self, mocked_sg):
+        """
+        An Issue with no project can't be matched to a FPTR project.
+
+        ``get_jira_issue()`` raises before this guard is reached in practice (see
+        the test below), so the Issue is stubbed here to exercise the guard itself.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        project_less_issue = mock.MagicMock()
+        project_less_issue.fields.issuetype.name = "Task"
+        project_less_issue.fields.project = None
+
+        with mock.patch.object(
+            handler, "get_jira_issue", return_value=project_less_issue
+        ):
+            self.assertFalse(
+                handler.accept_jira_event(
+                    "Issue", "FAKED-001", mock_jira.ISSUE_UPDATED_PAYLOAD
+                )
+            )
+
+    def test_get_jira_issue_raises_for_issue_without_a_project(self, mocked_sg):
+        """Loading an Issue that isn't bound to a project is an error."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_issue.update(fields={"project": None})
+
+        with self.assertRaises(RuntimeError) as raised:
+            handler.get_jira_issue(jira_issue.key)
+
+        self.assertEqual(
+            str(raised.exception),
+            "Jira Issue %s is not bound to any Project." % jira_issue.key,
+        )
+
+    def test_accept_jira_event_when_sync_in_fptr_field_is_not_enabled(self, mocked_sg):
+        """
+        The "Sync In FPTR" field must be on the screen for the project and issue
+        type, otherwise the Issue has no way to opt in to syncing.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        self._mock_sg_data(bridge.shotgun)
+
+        # the Issue is created without the "Sync In FPTR" field, so reading it
+        # raises AttributeError the way an unconfigured Jira screen would
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        jira_issue = bridge.jira.create_issue(
+            fields={"issuetype": bridge.jira.issue_type_by_name("Task")}
+        )
+
+        jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+
+        self.assertFalse(handler.accept_jira_event("Issue", jira_issue.key, jira_event))
+
+    # -------------------------------------------------------------------------------
+    # process_jira_event()
+    # -------------------------------------------------------------------------------
+
+    def test_process_jira_event_without_a_fptr_entity(self, mocked_sg):
+        """
+        Nothing is synced when the FPTR entity can't be resolved: here the Issue
+        records a FPTR Task that no longer exists.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_PROJECT)
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+
+        jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+
+        self.assertFalse(
+            handler.process_jira_event("Issue", jira_issue.key, jira_event)
+        )
+        self.assertEqual(bridge.shotgun.find("Task", []), [])
+
+    def test_process_jira_event_with_parent_association_change(self, mocked_sg):
+        """
+        A parenting change is reported by Jira as "IssueParentAssociation", which
+        carries no field id of its own and maps to the "parent" field.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        jira_event = self._mock_jira_event(jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD)
+        jira_event["changelog"]["items"] = [{"field": "IssueParentAssociation"}]
+
+        self.assertTrue(handler.process_jira_event("Issue", jira_issue.key, jira_event))
+
+        # the Issue has no parent, so the FPTR link is cleared rather than guessed
+        sg_task = bridge.shotgun.find_one(
+            "Task", [["id", "is", sg_task["id"]]], ["entity"]
+        )
+        self.assertIsNone(sg_task["entity"])
+
+    # -------------------------------------------------------------------------------
+    # _sync_jira_issue_to_sg() / _sync_jira_entity_to_sg()
+    # -------------------------------------------------------------------------------
+
+    def test_sync_jira_issue_to_sg_without_a_name_mapping(self, mocked_sg):
+        """With no FPTR field mapped to the name, the Jira summary is used."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._replace_field_mapping(
+            handler,
+            "Task",
+            [{"sg_field": "sg_description", "jira_field": "description"}],
+        )
+
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_PROJECT)
+
+        bridge.jira.set_projects([mock_jira.JIRA_PROJECT])
+        jira_issue = bridge.jira.create_issue(
+            fields={
+                "issuetype": bridge.jira.issue_type_by_name("Task"),
+                "summary": "Issue summary",
+                bridge.jira.get_jira_issue_field_id(JIRA_SHOTGUN_ID_FIELD.lower()): "",
+                bridge.jira.get_jira_issue_field_id(
+                    JIRA_SHOTGUN_TYPE_FIELD.lower()
+                ): "",
+            }
+        )
+
+        sg_task = handler._sync_jira_issue_to_sg(jira_issue)
+
+        self.assertEqual(sg_task["content"], "Issue summary")
+        # Jira is updated with the FPTR entity it now mirrors
+        self.assertEqual(
+            jira_issue.get_field(bridge.jira.jira_shotgun_id_field), str(sg_task["id"])
+        )
+        self.assertEqual(
+            jira_issue.get_field(bridge.jira.jira_shotgun_type_field), "Task"
+        )
+
+    def test_sync_jira_entity_to_sg_with_duplicated_issue_keys(self, mocked_sg):
+        """
+        Two FPTR entities carrying the same Jira key is ambiguous: we can't tell
+        which one the comment belongs to, so nothing is created.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        duplicated_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        duplicated_task["id"] = 2
+        duplicated_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
+        self.add_to_sg_mock_db(bridge.shotgun, duplicated_task)
+
+        self.assertFalse(
+            handler._sync_jira_entity_to_sg(jira_issue, "1", "Note", "created")
+        )
+        self.assertEqual(bridge.shotgun.find("Note", []), [])
+
+    def test_sync_jira_entity_to_sg_without_a_synced_issue(self, mocked_sg):
+        """A Jira Issue with no FPTR counterpart has nothing to attach a Note to."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun)
+
+        self.assertFalse(
+            handler._sync_jira_entity_to_sg(jira_issue, "1", "Note", "created")
+        )
+        self.assertEqual(bridge.shotgun.find("Note", []), [])
+
+    def test_sync_jira_entity_to_sg_deleting_an_unknown_entity(self, mocked_sg):
+        """Deleting an entity FPTR never knew about is reported, not created."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        self.assertFalse(
+            handler._sync_jira_entity_to_sg(jira_issue, "999", "Note", "deleted")
+        )
+        self.assertEqual(bridge.shotgun.find("Note", []), [])
+
+    # -------------------------------------------------------------------------------
+    # _sync_jira_fields_to_sg()
+    # -------------------------------------------------------------------------------
+
+    def test_sync_jira_fields_to_sg_syncs_watchers(self, mocked_sg):
+        """
+        Jira watchers are translated back to FPTR users; watchers with no FPTR
+        account are dropped rather than failing the sync.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._add_field_mapping(
+            handler, "Task", {"sg_field": "addressings_cc", "jira_field": "watches"}
+        )
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        known_watcher = mock.Mock(accountId=mock_jira.JIRA_USER["accountId"])
+        unknown_watcher = mock.Mock(accountId="not-in-fptr")
+
+        # the Jira mock has no watchers endpoint, so it is stubbed here
+        with mock.patch.object(
+            bridge.jira,
+            "watchers",
+            create=True,
+            return_value=mock.Mock(watchers=[known_watcher, unknown_watcher]),
+        ):
+            self.assertTrue(
+                handler._sync_jira_fields_to_sg(
+                    jira_issue, jira_issue.key, sg_task, ["watches"]
+                )
+            )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task", [["id", "is", sg_task["id"]]], ["addressings_cc"]
+        )
+        self.assertEqual(len(sg_task["addressings_cc"]), 1)
+        self.assertEqual(sg_task["addressings_cc"][0]["id"], mock_shotgun.SG_USER["id"])
+
+    def test_sync_jira_fields_to_sg_with_unmapped_status(self, mocked_sg):
+        """A Jira status with no FPTR counterpart leaves the FPTR status alone."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_issue.update(
+            fields={
+                "status": jira.resources.Status(None, None, raw={"name": "Unmapped"})
+            }
+        )
+
+        self.assertTrue(
+            handler._sync_jira_fields_to_sg(
+                jira_issue, jira_issue.key, sg_task, ["status"]
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task", [["id", "is", sg_task["id"]]], ["sg_status_list"]
+        )
+        self.assertEqual(
+            sg_task["sg_status_list"], mock_shotgun.SG_TASK["sg_status_list"]
+        )
+
+    def test_sync_jira_fields_to_sg_extracts_worklog_author(self, mocked_sg):
+        """
+        A worklog comment created by the bridge names its FPTR author, which is
+        used to set the TimeLog user rather than the Jira worklog author.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        jira_worklog = bridge.jira.add_worklog(
+            jira_issue,
+            timeSpentSeconds=60,
+            comment=handler._hook.compose_jira_worklog_comment(
+                {"user": mock_shotgun.SG_USER, "description": "Some work"}
+            ),
+        )
+
+        sg_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        sg_timelog["entity"] = sg_task
+        sg_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_worklog.id)
+        self.add_to_sg_mock_db(bridge.shotgun, sg_timelog)
+
+        self.assertTrue(
+            handler._sync_jira_fields_to_sg(
+                jira_issue, jira_worklog.id, sg_timelog, ["comment"]
+            )
+        )
+
+        sg_timelog = bridge.shotgun.find_one(
+            "TimeLog", [["id", "is", sg_timelog["id"]]], ["description", "user"]
+        )
+        self.assertEqual(sg_timelog["description"], "Some work")
+        self.assertEqual(sg_timelog["user"]["id"], mock_shotgun.SG_USER["id"])
+
+    def test_sync_jira_fields_to_sg_when_value_conversion_raises(self, mocked_sg):
+        """
+        A hook raising while converting a Jira value is reported as a failed sync
+        and leaves the FPTR entity untouched.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        with mock.patch.object(
+            handler._hook,
+            "get_sg_value_from_jira_value",
+            side_effect=RuntimeError("boom"),
+        ):
+            self.assertFalse(
+                handler._sync_jira_fields_to_sg(
+                    jira_issue, jira_issue.key, sg_task, ["summary"]
+                )
+            )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task", [["id", "is", sg_task["id"]]], ["content"]
+        )
+        self.assertEqual(sg_task["content"], mock_shotgun.SG_TASK["content"])
+
+    # -------------------------------------------------------------------------------
+    # Cascading worklog/comment sync
+    # -------------------------------------------------------------------------------
+
+    def test_sync_jira_worklogs_to_sg_when_timelogs_are_not_configured(self, mocked_sg):
+        """
+        Worklogs are only synced when TimeLog is part of the entity mapping, which
+        is not the case in the default configuration.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._drop_entity_mapping(handler, "TimeLog")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        bridge.jira.add_worklog(jira_issue, timeSpentSeconds=60)
+
+        self.assertTrue(handler._sync_jira_worklogs_to_sg(jira_issue))
+        self.assertEqual(bridge.shotgun.find("TimeLog", []), [])
+
+    def test_sync_jira_worklogs_to_sg_without_a_synced_issue(self, mocked_sg):
+        """
+        A worklog on an Issue whose FPTR entity isn't flagged as synced can't be
+        turned into a TimeLog.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue, sync_in_jira=False)
+        bridge.jira.add_worklog(jira_issue, timeSpentSeconds=60)
+
+        self.assertFalse(handler._sync_jira_worklogs_to_sg(jira_issue))
+        self.assertEqual(bridge.shotgun.find("TimeLog", []), [])
+
+    def test_sync_jira_worklogs_to_sg_reports_field_errors(self, mocked_sg):
+        """
+        A worklog missing one of the mapped Jira fields is reported, but the FPTR
+        TimeLog is still created with the values that could be read.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        # no timeSpentSeconds on this worklog, which the TimeLog maps to "duration"
+        bridge.jira.add_worklog(jira_issue, comment="Some work")
+
+        self.assertFalse(handler._sync_jira_worklogs_to_sg(jira_issue))
+
+        sg_timelogs = bridge.shotgun.find("TimeLog", [], ["description", "duration"])
+        self.assertEqual(len(sg_timelogs), 1)
+        self.assertEqual(sg_timelogs[0]["description"], "Some work")
+        # the field that couldn't be read never made it to FPTR
+        self.assertFalse(sg_timelogs[0]["duration"])
+
+    def test_sync_jira_worklogs_to_sg_deletes_stale_timelogs(self, mocked_sg):
+        """
+        With deletion enabled from Jira, a FPTR TimeLog whose Jira worklog is gone
+        is deleted; the ones still in Jira are kept.
+        """
+
+        handler, bridge = self._get_handler(
+            mocked_sg, name="entities_generic_jira_to_sg_deletion"
+        )
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_worklog = bridge.jira.add_worklog(
+            jira_issue, timeSpentSeconds=60, comment="Some work"
+        )
+
+        live_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        live_timelog["entity"] = sg_task
+        live_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_worklog.id,
+        )
+        self.add_to_sg_mock_db(bridge.shotgun, live_timelog)
+
+        stale_timelog = copy.deepcopy(mock_shotgun.SG_TIMELOG)
+        stale_timelog["id"] = 2
+        stale_timelog["entity"] = sg_task
+        stale_timelog[SHOTGUN_JIRA_ID_FIELD] = "%s/999" % jira_issue.key
+        self.add_to_sg_mock_db(bridge.shotgun, stale_timelog)
+
+        self.assertTrue(handler._sync_jira_worklogs_to_sg(jira_issue))
+
+        sg_timelogs = bridge.shotgun.find("TimeLog", [], [SHOTGUN_JIRA_ID_FIELD])
+        self.assertEqual(len(sg_timelogs), 1)
+        self.assertEqual(
+            sg_timelogs[0][SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, jira_worklog.id),
+        )
+
+    def test_sync_jira_comments_to_sg_when_notes_are_not_configured(self, mocked_sg):
+        """Comments are only synced when Note is part of the entity mapping."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+        self._drop_entity_mapping(handler, "Note")
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        bridge.jira.add_comment(jira_issue, "Some comment")
+
+        self.assertTrue(handler._sync_jira_comments_to_sg(jira_issue))
+        self.assertEqual(bridge.shotgun.find("Note", []), [])
+
+    def test_sync_jira_comments_to_sg_reports_field_errors(self, mocked_sg):
+        """
+        A comment deleted between being listed and being read is reported, and the
+        Note it would have filled is left empty.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        bridge.jira.add_comment(jira_issue, "Some comment")
+
+        with mock.patch.object(bridge.jira, "comment", return_value=None):
+            self.assertFalse(handler._sync_jira_comments_to_sg(jira_issue))
+
+        sg_notes = bridge.shotgun.find("Note", [], ["content"])
+        self.assertEqual(len(sg_notes), 1)
+        self.assertIsNone(sg_notes[0]["content"])
+
+    def test_sync_jira_comments_to_sg_deletes_stale_notes(self, mocked_sg):
+        """
+        With deletion enabled from Jira, a FPTR Note whose Jira comment is gone is
+        deleted; the ones still in Jira are kept.
+        """
+
+        handler, bridge = self._get_handler(
+            mocked_sg, name="entities_generic_jira_to_sg_deletion"
+        )
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        jira_comment = bridge.jira.add_comment(
+            jira_issue, "Some comment", author=mock_jira.JIRA_USER
+        )
+
+        live_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        live_note["tasks"] = [sg_task]
+        live_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        self.add_to_sg_mock_db(bridge.shotgun, live_note)
+
+        stale_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        stale_note["id"] = 2
+        stale_note["tasks"] = [sg_task]
+        stale_note[SHOTGUN_JIRA_ID_FIELD] = "%s/999" % jira_issue.key
+        self.add_to_sg_mock_db(bridge.shotgun, stale_note)
+
+        self.assertTrue(handler._sync_jira_comments_to_sg(jira_issue))
+
+        sg_notes = bridge.shotgun.find("Note", [], [SHOTGUN_JIRA_ID_FIELD])
+        self.assertEqual(len(sg_notes), 1)
+        self.assertEqual(
+            sg_notes[0][SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, jira_comment.id),
+        )
