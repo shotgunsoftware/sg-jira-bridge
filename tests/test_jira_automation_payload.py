@@ -230,3 +230,29 @@ class TestJiraAutomationPayload(TestSyncBase):
                     normalize_automation_request(
                         bridge, "Issue", issue_key, self._payload()
                     )
+
+    def test_unloaded_jira_issue_rejected(self, mocked_sg):
+        """
+        An Issue the Jira API never populated is rejected.
+
+        ``jira`` leaves ``raw`` unset on a resource it didn't load, which is
+        what the bridge sees when the request to Jira is answered by something
+        that isn't Jira, an SSO login page or a proxy error page. There are no
+        fields to sync from it, so the request must fail with a 400 rather than
+        push an empty Issue to Flow Production Tracking.
+        """
+        bridge, issue = self._bridge_with_issue(mocked_sg)
+
+        # the very class the Jira client hands back, built the way the library
+        # leaves a resource it never loaded
+        unloaded_issue = type(issue)({}, None)
+        self.assertIsNone(unloaded_issue.raw)
+
+        with mock.patch.object(bridge.jira, "issue", return_value=unloaded_issue):
+            with self.assertRaises(JiraAutomationPayloadError) as raised:
+                normalize_automation_request(
+                    bridge, "Issue", issue.key, self._payload()
+                )
+
+        # the Issue is named so the 400 is actionable for the pipeline admin
+        self.assertIn(issue.key, str(raised.exception))

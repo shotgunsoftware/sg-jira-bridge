@@ -3475,6 +3475,43 @@ class TestEntitiesGenericHandlerEdgeCases(TestEntitiesGenericHandler):
 class TestEntitiesGenericHandlerHelpers(TestEntitiesGenericHandlerEdgeCases):
     """Test the handler's settings lookups, key parsing and Jira entity loading."""
 
+    # -------------------------------------------------------------------------------
+    # setup()
+    # -------------------------------------------------------------------------------
+
+    def test_setup_missing_sync_in_fptr_jira_field(self, mocked_sg):
+        """
+        The handler can't work without the custom Jira field driving the sync, so
+        setup() must fail with a message naming the missing field.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        with mock.patch.object(
+            bridge.jira, "get_jira_issue_field_id", return_value=None
+        ):
+            with self.assertRaises(RuntimeError) as raised:
+                handler.setup()
+
+        self.assertEqual(
+            str(raised.exception),
+            "Missing required custom Jira field %s" % JIRA_SYNC_IN_FPTR_FIELD,
+        )
+
+    # -------------------------------------------------------------------------------
+    # Settings lookups
+    # -------------------------------------------------------------------------------
+
+    def test_get_jira_issue_type_settings(self, mocked_sg):
+        """The settings of a mapped Jira issue type are returned, unmapped give None."""
+
+        handler, _ = self._get_handler(mocked_sg)
+        get_settings = handler._EntitiesGenericHandler__get_jira_issue_type_settings
+
+        self.assertEqual(get_settings("Task")["sg_entity"], "Task")
+        self.assertEqual(get_settings("Epic")["sg_entity"], "Asset")
+        self.assertIsNone(get_settings("Bug"))
+
     def test_get_field_mapping_requires_exactly_one_field(self, mocked_sg):
         """__get_field_mapping() rejects being called with neither or both fields."""
 
@@ -3601,6 +3638,99 @@ class TestEntitiesGenericHandlerHelpers(TestEntitiesGenericHandlerEdgeCases):
         )
         self.assertFalse(can_sync_to_fptr(empty_issue))
 
+    # -------------------------------------------------------------------------------
+    # Jira comment/worklog retrieval
+    # -------------------------------------------------------------------------------
+
+    def test_missing_jira_issue_comment(self, mocked_sg):
+        """A comment that no longer exists in Jira resolves to None, not an error."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        with mock.patch.object(
+            bridge.jira,
+            "comment",
+            side_effect=jira.JIRAError(text="not found", status_code=404),
+        ):
+            self.assertIsNone(handler._get_jira_issue_comment("FAKED-001", "1"))
+
+    def test_get_jira_issue_comment_reraises_other_errors(self, mocked_sg):
+        """A Jira error other than 404 means something else is wrong: don't hide it."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        with mock.patch.object(
+            bridge.jira,
+            "comment",
+            side_effect=jira.JIRAError(text="boom", status_code=500),
+        ):
+            with self.assertRaises(jira.JIRAError) as raised:
+                handler._get_jira_issue_comment("FAKED-001", "1")
+
+        self.assertEqual(raised.exception.status_code, 500)
+
+    def test_missing_jira_issue_worklog(self, mocked_sg):
+        """A worklog that no longer exists in Jira resolves to None, not an error."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        with mock.patch.object(
+            bridge.jira,
+            "worklog",
+            side_effect=jira.JIRAError(text="not found", status_code=404),
+        ):
+            self.assertIsNone(handler._get_jira_issue_worklog("FAKED-001", "1"))
+
+    def test_get_jira_issue_worklog_reraises_other_errors(self, mocked_sg):
+        """A Jira error other than 404 means something else is wrong: don't hide it."""
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        with mock.patch.object(
+            bridge.jira,
+            "worklog",
+            side_effect=jira.JIRAError(text="boom", status_code=500),
+        ):
+            with self.assertRaises(jira.JIRAError) as raised:
+                handler._get_jira_issue_worklog("FAKED-001", "1")
+
+        self.assertEqual(raised.exception.status_code, 500)
+
+    def test_get_jira_entity_for_issue_linked_to_another_entity(self, mocked_sg):
+        """
+        A Jira Issue that records a different FPTR entity than the one being synced
+        must not be used, otherwise the two entities would overwrite each other.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        # the Issue is loaded as long as it points back at the same entity
+        self.assertEqual(
+            handler._get_jira_entity(
+                {
+                    "type": "Task",
+                    "id": sg_task["id"],
+                    SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+                }
+            ),
+            jira_issue,
+        )
+
+        # ...but not once it claims to be linked to another FPTR Task
+        jira_issue.update(fields={bridge.jira.jira_shotgun_id_field: "42"})
+        self.assertIsNone(
+            handler._get_jira_entity(
+                {
+                    "type": "Task",
+                    "id": sg_task["id"],
+                    SHOTGUN_JIRA_ID_FIELD: jira_issue.key,
+                }
+            )
+        )
+
 
 @mock.patch("shotgun_api3.Shotgun")
 class TestEntitiesGenericHandlerFPTRToJiraEdgeCases(
@@ -3611,6 +3741,54 @@ class TestEntitiesGenericHandlerFPTRToJiraEdgeCases(
     # -------------------------------------------------------------------------------
     # accept_shotgun_event()
     # -------------------------------------------------------------------------------
+
+    def test_accept_sg_event_rejects_jira_to_sg_only_entity(self, mocked_sg):
+        """
+        An entity configured to only sync from Jira to FPTR must not push anything
+        back to Jira.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_jira_to_sg")
+        self._mock_sg_data(bridge.shotgun)
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "entities_generic_jira_to_sg",
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                mock_shotgun.SG_TASK_CHANGE_EVENT,
+            )
+        )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task", [["id", "is", mock_shotgun.SG_TASK["id"]]], [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertIsNone(sg_task[SHOTGUN_JIRA_ID_FIELD])
+
+    def test_accept_sg_event_rejects_deletion_of_entity_synced_as_issue(
+        self, mocked_sg
+    ):
+        """
+        Deletion is only supported for the entities that are not flagged as synced
+        (Notes and TimeLogs): deleting a Task must not delete its Jira Issue.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        sg_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_event["meta"]["attribute_name"] = "retirement_date"
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME, "Task", mock_shotgun.SG_TASK["id"], sg_event
+            )
+        )
+
+        # the Jira Issue is still there
+        self.assertEqual(bridge.jira.issue(jira_issue.key), jira_issue)
 
     def test_accept_sg_event_rejects_already_handled_creation_event(self, mocked_sg):
         """
@@ -3934,6 +4112,17 @@ class TestEntitiesGenericHandlerFPTRToJiraEdgeCases(
 
         self.assertEqual(jira_issue.fields.summary, mock_shotgun.SG_TASK["content"])
 
+    def test_delete_jira_entity_without_a_jira_entity(self, mocked_sg):
+        """Deleting reports failure when the Jira entity can't be found."""
+
+        handler, _ = self._get_handler(mocked_sg)
+
+        self.assertFalse(
+            handler._delete_jira_entity(
+                {"type": "Task", "id": 1, SHOTGUN_JIRA_ID_FIELD: "FAKED-999"}
+            )
+        )
+
     # -------------------------------------------------------------------------------
     # _sync_sg_fields_to_jira()
     # -------------------------------------------------------------------------------
@@ -4137,6 +4326,31 @@ class TestEntitiesGenericHandlerFPTRToJiraEdgeCases(
         )
         self.assertEqual(jira_issue.fields.labels, ["urgent"])
 
+    def test_sync_sg_fields_to_jira_when_value_conversion_raises(self, mocked_sg):
+        """
+        A hook raising while converting a value is reported as a failed sync and
+        leaves the Jira Issue untouched.
+        """
+
+        handler, bridge = self._get_handler(mocked_sg)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        original_summary = jira_issue.fields.summary
+
+        with mock.patch.object(
+            handler._hook,
+            "get_jira_value_from_sg_value",
+            side_effect=RuntimeError("boom"),
+        ):
+            self.assertFalse(
+                handler._sync_sg_fields_to_jira(
+                    sg_task, jira_issue, field_name="content"
+                )
+            )
+
+        self.assertEqual(jira_issue.fields.summary, original_summary)
+
     def test_sync_sg_fields_to_jira_when_value_has_no_jira_equivalent(self, mocked_sg):
         """
         A FPTR value that can't be translated is reported rather than clearing the
@@ -4293,6 +4507,17 @@ class TestEntitiesGenericHandlerJiraToFPTREdgeCases(
     # -------------------------------------------------------------------------------
     # accept_jira_event()
     # -------------------------------------------------------------------------------
+
+    def test_accept_jira_event_rejects_non_issue_resource(self, mocked_sg):
+        """The handler only knows how to sync Issue resources."""
+
+        handler, _ = self._get_handler(mocked_sg)
+
+        self.assertFalse(
+            handler.accept_jira_event(
+                "Project", "UTest", mock_jira.ISSUE_UPDATED_PAYLOAD
+            )
+        )
 
     def test_accept_jira_event_rejects_event_without_its_entity(self, mocked_sg):
         """A comment event that carries no "comment" block can't be processed."""
