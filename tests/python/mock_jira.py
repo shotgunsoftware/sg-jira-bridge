@@ -454,6 +454,31 @@ COMMENT_PAYLOAD = {
     "issue": {"id": "FAKED-01", "key": "FAKED-01"},
 }
 
+REPLY_COMMENT_PAYLOAD = {
+    "webhookEvent": "comment_created",
+    "comment": {
+        "id": "100002",
+        "parentId": 100001,
+        "author": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+        "updateAuthor": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+        "body": "This is a reply",
+    },
+    "issue": {"id": "FAKED-01", "key": "FAKED-01"},
+}
+
+
+class MockedJiraUser:
+    """Minimal stand-in for a jira User resource used in MockedComment.author."""
+
+    def __init__(self, account_id, email="", display_name=""):
+        self.accountId = account_id
+        self.emailAddress = email
+        self.displayName = display_name
+
 
 class MockedSession(object):
     def put(self, *args, **kwargs):
@@ -1768,12 +1793,39 @@ class MockedJira(object):
         """
         if not isinstance(issue, jira.resources.Issue):
             issue = self.issue(issue)
-        raw = {"issue": issue, "id": str(len(issue._comments) + 1), "body": body}
+        raw = {
+            "issue": issue,
+            "id": str(len(issue._comments) + 1),
+            "body": body,
+            "author": MockedJiraUser(
+                JIRA_USER["accountId"],
+                JIRA_USER.get("emailAddress", ""),
+                JIRA_USER.get("displayName", ""),
+            ),
+        }
         for k in kwargs:
             raw[k] = kwargs[k]
         comment = MockedComment(None, None, raw=raw)
         issue._comments.append(comment)
         return comment
+
+    def add_comment_reply(self, issue_key, parent_comment_id, body):
+        """Mocked Jira method to add a threaded reply to an existing comment."""
+        issue = self.issue(issue_key) if not isinstance(issue_key, jira.resources.Issue) else issue_key
+        raw = {
+            "issue": issue,
+            "id": str(len(issue._comments) + 1),
+            "body": body,
+            "parentId": str(parent_comment_id),
+            "author": MockedJiraUser(
+                JIRA_USER["accountId"],
+                JIRA_USER.get("emailAddress", ""),
+                JIRA_USER.get("displayName", ""),
+            ),
+        }
+        reply = MockedComment(None, None, raw=raw)
+        issue._comments.append(reply)
+        return reply
 
     def comment(self, issue_key, comment_id, *args, **kwargs):
         """

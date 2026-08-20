@@ -200,6 +200,15 @@ SYNC = {
 }
 
 
+# Settings that include Reply entity for reply-sync tests
+SYNC["entities_generic_with_reply"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_with_reply"]["settings"]["entity_mapping"].append(
+    {
+        "sg_entity": "Reply",
+        "sync_deletion_direction": "both_way",
+    }
+)
+
 # Extra settings for testing all the entities generic syncer use cases
 SYNC["entities_generic_bad_sg_entity_formatting"] = copy.deepcopy(
     SYNC["entities_generic"]

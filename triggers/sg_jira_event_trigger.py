@@ -47,6 +47,7 @@ def registerCallbacks(reg):
     # Narrow down the list of events we pass to the bridge
     event_filter = {
         "Shotgun_Note_Change": ["*"],
+        "Shotgun_Reply_Change": ["*"],  # Needed for Reply/threaded comment sync.
         "Shotgun_Task_Change": ["*"],
         "Shotgun_Ticket_Change": ["*"],
         "Shotgun_Project_Change": ["*"],
@@ -116,6 +117,19 @@ def process_event(sg, logger, event, dispatch_routes):
 
     # Check the Project and get the routing
     project = event.get("project")
+    # Reply entities don't carry a direct project reference in the event.
+    # Derive the project from the parent Note when needed.
+    if not project and event.get("event_type") == "Shotgun_Reply_Change":
+        reply_meta = event.get("meta") or {}
+        reply_id = reply_meta.get("entity_id")
+        if reply_id:
+            reply = sg.find_one(
+                "Reply",
+                [["id", "is", reply_id]],
+                ["entity.Note.project"],
+            )
+            if reply:
+                project = reply.get("entity.Note.project")
     # If there is no Project associated with the event, just ignore it
     if not project:
         logger.debug("Ignoring event %s not associated with any Project" % event)
@@ -157,7 +171,7 @@ def process_event(sg, logger, event, dispatch_routes):
         "meta": meta,
         "session_uuid": event.get("session_uuid"),
         "user": event.get("user"),
-        "project": event["project"],
+        "project": project,
         "entity_type": entity_type,
         "entity_id": entity_id,
     }

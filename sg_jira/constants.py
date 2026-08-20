@@ -34,6 +34,10 @@ SHOTGUN_JIRA_URL_FIELD = "sg_jira_url"
 # A Shotgun check box field used to specify which entities should be synced.
 SHOTGUN_SYNC_IN_JIRA_FIELD = "sg_sync_in_jira"
 
+# A Shotgun text field on Note entities storing a JSON mapping of FPTR Reply IDs
+# to Jira comment reply IDs: {"<fptr_reply_id>": "<jira_reply_id>", ...}
+SHOTGUN_JIRA_REPLY_IDS_FIELD = "sg_jira_reply_ids"
+
 # A Jira check box field used to specify which entities should be synced.
 JIRA_SYNC_IN_FPTR_FIELD = "Sync In FPTR"
 
@@ -48,6 +52,7 @@ SG_ENTITY_SPECIAL_NAME_FIELDS = {
     "Task": "content",
     "HumanUser": "name",
     "Note": "subject",
+    "Reply": "content",
     "Department": "name",
     "Delivery": "title",
     "Tag": "name",
@@ -108,6 +113,14 @@ NOTE_FIELDS_MAPPING = {
     "content": None,
     "user": None,
     "tasks": None,
+}
+
+# Define the mapping between Shotgun Reply fields and Jira Comment/Reply fields.
+# If the Jira target is None, it means the target field is not settable
+# directly.
+REPLY_FIELDS_MAPPING = {
+    "content": None,
+    "retirement_date": None
 }
 
 # Define the mapping between Shotgun Asset fields and Jira Issue fields
