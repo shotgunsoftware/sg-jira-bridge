@@ -328,6 +328,58 @@ class JiraHook(object):
 
         return self._shotgun.find_one("HumanUser", sg_filters, ["id", "email", "name"])
 
+    # Matches Jira's wiki-markup user mention syntax, e.g.
+    # [~accountid:557058:276f63c9-3d4b-4562-a4a2-3abfacc11442]
+    JIRA_MENTION_REGEX = re.compile(r"\[~accountid:([^\]]+)\]")
+
+    # Matches the FPTR-side mention placeholder, e.g. [mention:88:PhilipScadding]
+    SG_MENTION_REGEX = re.compile(r"\[mention:(\d+):([^\]]*)\]")
+
+    def jira_body_to_sg(self, body):
+        """
+        Rewrite Jira user mentions in a comment/reply body to a readable FPTR
+        placeholder, for any accountId that matches a FPTR user via
+        `sg_jira_account_id`. Mentions with no matching FPTR user are left
+        untouched.
+
+        :param str body: A Jira comment or reply body.
+        :returns: The body with recognized mentions rewritten.
+        """
+
+        def _replace(match):
+            account_id = match.group(1)
+            sg_user = self._shotgun.find_one(
+                "HumanUser", [["sg_jira_account_id", "is", account_id]], ["name"]
+            )
+            if not sg_user:
+                return match.group(0)
+            name = re.sub(r"\s+", "", sg_user["name"])
+            return "[mention:%s:%s]" % (sg_user["id"], name)
+
+        return self.JIRA_MENTION_REGEX.sub(_replace, body)
+
+    def sg_body_to_jira(self, body):
+        """
+        Rewrite FPTR mention placeholders in a Note/Reply body back to Jira's
+        user mention syntax, for any placeholder whose FPTR user has a
+        `sg_jira_account_id` set. Placeholders with no matching Jira account
+        are left untouched.
+
+        :param str body: A FPTR Note or Reply content.
+        :returns: The body with recognized placeholders rewritten.
+        """
+
+        def _replace(match):
+            sg_user_id = int(match.group(1))
+            sg_user = self._shotgun.find_one(
+                "HumanUser", [["id", "is", sg_user_id]], ["sg_jira_account_id"]
+            )
+            if not sg_user or not sg_user.get("sg_jira_account_id"):
+                return match.group(0)
+            return "[~accountid:%s]" % sg_user["sg_jira_account_id"]
+
+        return self.SG_MENTION_REGEX.sub(_replace, body)
+
     def compose_jira_comment_body(self, sg_note):
         """Helper method to compose the Jira comment body from a FPTR note."""
         return self.COMMENT_BODY_TEMPLATE % (

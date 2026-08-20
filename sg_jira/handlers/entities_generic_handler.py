@@ -449,7 +449,9 @@ class EntitiesGenericHandler(SyncHandler):
         user = sg_reply.get("user") or {}
         user_name = user.get("name", "Unknown")
         body = sg_reply.get("content", "")
-        reply_body = f"_Reply from FPTR by {user_name}_\n{body}"
+        reply_body = self._hook.sg_body_to_jira(
+            f"_Reply from FPTR by {user_name}_\n{body}"
+        )
 
         if reply_id_str not in mapping:
             jira_reply = self._jira.add_comment_reply(issue_key, parent_comment_id, reply_body)
@@ -1164,7 +1166,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         jira_entity = self._jira.add_comment(
             jira_issue,
-            self._hook.compose_jira_comment_body(sg_entity),
+            self._hook.sg_body_to_jira(self._hook.compose_jira_comment_body(sg_entity)),
             visibility=None,  # TODO: check if Note properties should drive this
             is_internal=False,
         )
@@ -1891,7 +1893,7 @@ class EntitiesGenericHandler(SyncHandler):
                 "HumanUser", [["sg_jira_account_id", "is", jira_author["accountId"]]]
             )
 
-        body = comment_event.get("body", "")
+        body = self._hook.jira_body_to_sg(comment_event.get("body", ""))
 
         if webhook_action == "created" and sg_reply_id is None:
             sg_data = {
@@ -2176,7 +2178,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         sg_data = {
             "subject": "Comment created from Jira" if not sg_subject else sg_subject,
-            "content": sg_body,
+            "content": self._hook.jira_body_to_sg(sg_body),
             "user": sg_author,
         }
 

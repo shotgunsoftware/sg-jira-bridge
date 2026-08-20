@@ -193,6 +193,35 @@ class TestReplySync(TestSyncBase):
         mapping = json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}")
         self.assertIn(str(sg_reply["id"]), mapping)
 
+    def test_fptr_reply_mention_placeholder_rewritten_to_jira_mention(self, mocked_sg):
+        """A FPTR mention placeholder in a Reply's content should become a Jira mention."""
+        syncer, bridge = self._get_syncer(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        sg_reply["content"] = "[mention:%s:FordPrefect] thanks" % mock_shotgun.SG_USER["id"]
+        self.add_to_sg_mock_db(bridge.shotgun, sg_reply)
+
+        result = bridge.sync_in_jira(
+            self.HANDLER_NAME,
+            "Reply",
+            sg_reply["id"],
+            mock_shotgun.SG_REPLY_CHANGE_EVENT,
+        )
+
+        self.assertTrue(result)
+        new_reply = bridge.jira.comments(jira_issue.key)[-1]
+        self.assertIn(
+            "[~accountid:%s]" % mock_shotgun.SG_USER["sg_jira_account_id"],
+            new_reply.body,
+        )
+
     def test_fptr_reply_updates_jira_reply(self, mocked_sg):
         """Editing a FPTR Reply body should update the corresponding Jira comment reply."""
         syncer, bridge = self._get_syncer(mocked_sg)
@@ -376,6 +405,49 @@ class TestReplySync(TestSyncBase):
         )
         mapping = json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}")
         self.assertIn(str(replies[0]["id"]), mapping)
+
+    def test_jira_reply_mention_rewritten_to_fptr_placeholder(self, mocked_sg):
+        """A Jira mention in a reply body should become a readable FPTR placeholder."""
+        syncer, bridge = self._get_syncer(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key,
+            jira_comment.id,
+            "[~accountid:%s] fyi" % mock_shotgun.SG_USER["sg_jira_account_id"],
+        )
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        event = {
+            "webhookEvent": "comment_created",
+            "comment": {
+                "id": jira_reply.id,
+                "parentId": int(jira_comment.id),
+                "body": "[~accountid:%s] fyi" % mock_shotgun.SG_USER["sg_jira_account_id"],
+                "author": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+                "updateAuthor": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+            },
+            "issue": {"id": jira_issue.key, "key": jira_issue.key},
+        }
+
+        result = bridge.sync_in_shotgun(
+            self.HANDLER_NAME, "issue", jira_issue.key, event
+        )
+        self.assertTrue(result)
+
+        replies = bridge.shotgun.find(
+            "Reply",
+            [["entity", "is", {"type": "Note", "id": sg_note["id"]}]],
+            ["content"],
+        )
+        self.assertEqual(len(replies), 1)
+        self.assertEqual(
+            replies[0]["content"],
+            "[mention:%s:FordPrefect] fyi" % mock_shotgun.SG_USER["id"],
+        )
 
     def test_jira_reply_deletes_fptr_reply(self, mocked_sg):
         """A comment_deleted with parentId should delete the FPTR Reply."""

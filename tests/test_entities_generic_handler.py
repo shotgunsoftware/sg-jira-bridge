@@ -3244,3 +3244,65 @@ class TestEntitiesGenericHandlerHook(TestEntitiesGenericHandler):
 
         self.assertEqual(hook_path, module_path)
         self.assertEqual(syncer.hook.format_sg_date(self.JIRA_DATE), "fixture_date")
+
+
+@mock.patch("shotgun_api3.Shotgun")
+class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
+    """Test rewriting Jira user mentions to/from a readable FPTR placeholder."""
+
+    def _get_hook(self, mocked_sg):
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER)
+        return syncer.hook
+
+    def test_jira_body_to_sg_rewrites_mapped_mention(self, mocked_sg):
+        """A Jira mention for an accountId mapped to a FPTR user is rewritten."""
+        hook = self._get_hook(mocked_sg)
+        account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
+
+        result = hook.jira_body_to_sg("[~accountid:%s] hello" % account_id)
+
+        self.assertEqual(
+            result,
+            "[mention:%s:%s] hello"
+            % (mock_shotgun.SG_USER["id"], "FordPrefect"),
+        )
+
+    def test_jira_body_to_sg_leaves_unmapped_mention_untouched(self, mocked_sg):
+        """A Jira mention for an accountId with no matching FPTR user is left as-is."""
+        hook = self._get_hook(mocked_sg)
+
+        body = "[~accountid:no-such-account-id] hello"
+        self.assertEqual(hook.jira_body_to_sg(body), body)
+
+    def test_jira_body_to_sg_no_mention(self, mocked_sg):
+        """A body with no mention is returned unchanged."""
+        hook = self._get_hook(mocked_sg)
+
+        body = "just a plain comment"
+        self.assertEqual(hook.jira_body_to_sg(body), body)
+
+    def test_sg_body_to_jira_rewrites_mapped_placeholder(self, mocked_sg):
+        """A FPTR placeholder for a user with a Jira account id is rewritten."""
+        hook = self._get_hook(mocked_sg)
+        account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
+
+        result = hook.sg_body_to_jira(
+            "[mention:%s:FordPrefect] hello" % mock_shotgun.SG_USER["id"]
+        )
+
+        self.assertEqual(result, "[~accountid:%s] hello" % account_id)
+
+    def test_sg_body_to_jira_leaves_unmapped_placeholder_untouched(self, mocked_sg):
+        """A FPTR placeholder for a user id that doesn't exist is left as-is."""
+        hook = self._get_hook(mocked_sg)
+
+        body = "[mention:999999:NoSuchUser] hello"
+        self.assertEqual(hook.sg_body_to_jira(body), body)
+
+    def test_sg_body_to_jira_no_placeholder(self, mocked_sg):
+        """A body with no placeholder is returned unchanged."""
+        hook = self._get_hook(mocked_sg)
+
+        body = "just a plain reply"
+        self.assertEqual(hook.sg_body_to_jira(body), body)
