@@ -5,16 +5,13 @@
 # this software in either electronic or hard copy form.
 #
 
-import json
 import re
 
 from jira import JIRAError
 
 from ..constants import (
     NOTE_FIELDS_MAPPING,
-    REPLY_FIELDS_MAPPING,
     SHOTGUN_JIRA_ID_FIELD,
-    SHOTGUN_JIRA_REPLY_IDS_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
 )
 from ..errors import InvalidJiraValue
@@ -43,7 +40,6 @@ class NoteCommentHandler(SyncHandler):
     # If the Jira target is None, it means the target field is not settable
     # directly.
     __NOTE_FIELDS_MAPPING = NOTE_FIELDS_MAPPING
-    __REPLY_FIELDS_MAPPING = REPLY_FIELDS_MAPPING
 
     def setup(self):
         """
@@ -54,13 +50,11 @@ class NoteCommentHandler(SyncHandler):
             "Note", SHOTGUN_JIRA_ID_FIELD, "text", check_unique=True
         )
 
-    def _supported_shotgun_fields_for_shotgun_event(self, is_reply=False):
+    def _supported_shotgun_fields_for_shotgun_event(self):
         """
         Return the list of Flow Production Tracking fields that this handler can process for a
         Flow Production Tracking to Jira event.
         """
-        if is_reply:
-            return list(self.__REPLY_FIELDS_MAPPING.keys())
         return list(self.__NOTE_FIELDS_MAPPING.keys())
 
     def _compose_jira_comment_body(self, shotgun_note):
@@ -163,19 +157,12 @@ class NoteCommentHandler(SyncHandler):
         # the event, and then calls `TaskIssueHandler.process_shotgun_event` and,
         # only if this was successful, `NoteCommentHandler.process_shotgun_event`.
 
+        # We only accept Note
+        if entity_type != "Note":
+            return False
         meta = event["meta"]
         field = meta["attribute_name"]
-
-        if entity_type not in ["Note", "Reply"]:
-            return False
-
-        # Accept Note.replies events so we can sync Reply creation/deletion to Jira.
-        # TODO: should this just be covered by the supported check below?
-        if field == "replies":
-            return True
-
-        is_reply = entity_type == "Reply"
-        if field not in self._supported_shotgun_fields_for_shotgun_event(is_reply):
+        if field not in self._supported_shotgun_fields_for_shotgun_event():
             self._logger.debug(
                 "Rejecting Shotgun event for unsupported Shotgun field %s: %s"
                 % (field, event)
@@ -227,11 +214,7 @@ class NoteCommentHandler(SyncHandler):
         meta = event["meta"]
         shotgun_field = meta["attribute_name"]
 
-        # Dispatch Reply entity events before any Note-specific logic.
-        if entity_type == "Reply":
-            return self._process_reply_entity_event(entity_id, shotgun_field)
-
-        # NOTE: We don't validate that a Comment is configured to sync with
+        # NOTE: We're don't validate that a Comment is configured to sync with
         # the source Note that initiated the sync because Jira Comments don't
         # store any linked Shotgun Entity info like Issues do.
 
@@ -243,12 +226,6 @@ class NoteCommentHandler(SyncHandler):
             return self._sync_shotgun_task_notes_to_jira(
                 {"type": entity_type, "id": entity_id}
             )
-
-        # TODO: Questions if this is really needed?
-        # Dispatch Note.replies events before the in_create check — Reply
-        # creation fires with in_create=True on the Note but must be processed.
-        if shotgun_field == "replies":
-            return self._process_note_replies_change(entity_id, meta)
 
         sg_entity = self._shotgun.consolidate_entity(
             {"type": entity_type, "id": entity_id}, fields=self._shotgun_note_fields
@@ -459,189 +436,6 @@ class NoteCommentHandler(SyncHandler):
             updated = True
 
         return updated
-
-    def _note_reply_fields(self):
-        return [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_REPLY_IDS_FIELD]
-
-    def _reply_fields(self):
-        return [
-            "content",
-            "user",
-            "entity",
-            "entity.Note.%s" % SHOTGUN_JIRA_ID_FIELD,
-            "entity.Note.%s" % SHOTGUN_JIRA_REPLY_IDS_FIELD,
-        ]
-
-    def _parse_reply_mapping(self, raw):
-        """Parse the sg_jira_reply_ids JSON string. Returns an empty dict on failure."""
-        if not raw:
-            return {}
-        try:
-            return json.loads(raw)
-        except (ValueError, TypeError):
-            return {}
-
-    def _process_note_replies_change(self, note_id, meta):
-        """
-        Handle a Note.replies field change event.
-
-        Called when FPTR fires a Shotgun_Note_Change event with attribute_name=replies,
-        meaning a Reply was added to or removed from a Note. Creates or deletes the
-        corresponding Jira comment reply and updates the sg_jira_reply_ids mapping.
-        """
-        note = self._shotgun.find_one(
-            "Note", [["id", "is", note_id]], self._note_reply_fields()
-        )
-        if not note or not note.get(SHOTGUN_JIRA_ID_FIELD):
-            self._logger.debug(
-                "Skipping Note (%d) replies change: Note is not synced to Jira." % note_id
-            )
-            return False
-
-        note_jira_key = note[SHOTGUN_JIRA_ID_FIELD]
-        try:
-            issue_key, parent_comment_id = note_jira_key.split("/", 1)
-        except ValueError:
-            self._logger.warning(
-                "Invalid Jira key '%s' on Note (%d)." % (note_jira_key, note_id)
-            )
-            return False
-
-        mapping = self._parse_reply_mapping(note.get(SHOTGUN_JIRA_REPLY_IDS_FIELD))
-        changed = False
-
-        for reply_ref in meta.get("added", []):
-            reply_id = reply_ref["id"]
-            reply_id_str = str(reply_id)
-            if reply_id_str in mapping:
-                continue
-            reply = self._shotgun.find_one(
-                "Reply", [["id", "is", reply_id]], ["content", "user"]
-            )
-            if not reply:
-                continue
-            user_name = (reply.get("user") or {}).get("name", "Unknown")
-            body = "_Reply from FPTR by %s_\n%s" % (user_name, reply.get("content", ""))
-            try:
-                jira_reply = self._jira.add_comment_reply(issue_key, parent_comment_id, body)
-                mapping[reply_id_str] = jira_reply.id
-                changed = True
-                self._logger.info(
-                    "Created Jira reply %s for FPTR Reply (%d) on Note (%d)."
-                    % (jira_reply.id, reply_id, note_id)
-                )
-            except Exception as e:
-                self._logger.warning(
-                    "Failed to create Jira reply for Reply (%d): %s" % (reply_id, e)
-                )
-
-        for reply_ref in meta.get("removed", []):
-            reply_id_str = str(reply_ref["id"])
-            jira_reply_id = mapping.pop(reply_id_str, None)
-            if not jira_reply_id:
-                continue
-            try:
-                self._jira.comment(issue_key, jira_reply_id).delete()
-                changed = True
-                self._logger.info(
-                    "Deleted Jira reply %s for removed FPTR Reply (%s) on Note (%d)."
-                    % (jira_reply_id, reply_id_str, note_id)
-                )
-            except Exception as e:
-                self._logger.warning(
-                    "Failed to delete Jira reply %s: %s" % (jira_reply_id, e)
-                )
-
-        if changed:
-            self._shotgun.update(
-                "Note", note_id, {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)}
-            )
-
-        return True
-
-    def _process_reply_entity_event(self, reply_id, field):
-        """
-        Handle a Reply entity event (Shotgun_Reply_Change).
-
-        Called for content edits (field=content) and deletions (field=retirement_date).
-        Looks up the corresponding Jira reply via the parent Note's sg_jira_reply_ids
-        mapping and updates or deletes it.
-        """
-        # TODO: Confirm what happens on retirement
-        reply = self._shotgun.find_one(
-            "Reply", [["id", "is", reply_id]], self._reply_fields()
-        )
-        if not reply and field == "retirement_date":
-            reply = self._shotgun.find_one(
-                "Reply", [["id", "is", reply_id]], self._reply_fields(),
-                retired_only=True
-            )
-        if not reply:
-            self._logger.warning("Unable to find Reply (%d)." % reply_id)
-            return False
-
-        note_jira_key = reply.get("entity.Note.%s" % SHOTGUN_JIRA_ID_FIELD)
-        if not note_jira_key:
-            self._logger.debug(
-                "Skipping Reply (%d) event: parent Note is not synced to Jira." % reply_id
-            )
-            return False
-
-        try:
-            issue_key, _ = note_jira_key.split("/", 1)
-        except ValueError:
-            self._logger.warning(
-                "Invalid Jira key '%s' for Reply (%d)." % (note_jira_key, reply_id)
-            )
-            return False
-
-        mapping = self._parse_reply_mapping(
-            reply.get("entity.Note.%s" % SHOTGUN_JIRA_REPLY_IDS_FIELD)
-        )
-        reply_id_str = str(reply_id)
-        jira_reply_id = mapping.get(reply_id_str)
-        if not jira_reply_id:
-            self._logger.debug(
-                "Reply (%d) has no Jira entry in the mapping — skipping." % reply_id
-            )
-            return False
-
-        note_id = (reply.get("entity") or {}).get("id")
-
-        if field == "retirement_date":
-            try:
-                self._jira.comment(issue_key, jira_reply_id).delete()
-                self._logger.info(
-                    "Deleted Jira reply %s for retired FPTR Reply (%d)."
-                    % (jira_reply_id, reply_id)
-                )
-            except Exception as e:
-                self._logger.warning(
-                    "Failed to delete Jira reply %s: %s" % (jira_reply_id, e)
-                )
-            if note_id:
-                mapping.pop(reply_id_str, None)
-                self._shotgun.update(
-                    "Note", note_id, {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)}
-                )
-            return True
-
-        if field == "content":
-            user_name = (reply.get("user") or {}).get("name", "Unknown")
-            body = "_Reply from FPTR by %s_\n%s" % (user_name, reply.get("content", ""))
-            try:
-                self._jira.comment(issue_key, jira_reply_id).update(body=body)
-                self._logger.info(
-                    "Updated Jira reply %s for FPTR Reply (%d)." % (jira_reply_id, reply_id)
-                )
-                return True
-            except Exception as e:
-                self._logger.warning(
-                    "Failed to update Jira reply %s: %s" % (jira_reply_id, e)
-                )
-                return False
-
-        return False
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """

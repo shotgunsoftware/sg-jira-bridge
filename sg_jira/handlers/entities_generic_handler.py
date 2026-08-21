@@ -1305,7 +1305,9 @@ class EntitiesGenericHandler(SyncHandler):
         if sg_entity["type"] == "Note":
             if field_name == "tasks":
                 return True
-            comment_body = self._hook.compose_jira_comment_body(sg_entity)
+            comment_body = self._hook.sg_body_to_jira(
+                self._hook.compose_jira_comment_body(sg_entity)
+            )
             jira_entity.update(body=comment_body)
             return True
 

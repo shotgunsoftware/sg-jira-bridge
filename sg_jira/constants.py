@@ -115,14 +115,6 @@ NOTE_FIELDS_MAPPING = {
     "tasks": None,
 }
 
-# Define the mapping between Shotgun Reply fields and Jira Comment/Reply fields.
-# If the Jira target is None, it means the target field is not settable
-# directly.
-REPLY_FIELDS_MAPPING = {
-    "content": None,
-    "retirement_date": None
-}
-
 # Define the mapping between Shotgun Asset fields and Jira Issue fields
 ASSET_FIELDS_MAPPING = {
     "code": "summary",

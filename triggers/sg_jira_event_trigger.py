@@ -127,6 +127,11 @@ def process_event(sg, logger, event, dispatch_routes):
                 "Reply",
                 [["id", "is", reply_id]],
                 ["entity.Note.project"],
+            ) or sg.find_one(
+                "Reply",
+                [["id", "is", reply_id]],
+                ["entity.Note.project"],
+                retired_only=True,
             )
             if reply:
                 project = reply.get("entity.Note.project")

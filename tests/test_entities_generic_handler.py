@@ -1489,6 +1489,46 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         jira_comment = bridge._jira.comment(jira_issue.key, jira_comment.id)
         self.assertNotEqual(jira_comment.body, comment_body)
 
+    def test_fptr_to_jira_sync_existing_note_rewrites_mention_placeholder(
+        self, mocked_sg
+    ):
+        """
+        Editing an already-synced FPTR Note whose content contains a mention
+        placeholder should push a real Jira mention, not the raw placeholder.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "comment created from Jira")
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [mocked_sg_task]
+        mocked_sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (
+            jira_issue.key,
+            jira_comment.id,
+        )
+        mocked_sg_note["content"] = (
+            "[mention:%s:FordPrefect] see above" % mock_shotgun.SG_USER["id"]
+        )
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Note",
+                mock_shotgun.SG_NOTE["id"],
+                mock_shotgun.SG_NOTE_CHANGE_EVENT,
+            )
+        )
+
+        jira_comment = bridge._jira.comment(jira_issue.key, jira_comment.id)
+        self.assertIn(
+            "[~accountid:%s]" % mock_shotgun.SG_USER["sg_jira_account_id"],
+            jira_comment.body,
+        )
+        self.assertNotIn("[mention:", jira_comment.body)
+
     # -------------------------------------------------------------------------------
     # FPTR to Jira Sync - Note Deletion Event
     # -------------------------------------------------------------------------------
