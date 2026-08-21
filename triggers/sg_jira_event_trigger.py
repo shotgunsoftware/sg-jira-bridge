@@ -47,7 +47,12 @@ def registerCallbacks(reg):
     # Narrow down the list of events we pass to the bridge
     event_filter = {
         "Shotgun_Note_Change": ["*"],
-        "Shotgun_Reply_Change": ["*"],  # Needed for Reply/threaded comment sync.
+        # Only forward the fields the bridge actually processes for Reply
+        # (see EntitiesGenericHandler.__REPLY_SG_FIELDS and
+        # __SG_RETIREMENT_FIELD) - other Reply field changes, e.g. FPTR's
+        # internal `publish_status`, would just be rejected by the bridge
+        # after an unnecessary Project lookup and HTTP round trip.
+        "Shotgun_Reply_Change": ["content", "user", "entity", "retirement_date"],
         "Shotgun_Task_Change": ["*"],
         "Shotgun_Ticket_Change": ["*"],
         "Shotgun_Project_Change": ["*"],
@@ -117,8 +122,11 @@ def process_event(sg, logger, event, dispatch_routes):
 
     # Check the Project and get the routing
     project = event.get("project")
-    # Reply entities don't carry a direct project reference in the event.
-    # Derive the project from the parent Note when needed.
+    # Reply entities don't always carry a direct project reference in the event.
+    # Content/user/entity changes do, so this only ever runs for
+    # retirement_date (deletion) events - by the time this fallback runs, the
+    # Reply is virtually always already retired, so try the retired_only
+    # lookup first to avoid a guaranteed-to-fail query on the common path.
     if not project and event.get("event_type") == "Shotgun_Reply_Change":
         reply_meta = event.get("meta") or {}
         reply_id = reply_meta.get("entity_id")
@@ -127,11 +135,11 @@ def process_event(sg, logger, event, dispatch_routes):
                 "Reply",
                 [["id", "is", reply_id]],
                 ["entity.Note.project"],
+                retired_only=True,
             ) or sg.find_one(
                 "Reply",
                 [["id", "is", reply_id]],
                 ["entity.Note.project"],
-                retired_only=True,
             )
             if reply:
                 project = reply.get("entity.Note.project")
