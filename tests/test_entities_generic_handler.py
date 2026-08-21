@@ -3293,6 +3293,7 @@ class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
     def _get_hook(self, mocked_sg):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
         self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER)
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER_2)
         return syncer.hook
 
     def test_jira_body_to_sg_rewrites_mapped_mention(self, mocked_sg):
@@ -3346,3 +3347,55 @@ class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
 
         body = "just a plain reply"
         self.assertEqual(hook.sg_body_to_jira(body), body)
+
+    def test_jira_body_to_sg_rewrites_multiple_distinct_mentions(self, mocked_sg):
+        """Two different mentions in one body are each rewritten to the right user."""
+        hook = self._get_hook(mocked_sg)
+        account_id_1 = mock_shotgun.SG_USER["sg_jira_account_id"]
+        account_id_2 = mock_shotgun.SG_USER_2["sg_jira_account_id"]
+
+        result = hook.jira_body_to_sg(
+            "[~accountid:%s] and [~accountid:%s] please review"
+            % (account_id_1, account_id_2)
+        )
+
+        self.assertEqual(
+            result,
+            "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review"
+            % (mock_shotgun.SG_USER["id"], mock_shotgun.SG_USER_2["id"]),
+        )
+
+    def test_jira_body_to_sg_rewrites_multiple_mentions_mixed_mapped_unmapped(
+        self, mocked_sg
+    ):
+        """A mapped mention and an unmapped mention in the same body are each handled correctly."""
+        hook = self._get_hook(mocked_sg)
+        account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
+
+        result = hook.jira_body_to_sg(
+            "[~accountid:%s] and [~accountid:no-such-account-id] please review"
+            % account_id
+        )
+
+        self.assertEqual(
+            result,
+            "[mention:%s:FordPrefect] and [~accountid:no-such-account-id] please review"
+            % mock_shotgun.SG_USER["id"],
+        )
+
+    def test_sg_body_to_jira_rewrites_multiple_distinct_placeholders(self, mocked_sg):
+        """Two different placeholders in one body are each rewritten to the right Jira mention."""
+        hook = self._get_hook(mocked_sg)
+        account_id_1 = mock_shotgun.SG_USER["sg_jira_account_id"]
+        account_id_2 = mock_shotgun.SG_USER_2["sg_jira_account_id"]
+
+        result = hook.sg_body_to_jira(
+            "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review"
+            % (mock_shotgun.SG_USER["id"], mock_shotgun.SG_USER_2["id"])
+        )
+
+        self.assertEqual(
+            result,
+            "[~accountid:%s] and [~accountid:%s] please review"
+            % (account_id_1, account_id_2),
+        )

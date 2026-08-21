@@ -449,6 +449,79 @@ class TestReplySync(TestSyncBase):
             "[mention:%s:FordPrefect] fyi" % mock_shotgun.SG_USER["id"],
         )
 
+    def test_multiple_mentions_round_trip_jira_to_fptr_and_back(self, mocked_sg):
+        """
+        A Jira reply mentioning two mapped users should sync to FPTR with both
+        rewritten to their own placeholder, and editing that FPTR Reply should
+        sync back to Jira with both placeholders restored to real mentions.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        account_id_1 = mock_shotgun.SG_USER["sg_jira_account_id"]
+        account_id_2 = mock_shotgun.SG_USER_2["sg_jira_account_id"]
+        original_body = "[~accountid:%s] and [~accountid:%s] please review" % (
+            account_id_1,
+            account_id_2,
+        )
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, original_body
+        )
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        # Jira -> FPTR: both mentions should become their own placeholder.
+        event = {
+            "webhookEvent": "comment_created",
+            "comment": {
+                "id": jira_reply.id,
+                "parentId": int(jira_comment.id),
+                "body": original_body,
+                "author": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+                "updateAuthor": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+            },
+            "issue": {"id": jira_issue.key, "key": jira_issue.key},
+        }
+        self.assertTrue(
+            bridge.sync_in_shotgun(self.HANDLER_NAME, "issue", jira_issue.key, event)
+        )
+
+        expected_placeholders = "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review" % (
+            mock_shotgun.SG_USER["id"],
+            mock_shotgun.SG_USER_2["id"],
+        )
+        replies = bridge.shotgun.find(
+            "Reply",
+            [["entity", "is", {"type": "Note", "id": sg_note["id"]}]],
+            ["content"],
+        )
+        self.assertEqual(len(replies), 1)
+        sg_reply = replies[0]
+        self.assertEqual(sg_reply["content"], expected_placeholders)
+
+        # FPTR -> Jira: editing the Reply should restore both real mentions.
+        edited_content = expected_placeholders.replace(
+            "please review", "please review, thanks"
+        )
+        bridge.shotgun.update("Reply", sg_reply["id"], {"content": edited_content})
+
+        result = bridge.sync_in_jira(
+            self.HANDLER_NAME,
+            "Reply",
+            sg_reply["id"],
+            mock_shotgun.SG_REPLY_CHANGE_EVENT,
+        )
+        self.assertTrue(result)
+
+        updated_jira_reply = bridge.jira.comment(jira_issue.key, jira_reply.id)
+        self.assertIn(
+            "[~accountid:%s] and [~accountid:%s] please review, thanks"
+            % (account_id_1, account_id_2),
+            updated_jira_reply.body,
+        )
+
     def test_jira_reply_deletes_fptr_reply(self, mocked_sg):
         """A comment_deleted with parentId should delete the FPTR Reply."""
         syncer, bridge = self._get_syncer(mocked_sg)

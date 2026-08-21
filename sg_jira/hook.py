@@ -345,12 +345,22 @@ class JiraHook(object):
         :param str body: A Jira comment or reply body.
         :returns: The body with recognized mentions rewritten.
         """
+        # First extract all Jira user mentions so we can do a single look up for the matching Flow PT users
+        account_ids = {m.group(1) for m in self.JIRA_MENTION_REGEX.finditer(body)}
+        if not account_ids:
+            return body
+
+        sg_users_by_account_id = {
+            sg_user["sg_jira_account_id"]: sg_user
+            for sg_user in self._shotgun.find(
+                "HumanUser",
+                [["sg_jira_account_id", "in", list(account_ids)]],
+                ["name", "sg_jira_account_id"],
+            )
+        }
 
         def _replace(match):
-            account_id = match.group(1)
-            sg_user = self._shotgun.find_one(
-                "HumanUser", [["sg_jira_account_id", "is", account_id]], ["name"]
-            )
+            sg_user = sg_users_by_account_id.get(match.group(1))
             if not sg_user:
                 return match.group(0)
             name = re.sub(r"\s+", "", sg_user["name"])
@@ -368,15 +378,26 @@ class JiraHook(object):
         :param str body: A FPTR Note or Reply content.
         :returns: The body with recognized placeholders rewritten.
         """
+        # First extract all Flow PT user ids from any "mentions" in the body so we can
+        # do a lookup for those users.
+        sg_user_ids = {int(m.group(1)) for m in self.SG_MENTION_REGEX.finditer(body)}
+        if not sg_user_ids:
+            return body
+
+        account_ids_by_sg_user_id = {
+            sg_user["id"]: sg_user.get("sg_jira_account_id")
+            for sg_user in self._shotgun.find(
+                "HumanUser",
+                [["id", "in", list(sg_user_ids)]],
+                ["sg_jira_account_id"],
+            )
+        }
 
         def _replace(match):
-            sg_user_id = int(match.group(1))
-            sg_user = self._shotgun.find_one(
-                "HumanUser", [["id", "is", sg_user_id]], ["sg_jira_account_id"]
-            )
-            if not sg_user or not sg_user.get("sg_jira_account_id"):
+            account_id = account_ids_by_sg_user_id.get(int(match.group(1)))
+            if not account_id:
                 return match.group(0)
-            return "[~accountid:%s]" % sg_user["sg_jira_account_id"]
+            return "[~accountid:%s]" % account_id
 
         return self.SG_MENTION_REGEX.sub(_replace, body)
 
