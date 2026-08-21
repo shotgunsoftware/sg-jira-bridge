@@ -523,33 +523,14 @@ class JiraSession(jira.client.JIRA):
 
         The `jira` library's `add_comment()` only supports top-level comments: it
         hardcodes its request body to `{"body": ...}` with no way to pass extra
-        fields. Jira's comment threading (the "Reply" button in the UI, which
-        indents the new comment under its parent) is not a separate REST resource
-        either - despite the reply being visually nested, there is no
-        `/comment/{id}/replies` endpoint. It's the same `POST .../issue/{key}/comment`
-        endpoint as any other comment, just with an extra `parentId` field in the
-        payload, which was confirmed against a live Jira Cloud site (both API v2
-        and v3). So we have to bypass the library helper and issue the request
-        directly, using its own `_get_url`/`_session` so we stay consistent with
-        whatever REST API version and auth this JiraSession is configured for.
+        fields. Jira's comment threading involves creating a comment and providing a parentID.
+        However, this is only possible via the Jira REST API by providing the id in the fields.
 
         :param str issue_key: Key of the Jira Issue the parent comment belongs to.
         :param str parent_comment_id: Id of the Jira comment to reply to.
         :param str body: Text of the reply comment to add.
         :returns: The created :class:`jira.resources.Comment`.
         """
-        # Tests replace JiraSession's base class with a mock (see
-        # test_base.mock_jira_session_bases) that implements its own
-        # add_comment_reply. But since this method is defined directly on
-        # JiraSession, it would otherwise always shadow that mock, even under
-        # the swapped base - unlike attributes only inherited from the base,
-        # which resolve dynamically. Delegating via super() first (as
-        # __init__ already does for the same reason) lets the mock take over
-        # in tests while real usage falls through to the direct REST call
-        # below, since the real jira.client.JIRA has no such method.
-        if hasattr(super(), "add_comment_reply"):
-            return super().add_comment_reply(issue_key, parent_comment_id, body)
-
         data = {"body": body, "parentId": str(parent_comment_id)}
         url = self._get_url("issue/%s/comment" % issue_key)
         r = self._session.post(url, data=json.dumps(data))
