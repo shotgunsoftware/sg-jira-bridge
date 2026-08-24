@@ -659,6 +659,77 @@ class TestReplySync(TestSyncBase):
         self.assertEqual(len(replies), 0)
 
     # ---------------------------------------------------------------------------
+    # Rejecting Jira comment/reply events for unconfigured entity types
+    # ---------------------------------------------------------------------------
+
+    def test_jira_comment_rejected_when_note_not_configured(self, mocked_sg):
+        """
+        A live comment_created webhook must be rejected (not create a bare
+        Note) when Note isn't present in entity_mapping - matching how
+        accept_shotgun_event already rejects unconfigured FPTR entity types
+        for the FPTR -> Jira direction.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_without_note")
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        sg_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
+        self.add_to_sg_mock_db(bridge.shotgun, sg_task)
+
+        jira_comment = bridge.jira.add_comment(jira_issue, "new comment")
+
+        event = copy.deepcopy(mock_jira.COMMENT_PAYLOAD)
+        event["comment"]["id"] = jira_comment.id
+        event["comment"]["author"] = {"accountId": mock_jira.JIRA_USER_2["accountId"]}
+        event["issue"]["key"] = jira_issue.key
+        event["issue"]["id"] = jira_issue.key
+
+        result = bridge.sync_in_shotgun(
+            "entities_generic_without_note", "issue", jira_issue.key, event
+        )
+        self.assertFalse(result)
+        self.assertEqual(bridge.shotgun.find("Note", []), [])
+
+    def test_jira_reply_rejected_when_reply_not_configured(self, mocked_sg):
+        """
+        A live comment_created webhook for a reply (parentId set) must be
+        rejected when Reply isn't present in entity_mapping.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_without_note")
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        sg_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
+        self.add_to_sg_mock_db(bridge.shotgun, sg_task)
+
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, "a reply"
+        )
+
+        event = {
+            "webhookEvent": "comment_created",
+            "comment": {
+                "id": jira_reply.id,
+                "parentId": int(jira_comment.id),
+                "body": "a reply",
+                "author": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+                "updateAuthor": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+            },
+            "issue": {"id": jira_issue.key, "key": jira_issue.key},
+        }
+
+        result = bridge.sync_in_shotgun(
+            "entities_generic_without_note", "issue", jira_issue.key, event
+        )
+        self.assertFalse(result)
+        self.assertEqual(bridge.shotgun.find("Reply", []), [])
+
+    # ---------------------------------------------------------------------------
     # Backfilling existing Notes/Replies when a Task is synced for the first time
     # ---------------------------------------------------------------------------
 

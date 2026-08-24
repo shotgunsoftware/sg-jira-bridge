@@ -209,6 +209,15 @@ SYNC["entities_generic_with_reply"]["settings"]["entity_mapping"].append(
     }
 )
 
+# Settings with Note (and therefore Reply) excluded entirely, for testing that
+# Jira comment/reply webhook events are cleanly rejected when not configured.
+SYNC["entities_generic_without_note"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_without_note"]["settings"]["entity_mapping"] = [
+    m
+    for m in SYNC["entities_generic_without_note"]["settings"]["entity_mapping"]
+    if m["sg_entity"] != "Note"
+]
+
 # Extra settings for testing all the entities generic syncer use cases
 SYNC["entities_generic_bad_sg_entity_formatting"] = copy.deepcopy(
     SYNC["entities_generic"]

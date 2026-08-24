@@ -27,17 +27,6 @@ from .sync_handler import SyncHandler
 #  - find a way to check if a field exist for a specific issue type when accepting SG event
 #  - add a check for Jira Worklog fields existence
 #  - ensure mandatory fields for Jira entity creation (eg: started + duration for TimeLogs)
-#  - accept_jira_event()/process_jira_event() route Jira comment/reply webhook events to
-#    Note/Reply sync without checking they're actually present in entity_mapping - if a
-#    studio configures e.g. only "Task" and omits "Note"/"Reply", accept_jira_event() falls
-#    back to the parent Issue's (Task's) sync_settings via __get_jira_issue_type_settings()
-#    instead of rejecting, and process_jira_event() unconditionally dispatches to
-#    _sync_jira_entity_to_sg(..., "Note", ...) / _sync_jira_reply_to_sg(). Since setup() only
-#    validates required fields (SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_REPLY_IDS_FIELD) for
-#    entity types actually listed in entity_mapping, this can crash at runtime with a
-#    field-not-found error instead of being cleanly rejected. Fix: gate the comment/reply
-#    branch in accept_jira_event() on Note/Reply being present in entity_mapping, matching
-#    how accept_shotgun_event() already does for the FPTR -> Jira direction.
 
 
 class EntitiesGenericHandler(SyncHandler):
@@ -569,6 +558,16 @@ class EntitiesGenericHandler(SyncHandler):
                     return False
 
             sync_settings = self.__get_sg_entity_settings(sg_entity_type)
+            if not sync_settings:
+                # Unlike Issue-type events, comment/reply/worklog events have no
+                # sync_settings of their own to fall back on if the FPTR entity
+                # type isn't configured - falling through to the parent Issue's
+                # settings further down would wrongly accept the event.
+                self._logger.debug(
+                    f"Rejecting Jira event: FPTR {sg_entity_type} is not configured "
+                    f"for syncing."
+                )
+                return False
 
             # make sure we can get the associated jira issue
             # comment and worklog payload are not formatted the same unfortunately...
