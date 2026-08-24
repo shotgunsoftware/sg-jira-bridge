@@ -3399,3 +3399,52 @@ class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
             "[~accountid:%s] and [~accountid:%s] please review"
             % (account_id_1, account_id_2),
         )
+
+
+@mock.patch("shotgun_api3.Shotgun")
+class TestJiraHookReplyComment(TestEntitiesGenericHandler):
+    """Test composing/extracting the Reply <-> Jira comment reply body, mirroring Note behaviour."""
+
+    def _get_hook(self, mocked_sg):
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER)
+        return syncer.hook
+
+    def test_compose_jira_reply_comment(self, mocked_sg):
+        """The composed body wraps the Reply content in a panel with a FPTR byline."""
+        hook = self._get_hook(mocked_sg)
+        sg_reply = {"user": {"name": "Ford Prefect"}, "content": "hello there"}
+
+        result = hook.compose_jira_reply_comment(sg_reply)
+
+        self.assertIn("{panel}", result)
+        self.assertIn("_Reply created from FPTR by Ford Prefect_", result)
+        self.assertIn("hello there", result)
+
+    def test_extract_jira_reply_data_from_edited_comment(self, mocked_sg):
+        """
+        A panel-wrapped reply, in the form Jira returns after a human edits it
+        via the UI (bgColor panel, no title line, confirmed against a live
+        Jira Cloud site), is stripped back down to just its content.
+        """
+        hook = self._get_hook(mocked_sg)
+        jira_body = (
+            "{panel:bgColor=#deebff}\n"
+            "_Reply created from FPTR by Ford Prefect_\n"
+            "hello there, edited\n"
+            "{panel}"
+        )
+
+        content, sg_user = hook.extract_jira_reply_data(jira_body)
+
+        self.assertEqual(content.strip(), "hello there, edited")
+        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
+
+    def test_extract_jira_reply_data_no_wrapper(self, mocked_sg):
+        """A reply body with no FPTR wrapper (authored purely in Jira) is returned as-is."""
+        hook = self._get_hook(mocked_sg)
+
+        content, sg_user = hook.extract_jira_reply_data("just a plain reply")
+
+        self.assertEqual(content, "just a plain reply")
+        self.assertIsNone(sg_user)

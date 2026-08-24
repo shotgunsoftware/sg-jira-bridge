@@ -501,6 +501,16 @@ class TestReplySync(TestSyncBase):
         sg_reply = replies[0]
         self.assertEqual(sg_reply["content"], expected_placeholders)
 
+        # mockgun (unlike real Shotgun) doesn't resolve a "name" on entity-link
+        # fields read back after create() - patch the DB directly so the
+        # FPTR -> Jira half below has a realistic "user" to build the reply
+        # comment's byline from.
+        bridge.shotgun._db["Reply"][sg_reply["id"]]["user"] = {
+            "type": "HumanUser",
+            "id": mock_shotgun.SG_USER_2["id"],
+            "name": mock_shotgun.SG_USER_2["name"],
+        }
+
         # FPTR -> Jira: editing the Reply should restore both real mentions.
         edited_content = expected_placeholders.replace(
             "please review", "please review, thanks"
@@ -521,6 +531,64 @@ class TestReplySync(TestSyncBase):
             % (account_id_1, account_id_2),
             updated_jira_reply.body,
         )
+
+    def test_jira_reply_edit_does_not_leak_fptr_wrapper_into_content(self, mocked_sg):
+        """
+        Editing an FPTR-originated Jira reply through the Jira UI wraps it in
+        a `{panel:bgColor=...}` block with a "_Reply created from FPTR by
+        X_" byline (confirmed against a live Jira Cloud site). Syncing that
+        edit back to FPTR must strip the wrapper, not leak it into the Reply's
+        content - matching how Note edits already behave.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, "original reply"
+        )
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        self.add_to_sg_mock_db(bridge.shotgun, sg_reply)
+
+        mapping = {str(sg_reply["id"]): jira_reply.id}
+        self._setup_sg_note(
+            bridge, sg_task, jira_issue, jira_comment, reply_mapping=mapping
+        )
+
+        edited_body = (
+            "{panel:bgColor=#deebff}\n"
+            "_Reply created from FPTR by Ford Prefect_\n"
+            "edited via Jira UI\n"
+            "{panel}"
+        )
+        event = {
+            "webhookEvent": "comment_updated",
+            "comment": {
+                "id": jira_reply.id,
+                "parentId": int(jira_comment.id),
+                "body": edited_body,
+                "author": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+                "updateAuthor": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+            },
+            "issue": {"id": jira_issue.key, "key": jira_issue.key},
+        }
+
+        result = bridge.sync_in_shotgun(
+            self.HANDLER_NAME, "issue", jira_issue.key, event
+        )
+        self.assertTrue(result)
+
+        sg_reply = bridge.shotgun.find_one(
+            "Reply", [["id", "is", mock_shotgun.SG_REPLY["id"]]], ["content", "user"]
+        )
+        self.assertEqual(sg_reply["content"], "edited via Jira UI")
+        self.assertNotIn("panel", sg_reply["content"])
+        self.assertNotIn("Reply created from FPTR", sg_reply["content"])
+        # The embedded byline should also resolve the correct FPTR author.
+        self.assertEqual(sg_reply["user"]["id"], mock_shotgun.SG_USER["id"])
 
     def test_jira_reply_deletes_fptr_reply(self, mocked_sg):
         """A comment_deleted with parentId should delete the FPTR Reply."""

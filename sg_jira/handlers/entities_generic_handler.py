@@ -446,11 +446,8 @@ class EntitiesGenericHandler(SyncHandler):
             self.__set_reply_mapping(note_id, mapping)
             return True
 
-        user = sg_reply.get("user") or {}
-        user_name = user.get("name", "Unknown")
-        body = sg_reply.get("content", "")
         reply_body = self._hook.sg_body_to_jira(
-            f"_Reply from FPTR by {user_name}_\n{body}"
+            self._hook.compose_jira_reply_comment(sg_reply)
         )
 
         if reply_id_str not in mapping:
@@ -1888,14 +1885,20 @@ class EntitiesGenericHandler(SyncHandler):
             self._shotgun.update("Note", sg_note["id"], {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)})
             return True
 
-        jira_author = comment_event.get("author", {})
-        sg_author = None
-        if jira_author.get("accountId"):
-            sg_author = self._shotgun.find_one(
-                "HumanUser", [["sg_jira_account_id", "is", jira_author["accountId"]]]
-            )
+        sg_content, sg_author = self._hook.extract_jira_reply_data(
+            comment_event.get("body", "")
+        )
 
-        body = self._hook.jira_body_to_sg(comment_event.get("body", ""))
+        if not sg_author:
+            jira_author = comment_event.get("author", {})
+            if jira_author.get("accountId"):
+                sg_author = self._shotgun.find_one(
+                    "HumanUser",
+                    [["sg_jira_account_id", "is", jira_author["accountId"]]],
+                    ["id", "email", "name"],
+                )
+
+        body = self._hook.jira_body_to_sg(sg_content)
 
         if webhook_action == "created" and sg_reply_id is None:
             sg_data = {

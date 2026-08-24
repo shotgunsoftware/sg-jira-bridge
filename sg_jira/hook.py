@@ -46,6 +46,20 @@ class JiraHook(object):
     # Associated regex used to get FPTR TimeLog information from Jira worklog body
     JIRA_WORKLOG_REGEX = r"_Worklog created from FPTR by ([\w\s]+)_\n(.*)"
 
+    # Template used to build Jira comment replies from a Reply. Same panel
+    # treatment as Notes, but with no title (Replies have no subject field).
+    REPLY_BODY_TEMPLATE = """
+    {panel}
+    _Reply created from FPTR by %s_
+    %s
+    {panel}
+    """
+
+    # Associated regex used to get FPTR Reply information from a Jira comment
+    # reply body. Side note that once a human edits a title-less panel via the Jira UI, it comes back as
+    # `{panel:bgColor=...}` with no bolded title line (unlike JIRA_COMMENT_REGEX, which has one).
+    JIRA_REPLY_REGEX = r"{panel:bgColor=#[\w]{6}}\n_Reply created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+
     # Define the format of the Flow Production Tracking dates
     SG_DATE_FORMAT = "%Y-%m-%d"
 
@@ -469,6 +483,36 @@ class JiraHook(object):
                 "content",
                 jira_worklog_comment,
                 "Invalid Jira Worklog comment formatting. Unable to parse FPTR "
+                "author from '%s'" % author,
+            )
+
+        return result.group(2).strip(), sg_user
+
+    def compose_jira_reply_comment(self, sg_reply):
+        """Helper method to compose the Jira comment reply body from a FPTR Reply."""
+        return self.REPLY_BODY_TEMPLATE % (
+            sg_reply["user"]["name"],
+            sg_reply["content"],
+        )
+
+    def extract_jira_reply_data(self, jira_reply_comment):
+        """Helper method to extract the FPTR reply data from a Jira comment reply body."""
+
+        result = re.search(self.JIRA_REPLY_REGEX, jira_reply_comment, flags=re.S)
+
+        # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
+        # so the data will be found from the comment itself rather than its body
+        if not result:
+            return jira_reply_comment, None
+
+        author = result.group(1).strip()
+        # we need to make sure the author is associated with a current FPTR user
+        sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
+        if not sg_user:
+            raise InvalidJiraValue(
+                "content",
+                jira_reply_comment,
+                "Invalid Jira Comment panel formatting. Unable to parse FPTR "
                 "author from '%s'" % author,
             )
 
