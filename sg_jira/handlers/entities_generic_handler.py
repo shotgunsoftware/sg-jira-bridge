@@ -27,6 +27,17 @@ from .sync_handler import SyncHandler
 #  - find a way to check if a field exist for a specific issue type when accepting SG event
 #  - add a check for Jira Worklog fields existence
 #  - ensure mandatory fields for Jira entity creation (eg: started + duration for TimeLogs)
+#  - accept_jira_event()/process_jira_event() route Jira comment/reply webhook events to
+#    Note/Reply sync without checking they're actually present in entity_mapping - if a
+#    studio configures e.g. only "Task" and omits "Note"/"Reply", accept_jira_event() falls
+#    back to the parent Issue's (Task's) sync_settings via __get_jira_issue_type_settings()
+#    instead of rejecting, and process_jira_event() unconditionally dispatches to
+#    _sync_jira_entity_to_sg(..., "Note", ...) / _sync_jira_reply_to_sg(). Since setup() only
+#    validates required fields (SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_REPLY_IDS_FIELD) for
+#    entity types actually listed in entity_mapping, this can crash at runtime with a
+#    field-not-found error instead of being cleanly rejected. Fix: gate the comment/reply
+#    branch in accept_jira_event() on Note/Reply being present in entity_mapping, matching
+#    how accept_shotgun_event() already does for the FPTR -> Jira direction.
 
 
 class EntitiesGenericHandler(SyncHandler):
@@ -1562,9 +1573,32 @@ class EntitiesGenericHandler(SyncHandler):
                 continue
             self._sync_sg_fields_to_jira(e, jira_entity)
 
+            if linked_entity_type == "Note":
+                self._sync_sg_note_replies_to_jira(e)
+
         # TODO: do we want to sync with reciprocity in JIRA?
 
         return sync_with_error
+
+    def _sync_sg_note_replies_to_jira(self, sg_note):
+        """
+        Backfill any FPTR Replies on the given Note that haven't been synced yet.
+        Called after a Note itself has just been synced (created or confirmed
+        up to date) so pre-existing Replies (e.g. added while the Note or its
+        parent Task was unsynced) aren't left orphaned.
+        :param sg_note: The FPTR Note entity, already synced to Jira.
+        :type sg_note: dict
+        """
+        if "Reply" not in self._supported_shotgun_entities_for_shotgun_event():
+            return
+
+        sg_replies = self._shotgun.find(
+            "Reply",
+            [["entity", "is", {"type": "Note", "id": sg_note["id"]}]],
+            self.__sg_get_entity_fields("Reply"),
+        )
+        for sg_reply in sg_replies:
+            self._process_reply_shotgun_event(sg_reply, "content")
 
     def _sync_hierarchy_to_jira(self, sg_linked_entities, jira_issue, jira_field):
         """
@@ -2122,17 +2156,43 @@ class EntitiesGenericHandler(SyncHandler):
 
         existing_jira_comments = []
         sync_with_errors = False
+        sync_replies = "Reply" in self._supported_shotgun_entities_for_shotgun_event()
 
-        # first, push all the comments to FPTR; skip replies (they have a parentId and are handled separately)
-        for jira_comment in self._jira.comments(jira_issue.key):
-            if jira_comment.raw.get("parentId"):
-                continue
+        # Replies carry a parentId; group them by it upfront so each top-level
+        # comment's existing replies can be backfilled right after it's synced.
+        all_jira_comments = self._jira.comments(jira_issue.key)
+        top_level_jira_comments = []
+        jira_replies_by_parent_id = {}
+        for jira_comment in all_jira_comments:
+            parent_id = jira_comment.raw.get("parentId")
+            if parent_id:
+                jira_replies_by_parent_id.setdefault(str(parent_id), []).append(
+                    jira_comment
+                )
+            else:
+                top_level_jira_comments.append(jira_comment)
+
+        for jira_comment in top_level_jira_comments:
             existing_jira_comments.append("%s/%s" % (jira_issue.key, jira_comment.id))
             sg_entity = self._sync_jira_entity_to_sg(
                 jira_issue, jira_comment.id, "Note", None
             )
             if not sg_entity:
                 sync_with_errors = True
+                continue
+            if not self._sync_jira_fields_to_sg(
+                jira_issue, jira_comment.id, sg_entity, None
+            ):
+                sync_with_errors = True
+
+            if sync_replies:
+                for jira_reply in jira_replies_by_parent_id.get(
+                    str(jira_comment.id), []
+                ):
+                    if not self._sync_jira_reply_to_sg(
+                        jira_issue, jira_reply.raw, "created"
+                    ):
+                        sync_with_errors = True
 
         # then, if the sync deletion flag is enabled, remove the notes that doesn't exist anymore in Jira
 

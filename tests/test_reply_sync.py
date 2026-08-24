@@ -657,3 +657,102 @@ class TestReplySync(TestSyncBase):
         self.assertGreater(len(notes), 0)
         replies = bridge.shotgun.find("Reply", [])
         self.assertEqual(len(replies), 0)
+
+    # ---------------------------------------------------------------------------
+    # Backfilling existing Notes/Replies when a Task is synced for the first time
+    # ---------------------------------------------------------------------------
+
+    def test_fptr_task_sync_backfills_existing_note_and_reply(self, mocked_sg):
+        """
+        Flagging an already-Jira-linked Task as synced should backfill not just
+        pre-existing Notes but also pre-existing Replies on those Notes.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+        sg_note[SHOTGUN_JIRA_ID_FIELD] = ""
+        sg_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] = ""
+        self.add_to_sg_mock_db(bridge.shotgun, sg_note)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        self.add_to_sg_mock_db(bridge.shotgun, sg_reply)
+
+        sync_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sync_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
+
+        result = bridge.sync_in_jira(
+            self.HANDLER_NAME, "Task", sg_task["id"], sync_event
+        )
+        self.assertTrue(result)
+
+        # comments() returns top-level comments and replies together.
+        jira_comments = bridge.jira.comments(jira_issue.key)
+        self.assertEqual(len(jira_comments), 2)
+        new_comment = next(c for c in jira_comments if not c.raw.get("parentId"))
+
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", sg_note["id"]]],
+            [SHOTGUN_JIRA_ID_FIELD, SHOTGUN_JIRA_REPLY_IDS_FIELD],
+        )
+        self.assertEqual(
+            updated_note[SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, new_comment.id),
+        )
+
+        mapping = json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}")
+        self.assertIn(str(sg_reply["id"]), mapping)
+
+        jira_reply_id = mapping[str(sg_reply["id"])]
+        jira_reply = bridge.jira.comment(jira_issue.key, jira_reply_id)
+        self.assertIsNotNone(jira_reply)
+        self.assertIsNotNone(jira_reply.raw.get("parentId"))
+
+    def test_jira_issue_sync_backfills_existing_comment_and_reply(self, mocked_sg):
+        """
+        Fully syncing a Jira Issue to FPTR for the first time should backfill
+        not just pre-existing top-level comments but also pre-existing replies
+        on those comments.
+        """
+        syncer, bridge = self._get_syncer(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "top-level comment")
+        bridge.jira.add_comment_reply(jira_issue.key, jira_comment.id, "existing reply")
+
+        sg_task = copy.deepcopy(mock_shotgun.SG_TASK)
+        sg_task[SHOTGUN_SYNC_IN_JIRA_FIELD] = True
+        sg_task[SHOTGUN_JIRA_ID_FIELD] = jira_issue.key
+        self.add_to_sg_mock_db(bridge.shotgun, sg_task)
+
+        event = copy.deepcopy(mock_jira.ISSUE_CREATED_PAYLOAD)
+        event["issue"] = {"id": jira_issue.key, "key": jira_issue.key}
+
+        result = bridge.sync_in_shotgun(
+            self.HANDLER_NAME, "issue", jira_issue.key, event
+        )
+        self.assertTrue(result)
+
+        sg_note = bridge.shotgun.find_one(
+            "Note",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
+            [SHOTGUN_JIRA_REPLY_IDS_FIELD, "subject", "content"],
+        )
+        self.assertIsNotNone(sg_note)
+        self.assertEqual(sg_note["content"], "top-level comment")
+        self.assertTrue(sg_note["subject"])
+
+        replies = bridge.shotgun.find(
+            "Reply",
+            [["entity", "is", {"type": "Note", "id": sg_note["id"]}]],
+            ["content"],
+        )
+        self.assertEqual(len(replies), 1)
+        self.assertEqual(replies[0]["content"], "existing reply")

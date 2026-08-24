@@ -473,15 +473,6 @@ REPLY_COMMENT_PAYLOAD = {
 }
 
 
-class MockedJiraUser:
-    """Minimal stand-in for a jira User resource used in MockedComment.author."""
-
-    def __init__(self, account_id, email="", display_name=""):
-        self.accountId = account_id
-        self.emailAddress = email
-        self.displayName = display_name
-
-
 class MockedSession(object):
     def put(self, *args, **kwargs):
         pass
@@ -1803,11 +1794,11 @@ class MockedJira(object):
             "issue": issue,
             "id": str(len(issue._comments) + 1),
             "body": body,
-            "author": MockedJiraUser(
-                JIRA_USER["accountId"],
-                JIRA_USER.get("emailAddress", ""),
-                JIRA_USER.get("displayName", ""),
-            ),
+            "author": {
+                "accountId": JIRA_USER["accountId"],
+                "emailAddress": JIRA_USER.get("emailAddress", ""),
+                "displayName": JIRA_USER.get("displayName", ""),
+            },
         }
         for k in kwargs:
             raw[k] = kwargs[k]
@@ -1838,11 +1829,11 @@ class MockedJira(object):
             "id": str(len(issue._comments) + 1),
             "body": payload["body"],
             "parentId": payload["parentId"],
-            "author": MockedJiraUser(
-                JIRA_USER["accountId"],
-                JIRA_USER.get("emailAddress", ""),
-                JIRA_USER.get("displayName", ""),
-            ),
+            "author": {
+                "accountId": JIRA_USER["accountId"],
+                "emailAddress": JIRA_USER.get("emailAddress", ""),
+                "displayName": JIRA_USER.get("displayName", ""),
+            },
         }
         issue._comments.append(MockedComment(None, None, raw=raw))
         return SimpleNamespace(json=lambda: raw)
