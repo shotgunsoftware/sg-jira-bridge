@@ -4,10 +4,7 @@ Jira Project Automation
 #######################
 
 Jira **Project Automation** lets a Jira *project* administrator sync Issues to
-Flow Production Tracking (FPTR)
-
-You do not need Jira site-administrator access, and you do not need to create a
-Jira webhook.
+Flow Production Tracking (FPTR).
 
 When an automation rule runs:
 
@@ -15,12 +12,32 @@ When an automation rule runs:
 2. The bridge reads the Jira Issue.
 3. The bridge syncs the configured information to FPTR.
 
-In `Set up an automation rule`_ below — that is the standard path and all
-most projects need. It performs **full sync**: which means every mapped
-field on the Issue is sent to FPTR whenever the rule runs.
+`Set up an automation rule`_ below is the standard path, and all most projects
+need. It performs a **full sync**: every mapped field on the Issue is sent to
+FPTR whenever the rule runs. If you specifically need a single-field or
+changed-field sync, see :ref:`jira_automation_advanced` at the end of the page.
 
-when you have a specific requirement to perform a single-field
-or changed-field sync use :ref:`jira_automation_advanced` at the end of the page.
+An alternative to the Jira webhook
+**********************************
+
+There are two ways for Jira to notify the bridge that an Issue changed: a
+site-level **webhook** (see :ref:`Jira Webhook`) or **project automation
+rules**. They do the same job, so pick one per Jira project.
+
+.. warning::
+   Do not run both for the same project. Every change would reach the bridge
+   twice and be synced twice, and the two syncs can overlap on the same entity.
+
+**Prefer a webhook if you can create one.** It needs Jira site-administrator
+rights, and in return Jira does the work: one webhook covers the whole site,
+Jira builds the payload, only the fields that actually changed are synced, and
+comment and worklog changes are reported as they happen.
+
+**Use automation rules when you only have project-administrator rights.** You
+add a rule, and the JSON body below, to each project you want synced. Every run
+is a full sync: the bridge re-reads the Issue and re-writes every mapped field.
+Comment and worklog changes are not sent on their own — they are picked up by
+the next full sync of that Issue.
 
 Before you start
 ****************
@@ -46,11 +63,13 @@ FPTR.
      - In ``settings.py`` confirm that a ``SYNC`` entry uses
        ``sg_jira.EntitiesGenericSyncer``. The entry name, often ``entities`` is the *settings
        name* used in the automation URL. See :doc:`generic_syncer`.
-   * - The Issue is marked for syncing. (**Sync In FPTR = True**)
-     - Open a jira Issue and confirm that *Sync In FPTR* is set to ``True``. Issues where
-       it is unset or ``False`` are skipped. If you don't see the field, it
-       hasn't been added to the screen for this project and issue type — see
-       :ref:`Jira Configuration <entity-sync-jira-config>`.
+   * - The **Sync In FPTR field is on the Issue screen**
+     - Open any Issue in the project and look for *Sync In FPTR*. If it is
+       missing, the bridge rejects every event for this project and issue
+       type — see :ref:`Jira Configuration <entity-sync-jira-config>`.
+   * - One **test Issue has Sync In FPTR = True**
+     - The bridge skips Issues where this is ``False`` or empty. Set it on one
+       Issue now, so you have something to test the rule with.
    * - The Jira project is **linked to an FPTR project**
      - The FPTR Project's *Jira Key* field holds the Jira project key
        (e.g. ``PROJ``).
@@ -63,15 +82,16 @@ FPTR.
 What is supported
 *****************
 
+The table below covers what an automation rule can send to the bridge. Updates
+that originate in FPTR reach Jira through a separate mechanism, the FPTR Event
+Daemon and its ``sg_jira_event_trigger`` plugin — see :doc:`generic_syncer`.
+
 .. list-table::
    :header-rows: 1
    :widths: 30 70
 
    * - Item
      - Support
-   * - Direction
-     - Jira → Flow Production Tracking only. Automation rules cannot push from
-       FPTR to Jira.
    * - Jira resource
      - **Issues only.** A rule triggered by a comment or a worklog is not
        supported.
@@ -85,8 +105,6 @@ What is supported
      - Only synced if ``TimeLog`` is present in the Generic Syncer's
        ``entity_mapping``. It is **not** in the default configuration, so out
        of the box worklogs are not synced.
-   * - Per-issue opt-in
-     - The Issue's *Sync In FPTR* field must be ``True``.
 
 Set up an automation rule
 *************************
@@ -101,7 +119,7 @@ Set up an automation rule
       They do not decide which fields are sent to FPTR.
       For example, even if the rule runs only when Status changes,
       the bridge still syncs all mapped fields.
-      To limit which fields can ever sync, change ``field_mapping``
+      To limit which fields can sync, change ``field_mapping``
       in ``settings.py``; to sync only what changed, see
       :ref:`jira_automation_advanced`.
 
@@ -144,9 +162,14 @@ Set up an automation rule
            }
        }
 
-   ``source`` is what tells the bridge to read the Issue and sync it. The
-   ``user`` block is optional but recommended: it lets the bridge ignore
-   changes made by its own Jira user, which prevents sync loops.
+   ``source`` is what tells the bridge to read the Issue and sync it.
+
+   Always include the ``user`` block. The rule fires on every change to the
+   Issue, including the ones the bridge itself makes when syncing FPTR → Jira.
+   ``user`` reports who triggered the rule, which is how the bridge tells those
+   apart and skips its own. Without it, the bridge cannot, so it sends its own
+   writes back to FPTR. That is wasted work rather than an endless loop — FPTR,
+   in turn, ignores changes made by the bridge user.
 
 6. **For an issue-created rule only**, add ``webhook_event``:
 
