@@ -18,6 +18,10 @@ from socketserver import ThreadingMixIn
 from urllib import parse
 
 import sg_jira
+from sg_jira.jira_automation_payload import (
+    JiraAutomationPayloadError,
+    normalize_automation_request,
+)
 
 DESCRIPTION = """
 A simple web app frontend to the PTR Jira bridge.
@@ -304,7 +308,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             self.post_response(200, "POST request successful")
 
-        except SgJiraBridgeBadRequestError as e:
+        except (SgJiraBridgeBadRequestError, JiraAutomationPayloadError) as e:
             self.send_error(400, str(e))
         except Exception as e:
             self.send_error(500, str(e))
@@ -411,6 +415,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "Invalid request path %s, it must include a Jira resource "
                     "type and its key" % self.path
                 )
+
+            payload = normalize_automation_request(
+                self.server._sg_jira, entity_type, entity_key, payload
+            )
 
             self.server.sync_in_shotgun(
                 settings_name, entity_type, entity_key, event=payload, **parameters

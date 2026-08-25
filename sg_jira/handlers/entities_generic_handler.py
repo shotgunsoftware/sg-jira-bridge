@@ -10,6 +10,7 @@ import re
 import jira
 
 from sg_jira.constants import (
+    JIRA_EVENT_AUTOMATION_FULL_SYNC,
     JIRA_SHOTGUN_ID_FIELD,
     JIRA_SHOTGUN_TYPE_FIELD,
     JIRA_SYNC_IN_FPTR_FIELD,
@@ -453,10 +454,13 @@ class EntitiesGenericHandler(SyncHandler):
 
         else:
 
-            changelog = event.get("changelog")
-            if not changelog:
-                self._logger.debug("Rejecting Jira event without a changelog.")
-                return False
+            # Automation-driven full-sync events arrive without a Jira changelog;
+            # they trigger a sync of every mapped field instead.
+            if not event.get(JIRA_EVENT_AUTOMATION_FULL_SYNC):
+                changelog = event.get("changelog")
+                if not changelog:
+                    self._logger.debug("Rejecting Jira event without a changelog.")
+                    return False
 
             jira_issue = self.get_jira_issue(jira_entity["id"])
 
@@ -1747,7 +1751,8 @@ class EntitiesGenericHandler(SyncHandler):
                 sg_value = []
                 for w in self._jira.watchers(jira_issue).watchers:
                     sg_user = self._hook.get_sg_user_from_jira_user(w)
-                    sg_value.append(sg_user)
+                    if sg_user:
+                        sg_value.append(sg_user)
 
             elif jira_field == "status":
                 sg_value = (
@@ -1783,7 +1788,7 @@ class EntitiesGenericHandler(SyncHandler):
                 except Exception as e:
                     self._logger.warning(
                         f"Not syncing Jira {issue_type}.{jira_field} to Flow Production Tracking . "
-                        f"Error occurred when trying to convert FPTR value to Jira value: {e}"
+                        f"Error occurred when trying to convert Jira value to FPTR value: {e}"
                     )
                     sync_with_errors = True
                     continue
@@ -1826,7 +1831,7 @@ class EntitiesGenericHandler(SyncHandler):
             )
             if not sg_entity:
                 sync_with_errors = True
-            if not self._sync_jira_fields_to_sg(
+            elif not self._sync_jira_fields_to_sg(
                 jira_issue, jira_worklog.id, sg_entity, None
             ):
                 sync_with_errors = True
@@ -1872,6 +1877,10 @@ class EntitiesGenericHandler(SyncHandler):
                 jira_issue, jira_comment.id, "Note", None
             )
             if not sg_entity:
+                sync_with_errors = True
+            elif not self._sync_jira_fields_to_sg(
+                jira_issue, jira_comment.id, sg_entity, None
+            ):
                 sync_with_errors = True
 
         # then, if the sync deletion flag is enabled, remove the notes that doesn't exist anymore in Jira

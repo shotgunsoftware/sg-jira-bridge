@@ -32,10 +32,31 @@ Content-Length: {content_length}
 UNICODE_STRING = "unicode_îéö_😀"
 
 
+class MockJiraIssue(object):
+    """Mimics ``jira.Issue``: only the ``raw`` dict is read by the bridge."""
+
+    def __init__(self, key):
+        self.raw = {"id": "10001", "key": key, "fields": {"summary": "hi"}}
+
+
+class MockJira(object):
+    def issue(self, key):
+        return MockJiraIssue(key)
+
+
+class MockBridge(object):
+    """Stand-in for the SgJiraBridge exposed as ``server._sg_jira``."""
+
+    jira = MockJira()
+
+
 class MockServer(object):
     """
     Mock some of the web server methods.
     """
+
+    # The Jira->PTR route hands this to normalize_automation_request().
+    _sg_jira = MockBridge()
 
     @property
     def sync_settings_names(self):
@@ -303,6 +324,55 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"200 POST request successful" in raw_response)
+
+    def test_jira_automation_route(self, mocked_finish, mocked_jira, mocked_sg):
+        """
+        Jira Project Automation "Send web request" bodies are normalized on the
+        jira2sg route: a valid body is dispatched to
+        sync_in_shotgun (200), a malformed one is a 400.
+        """
+        server = MockServer()
+        server.sync_in_shotgun = mock.MagicMock(return_value=True)
+
+        # Valid automation body: normalized against the mocked Jira issue and synced.
+        handler = webapp.RequestHandler(
+            MockRequest(
+                "/jira2sg/valid/issue/PROJ-1",
+                {
+                    "source": "jira_project_automation",
+                    "user": {"accountId": "initiator-123"},
+                },
+            ),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"200 POST request successful" in raw_response)
+
+        # The normalized event must be the one dispatched to the bridge
+        # the issue is built from the mocked Jira issue, and the forwarded initiator.
+
+        server.sync_in_shotgun.assert_called_once()
+        event = server.sync_in_shotgun.call_args.kwargs["event"]
+        self.assertTrue(event["_bridge_automation_full_sync"])
+        self.assertEqual(event["issue"]["key"], "PROJ-1")
+        self.assertEqual(event["user"], {"accountId": "initiator-123"})
+
+        # Malformed automation body: an unsupported webhook_event is rejected as
+        # a JiraAutomationPayloadError, which the handler maps to HTTP 400.
+        handler = webapp.RequestHandler(
+            MockRequest(
+                "/jira2sg/valid/issue/PROJ-1",
+                {
+                    "source": "jira_project_automation",
+                    "webhook_event": "jira:issue_deleted",
+                },
+            ),
+            ("localhost", -1),
+            server,
+        )
+        raw_response = handler.wfile.getvalue()
+        self.assertTrue(b"HTTP/1.1 400" in raw_response)
 
     def test_admin_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
