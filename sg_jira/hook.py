@@ -66,6 +66,13 @@ class JiraHook(object):
     # Define the format of the Jira dates
     JIRA_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 
+    # Matches Jira's wiki-markup user mention syntax, e.g.
+    # [~accountid:557058:fg74g8asdf-3d4b-4563-a4a2-9y89fvg834g5]
+    JIRA_MENTION_REGEX = re.compile(r"\[~accountid:([^\]]+)\]")
+
+    # Matches the FPTR-side mention placeholder, e.g. [mention:88:FirstnameSecondName]
+    SG_MENTION_REGEX = re.compile(r"\[mention:(\d+):([^\]]*)\]")
+
     def __init__(self, bridge, logger):
         """Class constructor"""
         super().__init__()
@@ -341,13 +348,6 @@ class JiraHook(object):
             )
 
         return self._shotgun.find_one("HumanUser", sg_filters, ["id", "email", "name"])
-
-    # Matches Jira's wiki-markup user mention syntax, e.g.
-    # [~accountid:557058:276f63c9-3d4b-4562-a4a2-3abfacc11442]
-    JIRA_MENTION_REGEX = re.compile(r"\[~accountid:([^\]]+)\]")
-
-    # Matches the FPTR-side mention placeholder, e.g. [mention:88:PhilipScadding]
-    SG_MENTION_REGEX = re.compile(r"\[mention:(\d+):([^\]]*)\]")
 
     def _rewrite_jira_mentions_to_sg(self, body):
         """
