@@ -55,6 +55,9 @@ Sync In Jira  Checkbox    Enable/Disable syncing for this Entity   ``sg_sync_in_
     The Flow Production Tracking ``TimeLog`` and ``Note`` entities follow a specific workflow. For those entity types, only the
     ``Jira Key`` field is mandatory.
 
+.. note::
+    ``Reply`` entities don't require any fields creating on their own entity type, but they do require a **``Reply IDs``** ``Text`` field with the field code ``sg_jira_reply_ids`` to be created on the Note entity type.
+
 Flow Production Tracking Event Daemon Configuration
 ===================================================
 
@@ -358,6 +361,41 @@ Here is an example of how you can enable Note/Comment syncing:
 .. note::
     When creating a Jira comment using the API, it is not possible to set the author. To keep a track of who created the Note in FPTR, the
     author's name is embedded in the Jira comment body.
+
+.. _syncing-fptr-replies:
+
+Syncing Flow Production Tracking Replies as Jira Comment Replies
+---------------------------------------------
+
+Flow Production Tracking Notes can have Replies threaded under them, and these can be synced to Jira as threaded comment replies.
+Reply syncing requires that Note syncing is enabled, and that the ``sg_jira_reply_ids`` field :ref:`entity-sync-fptr-config` is created on the Note entity type.
+Just like Notes, the entity mapping is done automatically, so you only need to add the entry with the
+``sg_entity`` key.
+Here is an example of how you can enable Reply syncing:
+
+.. code-block:: python
+    :emphasize-lines: 20,21,22,23
+
+    SYNC = {
+        "entities": {
+            "syncer": "sg_jira.EntitiesGenericSyncer",
+            "settings": {
+                "entity_mapping": [
+                    ...
+                    {
+                        "sg_entity": "Note",
+                        "sync_deletion_direction": "jira_to_sg",
+                    },
+                    {
+                        "sg_entity": "Reply",
+                        "sync_deletion_direction": "both_way",
+                    }
+                ]
+            },
+        }
+    }
+
+.. note:: This requires Jira Cloud, as Jira Server does not support threaded comments.
 
 Syncing FPTR TimeLogs as Jira Worklogs
 --------------------------------------
