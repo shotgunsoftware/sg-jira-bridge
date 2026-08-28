@@ -451,6 +451,7 @@ class EntitiesGenericHandler(SyncHandler):
         )
 
         if reply_id_str not in mapping:
+            # We have a new reply
             jira_reply = self._jira.add_comment_reply(issue_key, parent_comment_id, reply_body)
             if not jira_reply:
                 self._logger.warning(
@@ -460,6 +461,7 @@ class EntitiesGenericHandler(SyncHandler):
             mapping[reply_id_str] = jira_reply.id
             self.__set_reply_mapping(note_id, mapping)
         else:
+            # Reply previously synced, try to update or create if not found in Jira
             jira_reply_id = mapping[reply_id_str]
             jira_reply = self._get_jira_issue_comment(issue_key, jira_reply_id)
             if not jira_reply:
@@ -477,6 +479,7 @@ class EntitiesGenericHandler(SyncHandler):
 
     def __get_reply_mapping(self, sg_reply):
         """Parse the sg_jira_reply_ids JSON from the parent Note. Returns an empty dict on failure."""
+        # Because Flow PT doesn't support json fields we store json as a string in a text field. We need to parse it.
         raw = sg_reply.get(f"entity.Note.{SHOTGUN_JIRA_REPLY_IDS_FIELD}") or ""
         if not raw:
             return {}
@@ -953,11 +956,8 @@ class EntitiesGenericHandler(SyncHandler):
         if entity_type == "Reply":
             # Reply entities don't support SHOTGUN_JIRA_ID_FIELD or SHOTGUN_SYNC_IN_JIRA_FIELD.
             # We fetch the parent Note's Jira key and reply mapping via dot-notation.
-            return [
-                "content",
-                "user",
-                "entity",
-                "retirement_date",
+            return self._supported_shotgun_fields_for_shotgun_event(entity_type) + [
+                self.__SG_RETIREMENT_FIELD,
                 f"entity.Note.{SHOTGUN_JIRA_ID_FIELD}",
                 f"entity.Note.{SHOTGUN_JIRA_REPLY_IDS_FIELD}",
             ]
