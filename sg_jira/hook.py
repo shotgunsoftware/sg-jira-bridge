@@ -349,7 +349,7 @@ class JiraHook(object):
     # Matches the FPTR-side mention placeholder, e.g. [mention:88:PhilipScadding]
     SG_MENTION_REGEX = re.compile(r"\[mention:(\d+):([^\]]*)\]")
 
-    def jira_body_to_sg(self, body):
+    def _rewrite_jira_mentions_to_sg(self, body):
         """
         Rewrite Jira user mentions in a comment/reply body to a readable FPTR
         placeholder, for any accountId that matches a FPTR user via
@@ -382,7 +382,7 @@ class JiraHook(object):
 
         return self.JIRA_MENTION_REGEX.sub(_replace, body)
 
-    def sg_body_to_jira(self, body):
+    def _rewrite_sg_mentions_to_jira(self, body):
         """
         Rewrite FPTR mention placeholders in a Note/Reply body back to Jira's
         user mention syntax, for any placeholder whose FPTR user has a
@@ -417,11 +417,12 @@ class JiraHook(object):
 
     def compose_jira_comment_body(self, sg_note):
         """Helper method to compose the Jira comment body from a FPTR note."""
-        return self.COMMENT_BODY_TEMPLATE % (
+        body = self.COMMENT_BODY_TEMPLATE % (
             sg_note["subject"],
             sg_note["user"]["name"],
             sg_note["content"],
         )
+        return self._rewrite_sg_mentions_to_jira(body)
 
     def extract_jira_comment_data(self, jira_comment_body):
         """Helper method to extract the FPTR note data from a Jira comment body."""
@@ -431,7 +432,7 @@ class JiraHook(object):
         # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
         # so the data will be found from the comment itself rather than its body
         if not result:
-            return None, jira_comment_body, None
+            return None, self._rewrite_jira_mentions_to_sg(jira_comment_body), None
 
         author = result.group(2).strip()
         # we need to make sure the author is associated with a current FPTR user
@@ -454,7 +455,7 @@ class JiraHook(object):
                 "Invalid Jira Comment panel formatting. Unable to parse FPTR "
                 "subject from '%s'" % subject,
             )
-        content = result.group(3).strip()
+        content = self._rewrite_jira_mentions_to_sg(result.group(3).strip())
 
         return subject, content, sg_user
 
@@ -490,10 +491,11 @@ class JiraHook(object):
 
     def compose_jira_reply_comment(self, sg_reply):
         """Helper method to compose the Jira comment reply body from a FPTR Reply."""
-        return self.REPLY_BODY_TEMPLATE % (
+        body = self.REPLY_BODY_TEMPLATE % (
             sg_reply["user"]["name"],
             sg_reply["content"],
         )
+        return self._rewrite_sg_mentions_to_jira(body)
 
     def extract_jira_reply_data(self, jira_reply_comment):
         """Helper method to extract the FPTR reply data from a Jira comment reply body."""
@@ -503,7 +505,7 @@ class JiraHook(object):
         # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
         # so the data will be found from the comment itself rather than its body
         if not result:
-            return jira_reply_comment, None
+            return self._rewrite_jira_mentions_to_sg(jira_reply_comment), None
 
         author = result.group(1).strip()
         # we need to make sure the author is associated with a current FPTR user
@@ -516,7 +518,7 @@ class JiraHook(object):
                 "author from '%s'" % author,
             )
 
-        return result.group(2).strip(), sg_user
+        return self._rewrite_jira_mentions_to_sg(result.group(2).strip()), sg_user
 
     def format_jira_date(self, sg_date):
         """Helper method to convert a FPTR date into a Jira date."""

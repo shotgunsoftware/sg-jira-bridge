@@ -446,9 +446,7 @@ class EntitiesGenericHandler(SyncHandler):
             self.__set_reply_mapping(note_id, mapping)
             return True
 
-        reply_body = self._hook.sg_body_to_jira(
-            self._hook.compose_jira_reply_comment(sg_reply)
-        )
+        reply_body = self._hook.compose_jira_reply_comment(sg_reply)
 
         if reply_id_str not in mapping:
             # We have a new reply
@@ -1173,7 +1171,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         jira_entity = self._jira.add_comment(
             jira_issue,
-            self._hook.sg_body_to_jira(self._hook.compose_jira_comment_body(sg_entity)),
+            self._hook.compose_jira_comment_body(sg_entity),
             visibility=None,  # TODO: check if Note properties should drive this
             is_internal=False,
         )
@@ -1312,9 +1310,7 @@ class EntitiesGenericHandler(SyncHandler):
         if sg_entity["type"] == "Note":
             if field_name == "tasks":
                 return True
-            comment_body = self._hook.sg_body_to_jira(
-                self._hook.compose_jira_comment_body(sg_entity)
-            )
+            comment_body = self._hook.compose_jira_comment_body(sg_entity)
             jira_entity.update(body=comment_body)
             return True
 
@@ -1931,12 +1927,10 @@ class EntitiesGenericHandler(SyncHandler):
                     ["id", "email", "name"],
                 )
 
-        body = self._hook.jira_body_to_sg(sg_content)
-
         if webhook_action == "created" and sg_reply_id is None:
             sg_data = {
                 "entity": {"type": "Note", "id": sg_note["id"]},
-                "content": body,
+                "content": sg_content,
             }
             if sg_author:
                 sg_data["user"] = sg_author
@@ -1945,7 +1939,7 @@ class EntitiesGenericHandler(SyncHandler):
             self._shotgun.update("Note", sg_note["id"], {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)})
 
         elif sg_reply_id is not None:
-            sg_data = {"content": body}
+            sg_data = {"content": sg_content}
             if sg_author:
                 sg_data["user"] = sg_author
             self._shotgun.update("Reply", sg_reply_id, sg_data)
@@ -2242,7 +2236,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         sg_data = {
             "subject": "Comment created from Jira" if not sg_subject else sg_subject,
-            "content": self._hook.jira_body_to_sg(sg_body),
+            "content": sg_body,
             "user": sg_author,
         }
 

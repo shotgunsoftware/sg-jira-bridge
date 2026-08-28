@@ -3296,12 +3296,12 @@ class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
         self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER_2)
         return syncer.hook
 
-    def test_jira_body_to_sg_rewrites_mapped_mention(self, mocked_sg):
+    def test__rewrite_jira_mentions_to_sg_rewrites_mapped_mention(self, mocked_sg):
         """A Jira mention for an accountId mapped to a FPTR user is rewritten."""
         hook = self._get_hook(mocked_sg)
         account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
 
-        result = hook.jira_body_to_sg("[~accountid:%s] hello" % account_id)
+        result = hook._rewrite_jira_mentions_to_sg("[~accountid:%s] hello" % account_id)
 
         self.assertEqual(
             result,
@@ -3309,52 +3309,52 @@ class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
             % (mock_shotgun.SG_USER["id"], "FordPrefect"),
         )
 
-    def test_jira_body_to_sg_leaves_unmapped_mention_untouched(self, mocked_sg):
+    def test__rewrite_jira_mentions_to_sg_leaves_unmapped_mention_untouched(self, mocked_sg):
         """A Jira mention for an accountId with no matching FPTR user is left as-is."""
         hook = self._get_hook(mocked_sg)
 
         body = "[~accountid:no-such-account-id] hello"
-        self.assertEqual(hook.jira_body_to_sg(body), body)
+        self.assertEqual(hook._rewrite_jira_mentions_to_sg(body), body)
 
-    def test_jira_body_to_sg_no_mention(self, mocked_sg):
+    def test__rewrite_jira_mentions_to_sg_no_mention(self, mocked_sg):
         """A body with no mention is returned unchanged."""
         hook = self._get_hook(mocked_sg)
 
         body = "just a plain comment"
-        self.assertEqual(hook.jira_body_to_sg(body), body)
+        self.assertEqual(hook._rewrite_jira_mentions_to_sg(body), body)
 
-    def test_sg_body_to_jira_rewrites_mapped_placeholder(self, mocked_sg):
+    def test__rewrite_sg_mentions_to_jira_rewrites_mapped_placeholder(self, mocked_sg):
         """A FPTR placeholder for a user with a Jira account id is rewritten."""
         hook = self._get_hook(mocked_sg)
         account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
 
-        result = hook.sg_body_to_jira(
+        result = hook._rewrite_sg_mentions_to_jira(
             "[mention:%s:FordPrefect] hello" % mock_shotgun.SG_USER["id"]
         )
 
         self.assertEqual(result, "[~accountid:%s] hello" % account_id)
 
-    def test_sg_body_to_jira_leaves_unmapped_placeholder_untouched(self, mocked_sg):
+    def test__rewrite_sg_mentions_to_jira_leaves_unmapped_placeholder_untouched(self, mocked_sg):
         """A FPTR placeholder for a user id that doesn't exist is left as-is."""
         hook = self._get_hook(mocked_sg)
 
         body = "[mention:999999:NoSuchUser] hello"
-        self.assertEqual(hook.sg_body_to_jira(body), body)
+        self.assertEqual(hook._rewrite_sg_mentions_to_jira(body), body)
 
-    def test_sg_body_to_jira_no_placeholder(self, mocked_sg):
+    def test__rewrite_sg_mentions_to_jira_no_placeholder(self, mocked_sg):
         """A body with no placeholder is returned unchanged."""
         hook = self._get_hook(mocked_sg)
 
         body = "just a plain reply"
-        self.assertEqual(hook.sg_body_to_jira(body), body)
+        self.assertEqual(hook._rewrite_sg_mentions_to_jira(body), body)
 
-    def test_jira_body_to_sg_rewrites_multiple_distinct_mentions(self, mocked_sg):
+    def test__rewrite_jira_mentions_to_sg_rewrites_multiple_distinct_mentions(self, mocked_sg):
         """Two different mentions in one body are each rewritten to the right user."""
         hook = self._get_hook(mocked_sg)
         account_id_1 = mock_shotgun.SG_USER["sg_jira_account_id"]
         account_id_2 = mock_shotgun.SG_USER_2["sg_jira_account_id"]
 
-        result = hook.jira_body_to_sg(
+        result = hook._rewrite_jira_mentions_to_sg(
             "[~accountid:%s] and [~accountid:%s] please review"
             % (account_id_1, account_id_2)
         )
@@ -3365,14 +3365,14 @@ class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
             % (mock_shotgun.SG_USER["id"], mock_shotgun.SG_USER_2["id"]),
         )
 
-    def test_jira_body_to_sg_rewrites_multiple_mentions_mixed_mapped_unmapped(
+    def test__rewrite_jira_mentions_to_sg_rewrites_multiple_mentions_mixed_mapped_unmapped(
         self, mocked_sg
     ):
         """A mapped mention and an unmapped mention in the same body are each handled correctly."""
         hook = self._get_hook(mocked_sg)
         account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
 
-        result = hook.jira_body_to_sg(
+        result = hook._rewrite_jira_mentions_to_sg(
             "[~accountid:%s] and [~accountid:no-such-account-id] please review"
             % account_id
         )
@@ -3383,13 +3383,13 @@ class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
             % mock_shotgun.SG_USER["id"],
         )
 
-    def test_sg_body_to_jira_rewrites_multiple_distinct_placeholders(self, mocked_sg):
+    def test__rewrite_sg_mentions_to_jira_rewrites_multiple_distinct_placeholders(self, mocked_sg):
         """Two different placeholders in one body are each rewritten to the right Jira mention."""
         hook = self._get_hook(mocked_sg)
         account_id_1 = mock_shotgun.SG_USER["sg_jira_account_id"]
         account_id_2 = mock_shotgun.SG_USER_2["sg_jira_account_id"]
 
-        result = hook.sg_body_to_jira(
+        result = hook._rewrite_sg_mentions_to_jira(
             "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review"
             % (mock_shotgun.SG_USER["id"], mock_shotgun.SG_USER_2["id"])
         )
