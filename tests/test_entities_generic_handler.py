@@ -3448,3 +3448,66 @@ class TestJiraHookReplyComment(TestEntitiesGenericHandler):
 
         self.assertEqual(content, "just a plain reply")
         self.assertIsNone(sg_user)
+
+    def test_extract_jira_reply_data_invalid_author(self, mocked_sg):
+        """A panel-wrapped reply with an unrecognised author raises InvalidJiraValue."""
+        from sg_jira.errors import InvalidJiraValue
+
+        hook = self._get_hook(mocked_sg)
+        jira_body = (
+            "{panel:bgColor=#deebff}\n"
+            "_Reply created from FPTR by Nobody Here_\n"
+            "hello\n"
+            "{panel}"
+        )
+
+        with self.assertRaises(InvalidJiraValue):
+            hook.extract_jira_reply_data(jira_body)
+
+
+@mock.patch("shotgun_api3.Shotgun")
+class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
+    """Test extracting FPTR Note data from Jira comment bodies."""
+
+    def _get_hook(self, mocked_sg):
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER)
+        return syncer.hook
+
+    def test_extract_jira_comment_data_braces_in_subject(self, mocked_sg):
+        """A panel subject containing braces is rejected as ill-formed."""
+        from sg_jira.errors import InvalidJiraValue
+
+        hook = self._get_hook(mocked_sg)
+        jira_body = (
+            "{panel:bgColor=#deebff}\n"
+            "*{bad}*\n\n"
+            "_Note created from FPTR by Ford Prefect_\n"
+            "content\n"
+            "{panel}"
+        )
+
+        with self.assertRaises(InvalidJiraValue):
+            hook.extract_jira_comment_data(jira_body)
+
+    def test_extract_jira_comment_data_rewrites_mentions(self, mocked_sg):
+        """Parsed comment content rewrites Jira mentions to FPTR placeholders."""
+        hook = self._get_hook(mocked_sg)
+        account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
+        jira_body = (
+            "{panel:bgColor=#deebff}\n"
+            "*Subject line*\n\n"
+            "_Note created from FPTR by Ford Prefect_\n"
+            "[~accountid:%s] please review\n"
+            "{panel}"
+        ) % account_id
+
+        subject, content, sg_user = hook.extract_jira_comment_data(jira_body)
+
+        self.assertEqual(subject, "Subject line")
+        self.assertEqual(
+            content,
+            "[mention:%s:FordPrefect] please review"
+            % mock_shotgun.SG_USER["id"],
+        )
+        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])

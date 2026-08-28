@@ -827,3 +827,344 @@ class TestReplySync(TestSyncBase):
         )
         self.assertEqual(len(replies), 1)
         self.assertEqual(replies[0]["content"], "existing reply")
+
+    # ---------------------------------------------------------------------------
+    # Handler edge cases (patch coverage)
+    # ---------------------------------------------------------------------------
+
+    def _get_handler(self, mocked_sg, name=None):
+        syncer, bridge = self._get_syncer(mocked_sg, name=name or self.HANDLER_NAME)
+        return syncer, bridge, syncer.handlers[0]
+
+    def _consolidated_sg_reply(self, sg_reply, sg_note):
+        """Build a Reply dict in the shape returned by consolidate_entity."""
+        return {
+            "type": "Reply",
+            "id": sg_reply["id"],
+            "content": sg_reply.get("content", ""),
+            "user": sg_reply.get("user"),
+            "entity": {"type": "Note", "id": sg_note["id"]},
+            f"entity.Note.{SHOTGUN_JIRA_ID_FIELD}": sg_note.get(
+                SHOTGUN_JIRA_ID_FIELD, ""
+            ),
+            f"entity.Note.{SHOTGUN_JIRA_REPLY_IDS_FIELD}": sg_note.get(
+                SHOTGUN_JIRA_REPLY_IDS_FIELD, ""
+            ),
+        }
+
+    def test_process_reply_skipped_when_parent_note_not_synced(self, mocked_sg):
+        """_process_reply_shotgun_event returns False when the parent Note has no Jira key."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note[SHOTGUN_JIRA_ID_FIELD] = ""
+        self.add_to_sg_mock_db(bridge.shotgun, sg_note)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        consolidated = self._consolidated_sg_reply(sg_reply, sg_note)
+
+        self.assertFalse(handler._process_reply_shotgun_event(consolidated, "content"))
+
+    def test_process_reply_invalid_parent_jira_key(self, mocked_sg):
+        """_process_reply_shotgun_event rejects a parent Note key without a comment id."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note[SHOTGUN_JIRA_ID_FIELD] = "FAKED-01"
+        self.add_to_sg_mock_db(bridge.shotgun, sg_note)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        consolidated = self._consolidated_sg_reply(sg_reply, sg_note)
+
+        self.assertFalse(handler._process_reply_shotgun_event(consolidated, "content"))
+
+    def test_process_reply_delete_without_mapping_entry(self, mocked_sg):
+        """Deleting a Reply with no mapping entry is a no-op at the handler level."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        consolidated = self._consolidated_sg_reply(sg_reply, sg_note)
+
+        self.assertFalse(
+            handler._process_reply_shotgun_event(consolidated, "retirement_date")
+        )
+
+    def test_process_reply_delete_cleans_stale_mapping(self, mocked_sg):
+        """Deleting a Reply whose Jira reply is already gone still clears the Note mapping."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        mapping = {str(mock_shotgun.SG_REPLY["id"]): "99999"}
+        sg_note = self._setup_sg_note(
+            bridge, sg_task, jira_issue, jira_comment, reply_mapping=mapping
+        )
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        consolidated = self._consolidated_sg_reply(sg_reply, sg_note)
+
+        self.assertTrue(
+            handler._process_reply_shotgun_event(consolidated, "retirement_date")
+        )
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", sg_note["id"]]],
+            [SHOTGUN_JIRA_REPLY_IDS_FIELD],
+        )
+        self.assertNotIn(
+            str(sg_reply["id"]),
+            json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}"),
+        )
+
+    def test_process_reply_create_jira_failure(self, mocked_sg):
+        """A failed Jira reply create leaves the handler returning False."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        consolidated = self._consolidated_sg_reply(sg_reply, sg_note)
+
+        with mock.patch.object(bridge.jira, "add_comment_reply", return_value=None):
+            self.assertFalse(
+                handler._process_reply_shotgun_event(consolidated, "content")
+            )
+
+    def test_process_reply_update_recreates_missing_jira_reply(self, mocked_sg):
+        """Updating a Reply re-creates the Jira reply when the mapped comment is gone."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        mapping = {str(mock_shotgun.SG_REPLY["id"]): "99999"}
+        sg_note = self._setup_sg_note(
+            bridge, sg_task, jira_issue, jira_comment, reply_mapping=mapping
+        )
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["content"] = "updated content"
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        consolidated = self._consolidated_sg_reply(sg_reply, sg_note)
+
+        self.assertTrue(handler._process_reply_shotgun_event(consolidated, "content"))
+
+        updated_note = bridge.shotgun.find_one(
+            "Note",
+            [["id", "is", sg_note["id"]]],
+            [SHOTGUN_JIRA_REPLY_IDS_FIELD],
+        )
+        new_mapping = json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}")
+        new_reply_id = new_mapping[str(sg_reply["id"])]
+        jira_reply = bridge.jira.comment(jira_issue.key, new_reply_id)
+        self.assertIn("updated content", jira_reply.body)
+
+    def test_process_reply_invalid_mapping_json(self, mocked_sg):
+        """Invalid JSON in the parent Note's reply mapping is treated as empty."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+        sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        sg_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] = "not-json"
+        self.add_to_sg_mock_db(bridge.shotgun, sg_note)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        consolidated = self._consolidated_sg_reply(sg_reply, sg_note)
+
+        self.assertTrue(handler._process_reply_shotgun_event(consolidated, "content"))
+
+    def test_jira_reply_sync_skipped_when_note_missing(self, mocked_sg):
+        """Jira reply sync is skipped when the parent Note cannot be found in FPTR."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._setup_sg_task(bridge, jira_issue)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, "orphan reply"
+        )
+
+        self.assertFalse(
+            handler._sync_jira_reply_to_sg(
+                jira_issue,
+                {
+                    "id": jira_reply.id,
+                    "parentId": int(jira_comment.id),
+                    "body": "orphan reply",
+                },
+                "created",
+            )
+        )
+
+    def test_jira_reply_sync_invalid_note_mapping_json(self, mocked_sg):
+        """Invalid JSON on the parent Note's mapping is treated as empty during Jira reply sync."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, "new reply"
+        )
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+        sg_note[SHOTGUN_JIRA_ID_FIELD] = "%s/%s" % (jira_issue.key, jira_comment.id)
+        sg_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] = "{bad json"
+        self.add_to_sg_mock_db(bridge.shotgun, sg_note)
+
+        self.assertTrue(
+            handler._sync_jira_reply_to_sg(
+                jira_issue,
+                {
+                    "id": jira_reply.id,
+                    "parentId": int(jira_comment.id),
+                    "body": "new reply",
+                },
+                "created",
+            )
+        )
+
+    def test_jira_reply_delete_without_mapping_entry(self, mocked_sg):
+        """Deleting a Jira reply with no FPTR mapping is a successful no-op."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, "gone reply"
+        )
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        self.assertTrue(
+            handler._sync_jira_reply_to_sg(
+                jira_issue,
+                {
+                    "id": jira_reply.id,
+                    "parentId": int(jira_comment.id),
+                    "body": "gone reply",
+                },
+                "deleted",
+            )
+        )
+        self.assertEqual(
+            bridge.shotgun.find(
+                "Reply",
+                [["entity", "is", {"type": "Note", "id": sg_note["id"]}]],
+            ),
+            [],
+        )
+
+    def test_jira_reply_update_without_mapping_entry(self, mocked_sg):
+        """Updating a Jira reply with no FPTR mapping is rejected."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, "edited reply"
+        )
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        self.assertFalse(
+            handler._sync_jira_reply_to_sg(
+                jira_issue,
+                {
+                    "id": jira_reply.id,
+                    "parentId": int(jira_comment.id),
+                    "body": "edited reply",
+                },
+                "updated",
+            )
+        )
+
+    def test_sync_jira_comments_note_entity_failure(self, mocked_sg):
+        """Comment backfill reports failure when the Note entity sync fails."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        bridge.jira.add_comment(jira_issue, "top-level comment")
+        self._setup_sg_task(bridge, jira_issue)
+
+        with mock.patch.object(
+            handler, "_sync_jira_entity_to_sg", return_value=False
+        ):
+            self.assertFalse(handler._sync_jira_comments_to_sg(jira_issue))
+
+    def test_sync_jira_comments_field_sync_failure(self, mocked_sg):
+        """Comment backfill reports failure when field sync fails."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "top-level comment")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+        sg_note["id"] = 99
+
+        with mock.patch.object(
+            handler, "_sync_jira_entity_to_sg", return_value=sg_note
+        ), mock.patch.object(handler, "_sync_jira_fields_to_sg", return_value=False):
+            self.assertFalse(handler._sync_jira_comments_to_sg(jira_issue))
+
+    def test_sync_jira_comments_reply_sync_failure(self, mocked_sg):
+        """Comment backfill reports failure when reply sync fails."""
+        _, bridge, handler = self._get_handler(mocked_sg)
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "top-level comment")
+        bridge.jira.add_comment_reply(jira_issue.key, jira_comment.id, "child reply")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        sg_note["tasks"] = [sg_task]
+        sg_note["id"] = 99
+
+        with mock.patch.object(
+            handler, "_sync_jira_entity_to_sg", return_value=sg_note
+        ), mock.patch.object(
+            handler, "_sync_jira_fields_to_sg", return_value=True
+        ), mock.patch.object(
+            handler, "_sync_jira_reply_to_sg", return_value=False
+        ):
+            self.assertFalse(handler._sync_jira_comments_to_sg(jira_issue))
+
+    def test_sync_sg_note_replies_skipped_when_reply_not_configured(self, mocked_sg):
+        """Reply backfill is skipped when Reply is not in entity_mapping."""
+        _, _, handler = self._get_handler(
+            mocked_sg, name="entities_generic_without_note"
+        )
+        handler._sync_sg_note_replies_to_jira({"type": "Note", "id": 1})
