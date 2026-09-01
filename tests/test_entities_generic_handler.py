@@ -3287,123 +3287,8 @@ class TestEntitiesGenericHandlerHook(TestEntitiesGenericHandler):
 
 
 @mock.patch("shotgun_api3.Shotgun")
-class TestJiraHookMentionRewrite(TestEntitiesGenericHandler):
-    """Test rewriting Jira user mentions to/from a readable FPTR placeholder."""
-
-    def _get_hook(self, mocked_sg):
-        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
-        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER)
-        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER_2)
-        return syncer.hook
-
-    def test__rewrite_jira_mentions_to_sg_rewrites_mapped_mention(self, mocked_sg):
-        """A Jira mention for an accountId mapped to a FPTR user is rewritten."""
-        hook = self._get_hook(mocked_sg)
-        account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
-
-        result = hook._rewrite_jira_mentions_to_sg("[~accountid:%s] hello" % account_id)
-
-        self.assertEqual(
-            result,
-            "[mention:%s:%s] hello"
-            % (mock_shotgun.SG_USER["id"], "FordPrefect"),
-        )
-
-    def test__rewrite_jira_mentions_to_sg_leaves_unmapped_mention_untouched(self, mocked_sg):
-        """A Jira mention for an accountId with no matching FPTR user is left as-is."""
-        hook = self._get_hook(mocked_sg)
-
-        body = "[~accountid:no-such-account-id] hello"
-        self.assertEqual(hook._rewrite_jira_mentions_to_sg(body), body)
-
-    def test__rewrite_jira_mentions_to_sg_no_mention(self, mocked_sg):
-        """A body with no mention is returned unchanged."""
-        hook = self._get_hook(mocked_sg)
-
-        body = "just a plain comment"
-        self.assertEqual(hook._rewrite_jira_mentions_to_sg(body), body)
-
-    def test__rewrite_sg_mentions_to_jira_rewrites_mapped_placeholder(self, mocked_sg):
-        """A FPTR placeholder for a user with a Jira account id is rewritten."""
-        hook = self._get_hook(mocked_sg)
-        account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
-
-        result = hook._rewrite_sg_mentions_to_jira(
-            "[mention:%s:FordPrefect] hello" % mock_shotgun.SG_USER["id"]
-        )
-
-        self.assertEqual(result, "[~accountid:%s] hello" % account_id)
-
-    def test__rewrite_sg_mentions_to_jira_leaves_unmapped_placeholder_untouched(self, mocked_sg):
-        """A FPTR placeholder for a user id that doesn't exist is left as-is."""
-        hook = self._get_hook(mocked_sg)
-
-        body = "[mention:999999:NoSuchUser] hello"
-        self.assertEqual(hook._rewrite_sg_mentions_to_jira(body), body)
-
-    def test__rewrite_sg_mentions_to_jira_no_placeholder(self, mocked_sg):
-        """A body with no placeholder is returned unchanged."""
-        hook = self._get_hook(mocked_sg)
-
-        body = "just a plain reply"
-        self.assertEqual(hook._rewrite_sg_mentions_to_jira(body), body)
-
-    def test__rewrite_jira_mentions_to_sg_rewrites_multiple_distinct_mentions(self, mocked_sg):
-        """Two different mentions in one body are each rewritten to the right user."""
-        hook = self._get_hook(mocked_sg)
-        account_id_1 = mock_shotgun.SG_USER["sg_jira_account_id"]
-        account_id_2 = mock_shotgun.SG_USER_2["sg_jira_account_id"]
-
-        result = hook._rewrite_jira_mentions_to_sg(
-            "[~accountid:%s] and [~accountid:%s] please review"
-            % (account_id_1, account_id_2)
-        )
-
-        self.assertEqual(
-            result,
-            "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review"
-            % (mock_shotgun.SG_USER["id"], mock_shotgun.SG_USER_2["id"]),
-        )
-
-    def test__rewrite_jira_mentions_to_sg_rewrites_multiple_mentions_mixed_mapped_unmapped(
-        self, mocked_sg
-    ):
-        """A mapped mention and an unmapped mention in the same body are each handled correctly."""
-        hook = self._get_hook(mocked_sg)
-        account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
-
-        result = hook._rewrite_jira_mentions_to_sg(
-            "[~accountid:%s] and [~accountid:no-such-account-id] please review"
-            % account_id
-        )
-
-        self.assertEqual(
-            result,
-            "[mention:%s:FordPrefect] and [~accountid:no-such-account-id] please review"
-            % mock_shotgun.SG_USER["id"],
-        )
-
-    def test__rewrite_sg_mentions_to_jira_rewrites_multiple_distinct_placeholders(self, mocked_sg):
-        """Two different placeholders in one body are each rewritten to the right Jira mention."""
-        hook = self._get_hook(mocked_sg)
-        account_id_1 = mock_shotgun.SG_USER["sg_jira_account_id"]
-        account_id_2 = mock_shotgun.SG_USER_2["sg_jira_account_id"]
-
-        result = hook._rewrite_sg_mentions_to_jira(
-            "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review"
-            % (mock_shotgun.SG_USER["id"], mock_shotgun.SG_USER_2["id"])
-        )
-
-        self.assertEqual(
-            result,
-            "[~accountid:%s] and [~accountid:%s] please review"
-            % (account_id_1, account_id_2),
-        )
-
-
-@mock.patch("shotgun_api3.Shotgun")
 class TestJiraHookReplyComment(TestEntitiesGenericHandler):
-    """Test composing/extracting the Reply <-> Jira comment reply body, mirroring Note behaviour."""
+    """Test Reply body parsing edge cases not covered by bridge integration tests."""
 
     def _get_hook(self, mocked_sg):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
@@ -3420,34 +3305,6 @@ class TestJiraHookReplyComment(TestEntitiesGenericHandler):
         self.assertIn("{panel}", result)
         self.assertIn("_Reply created from FPTR by Ford Prefect_", result)
         self.assertIn("hello there", result)
-
-    def test_extract_jira_reply_data_from_edited_comment(self, mocked_sg):
-        """
-        A panel-wrapped reply, in the form Jira returns after a human edits it
-        via the UI (bgColor panel, no title line, confirmed against a live
-        Jira Cloud site), is stripped back down to just its content.
-        """
-        hook = self._get_hook(mocked_sg)
-        jira_body = (
-            "{panel:bgColor=#deebff}\n"
-            "_Reply created from FPTR by Ford Prefect_\n"
-            "hello there, edited\n"
-            "{panel}"
-        )
-
-        content, sg_user = hook.extract_jira_reply_data(jira_body)
-
-        self.assertEqual(content.strip(), "hello there, edited")
-        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
-
-    def test_extract_jira_reply_data_no_wrapper(self, mocked_sg):
-        """A reply body with no FPTR wrapper (authored purely in Jira) is returned as-is."""
-        hook = self._get_hook(mocked_sg)
-
-        content, sg_user = hook.extract_jira_reply_data("just a plain reply")
-
-        self.assertEqual(content, "just a plain reply")
-        self.assertIsNone(sg_user)
 
     def test_extract_jira_reply_data_invalid_author(self, mocked_sg):
         """A panel-wrapped reply with an unrecognised author raises InvalidJiraValue."""
@@ -3467,7 +3324,7 @@ class TestJiraHookReplyComment(TestEntitiesGenericHandler):
 
 @mock.patch("shotgun_api3.Shotgun")
 class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
-    """Test extracting FPTR Note data from Jira comment bodies."""
+    """Test Note comment body parsing edge cases not covered by bridge integration tests."""
 
     def _get_hook(self, mocked_sg):
         syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
@@ -3491,7 +3348,12 @@ class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
             hook.extract_jira_comment_data(jira_body)
 
     def test_extract_jira_comment_data_rewrites_mentions(self, mocked_sg):
-        """Parsed comment content rewrites Jira mentions to FPTR placeholders."""
+        """
+        Parsed comment content rewrites Jira mentions to FPTR placeholders. This
+        is the only coverage of Jira -> FPTR mention rewriting for top-level Note
+        comments specifically - Reply mentions are covered separately by the
+        bridge integration tests in test_reply_sync.py.
+        """
         hook = self._get_hook(mocked_sg)
         account_id = mock_shotgun.SG_USER["sg_jira_account_id"]
         jira_body = (
@@ -3507,7 +3369,6 @@ class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
         self.assertEqual(subject, "Subject line")
         self.assertEqual(
             content,
-            "[mention:%s:FordPrefect] please review"
-            % mock_shotgun.SG_USER["id"],
+            "[mention:%s:FordPrefect] please review" % mock_shotgun.SG_USER["id"],
         )
         self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
