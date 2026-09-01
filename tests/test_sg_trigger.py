@@ -214,6 +214,8 @@ class TestSGTrigger(TestBase):
         }
 
         routing = {}
-        sg_jira_event_trigger.process_event(shotgun, logger, reply_change_event, routing)
+        sg_jira_event_trigger.process_event(
+            shotgun, logger, reply_change_event, routing
+        )
 
         self.assertTrue(PROJECT["id"] in routing)

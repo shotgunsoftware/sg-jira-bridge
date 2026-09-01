@@ -450,7 +450,9 @@ class EntitiesGenericHandler(SyncHandler):
 
         if reply_id_str not in mapping:
             # We have a new reply
-            jira_reply = self._jira.add_comment_reply(issue_key, parent_comment_id, reply_body)
+            jira_reply = self._jira.add_comment_reply(
+                issue_key, parent_comment_id, reply_body
+            )
             if not jira_reply:
                 self._logger.warning(
                     f"Failed to create Jira reply for Reply ({sg_reply['id']})."
@@ -466,7 +468,9 @@ class EntitiesGenericHandler(SyncHandler):
                 self._logger.warning(
                     f"Jira reply {jira_reply_id} for Reply ({sg_reply['id']}) not found — re-creating."
                 )
-                jira_reply = self._jira.add_comment_reply(issue_key, parent_comment_id, reply_body)
+                jira_reply = self._jira.add_comment_reply(
+                    issue_key, parent_comment_id, reply_body
+                )
                 if jira_reply:
                     mapping[reply_id_str] = jira_reply.id
                     self.__set_reply_mapping(note_id, mapping)
@@ -491,7 +495,9 @@ class EntitiesGenericHandler(SyncHandler):
 
     def __set_reply_mapping(self, note_id, mapping):
         """Write the sg_jira_reply_ids JSON back to the parent Note."""
-        self._shotgun.update("Note", note_id, {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)})
+        self._shotgun.update(
+            "Note", note_id, {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)}
+        )
 
     def accept_jira_event(self, resource_type, resource_id, event):
         """
@@ -692,7 +698,9 @@ class EntitiesGenericHandler(SyncHandler):
 
             # Route Jira comment replies (comments with parentId) to dedicated reply sync
             if webhook_entity == "comment" and event["comment"].get("parentId"):
-                return self._sync_jira_reply_to_sg(jira_issue, event["comment"], webhook_action)
+                return self._sync_jira_reply_to_sg(
+                    jira_issue, event["comment"], webhook_action
+                )
 
             sg_entity = self._sync_jira_entity_to_sg(
                 jira_issue, jira_key, sg_entity_type, webhook_action
@@ -795,7 +803,9 @@ class EntitiesGenericHandler(SyncHandler):
                 )
                 return False
 
-        self._logger.debug("Flow Production Tracking Reply event successfully accepted!")
+        self._logger.debug(
+            "Flow Production Tracking Reply event successfully accepted!"
+        )
         return True
 
     def __accept_shotgun_event_for_entities_synced_as_issues(
@@ -1911,7 +1921,11 @@ class EntitiesGenericHandler(SyncHandler):
                 return True
             self._shotgun.delete("Reply", sg_reply_id)
             mapping = {k: v for k, v in mapping.items() if str(v) != jira_reply_id}
-            self._shotgun.update("Note", sg_note["id"], {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)})
+            self._shotgun.update(
+                "Note",
+                sg_note["id"],
+                {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)},
+            )
             return True
 
         sg_content, sg_author = self._hook.extract_jira_reply_data(
@@ -1936,7 +1950,11 @@ class EntitiesGenericHandler(SyncHandler):
                 sg_data["user"] = sg_author
             sg_reply = self._shotgun.create("Reply", sg_data)
             mapping[str(sg_reply["id"])] = jira_reply_id
-            self._shotgun.update("Note", sg_note["id"], {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)})
+            self._shotgun.update(
+                "Note",
+                sg_note["id"],
+                {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)},
+            )
 
         elif sg_reply_id is not None:
             sg_data = {"content": sg_content}
