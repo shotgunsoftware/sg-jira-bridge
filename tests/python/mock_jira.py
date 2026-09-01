@@ -534,7 +534,9 @@ class MockedJira(object):
         # Needed by JiraSession.add_comment_reply, which has no library
         # helper to call and issues its request directly via these.
         self._options = {}
-        self._session = SimpleNamespace(post=self._fake_session_post, close=lambda: None)
+        self._session = SimpleNamespace(
+            post=self._fake_session_post, close=lambda: None
+        )
 
     def set_projects(self, projects):
         """

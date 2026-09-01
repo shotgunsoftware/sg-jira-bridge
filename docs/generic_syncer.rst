@@ -365,7 +365,7 @@ Here is an example of how you can enable Note/Comment syncing:
 .. _syncing-fptr-replies:
 
 Syncing Flow Production Tracking Replies as Jira Comment Replies
----------------------------------------------
+----------------------------------------------------------------
 
 Flow Production Tracking Notes can have Replies threaded under them, and these can be synced to Jira as threaded comment replies.
 Reply syncing requires that Note syncing is enabled, and that the ``sg_jira_reply_ids`` field :ref:`entity-sync-fptr-config` is created on the Note entity type.

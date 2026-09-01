@@ -164,7 +164,6 @@ class TestReplySync(TestSyncBase):
         self._setup_common_sg_data(bridge)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
-        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
         sg_task = self._setup_sg_task(bridge, jira_issue)
         sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
         sg_note["tasks"] = [sg_task]
@@ -265,7 +264,9 @@ class TestReplySync(TestSyncBase):
 
         sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
         sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
-        sg_reply["content"] = "[mention:%s:FordPrefect] thanks" % mock_shotgun.SG_USER["id"]
+        sg_reply["content"] = (
+            "[mention:%s:FordPrefect] thanks" % mock_shotgun.SG_USER["id"]
+        )
         self.add_to_sg_mock_db(bridge.shotgun, sg_reply)
 
         result = bridge.sync_in_jira(
@@ -356,9 +357,7 @@ class TestReplySync(TestSyncBase):
         updated_note = bridge.shotgun.find_one(
             "Note", [["id", "is", sg_note["id"]]], [SHOTGUN_JIRA_REPLY_IDS_FIELD]
         )
-        updated_mapping = json.loads(
-            updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}"
-        )
+        updated_mapping = json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}")
         self.assertNotIn(str(sg_reply["id"]), updated_mapping)
 
     def test_fptr_reply_delete_rejected_if_not_in_mapping(self, mocked_sg):
@@ -457,7 +456,8 @@ class TestReplySync(TestSyncBase):
             "comment": {
                 "id": jira_reply.id,
                 "parentId": int(jira_comment.id),
-                "body": "[~accountid:%s] fyi" % mock_shotgun.SG_USER["sg_jira_account_id"],
+                "body": "[~accountid:%s] fyi"
+                % mock_shotgun.SG_USER["sg_jira_account_id"],
                 "author": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
                 "updateAuthor": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
             },
@@ -519,9 +519,12 @@ class TestReplySync(TestSyncBase):
             bridge.sync_in_shotgun(self.HANDLER_NAME, "issue", jira_issue.key, event)
         )
 
-        expected_placeholders = "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review" % (
-            mock_shotgun.SG_USER["id"],
-            mock_shotgun.SG_USER_2["id"],
+        expected_placeholders = (
+            "[mention:%s:FordPrefect] and [mention:%s:SyncSync] please review"
+            % (
+                mock_shotgun.SG_USER["id"],
+                mock_shotgun.SG_USER_2["id"],
+            )
         )
         replies = bridge.shotgun.find(
             "Reply",
@@ -700,7 +703,9 @@ class TestReplySync(TestSyncBase):
         accept_shotgun_event already rejects unconfigured FPTR entity types
         for the FPTR -> Jira direction.
         """
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_without_note")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_without_note"
+        )
         self._setup_common_sg_data(bridge)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
@@ -728,7 +733,9 @@ class TestReplySync(TestSyncBase):
         A live comment_created webhook for a reply (parentId set) must be
         rejected when Reply isn't present in entity_mapping.
         """
-        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic_without_note")
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_without_note"
+        )
         self._setup_common_sg_data(bridge)
 
         jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
@@ -844,7 +851,13 @@ class TestReplySync(TestSyncBase):
 
         sg_note = bridge.shotgun.find_one(
             "Note",
-            [[SHOTGUN_JIRA_ID_FIELD, "is", "%s/%s" % (jira_issue.key, jira_comment.id)]],
+            [
+                [
+                    SHOTGUN_JIRA_ID_FIELD,
+                    "is",
+                    "%s/%s" % (jira_issue.key, jira_comment.id),
+                ]
+            ],
             [SHOTGUN_JIRA_REPLY_IDS_FIELD, "subject", "content"],
         )
         self.assertIsNotNone(sg_note)
@@ -901,9 +914,7 @@ class TestReplySync(TestSyncBase):
             [["id", "is", sg_note["id"]]],
             [SHOTGUN_JIRA_REPLY_IDS_FIELD],
         )
-        updated_mapping = json.loads(
-            updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}"
-        )
+        updated_mapping = json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}")
         self.assertNotIn(str(sg_reply["id"]), updated_mapping)
 
     def test_fptr_reply_update_recreates_missing_jira_reply(self, mocked_sg):
@@ -1175,9 +1186,7 @@ class TestReplySync(TestSyncBase):
         )
 
         new_reply = next(
-            c
-            for c in bridge.jira.comments(jira_issue.key)
-            if c.raw.get("parentId")
+            c for c in bridge.jira.comments(jira_issue.key) if c.raw.get("parentId")
         )
         self.assertIn("[mention:999999:NoSuchUser] hello", new_reply.body)
 
@@ -1202,9 +1211,7 @@ class TestReplySync(TestSyncBase):
         bridge.jira.add_comment(jira_issue, "top-level comment")
         self._setup_sg_task(bridge, jira_issue)
 
-        with mock.patch.object(
-            handler, "_sync_jira_entity_to_sg", return_value=False
-        ):
+        with mock.patch.object(handler, "_sync_jira_entity_to_sg", return_value=False):
             self.assertFalse(handler._sync_jira_comments_to_sg(jira_issue))
 
     def test_sync_jira_comments_field_sync_failure(self, mocked_sg):
