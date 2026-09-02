@@ -374,7 +374,7 @@ Just like Notes, the entity mapping is done automatically, so you only need to a
 Here is an example of how you can enable Reply syncing:
 
 .. code-block:: python
-    :emphasize-lines: 20,21,22,23
+    :emphasize-lines: 11,12,13,14
 
     SYNC = {
         "entities": {
