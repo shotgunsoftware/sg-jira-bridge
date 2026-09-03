@@ -95,16 +95,21 @@ class EntitiesGenericHandler(SyncHandler):
                 raise RuntimeError("Syncing at Project level is not supported.")
 
             # make sure that the required FPTR fields has been created for the entity
-            # Reply entities don't store SHOTGUN_JIRA_ID_FIELD themselves; tracking is via
-            # SHOTGUN_JIRA_REPLY_IDS_FIELD on the parent Note, which is asserted below.
-            if entity_mapping["sg_entity"] != "Reply":
-                self._shotgun.assert_field(
-                    entity_mapping["sg_entity"],
-                    SHOTGUN_JIRA_ID_FIELD,
-                    "text",
-                    check_unique=True,
-                )
-            else:
+            self._shotgun.assert_field(
+                entity_mapping["sg_entity"],
+                SHOTGUN_JIRA_ID_FIELD,
+                "text",
+                check_unique=True,
+            )
+
+            if entity_mapping["sg_entity"] == "Note" and entity_mapping.get(
+                "enable_reply_syncing"
+            ):
+                # Reply has no settings of its own - it fully inherits sync_direction
+                # and sync_deletion_direction from this Note entry. Reply entities
+                # don't store SHOTGUN_JIRA_ID_FIELD themselves; tracking is via
+                # SHOTGUN_JIRA_REPLY_IDS_FIELD on the parent Note instead.
+                self._shotgun.assert_entity_type("Reply")
                 self._shotgun.assert_field(
                     "Note",
                     SHOTGUN_JIRA_REPLY_IDS_FIELD,
@@ -123,9 +128,9 @@ class EntitiesGenericHandler(SyncHandler):
                     entity_mapping["sg_entity"], SHOTGUN_SYNC_IN_JIRA_FIELD, "checkbox"
                 )
 
-            # as the Note/Reply mapping is done internally by the code, not using the setting fields mapping, we want to skip
+            # as the Note mapping is done internally by the code, not using the setting fields mapping, we want to skip
             # some checks
-            if entity_mapping["sg_entity"] not in ["Note", "Reply"]:
+            if entity_mapping["sg_entity"] != "Note":
 
                 # check that the field mapping has been defined in the settings
                 if "field_mapping" not in entity_mapping.keys():
@@ -976,6 +981,19 @@ class EntitiesGenericHandler(SyncHandler):
             f"project.Project.{SHOTGUN_JIRA_ID_FIELD}",
             "created_by",
         ] + self._supported_shotgun_fields_for_shotgun_event(entity_type)
+
+    def __get_reply_settings(self):
+        """
+        Returns the sync settings for Reply syncing, or `None` if it's not enabled.
+        Reply has no settings of its own - it fully inherits `sync_direction` and
+        `sync_deletion_direction` from its parent Note's entity_mapping entry.
+        :returns: The Note entity_mapping dictionary, or `None`.
+        :rtype: dict or None
+        """
+        note_settings = self.__get_sg_entity_settings("Note")
+        if note_settings and note_settings.get("enable_reply_syncing"):
+            return note_settings
+        return None
 
     def __get_sg_entity_settings(self, entity_type):
         """

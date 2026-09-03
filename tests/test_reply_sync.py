@@ -1254,3 +1254,19 @@ class TestReplySync(TestSyncBase):
             handler, "_sync_jira_reply_to_sg", return_value=False
         ):
             self.assertFalse(handler._sync_jira_comments_to_sg(jira_issue))
+
+
+class TestReplySyncSettingsValidation(TestReplySync):
+    @mock.patch("shotgun_api3.Shotgun")
+    def test_setup_fails_fast_when_reply_syncing_enabled_without_note_field(
+        self, mocked_sg
+    ):
+        """
+        enable_reply_syncing=True on the Note entry must fail bridge setup
+        immediately if the sg_jira_reply_ids field hasn't been created on Note,
+        rather than starting successfully and failing later on the first Reply.
+        """
+        with self.assertRaises(RuntimeError):
+            TestSyncBase._get_syncer(
+                self, mocked_sg, name="entities_generic_with_reply"
+            )

@@ -200,14 +200,38 @@ SYNC = {
 }
 
 
-# Settings that include Reply entity for reply-sync tests
+# Settings that enable Reply syncing on the Note entry, for reply-sync tests.
+# Reply has no settings of its own - it fully inherits sync_direction and
+# sync_deletion_direction from Note.
 SYNC["entities_generic_with_reply"] = copy.deepcopy(SYNC["entities_generic"])
-SYNC["entities_generic_with_reply"]["settings"]["entity_mapping"].append(
-    {
-        "sg_entity": "Reply",
-        "sync_deletion_direction": "both_way",
-    }
+for _entity_mapping in SYNC["entities_generic_with_reply"]["settings"][
+    "entity_mapping"
+]:
+    if _entity_mapping["sg_entity"] == "Note":
+        _entity_mapping["enable_reply_syncing"] = True
+        _entity_mapping["sync_deletion_direction"] = "both_way"
+
+# Same as above, but Note (and therefore Reply) is restricted to Jira-to-FPTR
+# only, to test that Reply backfill/live-sync respects an inherited
+# one-directional setting.
+SYNC["entities_generic_with_reply_jira_to_sg"] = copy.deepcopy(
+    SYNC["entities_generic_with_reply"]
 )
+for _entity_mapping in SYNC["entities_generic_with_reply_jira_to_sg"]["settings"][
+    "entity_mapping"
+]:
+    if _entity_mapping["sg_entity"] == "Note":
+        _entity_mapping["sync_direction"] = "jira_to_sg"
+
+# Same as above, but restricted to FPTR-to-Jira only.
+SYNC["entities_generic_with_reply_sg_to_jira"] = copy.deepcopy(
+    SYNC["entities_generic_with_reply"]
+)
+for _entity_mapping in SYNC["entities_generic_with_reply_sg_to_jira"]["settings"][
+    "entity_mapping"
+]:
+    if _entity_mapping["sg_entity"] == "Note":
+        _entity_mapping["sync_direction"] = "sg_to_jira"
 
 # Settings with Note (and therefore Reply) excluded entirely, for testing that
 # Jira comment/reply webhook events are cleanly rejected when not configured.
