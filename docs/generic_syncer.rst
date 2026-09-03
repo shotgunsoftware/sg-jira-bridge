@@ -375,7 +375,7 @@ fully inherits that Note entry's ``sync_direction`` and ``sync_deletion_directio
 in a different direction than their parent Note. Here is an example of how you can enable Reply syncing:
 
 .. code-block:: python
-    :emphasize-lines: 9
+    :emphasize-lines: 10
 
     SYNC = {
         "entities": {
