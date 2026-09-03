@@ -1396,3 +1396,82 @@ class TestReplySyncDirectionInheritance(TestReplySync):
                 mock_shotgun.SG_REPLY_CHANGE_EVENT,
             )
         )
+
+
+class TestReplySyncBackfillDirection(TestReplySync):
+    @mock.patch("shotgun_api3.Shotgun")
+    def test_note_backfill_skips_reply_when_note_is_jira_to_sg_only(self, mocked_sg):
+        """
+        A pre-existing FPTR Reply on an already-Jira-linked Note must not be
+        pushed to Jira during backfill when Note's sync_direction is jira_to_sg.
+        Regression test: _sync_sg_note_replies_to_jira used to ignore direction
+        entirely and always push.
+        """
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_with_reply_jira_to_sg"
+        )
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        # Note is already linked to the existing Jira comment, so this test
+        # isolates the Reply-backfill direction check from Note's own
+        # (separate, pre-existing, out-of-scope) backfill-creation behavior.
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        self.add_to_sg_mock_db(bridge.shotgun, sg_reply)
+
+        sync_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sync_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
+
+        result = bridge.sync_in_jira(
+            "entities_generic_with_reply_jira_to_sg",
+            "Task",
+            sg_task["id"],
+            sync_event,
+        )
+        self.assertTrue(result)
+
+        jira_comments = bridge.jira.comments(jira_issue.key)
+        self.assertEqual(len(jira_comments), 1)  # only the parent comment
+
+        updated_note = bridge.shotgun.find_one(
+            "Note", [["id", "is", sg_note["id"]]], [SHOTGUN_JIRA_REPLY_IDS_FIELD]
+        )
+        mapping = json.loads(updated_note[SHOTGUN_JIRA_REPLY_IDS_FIELD] or "{}")
+        self.assertNotIn(str(sg_reply["id"]), mapping)
+
+    @mock.patch("shotgun_api3.Shotgun")
+    def test_issue_backfill_skips_reply_when_note_is_sg_to_jira_only(self, mocked_sg):
+        """
+        A pre-existing Jira reply on an already-FPTR-linked comment must not be
+        pulled into FPTR during backfill when Note's sync_direction is sg_to_jira.
+        Regression test: _sync_jira_comments_to_sg used to ignore direction
+        entirely and always pull.
+        """
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_with_reply_sg_to_jira"
+        )
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        # Note is already linked to the existing Jira comment (see comment in
+        # the test above for why).
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        bridge.jira.add_comment_reply(jira_issue.key, jira_comment.id, "existing reply")
+
+        event = copy.deepcopy(mock_jira.ISSUE_CREATED_PAYLOAD)
+        event["issue"] = {"id": jira_issue.key, "key": jira_issue.key}
+
+        result = bridge.sync_in_shotgun(
+            "entities_generic_with_reply_sg_to_jira", "issue", jira_issue.key, event
+        )
+        self.assertTrue(result)
+
+        self.assertEqual(bridge.shotgun.find("Reply", []), [])

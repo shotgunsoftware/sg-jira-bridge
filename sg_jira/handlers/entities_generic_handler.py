@@ -1628,7 +1628,10 @@ class EntitiesGenericHandler(SyncHandler):
         :param sg_note: The FPTR Note entity, already synced to Jira.
         :type sg_note: dict
         """
-        if "Reply" not in self._supported_shotgun_entities_for_shotgun_event():
+        reply_settings = self.__get_reply_settings()
+        if not reply_settings:
+            return
+        if reply_settings.get("sync_direction", "both_way") == "jira_to_sg":
             return
 
         sg_replies = self._shotgun.find(
@@ -2201,7 +2204,10 @@ class EntitiesGenericHandler(SyncHandler):
 
         existing_jira_comments = []
         sync_with_errors = False
-        sync_replies = "Reply" in self._supported_shotgun_entities_for_shotgun_event()
+        reply_settings = self.__get_reply_settings()
+        sync_replies = bool(reply_settings) and (
+            reply_settings.get("sync_direction", "both_way") != "sg_to_jira"
+        )
 
         # Replies carry a parentId; group them by it upfront so each top-level
         # comment's existing replies can be backfilled right after it's synced.
