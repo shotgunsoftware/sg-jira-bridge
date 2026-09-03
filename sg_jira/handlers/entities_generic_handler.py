@@ -9,11 +9,14 @@ import re
 
 import jira
 
+import json
+
 from sg_jira.constants import (
     JIRA_SHOTGUN_ID_FIELD,
     JIRA_SHOTGUN_TYPE_FIELD,
     JIRA_SYNC_IN_FPTR_FIELD,
     SHOTGUN_JIRA_ID_FIELD,
+    SHOTGUN_JIRA_REPLY_IDS_FIELD,
     SHOTGUN_JIRA_URL_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
 )
@@ -37,7 +40,7 @@ class EntitiesGenericHandler(SyncHandler):
     # fields)
     # They will be synced automatically if they have been defined in the settings file, as soon as the entity they are
     # linked to is synced as well
-    __ENTITIES_NOT_FLAGGED_AS_SYNCED = ["Note", "TimeLog"]
+    __ENTITIES_NOT_FLAGGED_AS_SYNCED = ["Note", "TimeLog", "Reply"]
 
     # Define the FPTR field associated to the deletion action
     __SG_RETIREMENT_FIELD = "retirement_date"
@@ -45,6 +48,7 @@ class EntitiesGenericHandler(SyncHandler):
     # Define the required FPTR fields for some specific entities not exposed entirely in the settings
     __NOTE_SG_FIELDS = ["subject", "content", "user", "tasks"]
     __TIMELOG_EXTRA_SG_FIELDS = ["user", "entity"]
+    __REPLY_SG_FIELDS = ["content", "user", "entity"]
 
     # Define the "fake" field used to map FPTR child entity with Jira entity
     # please, refer to the doc to see how this keyword can be used in the settings file
@@ -98,6 +102,20 @@ class EntitiesGenericHandler(SyncHandler):
                 check_unique=True,
             )
 
+            if entity_mapping["sg_entity"] == "Note" and entity_mapping.get(
+                "enable_reply_syncing"
+            ):
+                # Reply has no settings of its own - it fully inherits sync_direction
+                # and sync_deletion_direction from this Note entry. Reply entities
+                # don't store SHOTGUN_JIRA_ID_FIELD themselves; tracking is via
+                # SHOTGUN_JIRA_REPLY_IDS_FIELD on the parent Note instead.
+                self._shotgun.assert_entity_type("Reply")
+                self._shotgun.assert_field(
+                    "Note",
+                    SHOTGUN_JIRA_REPLY_IDS_FIELD,
+                    "text",
+                )
+
             # for some entities, we need to add extra checks
             if entity_mapping["sg_entity"] not in self.__ENTITIES_NOT_FLAGGED_AS_SYNCED:
 
@@ -112,7 +130,7 @@ class EntitiesGenericHandler(SyncHandler):
 
             # as the Note mapping is done internally by the code, not using the setting fields mapping, we want to skip
             # some checks
-            if entity_mapping["sg_entity"] not in ["Note"]:
+            if entity_mapping["sg_entity"] != "Note":
 
                 # check that the field mapping has been defined in the settings
                 if "field_mapping" not in entity_mapping.keys():
@@ -193,8 +211,8 @@ class EntitiesGenericHandler(SyncHandler):
             return False
 
         meta = event["meta"]
-        field = meta["attribute_name"]
         sync_settings = self.__get_sg_entity_settings(entity_type)
+        field = meta["attribute_name"]
         extra_sg_fields = [SHOTGUN_SYNC_IN_JIRA_FIELD]
 
         if sync_settings.get("sync_direction", "both_way") == "jira_to_sg":
@@ -243,6 +261,11 @@ class EntitiesGenericHandler(SyncHandler):
                 f"Rejecting Flow Production Tracking event: unfounded FPTR entity {entity_type} ({entity_id})"
             )
             return False
+
+        # Reply entities don't have project, SHOTGUN_JIRA_ID_FIELD, or SHOTGUN_SYNC_IN_JIRA_FIELD.
+        # Delegate to dedicated acceptance logic before the checks that require those fields.
+        if entity_type == "Reply":
+            return self.__accept_shotgun_event_for_reply(sg_entity, field, meta)
 
         # for now, we only support project entities as we need to find the associated Jira project
         if not sg_entity.get(f"project.Project.{SHOTGUN_JIRA_ID_FIELD}"):
@@ -302,6 +325,11 @@ class EntitiesGenericHandler(SyncHandler):
             self.__sg_get_entity_fields(entity_type),
             retired_only=True if sg_field == self.__SG_RETIREMENT_FIELD else False,
         )
+
+        # Reply has its own processing path — it doesn't map to a Jira entity directly
+        # but instead creates/updates/deletes a Jira comment reply on the parent Note's comment.
+        if entity_type == "Reply":
+            return self._process_reply_shotgun_event(sg_entity, sg_field)
 
         if sg_field == self.__SG_RETIREMENT_FIELD:
             return self._delete_jira_entity(sg_entity)
@@ -378,6 +406,104 @@ class EntitiesGenericHandler(SyncHandler):
         # otherwise, sync only the required field
         return self._sync_sg_fields_to_jira(sg_entity, jira_entity, field_name=sg_field)
 
+    def _process_reply_shotgun_event(self, sg_reply, sg_field):
+        """
+        Process a FPTR Reply entity event — create, update, or delete the corresponding Jira comment reply.
+        Reply entities have no SHOTGUN_JIRA_ID_FIELD; the parent Note carries a JSON mapping
+        of {fptr_reply_id: jira_reply_id} in SHOTGUN_JIRA_REPLY_IDS_FIELD.
+        """
+        note_jira_key = sg_reply.get(f"entity.Note.{SHOTGUN_JIRA_ID_FIELD}")
+        if not note_jira_key:
+            self._logger.debug(
+                f"Skipping Reply ({sg_reply['id']}) event: parent Note is not synced to Jira."
+            )
+            return False
+
+        try:
+            issue_key, parent_comment_id = note_jira_key.split("/", 1)
+        except ValueError:
+            self._logger.warning(
+                f"Invalid parent Note Jira key '{note_jira_key}' for Reply ({sg_reply['id']}). "
+                f"Expected '<issue_key>/<comment_id>'."
+            )
+            return False
+
+        mapping = self.__get_reply_mapping(sg_reply)
+        reply_id_str = str(sg_reply["id"])
+        note_id = sg_reply["entity"]["id"]
+
+        if sg_field == self.__SG_RETIREMENT_FIELD:
+            jira_reply_id = mapping.get(reply_id_str)
+            if not jira_reply_id:
+                self._logger.debug(
+                    f"Reply ({sg_reply['id']}) has no Jira reply to delete."
+                )
+                return False
+            jira_reply = self._get_jira_issue_comment(issue_key, jira_reply_id)
+            if jira_reply:
+                jira_reply.delete()
+            else:
+                self._logger.warning(
+                    f"Jira reply {jira_reply_id} for Reply ({sg_reply['id']}) not found — "
+                    f"cleaning stale mapping entry."
+                )
+            del mapping[reply_id_str]
+            self.__set_reply_mapping(note_id, mapping)
+            return True
+
+        reply_body = self._hook.compose_jira_reply_comment(sg_reply)
+
+        if reply_id_str not in mapping:
+            # We have a new reply
+            jira_reply = self._jira.add_comment_reply(
+                issue_key, parent_comment_id, reply_body
+            )
+            if not jira_reply:
+                self._logger.warning(
+                    f"Failed to create Jira reply for Reply ({sg_reply['id']})."
+                )
+                return False
+            mapping[reply_id_str] = jira_reply.id
+            self.__set_reply_mapping(note_id, mapping)
+        else:
+            # Reply previously synced, try to update or create if not found in Jira
+            jira_reply_id = mapping[reply_id_str]
+            jira_reply = self._get_jira_issue_comment(issue_key, jira_reply_id)
+            if not jira_reply:
+                self._logger.warning(
+                    f"Jira reply {jira_reply_id} for Reply ({sg_reply['id']}) not found — re-creating."
+                )
+                jira_reply = self._jira.add_comment_reply(
+                    issue_key, parent_comment_id, reply_body
+                )
+                if jira_reply:
+                    mapping[reply_id_str] = jira_reply.id
+                    self.__set_reply_mapping(note_id, mapping)
+                return bool(jira_reply)
+            jira_reply.update(body=reply_body)
+
+        return True
+
+    def __get_reply_mapping(self, sg_reply):
+        """Parse the sg_jira_reply_ids JSON from the parent Note. Returns an empty dict on failure."""
+        # Because Flow PT doesn't support json fields we store json as a string in a text field. We need to parse it.
+        raw = sg_reply.get(f"entity.Note.{SHOTGUN_JIRA_REPLY_IDS_FIELD}") or ""
+        if not raw:
+            return {}
+        try:
+            return json.loads(raw)
+        except (ValueError, TypeError):
+            self._logger.warning(
+                f"Couldn't parse {SHOTGUN_JIRA_REPLY_IDS_FIELD} on Note linked to Reply ({sg_reply.get('id')}): {raw!r}"
+            )
+            return {}
+
+    def __set_reply_mapping(self, note_id, mapping):
+        """Write the sg_jira_reply_ids JSON back to the parent Note."""
+        self._shotgun.update(
+            "Note", note_id, {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)}
+        )
+
     def accept_jira_event(self, resource_type, resource_id, event):
         """
         Accept or reject the given event for the given Jira resource.
@@ -419,6 +545,10 @@ class EntitiesGenericHandler(SyncHandler):
 
             sg_entity_type = "Note" if webhook_entity == "comment" else "TimeLog"
 
+            # If the comment carries a parentId it's a Jira comment reply, not a top-level Note comment.
+            if webhook_entity == "comment" and jira_entity.get("parentId"):
+                sg_entity_type = "Reply"
+
             if webhook_action == "created":
                 if (
                     jira_entity["author"]["accountId"]
@@ -440,6 +570,16 @@ class EntitiesGenericHandler(SyncHandler):
                     return False
 
             sync_settings = self.__get_sg_entity_settings(sg_entity_type)
+            if not sync_settings:
+                # Unlike Issue-type events, comment/reply/worklog events have no
+                # sync_settings of their own to fall back on if the FPTR entity
+                # type isn't configured - falling through to the parent Issue's
+                # settings further down would wrongly accept the event.
+                self._logger.debug(
+                    f"Rejecting Jira event: FPTR {sg_entity_type} is not configured "
+                    f"for syncing."
+                )
+                return False
 
             # make sure we can get the associated jira issue
             # comment and worklog payload are not formatted the same unfortunately...
@@ -560,6 +700,13 @@ class EntitiesGenericHandler(SyncHandler):
         else:
             jira_key = event[webhook_entity]["id"]
             sg_entity_type = "Note" if webhook_entity == "comment" else "TimeLog"
+
+            # Route Jira comment replies (comments with parentId) to dedicated reply sync
+            if webhook_entity == "comment" and event["comment"].get("parentId"):
+                return self._sync_jira_reply_to_sg(
+                    jira_issue, event["comment"], webhook_action
+                )
+
             sg_entity = self._sync_jira_entity_to_sg(
                 jira_issue, jira_key, sg_entity_type, webhook_action
             )
@@ -639,6 +786,33 @@ class EntitiesGenericHandler(SyncHandler):
         self._logger.debug("Flow Production Tracking event successfully accepted!")
         return True
 
+    def __accept_shotgun_event_for_reply(self, sg_entity, field, meta):
+        """
+        Helper method to check if a Reply entity event can be accepted for sync.
+        Replies have no SHOTGUN_JIRA_ID_FIELD of their own — we check the parent Note's Jira key.
+        """
+        note_jira_key = sg_entity.get(f"entity.Note.{SHOTGUN_JIRA_ID_FIELD}")
+        if not note_jira_key:
+            self._logger.debug(
+                f"Rejecting Flow Production Tracking event: Reply ({sg_entity['id']}) "
+                f"parent Note is not synced to Jira."
+            )
+            return False
+
+        if field == self.__SG_RETIREMENT_FIELD:
+            mapping = self.__get_reply_mapping(sg_entity)
+            if str(sg_entity["id"]) not in mapping:
+                self._logger.debug(
+                    f"Rejecting Flow Production Tracking event: Reply ({sg_entity['id']}) "
+                    f"has no Jira reply entry in the parent Note's mapping."
+                )
+                return False
+
+        self._logger.debug(
+            "Flow Production Tracking Reply event successfully accepted!"
+        )
+        return True
+
     def __accept_shotgun_event_for_entities_synced_as_issues(
         self, sg_entity, jira_issue_type
     ):
@@ -698,9 +872,14 @@ class EntitiesGenericHandler(SyncHandler):
         """
         Return the list of Flow Production Tracking entities that this handler can process for a
         Flow Production Tracking to Jira event.
+        Reply has no entity_mapping entry of its own - it's included here when
+        enabled via Note's enable_reply_syncing.
         :returns: A list of strings.
         """
-        return [m["sg_entity"] for m in self.__entity_mapping]
+        entities = [m["sg_entity"] for m in self.__entity_mapping]
+        if self.__get_sg_entity_settings("Reply"):
+            entities.append("Reply")
+        return entities
 
     def _supported_shotgun_fields_for_shotgun_event(self, entity_type):
         """
@@ -713,6 +892,9 @@ class EntitiesGenericHandler(SyncHandler):
 
         if entity_type == "Note":
             return self.__NOTE_SG_FIELDS
+
+        if entity_type == "Reply":
+            return self.__REPLY_SG_FIELDS
 
         sg_fields = []
         for entity_mapping in self.__entity_mapping:
@@ -789,6 +971,14 @@ class EntitiesGenericHandler(SyncHandler):
         :type entity_type: str
         :returns: A list of strings.
         """
+        if entity_type == "Reply":
+            # Reply entities don't support SHOTGUN_JIRA_ID_FIELD or SHOTGUN_SYNC_IN_JIRA_FIELD.
+            # We fetch the parent Note's Jira key and reply mapping via dot-notation.
+            return self._supported_shotgun_fields_for_shotgun_event(entity_type) + [
+                self.__SG_RETIREMENT_FIELD,
+                f"entity.Note.{SHOTGUN_JIRA_ID_FIELD}",
+                f"entity.Note.{SHOTGUN_JIRA_REPLY_IDS_FIELD}",
+            ]
         return [
             SHOTGUN_SYNC_IN_JIRA_FIELD,
             SHOTGUN_JIRA_ID_FIELD,
@@ -800,10 +990,19 @@ class EntitiesGenericHandler(SyncHandler):
     def __get_sg_entity_settings(self, entity_type):
         """
         Returns the sync settings for the given FPTR entity type.
+        Reply has no entity_mapping entry of its own - it fully inherits
+        `sync_direction` and `sync_deletion_direction` from its parent Note's
+        entry, so a Reply lookup returns Note's settings once enabled via
+        `enable_reply_syncing`, or `None` if it isn't.
         :param entity_type: The type of FPTR entity we want to query the settings for.
         :type entity_type: str
-        :returns: A dictionary with the sync settings.
+        :returns: A dictionary with the sync settings, or `None`.
         """
+        if entity_type == "Reply":
+            note_settings = self.__get_sg_entity_settings("Note")
+            if note_settings and note_settings.get("enable_reply_syncing"):
+                return note_settings
+            return None
         for entity_mapping in self.__entity_mapping:
             if entity_mapping["sg_entity"] == entity_type:
                 return entity_mapping
@@ -1398,9 +1597,35 @@ class EntitiesGenericHandler(SyncHandler):
                 continue
             self._sync_sg_fields_to_jira(e, jira_entity)
 
+            if linked_entity_type == "Note":
+                self._sync_sg_note_replies_to_jira(e)
+
         # TODO: do we want to sync with reciprocity in JIRA?
 
         return sync_with_error
+
+    def _sync_sg_note_replies_to_jira(self, sg_note):
+        """
+        Backfill any FPTR Replies on the given Note that haven't been synced yet.
+        Called after a Note itself has just been synced (created or confirmed
+        up to date) so pre-existing Replies (e.g. added while the Note or its
+        parent Task was unsynced) aren't left orphaned.
+        :param sg_note: The FPTR Note entity, already synced to Jira.
+        :type sg_note: dict
+        """
+        reply_settings = self.__get_sg_entity_settings("Reply")
+        if not reply_settings:
+            return
+        if reply_settings.get("sync_direction", "both_way") == "jira_to_sg":
+            return
+
+        sg_replies = self._shotgun.find(
+            "Reply",
+            [["entity", "is", {"type": "Note", "id": sg_note["id"]}]],
+            self.__sg_get_entity_fields("Reply"),
+        )
+        for sg_reply in sg_replies:
+            self._process_reply_shotgun_event(sg_reply, "content")
 
     def _sync_hierarchy_to_jira(self, sg_linked_entities, jira_issue, jira_field):
         """
@@ -1667,6 +1892,106 @@ class EntitiesGenericHandler(SyncHandler):
 
         return sg_entities[0]
 
+    def _sync_jira_reply_to_sg(self, jira_issue, comment_event, webhook_action):
+        """
+        Sync a Jira comment reply to a FPTR Reply entity.
+        Uses a two-step lookup: find the parent Note via <issue_key>/<parent_comment_id> in
+        SHOTGUN_JIRA_ID_FIELD, then use the Note's SHOTGUN_JIRA_REPLY_IDS_FIELD mapping to
+        locate or create the FPTR Reply.
+
+        :param jira_issue: The Jira Issue the comment reply belongs to.
+        :type jira_issue: jira.resources.Issue
+        :param comment_event: Raw comment dict from the Jira webhook event payload.
+        :type comment_event: dict
+        :param webhook_action: "created", "updated", or "deleted".
+        :type webhook_action: str
+        :returns: True if sync succeeded, False otherwise.
+        """
+        parent_comment_id = str(comment_event["parentId"])
+        jira_reply_id = str(comment_event["id"])
+        jira_note_key = f"{jira_issue.key}/{parent_comment_id}"
+
+        sg_note = self._shotgun.find_one(
+            "Note",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_note_key]],
+            [SHOTGUN_JIRA_REPLY_IDS_FIELD, "project"],
+        )
+        if not sg_note:
+            self._logger.debug(
+                f"Couldn't find FPTR Note with Jira key {jira_note_key}. Skipping Jira reply sync."
+            )
+            return False
+
+        raw_mapping = sg_note.get(SHOTGUN_JIRA_REPLY_IDS_FIELD) or ""
+        try:
+            mapping = json.loads(raw_mapping) if raw_mapping else {}
+        except (ValueError, TypeError):
+            mapping = {}
+
+        # Reverse-lookup: find which FPTR Reply ID maps to this Jira reply ID
+        sg_reply_id = None
+        for fptr_id, j_id in mapping.items():
+            if str(j_id) == jira_reply_id:
+                sg_reply_id = int(fptr_id)
+                break
+
+        if webhook_action == "deleted":
+            if sg_reply_id is None:
+                self._logger.debug(
+                    f"No FPTR Reply found for Jira reply {jira_reply_id}. Nothing to delete."
+                )
+                return True
+            self._shotgun.delete("Reply", sg_reply_id)
+            mapping = {k: v for k, v in mapping.items() if str(v) != jira_reply_id}
+            self._shotgun.update(
+                "Note",
+                sg_note["id"],
+                {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)},
+            )
+            return True
+
+        sg_content, sg_author = self._hook.extract_jira_reply_data(
+            comment_event.get("body", "")
+        )
+
+        if not sg_author:
+            jira_author = comment_event.get("author", {})
+            if jira_author.get("accountId"):
+                sg_author = self._shotgun.find_one(
+                    "HumanUser",
+                    [["sg_jira_account_id", "is", jira_author["accountId"]]],
+                    ["id", "email", "name"],
+                )
+
+        if webhook_action == "created" and sg_reply_id is None:
+            sg_data = {
+                "entity": {"type": "Note", "id": sg_note["id"]},
+                "content": sg_content,
+            }
+            if sg_author:
+                sg_data["user"] = sg_author
+            sg_reply = self._shotgun.create("Reply", sg_data)
+            mapping[str(sg_reply["id"])] = jira_reply_id
+            self._shotgun.update(
+                "Note",
+                sg_note["id"],
+                {SHOTGUN_JIRA_REPLY_IDS_FIELD: json.dumps(mapping)},
+            )
+
+        elif sg_reply_id is not None:
+            sg_data = {"content": sg_content}
+            if sg_author:
+                sg_data["user"] = sg_author
+            self._shotgun.update("Reply", sg_reply_id, sg_data)
+
+        else:
+            self._logger.debug(
+                f"No FPTR Reply found for Jira reply {jira_reply_id} on action '{webhook_action}'. Skipping."
+            )
+            return False
+
+        return True
+
     def _sync_jira_fields_to_sg(
         self, jira_issue, jira_key, sg_entity, jira_fields=None
     ):
@@ -1864,15 +2189,46 @@ class EntitiesGenericHandler(SyncHandler):
 
         existing_jira_comments = []
         sync_with_errors = False
+        reply_settings = self.__get_sg_entity_settings("Reply")
+        sync_replies = bool(reply_settings) and (
+            reply_settings.get("sync_direction", "both_way") != "sg_to_jira"
+        )
 
-        # first, push all the comments to FPTR
-        for jira_comment in self._jira.comments(jira_issue.key):
+        # Replies carry a parentId; group them by it upfront so each top-level
+        # comment's existing replies can be backfilled right after it's synced.
+        all_jira_comments = self._jira.comments(jira_issue.key)
+        top_level_jira_comments = []
+        jira_replies_by_parent_id = {}
+        for jira_comment in all_jira_comments:
+            parent_id = jira_comment.raw.get("parentId")
+            if parent_id:
+                jira_replies_by_parent_id.setdefault(str(parent_id), []).append(
+                    jira_comment
+                )
+            else:
+                top_level_jira_comments.append(jira_comment)
+
+        for jira_comment in top_level_jira_comments:
             existing_jira_comments.append("%s/%s" % (jira_issue.key, jira_comment.id))
             sg_entity = self._sync_jira_entity_to_sg(
                 jira_issue, jira_comment.id, "Note", None
             )
             if not sg_entity:
                 sync_with_errors = True
+                continue
+            if not self._sync_jira_fields_to_sg(
+                jira_issue, jira_comment.id, sg_entity, None
+            ):
+                sync_with_errors = True
+
+            if sync_replies:
+                for jira_reply in jira_replies_by_parent_id.get(
+                    str(jira_comment.id), []
+                ):
+                    if not self._sync_jira_reply_to_sg(
+                        jira_issue, jira_reply.raw, "created"
+                    ):
+                        sync_with_errors = True
 
         # then, if the sync deletion flag is enabled, remove the notes that doesn't exist anymore in Jira
 

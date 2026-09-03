@@ -55,6 +55,9 @@ Sync In Jira  Checkbox    Enable/Disable syncing for this Entity   ``sg_sync_in_
     The Flow Production Tracking ``TimeLog`` and ``Note`` entities follow a specific workflow. For those entity types, only the
     ``Jira Key`` field is mandatory.
 
+.. note::
+    ``Reply`` entities don't require any fields creating on their own entity type, but enabling Reply syncing (via ``enable_reply_syncing`` on the ``Note`` entity mapping entry) requires a **``Reply IDs``** ``Text`` field with the field code ``sg_jira_reply_ids`` to be created on the Note entity type.
+
 Flow Production Tracking Event Daemon Configuration
 ===================================================
 
@@ -322,6 +325,9 @@ Key value            Description
 ``sg_to_jira``       If a Note is deleted in FPTR, the associated Comment will be deleted in Jira. But if a Comment is deleted in Jira, the associated Note won't be deleted in FPTR
 ==================== =================================================================================================================================================================
 
+Flow Production Tracking Note Replies are also supported (when using Jira Cloud) and can be enabled with the ``enable_reply_syncing`` key on the ``Note`` entity mapping entry.
+In order to use replies you must create an additional field on the Note entity type (not the Reply): ``sg_jira_reply_ids`` of type ``Text``. This field is used to store the Jira comment IDs of the synced replies.
+
 Here is an example of how you can enable Note/Comment syncing:
 
 .. code-block:: python
@@ -345,6 +351,7 @@ Here is an example of how you can enable Note/Comment syncing:
                     {
                         "sg_entity": "Note",
                         "sync_deletion_direction": "jira_to_sg",
+                        "enable_reply_syncing": True,
                     }
                 ]
             },

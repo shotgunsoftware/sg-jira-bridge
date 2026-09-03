@@ -58,5 +58,30 @@ class TestSyncBase(TestBase):
 
         self.mock_jira_session_bases()
 
+        # Patch mockgun.Shotgun with no-op stubs for real SG API methods that
+        # mockgun doesn't implement (add_user_agent added in SG-42067,
+        # set_session_uuid called by bridge.sync_in_jira).
+        for _method in ("add_user_agent", "set_session_uuid"):
+            if not hasattr(mockgun.Shotgun, _method):
+                setattr(mockgun.Shotgun, _method, lambda self, *a, **kw: None)
+                self.addCleanup(delattr, mockgun.Shotgun, _method)
+
+        # mockgun's _validate_entity_data doesn't know about the SG "duration"
+        # data type (used by TimeLog.duration). Patch it to treat duration as
+        # number (int), which is how the SG Python API stores duration values.
+        _orig_validate = mockgun.Shotgun._validate_entity_data
+
+        def _validate_with_duration(self_mg, entity_type, data):
+            for field in list(data):
+                fi = self_mg._schema.get(entity_type, {}).get(field, {})
+                if fi.get("data_type", {}).get("value") == "duration":
+                    fi["data_type"]["value"] = "number"
+            _orig_validate(self_mg, entity_type, data)
+
+        mockgun.Shotgun._validate_entity_data = _validate_with_duration
+        self.addCleanup(
+            setattr, mockgun.Shotgun, "_validate_entity_data", _orig_validate
+        )
+
         # TODO: add a Shotgun patcher so deriving classes don't have to patch
         # Shotgun themselves.

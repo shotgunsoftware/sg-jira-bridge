@@ -34,8 +34,10 @@ class JiraHook(object):
     {panel}
     """
 
-    # Associated regex used to get FPTR Note information from Jira comment body
-    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+    # Associated regex used to get FPTR Note information from Jira comment body.
+    # Leading/trailing groups capture any text a human added outside the panel
+    # (e.g. before it opens or after it closes) so it isn't silently dropped.
+    JIRA_COMMENT_REGEX = r"(.*?){panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}(.*)"
 
     # Template used to build Jira worklogs content from a TimeLog.
     WORKLOG_BODY_TEMPLATE = """
@@ -46,11 +48,34 @@ class JiraHook(object):
     # Associated regex used to get FPTR TimeLog information from Jira worklog body
     JIRA_WORKLOG_REGEX = r"_Worklog created from FPTR by ([\w\s]+)_\n(.*)"
 
+    # Template used to build Jira comment replies from a Reply. Same panel
+    # treatment as Notes, but with no title (Replies have no subject field).
+    REPLY_BODY_TEMPLATE = """
+    {panel}
+    _Reply created from FPTR by %s_
+    %s
+    {panel}
+    """
+
+    # Associated regex used to get FPTR Reply information from a Jira comment
+    # reply body. Side note that once a human edits a title-less panel via the Jira UI, it comes back as
+    # `{panel:bgColor=...}` with no bolded title line (unlike JIRA_COMMENT_REGEX, which has one).
+    # Leading/trailing groups capture any text a human added outside the panel
+    # (e.g. before it opens or after it closes) so it isn't silently dropped.
+    JIRA_REPLY_REGEX = r"(.*?){panel:bgColor=#[\w]{6}}\n_Reply created from FPTR by ([\w\s]+)_\n(.*)\n{panel}(.*)"
+
     # Define the format of the Flow Production Tracking dates
     SG_DATE_FORMAT = "%Y-%m-%d"
 
     # Define the format of the Jira dates
     JIRA_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
+
+    # Matches Jira's wiki-markup user mention syntax, e.g.
+    # [~accountid:557058:fg74g8asdf-3d4b-4563-a4a2-9y89fvg834g5]
+    JIRA_MENTION_REGEX = re.compile(r"\[~accountid:([^\]]+)\]")
+
+    # Matches the FPTR-side mention placeholder, e.g. [mention:88:FirstnameSecondName]
+    SG_MENTION_REGEX = re.compile(r"\[mention:(\d+):([^\]]*)\]")
 
     def __init__(self, bridge, logger):
         """Class constructor"""
@@ -328,13 +353,80 @@ class JiraHook(object):
 
         return self._shotgun.find_one("HumanUser", sg_filters, ["id", "email", "name"])
 
+    def _rewrite_jira_mentions_to_sg(self, body):
+        """
+        Rewrite Jira user mentions in a comment/reply body to a readable FPTR
+        placeholder, for any accountId that matches a FPTR user via
+        `sg_jira_account_id`. Mentions with no matching FPTR user are left
+        untouched.
+
+        :param str body: A Jira comment or reply body.
+        :returns: The body with recognized mentions rewritten.
+        """
+        # First extract all Jira user mentions so we can do a single look up for the matching Flow PT users
+        account_ids = {m.group(1) for m in self.JIRA_MENTION_REGEX.finditer(body)}
+        if not account_ids:
+            return body
+
+        sg_users_by_account_id = {
+            sg_user["sg_jira_account_id"]: sg_user
+            for sg_user in self._shotgun.find(
+                "HumanUser",
+                [["sg_jira_account_id", "in", list(account_ids)]],
+                ["name", "sg_jira_account_id"],
+            )
+        }
+
+        def _replace(match):
+            sg_user = sg_users_by_account_id.get(match.group(1))
+            if not sg_user:
+                return match.group(0)
+            name = re.sub(r"\s+", "", sg_user["name"])
+            return "[mention:%s:%s]" % (sg_user["id"], name)
+
+        return self.JIRA_MENTION_REGEX.sub(_replace, body)
+
+    def _rewrite_sg_mentions_to_jira(self, body):
+        """
+        Rewrite FPTR mention placeholders in a Note/Reply body back to Jira's
+        user mention syntax, for any placeholder whose FPTR user has a
+        `sg_jira_account_id` set. Placeholders with no matching Jira account
+        are left untouched.
+
+        :param str body: A FPTR Note or Reply content.
+        :returns: The body with recognized placeholders rewritten.
+        """
+        # First extract all Flow PT user ids from any "mentions" in the body so we can
+        # do a lookup for those users.
+        sg_user_ids = {int(m.group(1)) for m in self.SG_MENTION_REGEX.finditer(body)}
+        if not sg_user_ids:
+            return body
+
+        account_ids_by_sg_user_id = {
+            sg_user["id"]: sg_user.get("sg_jira_account_id")
+            for sg_user in self._shotgun.find(
+                "HumanUser",
+                [["id", "in", list(sg_user_ids)]],
+                ["sg_jira_account_id"],
+            )
+        }
+
+        def _replace(match):
+            account_id = account_ids_by_sg_user_id.get(int(match.group(1)))
+            if not account_id:
+                return match.group(0)
+            return "[~accountid:%s]" % account_id
+
+        return self.SG_MENTION_REGEX.sub(_replace, body)
+
     def compose_jira_comment_body(self, sg_note):
         """Helper method to compose the Jira comment body from a FPTR note."""
-        return self.COMMENT_BODY_TEMPLATE % (
+        body = self.COMMENT_BODY_TEMPLATE % (
             sg_note["subject"],
             sg_note["user"]["name"],
             sg_note["content"],
         )
+        return self._rewrite_sg_mentions_to_jira(body)
 
     def extract_jira_comment_data(self, jira_comment_body):
         """Helper method to extract the FPTR note data from a Jira comment body."""
@@ -344,9 +436,9 @@ class JiraHook(object):
         # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
         # so the data will be found from the comment itself rather than its body
         if not result:
-            return None, jira_comment_body, None
+            return None, self._rewrite_jira_mentions_to_sg(jira_comment_body), None
 
-        author = result.group(2).strip()
+        author = result.group(3).strip()
         # we need to make sure the author is associated with a current FPTR user
         sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
         if not sg_user:
@@ -357,7 +449,7 @@ class JiraHook(object):
                 "author from '%s'" % author,
             )
 
-        subject = result.group(1).strip()
+        subject = result.group(2).strip()
         # if we have any { or } in the title reject the value as it is likely
         # to be an ill-formed panel block.
         if re.search(r"[\{\}]", subject):
@@ -367,7 +459,17 @@ class JiraHook(object):
                 "Invalid Jira Comment panel formatting. Unable to parse FPTR "
                 "subject from '%s'" % subject,
             )
-        content = result.group(3).strip()
+        # A human may have added text outside the panel (before it opens or
+        # after it closes) when editing the comment in Jira - preserve it
+        # alongside the panel's own content instead of silently dropping it.
+        content_parts = [
+            result.group(1).strip(),
+            result.group(4).strip(),
+            result.group(5).strip(),
+        ]
+        content = self._rewrite_jira_mentions_to_sg(
+            "\n\n".join(part for part in content_parts if part)
+        )
 
         return subject, content, sg_user
 
@@ -400,6 +502,49 @@ class JiraHook(object):
             )
 
         return result.group(2).strip(), sg_user
+
+    def compose_jira_reply_comment(self, sg_reply):
+        """Helper method to compose the Jira comment reply body from a FPTR Reply."""
+        body = self.REPLY_BODY_TEMPLATE % (
+            sg_reply["user"]["name"],
+            sg_reply["content"],
+        )
+        return self._rewrite_sg_mentions_to_jira(body)
+
+    def extract_jira_reply_data(self, jira_reply_comment):
+        """Helper method to extract the FPTR reply data from a Jira comment reply body."""
+
+        result = re.search(self.JIRA_REPLY_REGEX, jira_reply_comment, flags=re.S)
+
+        # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
+        # so the data will be found from the comment itself rather than its body
+        if not result:
+            return self._rewrite_jira_mentions_to_sg(jira_reply_comment), None
+
+        author = result.group(2).strip()
+        # we need to make sure the author is associated with a current FPTR user
+        sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
+        if not sg_user:
+            raise InvalidJiraValue(
+                "content",
+                jira_reply_comment,
+                "Invalid Jira Comment panel formatting. Unable to parse FPTR "
+                "author from '%s'" % author,
+            )
+
+        # A human may have added text outside the panel (before it opens or
+        # after it closes) when editing the reply in Jira - preserve it
+        # alongside the panel's own content instead of silently dropping it.
+        content_parts = [
+            result.group(1).strip(),
+            result.group(3).strip(),
+            result.group(4).strip(),
+        ]
+        content = self._rewrite_jira_mentions_to_sg(
+            "\n\n".join(part for part in content_parts if part)
+        )
+
+        return content, sg_user
 
     def format_jira_date(self, sg_date):
         """Helper method to convert a FPTR date into a Jira date."""

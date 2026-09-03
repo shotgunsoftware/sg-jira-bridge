@@ -6,7 +6,9 @@
 #
 
 import copy
+import json
 import re
+from types import SimpleNamespace
 
 import jira
 from jira import JIRAError
@@ -454,6 +456,22 @@ COMMENT_PAYLOAD = {
     "issue": {"id": "FAKED-01", "key": "FAKED-01"},
 }
 
+REPLY_COMMENT_PAYLOAD = {
+    "webhookEvent": "comment_created",
+    "comment": {
+        "id": "100002",
+        "parentId": 100001,
+        "author": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+        "updateAuthor": {
+            "accountId": JIRA_USER_2["accountId"],
+        },
+        "body": "This is a reply",
+    },
+    "issue": {"id": "FAKED-01", "key": "FAKED-01"},
+}
+
 
 class MockedSession(object):
     def put(self, *args, **kwargs):
@@ -513,6 +531,12 @@ class MockedJira(object):
         self._createmeta = {}
         self._issues = {}
         self._issue_links = []
+        # Needed by JiraSession.add_comment_reply, which has no library
+        # helper to call and issues its request directly via these.
+        self._options = {}
+        self._session = SimpleNamespace(
+            post=self._fake_session_post, close=lambda: None
+        )
 
     def set_projects(self, projects):
         """
@@ -1768,12 +1792,53 @@ class MockedJira(object):
         """
         if not isinstance(issue, jira.resources.Issue):
             issue = self.issue(issue)
-        raw = {"issue": issue, "id": str(len(issue._comments) + 1), "body": body}
+        raw = {
+            "issue": issue,
+            "id": str(len(issue._comments) + 1),
+            "body": body,
+            "author": {
+                "accountId": JIRA_USER["accountId"],
+                "emailAddress": JIRA_USER.get("emailAddress", ""),
+                "displayName": JIRA_USER.get("displayName", ""),
+            },
+        }
         for k in kwargs:
             raw[k] = kwargs[k]
         comment = MockedComment(None, None, raw=raw)
         issue._comments.append(comment)
         return comment
+
+    def _get_url(self, path, base=None):
+        """
+        Mocked Jira method. `JiraSession.add_comment_reply` has no library
+        helper to call (the real jira.client.JIRA has no such method), so it
+        builds and posts the request itself via `_get_url`/`_session`. We
+        don't need a realistic URL here, just something `_fake_session_post`
+        below can parse back out - so the real add_comment_reply code runs
+        unchanged in tests instead of being duplicated by a mocked method.
+        """
+        return path
+
+    def _fake_session_post(self, url, data=None, **kwargs):
+        """Mocked HTTP POST, understanding only the add_comment_reply request shape."""
+        match = re.match(r"^issue/(.+)/comment$", url)
+        if not match:
+            raise NotImplementedError("Unmocked POST to %s" % url)
+        issue = self.issue(match.group(1))
+        payload = json.loads(data)
+        raw = {
+            "issue": issue,
+            "id": str(len(issue._comments) + 1),
+            "body": payload["body"],
+            "parentId": payload["parentId"],
+            "author": {
+                "accountId": JIRA_USER["accountId"],
+                "emailAddress": JIRA_USER.get("emailAddress", ""),
+                "displayName": JIRA_USER.get("displayName", ""),
+            },
+        }
+        issue._comments.append(MockedComment(None, None, raw=raw))
+        return SimpleNamespace(json=lambda: raw)
 
     def comment(self, issue_key, comment_id, *args, **kwargs):
         """
