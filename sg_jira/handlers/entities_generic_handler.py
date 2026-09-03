@@ -204,15 +204,26 @@ class EntitiesGenericHandler(SyncHandler):
         self._logger.debug(f"Checking Flow Production Tracking event...\n {event}")
 
         # check that the entity linked to the event is supported by the bridge
-        if entity_type not in self._supported_shotgun_entities_for_shotgun_event():
+        # Reply has no entity_mapping entry of its own - it's enabled via
+        # Note's enable_reply_syncing and fully inherits Note's sync_direction.
+        if entity_type == "Reply":
+            sync_settings = self.__get_reply_settings()
+            if not sync_settings:
+                self._logger.debug(
+                    "Rejecting Flow Production Tracking event: Reply syncing is not "
+                    "enabled (set enable_reply_syncing on the Note entity_mapping entry)."
+                )
+                return False
+        elif entity_type not in self._supported_shotgun_entities_for_shotgun_event():
             self._logger.debug(
                 f"Rejecting Flow Production Tracking event: unsupported FPTR entity type {entity_type}"
             )
             return False
+        else:
+            sync_settings = self.__get_sg_entity_settings(entity_type)
 
         meta = event["meta"]
         field = meta["attribute_name"]
-        sync_settings = self.__get_sg_entity_settings(entity_type)
         extra_sg_fields = [SHOTGUN_SYNC_IN_JIRA_FIELD]
 
         if sync_settings.get("sync_direction", "both_way") == "jira_to_sg":
@@ -569,7 +580,12 @@ class EntitiesGenericHandler(SyncHandler):
                     )
                     return False
 
-            sync_settings = self.__get_sg_entity_settings(sg_entity_type)
+            # Reply has no entity_mapping entry of its own - it's enabled via
+            # Note's enable_reply_syncing and fully inherits Note's sync_direction.
+            if sg_entity_type == "Reply":
+                sync_settings = self.__get_reply_settings()
+            else:
+                sync_settings = self.__get_sg_entity_settings(sg_entity_type)
             if not sync_settings:
                 # Unlike Issue-type events, comment/reply/worklog events have no
                 # sync_settings of their own to fall back on if the FPTR entity

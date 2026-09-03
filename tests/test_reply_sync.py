@@ -1299,3 +1299,100 @@ class TestReplySyncSettingsValidation(TestReplySync):
                 TestSyncBase._get_syncer(
                     self, mocked_sg, name="entities_generic_with_reply"
                 )
+
+
+class TestReplySyncDirectionInheritance(TestReplySync):
+    @mock.patch("shotgun_api3.Shotgun")
+    def test_fptr_reply_create_rejected_when_note_is_jira_to_sg_only(self, mocked_sg):
+        """A Reply created in FPTR must not sync to Jira when Note's sync_direction is jira_to_sg."""
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_with_reply_jira_to_sg"
+        )
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        self.add_to_sg_mock_db(bridge.shotgun, sg_reply)
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "entities_generic_with_reply_jira_to_sg",
+                "Reply",
+                sg_reply["id"],
+                mock_shotgun.SG_REPLY_CHANGE_EVENT,
+            )
+        )
+        self.assertEqual(
+            len(
+                [
+                    c
+                    for c in bridge.jira.comments(jira_issue.key)
+                    if c.raw.get("parentId")
+                ]
+            ),
+            0,
+        )
+
+    @mock.patch("shotgun_api3.Shotgun")
+    def test_jira_reply_create_rejected_when_note_is_sg_to_jira_only(self, mocked_sg):
+        """A Jira comment reply must not sync to FPTR when Note's sync_direction is sg_to_jira."""
+        syncer, bridge = self._get_syncer(
+            mocked_sg, name="entities_generic_with_reply_sg_to_jira"
+        )
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        jira_reply = bridge.jira.add_comment_reply(
+            jira_issue.key, jira_comment.id, "a new reply"
+        )
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        event = {
+            "webhookEvent": "comment_created",
+            "comment": {
+                "id": jira_reply.id,
+                "parentId": int(jira_comment.id),
+                "body": "a new reply",
+                "author": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+                "updateAuthor": {"accountId": mock_jira.JIRA_USER_2["accountId"]},
+            },
+            "issue": {"id": jira_issue.key, "key": jira_issue.key},
+        }
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                "entities_generic_with_reply_sg_to_jira", "issue", jira_issue.key, event
+            )
+        )
+        self.assertEqual(bridge.shotgun.find("Reply", []), [])
+
+    @mock.patch("shotgun_api3.Shotgun")
+    def test_fptr_reply_rejected_when_reply_syncing_not_enabled(self, mocked_sg):
+        """A Reply create event must be rejected outright when enable_reply_syncing is absent on Note."""
+        syncer, bridge = self._get_syncer(mocked_sg, name="entities_generic")
+        self._setup_common_sg_data(bridge)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        jira_comment = bridge.jira.add_comment(jira_issue, "parent comment")
+        sg_task = self._setup_sg_task(bridge, jira_issue)
+        sg_note = self._setup_sg_note(bridge, sg_task, jira_issue, jira_comment)
+
+        sg_reply = copy.deepcopy(mock_shotgun.SG_REPLY)
+        sg_reply["entity"] = {"type": "Note", "id": sg_note["id"]}
+        self.add_to_sg_mock_db(bridge.shotgun, sg_reply)
+
+        self.assertFalse(
+            bridge.sync_in_jira(
+                "entities_generic",
+                "Reply",
+                sg_reply["id"],
+                mock_shotgun.SG_REPLY_CHANGE_EVENT,
+            )
+        )
