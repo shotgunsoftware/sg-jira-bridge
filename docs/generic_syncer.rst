@@ -56,7 +56,7 @@ Sync In Jira  Checkbox    Enable/Disable syncing for this Entity   ``sg_sync_in_
     ``Jira Key`` field is mandatory.
 
 .. note::
-    ``Reply`` entities don't require any fields creating on their own entity type, but they do require a **``Reply IDs``** ``Text`` field with the field code ``sg_jira_reply_ids`` to be created on the Note entity type.
+    ``Reply`` entities don't require any fields creating on their own entity type, but enabling Reply syncing (via ``enable_reply_syncing`` on the ``Note`` entity mapping entry) requires a **``Reply IDs``** ``Text`` field with the field code ``sg_jira_reply_ids`` to be created on the Note entity type.
 
 Flow Production Tracking Event Daemon Configuration
 ===================================================
@@ -368,13 +368,14 @@ Syncing Flow Production Tracking Replies as Jira Comment Replies
 ----------------------------------------------------------------
 
 Flow Production Tracking Notes can have Replies threaded under them, and these can be synced to Jira as threaded comment replies.
-Reply syncing requires that Note syncing is enabled, and that the ``sg_jira_reply_ids`` field :ref:`entity-sync-fptr-config` is created on the Note entity type.
-Just like Notes, the entity mapping is done automatically, so you only need to add the entry with the
-``sg_entity`` key.
-Here is an example of how you can enable Reply syncing:
+Reply syncing requires that the ``sg_jira_reply_ids`` field :ref:`entity-sync-fptr-config` is created on the Note entity type.
+
+Reply has no settings of its own: it is enabled with the ``enable_reply_syncing`` key on the ``Note`` entity mapping entry, and it
+fully inherits that Note entry's ``sync_direction`` and ``sync_deletion_direction`` - there is no way to configure Replies to sync
+in a different direction than their parent Note. Here is an example of how you can enable Reply syncing:
 
 .. code-block:: python
-    :emphasize-lines: 11,12,13,14
+    :emphasize-lines: 9
 
     SYNC = {
         "entities": {
@@ -384,12 +385,9 @@ Here is an example of how you can enable Reply syncing:
                     ...
                     {
                         "sg_entity": "Note",
-                        "sync_deletion_direction": "jira_to_sg",
-                    },
-                    {
-                        "sg_entity": "Reply",
                         "sync_deletion_direction": "both_way",
-                    }
+                        "enable_reply_syncing": True,
+                    },
                 ]
             },
         }

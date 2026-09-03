@@ -136,13 +136,15 @@ the mapping and log a warning.
 
 ### `settings.py`
 
-- Add a `Reply` entry to the `entity_mapping` list under the `entities` syncer,
-  analogous to the existing `Note` entry:
+- Add `enable_reply_syncing: True` to the `Note` entry in the `entity_mapping`
+  list under the `entities` syncer. Reply has no settings of its own - it fully
+  inherits `sync_direction`/`sync_deletion_direction` from that Note entry, e.g.:
   ```python
   {
-      "sg_entity": "Reply",
+      "sg_entity": "Note",
       "sync_deletion_direction": "both_way",
-  },
+      "enable_reply_syncing": True,
+  }
   ```
 
 ### `tests/`
@@ -204,5 +206,5 @@ check does not yet exist.
 | `sg_jira/constants.py` | Add `SHOTGUN_JIRA_REPLY_IDS_FIELD` |
 | `sg_jira/handlers/entities_generic_handler.py` | Core logic for Reply entity handling |
 | `sg_jira/jira_session.py` | Helper methods for Jira reply REST endpoints |
-| `settings.py` | Add `Reply` to entity_mapping |
+| `settings.py` | Add enable_reply_syncing to the Note entity_mapping entry |
 | `tests/` | New tests for reply sync |
