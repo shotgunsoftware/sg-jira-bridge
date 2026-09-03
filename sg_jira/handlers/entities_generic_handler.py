@@ -204,25 +204,14 @@ class EntitiesGenericHandler(SyncHandler):
         self._logger.debug(f"Checking Flow Production Tracking event...\n {event}")
 
         # check that the entity linked to the event is supported by the bridge
-        # Reply has no entity_mapping entry of its own - it's enabled via
-        # Note's enable_reply_syncing and fully inherits Note's sync_direction.
-        if entity_type == "Reply":
-            sync_settings = self.__get_reply_settings()
-            if not sync_settings:
-                self._logger.debug(
-                    "Rejecting Flow Production Tracking event: Reply syncing is not "
-                    "enabled (set enable_reply_syncing on the Note entity_mapping entry)."
-                )
-                return False
-        elif entity_type not in self._supported_shotgun_entities_for_shotgun_event():
+        if entity_type not in self._supported_shotgun_entities_for_shotgun_event():
             self._logger.debug(
                 f"Rejecting Flow Production Tracking event: unsupported FPTR entity type {entity_type}"
             )
             return False
-        else:
-            sync_settings = self.__get_sg_entity_settings(entity_type)
 
         meta = event["meta"]
+        sync_settings = self.__get_sg_entity_settings(entity_type)
         field = meta["attribute_name"]
         extra_sg_fields = [SHOTGUN_SYNC_IN_JIRA_FIELD]
 
@@ -580,12 +569,7 @@ class EntitiesGenericHandler(SyncHandler):
                     )
                     return False
 
-            # Reply has no entity_mapping entry of its own - it's enabled via
-            # Note's enable_reply_syncing and fully inherits Note's sync_direction.
-            if sg_entity_type == "Reply":
-                sync_settings = self.__get_reply_settings()
-            else:
-                sync_settings = self.__get_sg_entity_settings(sg_entity_type)
+            sync_settings = self.__get_sg_entity_settings(sg_entity_type)
             if not sync_settings:
                 # Unlike Issue-type events, comment/reply/worklog events have no
                 # sync_settings of their own to fall back on if the FPTR entity
@@ -888,9 +872,14 @@ class EntitiesGenericHandler(SyncHandler):
         """
         Return the list of Flow Production Tracking entities that this handler can process for a
         Flow Production Tracking to Jira event.
+        Reply has no entity_mapping entry of its own - it's included here when
+        enabled via Note's enable_reply_syncing.
         :returns: A list of strings.
         """
-        return [m["sg_entity"] for m in self.__entity_mapping]
+        entities = [m["sg_entity"] for m in self.__entity_mapping]
+        if self.__get_sg_entity_settings("Reply"):
+            entities.append("Reply")
+        return entities
 
     def _supported_shotgun_fields_for_shotgun_event(self, entity_type):
         """
@@ -998,26 +987,22 @@ class EntitiesGenericHandler(SyncHandler):
             "created_by",
         ] + self._supported_shotgun_fields_for_shotgun_event(entity_type)
 
-    def __get_reply_settings(self):
-        """
-        Returns the sync settings for Reply syncing, or `None` if it's not enabled.
-        Reply has no settings of its own - it fully inherits `sync_direction` and
-        `sync_deletion_direction` from its parent Note's entity_mapping entry.
-        :returns: The Note entity_mapping dictionary, or `None`.
-        :rtype: dict or None
-        """
-        note_settings = self.__get_sg_entity_settings("Note")
-        if note_settings and note_settings.get("enable_reply_syncing"):
-            return note_settings
-        return None
-
     def __get_sg_entity_settings(self, entity_type):
         """
         Returns the sync settings for the given FPTR entity type.
+        Reply has no entity_mapping entry of its own - it fully inherits
+        `sync_direction` and `sync_deletion_direction` from its parent Note's
+        entry, so a Reply lookup returns Note's settings once enabled via
+        `enable_reply_syncing`, or `None` if it isn't.
         :param entity_type: The type of FPTR entity we want to query the settings for.
         :type entity_type: str
-        :returns: A dictionary with the sync settings.
+        :returns: A dictionary with the sync settings, or `None`.
         """
+        if entity_type == "Reply":
+            note_settings = self.__get_sg_entity_settings("Note")
+            if note_settings and note_settings.get("enable_reply_syncing"):
+                return note_settings
+            return None
         for entity_mapping in self.__entity_mapping:
             if entity_mapping["sg_entity"] == entity_type:
                 return entity_mapping
@@ -1628,7 +1613,7 @@ class EntitiesGenericHandler(SyncHandler):
         :param sg_note: The FPTR Note entity, already synced to Jira.
         :type sg_note: dict
         """
-        reply_settings = self.__get_reply_settings()
+        reply_settings = self.__get_sg_entity_settings("Reply")
         if not reply_settings:
             return
         if reply_settings.get("sync_direction", "both_way") == "jira_to_sg":
@@ -2204,7 +2189,7 @@ class EntitiesGenericHandler(SyncHandler):
 
         existing_jira_comments = []
         sync_with_errors = False
-        reply_settings = self.__get_reply_settings()
+        reply_settings = self.__get_sg_entity_settings("Reply")
         sync_replies = bool(reply_settings) and (
             reply_settings.get("sync_direction", "both_way") != "sg_to_jira"
         )
