@@ -24,6 +24,7 @@ from sg_jira.constants import (
     SHOTGUN_JIRA_REPLY_IDS_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
 )
+from sg_jira.shotgun_session import ShotgunSession
 
 
 @mock.patch("shotgun_api3.Shotgun")
@@ -1265,8 +1266,36 @@ class TestReplySyncSettingsValidation(TestReplySync):
         enable_reply_syncing=True on the Note entry must fail bridge setup
         immediately if the sg_jira_reply_ids field hasn't been created on Note,
         rather than starting successfully and failing later on the first Reply.
+
+        We force the missing-field condition by patching
+        ShotgunSession.assert_field to raise specifically for the
+        (Note, sg_jira_reply_ids) call, rather than relying on the real mockgun
+        schema to genuinely lack that field. mockgun.SchemaFactory caches the
+        parsed schema dict at the class level and hands the *same* dict to
+        every mockgun.Shotgun() built against the same schema path;
+        TestReplySync._get_syncer's override mutates that shared dict in place
+        to add sg_jira_reply_ids to Note. Because unittest runs test methods in
+        alphabetical order, by the time this test runs in a full-file/class
+        run, earlier tests have already polluted the shared cache, so the
+        field would no longer genuinely be absent. Patching assert_field makes
+        this test's outcome independent of what other tests ran before it.
         """
-        with self.assertRaises(RuntimeError):
-            TestSyncBase._get_syncer(
-                self, mocked_sg, name="entities_generic_with_reply"
+        orig_assert_field = ShotgunSession.assert_field
+
+        def fake_assert_field(
+            self, entity_type, field_name, field_type, check_unique=False
+        ):
+            if entity_type == "Note" and field_name == SHOTGUN_JIRA_REPLY_IDS_FIELD:
+                raise RuntimeError(
+                    "Missing required custom Shotgun Note field %s"
+                    % SHOTGUN_JIRA_REPLY_IDS_FIELD
+                )
+            return orig_assert_field(
+                self, entity_type, field_name, field_type, check_unique=check_unique
             )
+
+        with mock.patch.object(ShotgunSession, "assert_field", fake_assert_field):
+            with self.assertRaises(RuntimeError):
+                TestSyncBase._get_syncer(
+                    self, mocked_sg, name="entities_generic_with_reply"
+                )
