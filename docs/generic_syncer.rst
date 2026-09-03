@@ -325,6 +325,9 @@ Key value            Description
 ``sg_to_jira``       If a Note is deleted in FPTR, the associated Comment will be deleted in Jira. But if a Comment is deleted in Jira, the associated Note won't be deleted in FPTR
 ==================== =================================================================================================================================================================
 
+Flow Production Tracking Note Replies are also supported (when using Jira Cloud) and can be enabled with the ``enable_reply_syncing`` key on the ``Note`` entity mapping entry.
+In order to use replies you must create an additional field on the Note entity type (not the Reply): ``sg_jira_reply_ids`` of type ``Text``. This field is used to store the Jira comment IDs of the synced replies.
+
 Here is an example of how you can enable Note/Comment syncing:
 
 .. code-block:: python
@@ -348,6 +351,7 @@ Here is an example of how you can enable Note/Comment syncing:
                     {
                         "sg_entity": "Note",
                         "sync_deletion_direction": "jira_to_sg",
+                        "enable_reply_syncing": True,
                     }
                 ]
             },
@@ -361,39 +365,6 @@ Here is an example of how you can enable Note/Comment syncing:
 .. note::
     When creating a Jira comment using the API, it is not possible to set the author. To keep a track of who created the Note in FPTR, the
     author's name is embedded in the Jira comment body.
-
-.. _syncing-fptr-replies:
-
-Syncing Flow Production Tracking Replies as Jira Comment Replies
-----------------------------------------------------------------
-
-Flow Production Tracking Notes can have Replies threaded under them, and these can be synced to Jira as threaded comment replies.
-Reply syncing requires that the ``sg_jira_reply_ids`` field :ref:`entity-sync-fptr-config` is created on the Note entity type.
-
-Reply has no settings of its own: it is enabled with the ``enable_reply_syncing`` key on the ``Note`` entity mapping entry, and it
-fully inherits that Note entry's ``sync_direction`` and ``sync_deletion_direction`` - there is no way to configure Replies to sync
-in a different direction than their parent Note. Here is an example of how you can enable Reply syncing:
-
-.. code-block:: python
-    :emphasize-lines: 10
-
-    SYNC = {
-        "entities": {
-            "syncer": "sg_jira.EntitiesGenericSyncer",
-            "settings": {
-                "entity_mapping": [
-                    ...
-                    {
-                        "sg_entity": "Note",
-                        "sync_deletion_direction": "both_way",
-                        "enable_reply_syncing": True,
-                    },
-                ]
-            },
-        }
-    }
-
-.. note:: This requires Jira Cloud, as Jira Server does not support threaded comments.
 
 Syncing FPTR TimeLogs as Jira Worklogs
 --------------------------------------
