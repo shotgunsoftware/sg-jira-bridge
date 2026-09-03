@@ -34,8 +34,10 @@ class JiraHook(object):
     {panel}
     """
 
-    # Associated regex used to get FPTR Note information from Jira comment body
-    JIRA_COMMENT_REGEX = r"{panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+    # Associated regex used to get FPTR Note information from Jira comment body.
+    # Leading/trailing groups capture any text a human added outside the panel
+    # (e.g. before it opens or after it closes) so it isn't silently dropped.
+    JIRA_COMMENT_REGEX = r"(.*?){panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}(.*)"
 
     # Template used to build Jira worklogs content from a TimeLog.
     WORKLOG_BODY_TEMPLATE = """
@@ -58,7 +60,9 @@ class JiraHook(object):
     # Associated regex used to get FPTR Reply information from a Jira comment
     # reply body. Side note that once a human edits a title-less panel via the Jira UI, it comes back as
     # `{panel:bgColor=...}` with no bolded title line (unlike JIRA_COMMENT_REGEX, which has one).
-    JIRA_REPLY_REGEX = r"{panel:bgColor=#[\w]{6}}\n_Reply created from FPTR by ([\w\s]+)_\n(.*)\n{panel}"
+    # Leading/trailing groups capture any text a human added outside the panel
+    # (e.g. before it opens or after it closes) so it isn't silently dropped.
+    JIRA_REPLY_REGEX = r"(.*?){panel:bgColor=#[\w]{6}}\n_Reply created from FPTR by ([\w\s]+)_\n(.*)\n{panel}(.*)"
 
     # Define the format of the Flow Production Tracking dates
     SG_DATE_FORMAT = "%Y-%m-%d"
@@ -434,7 +438,7 @@ class JiraHook(object):
         if not result:
             return None, self._rewrite_jira_mentions_to_sg(jira_comment_body), None
 
-        author = result.group(2).strip()
+        author = result.group(3).strip()
         # we need to make sure the author is associated with a current FPTR user
         sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
         if not sg_user:
@@ -445,7 +449,7 @@ class JiraHook(object):
                 "author from '%s'" % author,
             )
 
-        subject = result.group(1).strip()
+        subject = result.group(2).strip()
         # if we have any { or } in the title reject the value as it is likely
         # to be an ill-formed panel block.
         if re.search(r"[\{\}]", subject):
@@ -455,7 +459,17 @@ class JiraHook(object):
                 "Invalid Jira Comment panel formatting. Unable to parse FPTR "
                 "subject from '%s'" % subject,
             )
-        content = self._rewrite_jira_mentions_to_sg(result.group(3).strip())
+        # A human may have added text outside the panel (before it opens or
+        # after it closes) when editing the comment in Jira - preserve it
+        # alongside the panel's own content instead of silently dropping it.
+        content_parts = [
+            result.group(1).strip(),
+            result.group(4).strip(),
+            result.group(5).strip(),
+        ]
+        content = self._rewrite_jira_mentions_to_sg(
+            "\n\n".join(part for part in content_parts if part)
+        )
 
         return subject, content, sg_user
 
@@ -507,7 +521,7 @@ class JiraHook(object):
         if not result:
             return self._rewrite_jira_mentions_to_sg(jira_reply_comment), None
 
-        author = result.group(1).strip()
+        author = result.group(2).strip()
         # we need to make sure the author is associated with a current FPTR user
         sg_user = self._shotgun.find_one("HumanUser", [["name", "is", author]])
         if not sg_user:
@@ -518,7 +532,19 @@ class JiraHook(object):
                 "author from '%s'" % author,
             )
 
-        return self._rewrite_jira_mentions_to_sg(result.group(2).strip()), sg_user
+        # A human may have added text outside the panel (before it opens or
+        # after it closes) when editing the reply in Jira - preserve it
+        # alongside the panel's own content instead of silently dropping it.
+        content_parts = [
+            result.group(1).strip(),
+            result.group(3).strip(),
+            result.group(4).strip(),
+        ]
+        content = self._rewrite_jira_mentions_to_sg(
+            "\n\n".join(part for part in content_parts if part)
+        )
+
+        return content, sg_user
 
     def format_jira_date(self, sg_date):
         """Helper method to convert a FPTR date into a Jira date."""

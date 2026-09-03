@@ -3320,6 +3320,40 @@ class TestJiraHookReplyComment(TestEntitiesGenericHandler):
         with self.assertRaises(InvalidJiraValue):
             hook.extract_jira_reply_data(jira_body)
 
+    def test_extract_jira_reply_data_preserves_text_outside_panel(self, mocked_sg):
+        """Text a human adds outside the panel (before/after it) must not be dropped."""
+        hook = self._get_hook(mocked_sg)
+        jira_body = (
+            "one more thing before\n"
+            "{panel:bgColor=#deebff}\n"
+            "_Reply created from FPTR by Ford Prefect_\n"
+            "hello there\n"
+            "{panel}\n"
+            "and a note added after"
+        )
+
+        content, sg_user = hook.extract_jira_reply_data(jira_body)
+
+        self.assertIn("one more thing before", content)
+        self.assertIn("hello there", content)
+        self.assertIn("and a note added after", content)
+        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
+
+    def test_extract_jira_reply_data_no_text_outside_panel(self, mocked_sg):
+        """No regression: a plain panel-only reply still parses to just its own content."""
+        hook = self._get_hook(mocked_sg)
+        jira_body = (
+            "{panel:bgColor=#deebff}\n"
+            "_Reply created from FPTR by Ford Prefect_\n"
+            "hello there\n"
+            "{panel}"
+        )
+
+        content, sg_user = hook.extract_jira_reply_data(jira_body)
+
+        self.assertEqual(content, "hello there")
+        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
+
 
 @mock.patch("shotgun_api3.Shotgun")
 class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
@@ -3370,4 +3404,25 @@ class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
             content,
             "[mention:%s:FordPrefect] please review" % mock_shotgun.SG_USER["id"],
         )
+        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
+
+    def test_extract_jira_comment_data_preserves_text_outside_panel(self, mocked_sg):
+        """Text a human adds outside the panel (before/after it) must not be dropped."""
+        hook = self._get_hook(mocked_sg)
+        jira_body = (
+            "one more thing before\n"
+            "{panel:bgColor=#deebff}\n"
+            "*Subject line*\n\n"
+            "_Note created from FPTR by Ford Prefect_\n"
+            "hello there\n"
+            "{panel}\n"
+            "and a note added after"
+        )
+
+        subject, content, sg_user = hook.extract_jira_comment_data(jira_body)
+
+        self.assertEqual(subject, "Subject line")
+        self.assertIn("one more thing before", content)
+        self.assertIn("hello there", content)
+        self.assertIn("and a note added after", content)
         self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
