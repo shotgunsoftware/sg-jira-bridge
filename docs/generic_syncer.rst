@@ -56,7 +56,7 @@ Sync In Jira  Checkbox    Enable/Disable syncing for this Entity   ``sg_sync_in_
     ``Jira Key`` field is mandatory.
 
 .. note::
-    ``Reply`` entities don't require any fields creating on their own entity type, but enabling Reply syncing (via ``enable_reply_syncing`` on the ``Note`` entity mapping entry) requires a **``Reply IDs``** ``Text`` field with the field code ``sg_jira_reply_ids`` to be created on the Note entity type.
+    ``Reply`` entities don't require any fields creating on their own entity type, but enabling Reply syncing (via ``enable_reply_syncing`` on the ``Note`` entity mapping entry) requires a **``Jira Reply IDs``** ``Text`` field with the field code ``sg_jira_reply_ids`` to be created on the Note entity type.
 
 Flow Production Tracking Event Daemon Configuration
 ===================================================

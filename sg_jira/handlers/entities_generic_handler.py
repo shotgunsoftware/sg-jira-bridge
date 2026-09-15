@@ -1463,7 +1463,18 @@ class EntitiesGenericHandler(SyncHandler):
             comment_sync_with_error = self._sync_sg_linked_entities_to_jira(
                 sg_entity, "Note", jira_entity
             )
-            if worklog_sync_with_error or comment_sync_with_error:
+            # Pull in any Jira comments/replies which don't have a matching FPTR Note yet,
+            # e.g. ones added directly in Jira while Note syncing was disabled on this entity.
+            jira_comment_sync_with_error = not self._sync_jira_comments_to_sg(
+                jira_entity
+            )
+            # TODO: Worklogs should also perhaps be synced from Jira to FPTR at this point
+
+            if (
+                worklog_sync_with_error
+                or comment_sync_with_error
+                or jira_comment_sync_with_error
+            ):
                 sync_with_errors = True
 
         return not sync_with_errors

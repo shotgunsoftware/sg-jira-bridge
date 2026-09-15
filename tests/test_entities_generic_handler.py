@@ -704,6 +704,103 @@ class TestEntitiesGenericHandlerFPTRToJira(TestEntitiesGenericHandler):
         self.assertEqual(jira_issue.fields.summary, sg_task["content"])
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
 
+    def test_fptr_to_jira_sync_existing_entity_pulls_pre_existing_jira_comments(
+        self, mocked_sg
+    ):
+        """
+        When the "Sync to Jira" field is checked in FPTR, the full sync that follows should also
+        pull in Jira comments that don't have a matching FPTR Note yet (e.g. comments added to
+        the Jira Issue while Note syncing was disabled).
+
+        Test environment:
+        - the entity/field mapping has been done correctly in the settings
+        - the entity is flagged as ready to sync in FPTR
+        - the sync direction is configured to work both way
+        - the Issue already exists in Jira and is correctly associated to the FPTR entity
+        - a comment was added directly in Jira before the FPTR full sync happens, and has no
+          matching FPTR Note
+        Expected result:
+        - a new FPTR Note is created from the pre-existing Jira comment
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        jira_comment = bridge.jira.add_comment(
+            jira_issue, body="comment body", author=mock_jira.JIRA_USER
+        )
+
+        sg_notes = bridge.shotgun.find("Note", [["tasks", "is", mocked_sg_task]])
+        self.assertEqual(len(sg_notes), 0)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                sg_mocked_event,
+            )
+        )
+
+        sg_notes = bridge.shotgun.find(
+            "Note", [["tasks", "is", mocked_sg_task]], [SHOTGUN_JIRA_ID_FIELD]
+        )
+        self.assertEqual(len(sg_notes), 1)
+        self.assertEqual(
+            sg_notes[0][SHOTGUN_JIRA_ID_FIELD],
+            "%s/%s" % (jira_issue.key, jira_comment.id),
+        )
+
+    def test_fptr_to_jira_sync_existing_entity_note_content_survives_round_trip(
+        self, mocked_sg
+    ):
+        """
+        When the "Sync to Jira" field is checked in FPTR, an existing FPTR Note is pushed to
+        Jira as a new comment, then immediately pulled back as part of the same full sync
+        (since it now has no matching pre-existing FPTR Note to skip). The Jira comment isn't
+        touched by a human in between, so it's still in the literal, un-normalized panel
+        format the bridge writes on creation.
+
+        Expected result:
+        - the Note's original subject/content must survive that round trip unchanged, instead
+          of being overwritten with the raw, unparsed panel-wrapped text.
+        """
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        sg_mocked_event = copy.deepcopy(mock_shotgun.SG_TASK_CHANGE_EVENT)
+        sg_mocked_event["meta"]["attribute_name"] = SHOTGUN_SYNC_IN_JIRA_FIELD
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        mocked_sg_task = self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+
+        mocked_sg_note = copy.deepcopy(mock_shotgun.SG_NOTE)
+        mocked_sg_note["tasks"] = [mocked_sg_task]
+        self.add_to_sg_mock_db(bridge.shotgun, mocked_sg_note)
+
+        self.assertTrue(
+            bridge.sync_in_jira(
+                self.HANDLER_NAME,
+                "Task",
+                mock_shotgun.SG_TASK["id"],
+                sg_mocked_event,
+            )
+        )
+
+        sg_notes = bridge.shotgun.find(
+            "Note",
+            [["tasks", "is", mocked_sg_task]],
+            ["subject", "content", SHOTGUN_JIRA_ID_FIELD],
+        )
+        self.assertEqual(len(sg_notes), 1)
+        self.assertEqual(sg_notes[0]["subject"], mock_shotgun.SG_NOTE["subject"])
+        self.assertEqual(sg_notes[0]["content"], mock_shotgun.SG_NOTE["content"])
+
     def test_fptr_to_jira_sync_existing_entity_parent_not_synced(self, mocked_sg):
         """
         Check that is a parent entity not synced is linked to a sync entity, it won't be synced in Jira.
@@ -3354,6 +3451,22 @@ class TestJiraHookReplyComment(TestEntitiesGenericHandler):
         self.assertEqual(content, "hello there")
         self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
 
+    def test_extract_jira_reply_data_unedited_panel(self, mocked_sg):
+        """
+        A reply comment body that was never edited in the Jira UI (i.e. still the literal
+        output of compose_jira_reply_comment(), with no bgColor normalization applied by
+        Jira) must still parse back to its original content and author, instead of being
+        treated as unparsed plain text.
+        """
+        hook = self._get_hook(mocked_sg)
+        sg_reply = {"user": {"name": "Ford Prefect"}, "content": "hello there"}
+        jira_body = hook.compose_jira_reply_comment(sg_reply)
+
+        content, sg_user = hook.extract_jira_reply_data(jira_body)
+
+        self.assertEqual(content, "hello there")
+        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
+
 
 @mock.patch("shotgun_api3.Shotgun")
 class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
@@ -3425,4 +3538,25 @@ class TestJiraHookCommentExtract(TestEntitiesGenericHandler):
         self.assertIn("one more thing before", content)
         self.assertIn("hello there", content)
         self.assertIn("and a note added after", content)
+        self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])
+
+    def test_extract_jira_comment_data_unedited_panel(self, mocked_sg):
+        """
+        A comment body that was never edited in the Jira UI (i.e. still the literal output
+        of compose_jira_comment_body(), with the subject in the panel's title= attribute and
+        no bgColor normalization applied by Jira) must still parse back to its original
+        subject/content/author, instead of being treated as unparsed plain text.
+        """
+        hook = self._get_hook(mocked_sg)
+        sg_note = {
+            "subject": "Some subject",
+            "user": {"name": "Ford Prefect"},
+            "content": "hello there",
+        }
+        jira_body = hook.compose_jira_comment_body(sg_note)
+
+        subject, content, sg_user = hook.extract_jira_comment_data(jira_body)
+
+        self.assertEqual(subject, "Some subject")
+        self.assertEqual(content, "hello there")
         self.assertEqual(sg_user["id"], mock_shotgun.SG_USER["id"])

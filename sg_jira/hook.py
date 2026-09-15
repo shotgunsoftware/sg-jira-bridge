@@ -39,6 +39,14 @@ class JiraHook(object):
     # (e.g. before it opens or after it closes) so it isn't silently dropped.
     JIRA_COMMENT_REGEX = r"(.*?){panel:bgColor=#[\w]{6}}\n\*(.*)\*\n\n_Note created from FPTR by ([\w\s]+)_\n(.*)\n{panel}(.*)"
 
+    # Jira only re-serializes the panel macro into the JIRA_COMMENT_REGEX form (bgColor,
+    # bolded title line) once a human opens/saves the comment via the Jira UI rich text
+    # editor. A comment that was created by the bridge and never touched in Jira still has
+    # the literal COMMENT_BODY_TEMPLATE text, with the subject in the panel's title=
+    # attribute rather than a separate bold line - match that form too so a Note synced
+    # back to FPTR immediately after being created isn't treated as unparsed plain text.
+    JIRA_COMMENT_UNEDITED_REGEX = r"(.*?){panel:title=(.*?)}\n[ \t]*_Note created from FPTR by ([\w\s]+)_\n(.*)\n[ \t]*{panel}(.*)"
+
     # Template used to build Jira worklogs content from a TimeLog.
     WORKLOG_BODY_TEMPLATE = """
     _Worklog created from FPTR by %s_
@@ -63,6 +71,11 @@ class JiraHook(object):
     # Leading/trailing groups capture any text a human added outside the panel
     # (e.g. before it opens or after it closes) so it isn't silently dropped.
     JIRA_REPLY_REGEX = r"(.*?){panel:bgColor=#[\w]{6}}\n_Reply created from FPTR by ([\w\s]+)_\n(.*)\n{panel}(.*)"
+
+    # Matches a reply that was created by the bridge and never touched in Jira, still using
+    # the literal REPLY_BODY_TEMPLATE text (plain `{panel}`, no bgColor normalization applied
+    # by Jira yet). See JIRA_COMMENT_UNEDITED_REGEX for why this is needed.
+    JIRA_REPLY_UNEDITED_REGEX = r"(.*?){panel}\n[ \t]*_Reply created from FPTR by ([\w\s]+)_\n(.*)\n[ \t]*{panel}(.*)"
 
     # Define the format of the Flow Production Tracking dates
     SG_DATE_FORMAT = "%Y-%m-%d"
@@ -431,7 +444,9 @@ class JiraHook(object):
     def extract_jira_comment_data(self, jira_comment_body):
         """Helper method to extract the FPTR note data from a Jira comment body."""
 
-        result = re.search(self.JIRA_COMMENT_REGEX, jira_comment_body, flags=re.S)
+        result = re.search(
+            self.JIRA_COMMENT_REGEX, jira_comment_body, flags=re.S
+        ) or re.search(self.JIRA_COMMENT_UNEDITED_REGEX, jira_comment_body, flags=re.S)
 
         # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
         # so the data will be found from the comment itself rather than its body
@@ -514,7 +529,9 @@ class JiraHook(object):
     def extract_jira_reply_data(self, jira_reply_comment):
         """Helper method to extract the FPTR reply data from a Jira comment reply body."""
 
-        result = re.search(self.JIRA_REPLY_REGEX, jira_reply_comment, flags=re.S)
+        result = re.search(
+            self.JIRA_REPLY_REGEX, jira_reply_comment, flags=re.S
+        ) or re.search(self.JIRA_REPLY_UNEDITED_REGEX, jira_reply_comment, flags=re.S)
 
         # if the Jira comment body doesn't match our regex, that means the comment could have been created from Jira
         # so the data will be found from the comment itself rather than its body
