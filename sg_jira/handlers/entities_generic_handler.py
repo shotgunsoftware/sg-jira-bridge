@@ -1577,6 +1577,10 @@ class EntitiesGenericHandler(SyncHandler):
         ):
             return False
 
+        # TODO(SG-45304): this pushes to Jira unconditionally, ignoring linked_entity_type's
+        # own sync_direction setting (e.g. a Note configured "jira_to_sg" would still be
+        # pushed here). Direction is currently only enforced in accept_shotgun_event/
+        # accept_jira_event, which full-sync bulk methods like this one bypass entirely.
         linked_entity_field = "tasks" if linked_entity_type == "Note" else "entity"
 
         sg_linked_entities = self._shotgun.find(
@@ -2154,6 +2158,10 @@ class EntitiesGenericHandler(SyncHandler):
         existing_jira_worklogs = []
         sync_with_errors = False
 
+        # TODO(SG-45304): this pulls from Jira unconditionally, ignoring TimeLog's own
+        # sync_direction setting (e.g. a TimeLog configured "sg_to_jira" would still be
+        # pulled here). Direction is currently only enforced in accept_shotgun_event/
+        # accept_jira_event, which full-sync bulk methods like this one bypass entirely.
         # first, push all the worklogs to FPTR
         for jira_worklog in self._jira.worklogs(jira_issue.key):
             existing_jira_worklogs.append("%s/%s" % (jira_issue.key, jira_worklog.id))
@@ -2204,6 +2212,12 @@ class EntitiesGenericHandler(SyncHandler):
         sync_replies = bool(reply_settings) and (
             reply_settings.get("sync_direction", "both_way") != "sg_to_jira"
         )
+
+        # TODO(SG-45304): the top-level comment/Note pull just below has no equivalent
+        # direction check - it runs unconditionally regardless of Note's sync_direction
+        # setting (unlike sync_replies above, which correctly gates the Reply backfill on
+        # it, since Reply inherits Note's settings). A Note configured "sg_to_jira" would
+        # still have its Jira comment pulled into FPTR here.
 
         # Replies carry a parentId; group them by it upfront so each top-level
         # comment's existing replies can be backfilled right after it's synced.
