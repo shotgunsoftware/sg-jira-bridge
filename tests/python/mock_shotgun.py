@@ -157,3 +157,22 @@ SG_NOTE_CHANGE_EVENT = {
         "entity_id": SG_NOTE["id"],
     },
 }
+
+SG_REPLY = {
+    "type": "Reply",
+    "id": 1,
+    "content": "This is a reply",
+    "user": SG_USER,
+    "entity": SG_NOTE,
+}
+
+SG_REPLY_CHANGE_EVENT = {
+    "user": {"type": "HumanUser", "id": SG_USER["id"]},
+    "project": {"type": "Project", "id": SG_PROJECT["id"]},
+    "meta": {
+        "type": "attribute_change",
+        "attribute_name": "content",
+        "entity_type": "Reply",
+        "entity_id": SG_REPLY["id"],
+    },
+}

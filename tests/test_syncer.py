@@ -334,6 +334,21 @@ class TestJiraSyncer(TestSyncBase):
             RuntimeError, "Sorry, I'm bad!", self._get_syncer, mocked_sg, "bad_setup"
         )
 
+        # A syncer that fails setup() must not be cached on the bridge - a
+        # second get_syncer() call for the same settings name, on the same
+        # bridge instance, must fail the same clear way instead of silently
+        # returning an unvalidated syncer.
+        retry_bridge = sg_jira.Bridge.get_bridge(
+            os.path.join(self._fixtures_path, "settings.py")
+        )
+        self.assertRaisesRegex(
+            RuntimeError, "Sorry, I'm bad!", retry_bridge.get_syncer, "bad_setup"
+        )
+        self.assertRaisesRegex(
+            RuntimeError, "Sorry, I'm bad!", retry_bridge.get_syncer, "bad_setup"
+        )
+        self.assertNotIn("bad_setup", retry_bridge._syncers)
+
         bridge = sg_jira.Bridge.get_bridge(
             os.path.join(self._fixtures_path, "settings.py")
         )

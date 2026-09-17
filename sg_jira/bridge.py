@@ -333,10 +333,15 @@ class Bridge(object):
             settings = sync_settings.get("settings") or {}
             # Instantiate the syncer with our standard parameters and any
             # additional settings as parameters.
-            self._syncers[name] = syncer_class(
+            # Only cache the syncer once it's successfully set up - if setup()
+            # raises (e.g. a required custom field is missing), the syncer must
+            # not be cached, so the next attempt retries setup() and fails the
+            # same clear way, instead of silently skipping validation forever.
+            syncer = syncer_class(
                 name=name, bridge=self, hook_class=hook_class, **settings
             )
-            self._syncers[name].setup()
+            syncer.setup()
+            self._syncers[name] = syncer
         return self._syncers[name]
 
     def sync_in_jira(self, settings_name, entity_type, entity_id, event, **kwargs):

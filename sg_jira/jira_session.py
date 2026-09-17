@@ -6,10 +6,12 @@
 #
 
 import logging
+import json
 from json.decoder import JSONDecodeError
 
 import jira
 from jira import JIRAError
+from jira.resources import Comment
 from packaging import version
 
 # Since we are using pbr in the forked jira repo, the tags we are using are marked as dev versions and
@@ -514,6 +516,25 @@ class JiraSession(jira.client.JIRA):
         )
         logger.debug("Available transitions are %s" % jira_transitions)
         return False
+
+    def add_comment_reply(self, issue_key, parent_comment_id, body):
+        """
+        Add a threaded reply to an existing Jira comment and return the created Comment.
+
+        The `jira` library's `add_comment()` only supports top-level comments: it
+        hardcodes its request body to `{"body": ...}` with no way to pass extra
+        fields. Jira's comment threading involves creating a comment and providing a parentID.
+        However, this is only possible via the Jira REST API by providing the id in the fields.
+
+        :param str issue_key: Key of the Jira Issue the parent comment belongs to.
+        :param str parent_comment_id: Id of the Jira comment to reply to.
+        :param str body: Text of the reply comment to add.
+        :returns: The created :class:`jira.resources.Comment`.
+        """
+        data = {"body": body, "parentId": str(parent_comment_id)}
+        url = self._get_url("issue/%s/comment" % issue_key)
+        r = self._session.post(url, data=json.dumps(data))
+        return Comment(self._options, self._session, raw=r.json())
 
     def create_issue_from_data(self, jira_project, issue_type, data):
         """

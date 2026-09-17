@@ -159,3 +159,63 @@ class TestSGTrigger(TestBase):
         self.assertTrue(routing[PROJECT["id"]].startswith(url))
         mocked.assert_called()
         self.assertTrue(mocked.call_args[0][0].startswith(url))
+
+    def test_reply_change_event_derives_project_when_reply_is_retired(self):
+        """
+        A Shotgun_Reply_Change event for a retired (deleted) Reply must still
+        resolve its parent Project, so the deletion is forwarded to Jira
+        instead of being silently dropped.
+        """
+        self.set_sg_mock_schema(
+            os.path.join(
+                os.path.dirname(__file__),
+                "fixtures",
+                "schemas",
+                "sg-jira",
+            )
+        )
+        shotgun = mockgun.Shotgun("http://unit_test_mock_sg", "mock_user", "mock_key")
+
+        # mockgun's stock schema has no "Reply" entity type; borrow Note's.
+        if "Reply" not in shotgun._schema:
+            shotgun._schema["Reply"] = shotgun._schema["Note"]
+            shotgun._schema_entity["Reply"] = shotgun._schema_entity["Note"]
+            shotgun._db["Reply"] = {}
+        if "entity" not in shotgun._schema["Reply"]:
+            shotgun._schema["Reply"]["entity"] = shotgun._schema["Reply"]["user"]
+
+        self.add_to_sg_mock_db(shotgun, PROJECT)
+        note = {
+            "type": "Note",
+            "id": 1,
+            "subject": "A note",
+            "project": PROJECT,
+        }
+        self.add_to_sg_mock_db(shotgun, note)
+        reply = {
+            "type": "Reply",
+            "id": 1,
+            "content": "A reply",
+            "entity": note,
+        }
+        self.add_to_sg_mock_db(shotgun, reply)
+        shotgun.delete("Reply", reply["id"])
+
+        reply_change_event = {
+            "event_type": "Shotgun_Reply_Change",
+            "attribute_name": "retirement_date",
+            "project": None,
+            "meta": {
+                "type": "attribute_change",
+                "attribute_name": "retirement_date",
+                "entity_type": "Reply",
+                "entity_id": reply["id"],
+            },
+        }
+
+        routing = {}
+        sg_jira_event_trigger.process_event(
+            shotgun, logger, reply_change_event, routing
+        )
+
+        self.assertTrue(PROJECT["id"] in routing)
