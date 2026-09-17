@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Debugging &mdash; sg-jira-bridge v0.7.1 documentation</title>
+  <title>Debugging &mdash; sg-jira-bridge v0.7.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -108,7 +108,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.7.1.<br>
+    <b>sg-jira-bridge</b> v0.7.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -165,52 +165,52 @@ Under normal operation, it is recommended to use <code class="docutils literal n
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define logging</span>
 <span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;disable_existing_loggers&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s2">"version"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"disable_existing_loggers"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="c1"># Settings for the parent of all loggers</span>
-    <span class="s2">&quot;root&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"root"</span><span class="p">:</span> <span class="p">{</span>
         <span class="c1"># Set default logging level for all loggers and add the console and</span>
         <span class="c1"># file handlers</span>
-        <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;handlers&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="s2">&quot;console&quot;</span><span class="p">,</span> <span class="s2">&quot;file&quot;</span>
+        <span class="s2">"level"</span><span class="p">:</span> <span class="s2">"DEBUG"</span><span class="p">,</span>
+        <span class="s2">"handlers"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"console"</span><span class="p">,</span> <span class="s2">"file"</span>
         <span class="p">],</span>
     <span class="p">},</span>
-    <span class="s2">&quot;loggers&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="c1"># Set web server level to WARNING so we don&#39;t hear about every request</span>
+    <span class="s2">"loggers"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># Set web server level to WARNING so we don't hear about every request</span>
         <span class="c1"># If you want to see the requests in the logs, set this to INFO.</span>
-        <span class="s2">&quot;webapp&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="s2">&quot;WARNING&quot;</span>
+        <span class="s2">"webapp"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"level"</span><span class="p">:</span> <span class="s2">"WARNING"</span>
         <span class="p">}</span>
     <span class="p">},</span>
     <span class="c1"># Some formatters, mainly as examples</span>
-    <span class="s2">&quot;formatters&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> </span><span class="si">%(levelname)s</span><span class="s2"> [</span><span class="si">%(module)s</span><span class="s2"> </span><span class="si">%(process)d</span><span class="s2"> </span><span class="si">%(thread)d</span><span class="s2">] </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+    <span class="s2">"formatters"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"verbose"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"format"</span><span class="p">:</span> <span class="s2">"</span><span class="si">%(asctime)s</span><span class="s2"> </span><span class="si">%(levelname)s</span><span class="s2"> [</span><span class="si">%(module)s</span><span class="s2"> </span><span class="si">%(process)d</span><span class="s2"> </span><span class="si">%(thread)d</span><span class="s2">] </span><span class="si">%(message)s</span><span class="s2">"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;standard&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> </span><span class="si">%(levelname)s</span><span class="s2"> [</span><span class="si">%(module)s</span><span class="s2">] </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+        <span class="s2">"standard"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"format"</span><span class="p">:</span> <span class="s2">"</span><span class="si">%(asctime)s</span><span class="s2"> </span><span class="si">%(levelname)s</span><span class="s2"> [</span><span class="si">%(module)s</span><span class="s2">] </span><span class="si">%(message)s</span><span class="s2">"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;simple&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">:</span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+        <span class="s2">"simple"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"format"</span><span class="p">:</span> <span class="s2">"</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">:</span><span class="si">%(message)s</span><span class="s2">"</span>
         <span class="p">},</span>
     <span class="p">},</span>
     <span class="c1"># Define the logging handlers</span>
-    <span class="s2">&quot;handlers&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"handlers"</span><span class="p">:</span> <span class="p">{</span>
         <span class="c1"># Print out any message to stdout</span>
-        <span class="s2">&quot;console&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;logging.StreamHandler&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;formatter&quot;</span><span class="p">:</span> <span class="s2">&quot;standard&quot;</span>
+        <span class="s2">"console"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"level"</span><span class="p">:</span> <span class="s2">"INFO"</span><span class="p">,</span>
+            <span class="s2">"class"</span><span class="p">:</span> <span class="s2">"logging.StreamHandler"</span><span class="p">,</span>
+            <span class="s2">"formatter"</span><span class="p">:</span> <span class="s2">"standard"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;logging.handlers.RotatingFileHandler&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;formatter&quot;</span><span class="p">:</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
+        <span class="s2">"file"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"level"</span><span class="p">:</span> <span class="s2">"INFO"</span><span class="p">,</span>
+            <span class="s2">"class"</span><span class="p">:</span> <span class="s2">"logging.handlers.RotatingFileHandler"</span><span class="p">,</span>
+            <span class="s2">"formatter"</span><span class="p">:</span> <span class="s2">"standard"</span><span class="p">,</span>
             <span class="c1"># this location should be updated to where you store logs</span>
-            <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;/tmp/sg_jira.log&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;maxBytes&quot;</span><span class="p">:</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
-            <span class="s2">&quot;backupCount&quot;</span><span class="p">:</span> <span class="mi">5</span>
+            <span class="s2">"filename"</span><span class="p">:</span> <span class="s2">"/tmp/sg_jira.log"</span><span class="p">,</span>
+            <span class="s2">"maxBytes"</span><span class="p">:</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
+            <span class="s2">"backupCount"</span><span class="p">:</span> <span class="mi">5</span>
         <span class="p">},</span>
     <span class="p">},</span>
 <span class="p">}</span>
@@ -330,7 +330,7 @@ or move Flow Production Tracking Jira Bridge into some sort of DMZ setup.</p></l
 <p>If you change a status in Flow Production Tracking or Jira and there’s no matching status value
 defined by the mapping in your handlers for the change, then you will see
 something like this in the logs:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2019</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">11</span> <span class="mi">15</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">09</span><span class="p">,</span><span class="mi">517</span> <span class="n">WARNING</span> <span class="p">[</span><span class="n">entity_issue_handler</span><span class="p">]</span> <span class="n">Unable</span> <span class="n">to</span> <span class="n">find</span> <span class="n">a</span> <span class="n">matching</span> <span class="n">Jira</span> <span class="n">status</span> <span class="k">for</span> <span class="n">Flow</span> <span class="n">Production</span> <span class="n">Tracking</span> <span class="n">status</span> <span class="s1">&#39;na&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2019</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">11</span> <span class="mi">15</span><span class="p">:</span><span class="mi">59</span><span class="p">:</span><span class="mi">09</span><span class="p">,</span><span class="mi">517</span> <span class="n">WARNING</span> <span class="p">[</span><span class="n">entity_issue_handler</span><span class="p">]</span> <span class="n">Unable</span> <span class="n">to</span> <span class="n">find</span> <span class="n">a</span> <span class="n">matching</span> <span class="n">Jira</span> <span class="n">status</span> <span class="k">for</span> <span class="n">Flow</span> <span class="n">Production</span> <span class="n">Tracking</span> <span class="n">status</span> <span class="s1">'na'</span>
 </pre></div>
 </div>
 <p>In this case, there is no Jira status defined in the handlers to match with
@@ -338,12 +338,12 @@ the <code class="docutils literal notranslate"><span class="pre">na</span></code
 <code class="docutils literal notranslate"><span class="pre">_sg_jira_status_mapping()</span></code> property that returns the status mapping.
 You can see there’s no <code class="docutils literal notranslate"><span class="pre">na</span></code> status here:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">return</span> <span class="p">{</span>
-    <span class="s2">&quot;ip&quot;</span><span class="p">:</span> <span class="s2">&quot;In Progress&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;fin&quot;</span><span class="p">:</span> <span class="s2">&quot;Done&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;res&quot;</span><span class="p">:</span> <span class="s2">&quot;Done&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;rdy&quot;</span><span class="p">:</span> <span class="s2">&quot;Selected for Development&quot;</span><span class="p">,</span>  <span class="c1"># Used to be &quot;To Do&quot; ?</span>
-    <span class="s2">&quot;wtg&quot;</span><span class="p">:</span> <span class="s2">&quot;Selected for Development&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;hld&quot;</span><span class="p">:</span> <span class="s2">&quot;Backlog&quot;</span><span class="p">,</span>
+    <span class="s2">"ip"</span><span class="p">:</span> <span class="s2">"In Progress"</span><span class="p">,</span>
+    <span class="s2">"fin"</span><span class="p">:</span> <span class="s2">"Done"</span><span class="p">,</span>
+    <span class="s2">"res"</span><span class="p">:</span> <span class="s2">"Done"</span><span class="p">,</span>
+    <span class="s2">"rdy"</span><span class="p">:</span> <span class="s2">"Selected for Development"</span><span class="p">,</span>  <span class="c1"># Used to be "To Do" ?</span>
+    <span class="s2">"wtg"</span><span class="p">:</span> <span class="s2">"Selected for Development"</span><span class="p">,</span>
+    <span class="s2">"hld"</span><span class="p">:</span> <span class="s2">"Backlog"</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>

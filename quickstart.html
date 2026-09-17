@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; sg-jira-bridge v0.7.1 documentation</title>
+  <title>Quick Start &mdash; sg-jira-bridge v0.7.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -129,7 +129,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.7.1.<br>
+    <b>sg-jira-bridge</b> v0.7.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -448,14 +448,14 @@ the default settings are fine as-is.</p>
 environment or use <a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a>
 and define these in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Flow Production Tracking credentials</span>
-<span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgrid.autodesk.com&#39;</span>
-<span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">&#39;sg-jira-bridge&#39;</span>
-<span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>  <span class="c1"># replace with your api key</span>
+<span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">'https://mysite.shotgrid.autodesk.com'</span>
+<span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">'sg-jira-bridge'</span>
+<span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">'01234567@abcdef0123456789'</span>  <span class="c1"># replace with your api key</span>
 
 <span class="c1"># Jira credentials</span>
-<span class="n">SGJIRA_JIRA_SITE</span><span class="o">=</span><span class="s1">&#39;https://mystudio.atlassian.net&#39;</span>
-<span class="n">SGJIRA_JIRA_USER</span><span class="o">=</span><span class="s1">&#39;richard.hendricks@piedpiper.com&#39;</span>
-<span class="n">SGJIRA_JIRA_USER_SECRET</span><span class="o">=</span><span class="s1">&#39;youkn0wwh@tapa$5word1smAKeitag0odone3&#39;</span>  <span class="c1"># replace with your user&#39;s password or API key</span>
+<span class="n">SGJIRA_JIRA_SITE</span><span class="o">=</span><span class="s1">'https://mystudio.atlassian.net'</span>
+<span class="n">SGJIRA_JIRA_USER</span><span class="o">=</span><span class="s1">'richard.hendricks@piedpiper.com'</span>
+<span class="n">SGJIRA_JIRA_USER_SECRET</span><span class="o">=</span><span class="s1">'youkn0wwh@tapa$5word1smAKeitag0odone3'</span>  <span class="c1"># replace with your user's password or API key</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -498,7 +498,7 @@ $<span class="w"> </span><span class="nb">source</span><span class="w"> </span>v
 $<span class="w"> </span>venv/Scripts/activate
 
 <span class="c1"># Install required packages for the trigger.</span>
-<span class="c1"># Note: This requirements.txt is in the &quot;sg-jira-bridge/triggers&quot;</span>
+<span class="c1"># Note: This requirements.txt is in the "sg-jira-bridge/triggers"</span>
 <span class="c1">#       subdirectory, NOT in the root of the project.</span>
 pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>/path/to/sg-jira-bridge/triggers/requirements.txt
 </pre></div>
@@ -524,8 +524,8 @@ shotgunEvents conf file:</p>
 <p>The trigger uses the following environment variables to retrieve Flow Production Tracking
 credentials:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sg_jira_event_trigger.py credentials</span>
-<span class="n">SGDAEMON_SGJIRA_NAME</span><span class="o">=</span><span class="s1">&#39;sg_jira_event_trigger&#39;</span>
-<span class="n">SGDAEMON_SGJIRA_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>  <span class="c1"># replace with your api key</span>
+<span class="n">SGDAEMON_SGJIRA_NAME</span><span class="o">=</span><span class="s1">'sg_jira_event_trigger'</span>
+<span class="n">SGDAEMON_SGJIRA_KEY</span><span class="o">=</span><span class="s1">'01234567@abcdef0123456789'</span>  <span class="c1"># replace with your api key</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -548,9 +548,9 @@ differ from the default ones. Make sure the values in
 <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge/blob/v0.4.0b2/sg_jira/constants.py#L90/">TASK_ISSUE_STATUS_MAPPING</a>
 match the names used in your workflow:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;wtg&quot;</span><span class="p">:</span> <span class="s2">&quot;Backlog&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;rdy&quot;</span><span class="p">:</span> <span class="s2">&quot;Selected For Development&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ip&quot;</span><span class="p">:</span> <span class="s2">&quot;In Progress&quot;</span><span class="p">,</span>
+    <span class="s2">"wtg"</span><span class="p">:</span> <span class="s2">"Backlog"</span><span class="p">,</span>
+    <span class="s2">"rdy"</span><span class="p">:</span> <span class="s2">"Selected For Development"</span><span class="p">,</span>
+    <span class="s2">"ip"</span><span class="p">:</span> <span class="s2">"In Progress"</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.bridge &mdash; sg-jira-bridge v0.7.1 documentation</title>
+  <title>sg_jira.bridge &mdash; sg-jira-bridge v0.7.2 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -87,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.7.1.<br>
+    <b>sg-jira-bridge</b> v0.7.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -160,16 +160,16 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="c1"># Ensure basic logging is always enabled</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">:</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">"</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">:</span><span class="si">%(message)s</span><span class="s2">"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Bridge</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A bridge between Flow Production Tracking and Jira.</span>
 
 <span class="sd">    The bridge handles connections to the Flow Production Tracking and Jira servers and dispatches</span>
 <span class="sd">    sync events.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="Bridge.__init__"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -182,12 +182,12 @@
         <span class="n">sync_settings</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">sg_http_proxy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Instatiate a new bridge between the given PTR site and Jira site.</span>
 
 <span class="sd">        .. note::</span>
 <span class="sd">            Jira Cloud requires the use of an API token and will not work with</span>
-<span class="sd">            a user&#39;s password. See https://confluence.atlassian.com/x/Vo71Nw</span>
+<span class="sd">            a user's password. See https://confluence.atlassian.com/x/Vo71Nw</span>
 <span class="sd">            for information on how to generate a token.</span>
 <span class="sd">            Jira Server will use PAT so please provide empty string as `SGJIRA_JIRA_USER`.</span>
 
@@ -201,7 +201,7 @@
 <span class="sd">        :param sync_settings: A dictionary where keys are settings names.</span>
 <span class="sd">        :param str sg_http_proxy: Optional, a http proxy to use for the Flow Production Tracking</span>
 <span class="sd">                                  connection, or None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="c1"># The bridge webserver is multithreaded, which means we need to</span>
@@ -216,10 +216,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_sg_http_proxy</span> <span class="o">=</span> <span class="n">sg_http_proxy</span>
 
         <span class="c1"># Even though we will end up needing a connection per thread, we</span>
-        <span class="c1"># still need to do a one-time check to make sure the site we&#39;re</span>
+        <span class="c1"># still need to do a one-time check to make sure the site we're</span>
         <span class="c1"># connecting to is setup properly for use with the bridge. That</span>
         <span class="c1"># logic is run via the setup() method on the session object, so</span>
-        <span class="c1"># we will connect here and call that a single time since there&#39;s</span>
+        <span class="c1"># we will connect here and call that a single time since there's</span>
         <span class="c1"># no reason to do that validation pass from each thread when we</span>
         <span class="c1"># create new connections.</span>
         <span class="n">shotgun</span> <span class="o">=</span> <span class="n">ShotgunSession</span><span class="p">(</span>
@@ -228,14 +228,14 @@
             <span class="n">api_key</span><span class="o">=</span><span class="n">sg_script_key</span><span class="p">,</span>
             <span class="n">http_proxy</span><span class="o">=</span><span class="n">sg_http_proxy</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">shotgun</span><span class="o">.</span><span class="n">add_user_agent</span><span class="p">(</span><span class="s2">&quot;sg_jira_sync&quot;</span><span class="p">)</span>
+        <span class="n">shotgun</span><span class="o">.</span><span class="n">add_user_agent</span><span class="p">(</span><span class="s2">"sg_jira_sync"</span><span class="p">)</span>
         <span class="n">shotgun</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user</span> <span class="o">=</span> <span class="n">jira_user</span>
         <span class="n">options</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;token_auth&quot;</span><span class="p">:</span> <span class="n">jira_secret</span><span class="p">}</span>
-            <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;basic_auth&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">jira_user</span><span class="p">,</span> <span class="n">jira_secret</span><span class="p">)}</span>
+            <span class="p">{</span><span class="s2">"token_auth"</span><span class="p">:</span> <span class="n">jira_secret</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"None"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">{</span><span class="s2">"basic_auth"</span><span class="p">:</span> <span class="p">(</span><span class="n">jira_user</span><span class="p">,</span> <span class="n">jira_secret</span><span class="p">)}</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span> <span class="o">=</span> <span class="n">JiraSession</span><span class="p">(</span><span class="n">jira_site</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sync_settings</span> <span class="o">=</span> <span class="n">sync_settings</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -244,12 +244,12 @@
 
 <div class="viewcode-block" id="Bridge.get_bridge"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.get_bridge">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_bridge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Read the given settings and instantiate a new :class:`Bridge` with them.</span>
 
 <span class="sd">        :param str settings_file: Path to a settings Python file.</span>
 <span class="sd">        :raises ValueError: on missing required settings.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># make sure we have an absolute path</span>
         <span class="n">settings_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings_file</span><span class="p">)</span>
 
@@ -264,17 +264,17 @@
         <span class="k">if</span> <span class="n">logger_settings</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">dictConfig</span><span class="p">(</span><span class="n">logger_settings</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Successfully read settings from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">settings_file_path</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Successfully read settings from </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">settings_file_path</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-                <span class="n">shotgun_settings</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-                <span class="n">shotgun_settings</span><span class="p">[</span><span class="s2">&quot;script_name&quot;</span><span class="p">],</span>
-                <span class="n">shotgun_settings</span><span class="p">[</span><span class="s2">&quot;script_key&quot;</span><span class="p">],</span>
-                <span class="n">jira_settings</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-                <span class="n">jira_settings</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">],</span>
-                <span class="n">jira_settings</span><span class="p">[</span><span class="s2">&quot;secret&quot;</span><span class="p">],</span>
+                <span class="n">shotgun_settings</span><span class="p">[</span><span class="s2">"site"</span><span class="p">],</span>
+                <span class="n">shotgun_settings</span><span class="p">[</span><span class="s2">"script_name"</span><span class="p">],</span>
+                <span class="n">shotgun_settings</span><span class="p">[</span><span class="s2">"script_key"</span><span class="p">],</span>
+                <span class="n">jira_settings</span><span class="p">[</span><span class="s2">"site"</span><span class="p">],</span>
+                <span class="n">jira_settings</span><span class="p">[</span><span class="s2">"user"</span><span class="p">],</span>
+                <span class="n">jira_settings</span><span class="p">[</span><span class="s2">"secret"</span><span class="p">],</span>
                 <span class="n">sync_settings</span><span class="p">,</span>
-                <span class="n">sg_http_proxy</span><span class="o">=</span><span class="n">shotgun_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;http_proxy&quot;</span><span class="p">),</span>
+                <span class="n">sg_http_proxy</span><span class="o">=</span><span class="n">shotgun_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"http_proxy"</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
@@ -282,7 +282,7 @@
 
 <div class="viewcode-block" id="Bridge.read_settings"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.read_settings">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">read_settings</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Read the given settings file.</span>
 
 <span class="sd">        :param str settings_file: Path to a settings Python file.</span>
@@ -290,13 +290,13 @@
 <span class="sd">            (logger settings, shotgun settings, jira settings, sync settings)</span>
 <span class="sd">        :raises ValueError: if the file does not exist or if its name does not end</span>
 <span class="sd">                 with ``.py``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">settings_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">settings_file</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Settings file </span><span class="si">%s</span><span class="s2"> does not exist&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">full_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Settings file </span><span class="si">%s</span><span class="s2"> does not exist"</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">full_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".py"</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Settings file </span><span class="si">%s</span><span class="s2"> is not a Python file with a .py extension&quot;</span> <span class="o">%</span> <span class="n">full_path</span>
+                <span class="s2">"Settings file </span><span class="si">%s</span><span class="s2"> is not a Python file with a .py extension"</span> <span class="o">%</span> <span class="n">full_path</span>
             <span class="p">)</span>
 
         <span class="n">_</span><span class="p">,</span> <span class="n">module_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
@@ -307,7 +307,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not import module </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not import module </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Retrieve all properties we handle and provide empty values if missing</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
@@ -323,43 +323,43 @@
         <span class="c1"># Retrieve Shotgun connection settings</span>
         <span class="n">shotgun_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">SHOTGUN_SETTINGS_KEY</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_settings</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Shotgun settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Missing Shotgun settings in </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
         <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">name</span>
-            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;script_name&quot;</span><span class="p">,</span> <span class="s2">&quot;script_key&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"script_name"</span><span class="p">,</span> <span class="s2">"script_key"</span><span class="p">]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Missing Shotgun setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
+                <span class="s2">"Missing Shotgun setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
             <span class="p">)</span>
 
         <span class="c1"># Retrieve Jira connection settings</span>
         <span class="n">jira_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">JIRA_SETTINGS_KEY</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Jira settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Missing Jira settings in </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
 
-        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;secret&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"secret"</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
         <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Missing Jira setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
+                <span class="s2">"Missing Jira setting values </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
             <span class="p">)</span>
 
         <span class="n">sync_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">SYNC_SETTINGS_KEY</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_settings</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing sync settings in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Missing sync settings in </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">full_path</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">logger_settings</span><span class="p">,</span> <span class="n">shotgun_settings</span><span class="p">,</span> <span class="n">jira_settings</span><span class="p">,</span> <span class="n">sync_settings</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">shotgun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a connected :class:`~shotgun_session.ShotgunSession` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># This ensures we end up with a connection per thread. See the comment</span>
         <span class="c1"># at the top of this file where the global cache is initialized for a</span>
         <span class="c1"># full explanation.</span>
-        <span class="n">sg</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SG_CACHED_CONNECTIONS</span><span class="p">,</span> <span class="s2">&quot;sg&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">sg</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SG_CACHED_CONNECTIONS</span><span class="p">,</span> <span class="s2">"sg"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">sg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sg</span> <span class="o">=</span> <span class="n">ShotgunSession</span><span class="p">(</span>
@@ -368,23 +368,23 @@
                 <span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sg_script_key</span><span class="p">,</span>
                 <span class="n">http_proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sg_http_proxy</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">sg</span><span class="o">.</span><span class="n">add_user_agent</span><span class="p">(</span><span class="s2">&quot;sg_jira_sync&quot;</span><span class="p">)</span>
+            <span class="n">sg</span><span class="o">.</span><span class="n">add_user_agent</span><span class="p">(</span><span class="s2">"sg_jira_sync"</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_SG_CACHED_CONNECTIONS</span><span class="o">.</span><span class="n">sg</span> <span class="o">=</span> <span class="n">sg</span>
 
         <span class="k">return</span> <span class="n">sg</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">current_shotgun_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the Flow Production Tracking user used for the connection.</span>
 
 <span class="sd">        :returns: A Flow Production Tracking record dictionary with an `id` key and a `type` key.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">current_user</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">current_jira_username</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the username of the current Jira user.</span>
 
 <span class="sd">        The jira API escapes special characters using %xx syntax when storing</span>
@@ -394,84 +394,89 @@
 <span class="sd">        ``richard+hendricks``)</span>
 
 <span class="sd">        :returns: A string with the username.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote_plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jira</span><span class="o">.</span><span class="n">current_user</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jira</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a connected :class:`~jira_session.JiraSession` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sync_settings_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the list of sync settings this bridge handles.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_settings</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 <div class="viewcode-block" id="Bridge.reset"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.reset">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Reset the bridge.</span>
 
 <span class="sd">        Clears all caches.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Resetting bridge&quot;</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Resetting bridge"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">clear_cached_field_schema</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Bridge.get_syncer"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.get_syncer">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_syncer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns a :class:`Syncer` instance for the given settings name.</span>
 
 <span class="sd">        :param str: A settings name.</span>
 <span class="sd">        :raises ValueError: for invalid settings.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncers</span><span class="p">:</span>
             <span class="c1"># Create the syncer from the settings</span>
             <span class="n">sync_settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">sync_settings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing sync settings for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Missing sync settings for </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sync_settings</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Invalid sync settings for </span><span class="si">%s</span><span class="s2">, it must be dictionary.&quot;</span> <span class="o">%</span> <span class="n">name</span>
+                    <span class="s2">"Invalid sync settings for </span><span class="si">%s</span><span class="s2">, it must be dictionary."</span> <span class="o">%</span> <span class="n">name</span>
                 <span class="p">)</span>
             <span class="c1"># Retrieve the hook</span>
-            <span class="n">hook_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_hook_class</span><span class="p">(</span><span class="n">sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hook&quot;</span><span class="p">))</span>
+            <span class="n">hook_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_hook_class</span><span class="p">(</span><span class="n">sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hook"</span><span class="p">))</span>
             <span class="c1"># Retrieve the syncer</span>
-            <span class="n">syncer_name</span> <span class="o">=</span> <span class="n">sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;syncer&quot;</span><span class="p">)</span>
+            <span class="n">syncer_name</span> <span class="o">=</span> <span class="n">sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"syncer"</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">syncer_name</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing `syncer` setting for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">syncer_name</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Missing `syncer` setting for </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">"."</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">syncer_name</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Invalid `syncer` setting </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2">: &quot;</span>
-                    <span class="s2">&quot;it must be a &lt;module path&gt;.&lt;class name&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">syncer_name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                    <span class="s2">"Invalid `syncer` setting </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2">: "</span>
+                    <span class="s2">"it must be a &lt;module path&gt;.&lt;class name&gt;"</span> <span class="o">%</span> <span class="p">(</span><span class="n">syncer_name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
                 <span class="p">)</span>
-            <span class="n">module_name</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">syncer_name</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">module_name</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">syncer_name</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">syncer_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Unable to retrieve a </span><span class="si">%s</span><span class="s2"> class from module </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="s2">"Unable to retrieve a </span><span class="si">%s</span><span class="s2"> class from module </span><span class="si">%s</span><span class="s2">"</span>
                     <span class="o">%</span> <span class="p">(</span>
                         <span class="n">class_name</span><span class="p">,</span>
                         <span class="n">module</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="c1"># Retrieve the settings for the syncer, if any</span>
-            <span class="n">settings</span> <span class="o">=</span> <span class="n">sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;settings&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">sync_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="c1"># Instantiate the syncer with our standard parameters and any</span>
             <span class="c1"># additional settings as parameters.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_syncers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">syncer_class</span><span class="p">(</span>
+            <span class="c1"># Only cache the syncer once it's successfully set up - if setup()</span>
+            <span class="c1"># raises (e.g. a required custom field is missing), the syncer must</span>
+            <span class="c1"># not be cached, so the next attempt retries setup() and fails the</span>
+            <span class="c1"># same clear way, instead of silently skipping validation forever.</span>
+            <span class="n">syncer</span> <span class="o">=</span> <span class="n">syncer_class</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">bridge</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">hook_class</span><span class="o">=</span><span class="n">hook_class</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_syncers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+            <span class="n">syncer</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_syncers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">syncer</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syncers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Bridge.sync_in_jira"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.sync_in_jira">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">sync_in_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Sync the given Flow Production Tracking Entity to Jira.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
@@ -480,16 +485,16 @@
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
 <span class="sd">        :returns: True if the Entity was actually synced in Jira, False if</span>
 <span class="sd">                  syncing was skipped for any reason.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">synced</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">syncer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_syncer</span><span class="p">(</span><span class="n">settings_name</span><span class="p">)</span>
             <span class="c1"># See comment in Syncer class: we assume complicated logic can be</span>
-            <span class="c1"># handled in a single handler, so we don&#39;t have to support multiple</span>
+            <span class="c1"># handled in a single handler, so we don't have to support multiple</span>
             <span class="c1"># handlers.</span>
             <span class="n">handler</span> <span class="o">=</span> <span class="n">syncer</span><span class="o">.</span><span class="n">accept_shotgun_event</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">handler</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">set_session_uuid</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;session_uuid&quot;</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shotgun</span><span class="o">.</span><span class="n">set_session_uuid</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_uuid"</span><span class="p">))</span>
                 <span class="n">synced</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">process_shotgun_event</span><span class="p">(</span><span class="n">entity_type</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Catch the exception to log it and let it bubble up</span>
@@ -500,7 +505,7 @@
 <div class="viewcode-block" id="Bridge.sync_in_shotgun"><a class="viewcode-back" href="../../developer.html#sg_jira.Bridge.sync_in_shotgun">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">sync_in_shotgun</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">settings_name</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Sync the given Jira Resource to Flow Production Tracking.</span>
 
 <span class="sd">        :param str settings_name: The name of the settings to use for this sync.</span>
@@ -509,12 +514,12 @@
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
 <span class="sd">        :returns: True if the resource was actually synced in Flow Production Tracking, False if</span>
 <span class="sd">                  syncing was skipped for any reason.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">synced</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">syncer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_syncer</span><span class="p">(</span><span class="n">settings_name</span><span class="p">)</span>
             <span class="c1"># See comment in Syncer class: we assume copmlicated logic can be</span>
-            <span class="c1"># handled in a single handler, so we don&#39;t have to support multiple</span>
+            <span class="c1"># handled in a single handler, so we don't have to support multiple</span>
             <span class="c1"># handlers.</span>
             <span class="n">handler</span> <span class="o">=</span> <span class="n">syncer</span><span class="o">.</span><span class="n">accept_jira_event</span><span class="p">(</span><span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">handler</span><span class="p">:</span>
@@ -527,11 +532,11 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">__get_hook_class</span><span class="p">(</span><span class="n">hook_path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Given the path to a hook file, get the associated class object.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Given the path to a hook file, get the associated class object."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">hook_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">hook_path</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">hook_path</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">JiraHook</span>
         <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">hook_path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">module_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">module_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">spec_from_file_location</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">hook_path</span><span class="p">)</span>
         <span class="n">module_obj</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module_obj</span>

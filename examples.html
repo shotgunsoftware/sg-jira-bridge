@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples &mdash; sg-jira-bridge v0.7.1 documentation</title>
+  <title>Examples &mdash; sg-jira-bridge v0.7.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -108,7 +108,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.7.1.<br>
+    <b>sg-jira-bridge</b> v0.7.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -162,12 +162,12 @@ the <a class="reference external" href="https://github.com/shotgunsoftware/sg-ji
     <span class="c1"># Add the test syncer to the list of syncers, it will be available</span>
     <span class="c1"># with the http://&lt;your server&gt;/jira2sg/test and http://&lt;your server&gt;/sg2jira/test</span>
     <span class="c1"># urls.</span>
-    <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"test"</span><span class="p">:</span> <span class="p">{</span>
         <span class="c1"># Example of a custom syncer with an additional parameter to define</span>
         <span class="c1"># a log level.</span>
-        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;example_sync.ExampleSync&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+        <span class="s2">"syncer"</span><span class="p">:</span> <span class="s2">"example_sync.ExampleSync"</span><span class="p">,</span>
+        <span class="s2">"settings"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"log_level"</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
         <span class="p">},</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -220,16 +220,16 @@ this Timelog field will be updated as well.</p>
 <h4>TimeLog Deletion<a class="headerlink" href="#timelog-deletion" title="Permalink to this heading"></a></h4>
 <p>The Timelog syncer comes with two settings defined in the <a class="reference external" href="https://github.com/shotgunsoftware/sg-jira-bridge/blob/master/settings.py">settings.py</a>
 file to manage the deletion of Timelog/Worklog in Flow Production Tracking and Jira.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;timelog&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">"timelog"</span><span class="p">:</span> <span class="p">{</span>
     <span class="c1"># The syncer class to use</span>
-    <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;timelog_worklog.TimelogWorklogSyncer&quot;</span><span class="p">,</span>
+    <span class="s2">"syncer"</span><span class="p">:</span> <span class="s2">"timelog_worklog.TimelogWorklogSyncer"</span><span class="p">,</span>
     <span class="c1"># And its specific settings which are passed to its __init__ method</span>
-    <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;issue_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span>
+    <span class="s2">"settings"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"issue_type"</span><span class="p">:</span> <span class="s2">"Task"</span><span class="p">,</span>
         <span class="c1"># If True, when a worklog is deleted in Jira it will also be deleted in Flow Production Tracking</span>
-        <span class="s2">&quot;sync_sg_timelog_deletion&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"sync_sg_timelog_deletion"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="c1"># If True, when a timelog is deleted in Flow Production Tracking, it will also be deleted in Jira</span>
-        <span class="s2">&quot;sync_jira_worklog_deletion&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"sync_jira_worklog_deletion"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">}</span>
 </pre></div>

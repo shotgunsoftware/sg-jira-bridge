@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings &mdash; sg-jira-bridge v0.7.1 documentation</title>
+  <title>Settings &mdash; sg-jira-bridge v0.7.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -98,7 +98,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.7.1.<br>
+    <b>sg-jira-bridge</b> v0.7.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -173,14 +173,14 @@ API tokens.</p>
 <a class="reference external" href="https://pypi.org/project/python-dotenv">python-dotenv</a> and defining these
 in a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Flow Production Tracking credentials</span>
-<span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">&#39;https://mysite.shotgrid.autodesk.com&#39;</span>
-<span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">&#39;sg-jira-bridge&#39;</span>
-<span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">&#39;01234567@abcdef0123456789&#39;</span>
+<span class="n">SGJIRA_SG_SITE</span><span class="o">=</span><span class="s1">'https://mysite.shotgrid.autodesk.com'</span>
+<span class="n">SGJIRA_SG_SCRIPT_NAME</span><span class="o">=</span><span class="s1">'sg-jira-bridge'</span>
+<span class="n">SGJIRA_SG_SCRIPT_KEY</span><span class="o">=</span><span class="s1">'01234567@abcdef0123456789'</span>
 
 <span class="c1"># Jira credentials</span>
-<span class="n">SGJIRA_JIRA_SITE</span><span class="o">=</span><span class="s1">&#39;https://mystudio.atlassian.net&#39;</span>
-<span class="n">SGJIRA_JIRA_USER</span><span class="o">=</span><span class="s1">&#39;richard.hendricks@piedpiper.com&#39;</span>
-<span class="n">SGJIRA_JIRA_USER_SECRET</span><span class="o">=</span><span class="s1">&#39;youkn0wwh@tapa$5word1smAKeitag0odone3&#39;</span>
+<span class="n">SGJIRA_JIRA_SITE</span><span class="o">=</span><span class="s1">'https://mystudio.atlassian.net'</span>
+<span class="n">SGJIRA_JIRA_USER</span><span class="o">=</span><span class="s1">'richard.hendricks@piedpiper.com'</span>
+<span class="n">SGJIRA_JIRA_USER_SECRET</span><span class="o">=</span><span class="s1">'youkn0wwh@tapa$5word1smAKeitag0odone3'</span>
 </pre></div>
 </div>
 </section>
@@ -193,12 +193,12 @@ stored in a <code class="docutils literal notranslate"><span class="pre">LOGGING
 <h2>Sync Settings<a class="headerlink" href="#sync-settings" title="Permalink to this heading"></a></h2>
 <p>The sync settings are stored in a <code class="docutils literal notranslate"><span class="pre">SYNC</span></code> <em>dict</em> in the format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SYNC</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;sync_settings_name&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"sync_settings_name"</span><span class="p">:</span> <span class="p">{</span>
         <span class="c1"># The Syncer class to use with the module name included</span>
-        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;sg_jira.MyCustomSyncer&quot;</span><span class="p">,</span>
+        <span class="s2">"syncer"</span><span class="p">:</span> <span class="s2">"sg_jira.MyCustomSyncer"</span><span class="p">,</span>
         <span class="c1"># And the specific settings which are passed to its __init__() method</span>
-        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;my_setting_name&quot;</span><span class="p">:</span> <span class="s2">&quot;My Setting Value&quot;</span>
+        <span class="s2">"settings"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"my_setting_name"</span><span class="p">:</span> <span class="s2">"My Setting Value"</span>
         <span class="p">},</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -223,23 +223,23 @@ syncer by adding the directory that contains your custom syncer using
 <code class="docutils literal notranslate"><span class="pre">sys.path</span></code>.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Additional paths can be added for custom syncers</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;./examples&quot;</span><span class="p">))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">"./examples"</span><span class="p">))</span>
 
 <span class="n">SYNC</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"default"</span><span class="p">:</span> <span class="p">{</span>
         <span class="c1"># The syncer class to use</span>
-        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;sg_jira.TaskIssueSyncer&quot;</span><span class="p">,</span>
+        <span class="s2">"syncer"</span><span class="p">:</span> <span class="s2">"sg_jira.TaskIssueSyncer"</span><span class="p">,</span>
         <span class="c1"># And the specific settings which are passed to its __init__() method</span>
-        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="s2">&quot;bar&quot;</span>
+        <span class="s2">"settings"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"foo"</span><span class="p">:</span> <span class="s2">"bar"</span>
         <span class="p">},</span>
     <span class="p">},</span>
-    <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"test"</span><span class="p">:</span> <span class="p">{</span>
         <span class="c1"># Example of a custom syncer with an additional parameter to define</span>
         <span class="c1"># a log level.</span>
-        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;example_sync.ExampleSync&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+        <span class="s2">"syncer"</span><span class="p">:</span> <span class="s2">"example_sync.ExampleSync"</span><span class="p">,</span>
+        <span class="s2">"settings"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"log_level"</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
         <span class="p">},</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -258,26 +258,26 @@ overly simplified example might look something like this:</p>
 <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 
 <span class="n">SYNC</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"default"</span><span class="p">:</span> <span class="p">{</span>
         <span class="c1"># The syncer class to use</span>
-        <span class="s2">&quot;syncer&quot;</span><span class="p">:</span> <span class="s2">&quot;sg_jira.TaskIssueSyncer&quot;</span><span class="p">,</span>
+        <span class="s2">"syncer"</span><span class="p">:</span> <span class="s2">"sg_jira.TaskIssueSyncer"</span><span class="p">,</span>
         <span class="c1"># And the specific settings which are passed to its __init__() method</span>
-        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="s2">&quot;bar&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;orange&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;do_something&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+        <span class="s2">"settings"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"foo"</span><span class="p">:</span> <span class="s2">"bar"</span><span class="p">,</span>
+            <span class="s2">"color"</span><span class="p">:</span> <span class="s2">"orange"</span><span class="p">,</span>
+            <span class="s2">"do_something"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"log_level"</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
         <span class="p">},</span>
     <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="c1"># create settings for default_test from default</span>
-<span class="n">SYNC</span><span class="p">[</span><span class="s2">&quot;test_settings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">SYNC</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])</span>
+<span class="n">SYNC</span><span class="p">[</span><span class="s2">"test_settings"</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">SYNC</span><span class="p">[</span><span class="s2">"default"</span><span class="p">])</span>
 
 <span class="c1"># override the settings we need</span>
-<span class="n">SYNC</span><span class="p">[</span><span class="s2">&quot;test_settings&quot;</span><span class="p">][</span><span class="s2">&quot;settings&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-    <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
-    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span>
+<span class="n">SYNC</span><span class="p">[</span><span class="s2">"test_settings"</span><span class="p">][</span><span class="s2">"settings"</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+    <span class="s2">"log_level"</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+    <span class="s2">"color"</span><span class="p">:</span> <span class="s2">"red"</span>
 <span class="p">})</span>
 </pre></div>
 </div>

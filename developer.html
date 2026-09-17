@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Resources &mdash; sg-jira-bridge v0.7.1 documentation</title>
+  <title>Developer Resources &mdash; sg-jira-bridge v0.7.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -138,7 +138,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.7.1.<br>
+    <b>sg-jira-bridge</b> v0.7.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -236,21 +236,21 @@ well, to pass on to Handlers:</p>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Sync Flow Production Tracking Tasks as Jira Issues.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    """</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">"Task"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Instatiate a new Task/Issue syncer for the given bridge.</span>
 
 <span class="sd">        :param str issue_type: Jira Issue type to use when creating new Issues.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span> <span class="o">=</span> <span class="n">issue_type</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task_issue_handler</span> <span class="o">=</span> <span class="n">TaskIssueHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_note_comment_handler</span> <span class="o">=</span> <span class="n">NoteCommentHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1"># A handler combining the Task &lt;-&gt; Issue handler and the Note &lt;-&gt; Comment</span>
-        <span class="c1"># handler. Task syncing to Jira starts if the Task &quot;Sync in Jira&quot; checkbox</span>
+        <span class="c1"># handler. Task syncing to Jira starts if the Task "Sync in Jira" checkbox</span>
         <span class="c1"># is turned on. Notes linked to a Task being actively synced are automatically</span>
         <span class="c1"># synced without having to manually select them. A full sync is performed</span>
         <span class="c1"># when the Task checkbox is turned on.</span>
@@ -261,9 +261,9 @@ well, to pass on to Handlers:</p>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a list of :class:`~handlers.SyncHandler` instances.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_enable_syncing_handler</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_task_issue_handler</span><span class="p">,</span>
@@ -362,11 +362,11 @@ must be overridden <em>in addition to the ones required by</em>
 <dl class="py class">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sg_jira.shotgun_session.</span></span><span class="sig-name descname"><span class="pre">ShotgunSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/shotgun_session.html#ShotgunSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession" title="Permalink to this definition"></a></dt>
-<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.10.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
+<dd><p>Wraps a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.10.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> instance and provide some helpers and
 session caches.</p>
 <p>Ensures all the values we get from Flow Production Tracking are unicode and not utf-8 encoded
 strings. Utf-8 encodes unicode values before sending them to Flow Production Tracking.</p>
-<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.10.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
+<p>Instantiate a <a class="reference external" href="https://developers.shotgridsoftware.com/python-api/reference.html#shotgun_api3.shotgun.Shotgun" title="(in python-api vv3.10.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shotgun_api3.shotgun.Shotgun</span></code></a> with the sanitized parameters.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.shotgun_session.ShotgunSession.current_user">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_user</span></span><a class="headerlink" href="#sg_jira.shotgun_session.ShotgunSession.current_user" title="Permalink to this definition"></a></dt>
@@ -739,6 +739,28 @@ given one and try to apply it.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.add_comment_reply">
+<span class="sig-name descname"><span class="pre">add_comment_reply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">issue_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_comment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.add_comment_reply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.add_comment_reply" title="Permalink to this definition"></a></dt>
+<dd><p>Add a threaded reply to an existing Jira comment and return the created Comment.</p>
+<p>The <cite>jira</cite> library’s <cite>add_comment()</cite> only supports top-level comments: it
+hardcodes its request body to <cite>{“body”: …}</cite> with no way to pass extra
+fields. Jira’s comment threading involves creating a comment and providing a parentID.
+However, this is only possible via the Jira REST API by providing the id in the fields.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>issue_key</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Key of the Jira Issue the parent comment belongs to.</p></li>
+<li><p><strong>parent_comment_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Id of the Jira comment to reply to.</p></li>
+<li><p><strong>body</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Text of the reply comment to add.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The created <code class="xref py py-class docutils literal notranslate"><span class="pre">jira.resources.Comment</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.jira_session.JiraSession.create_issue_from_data">
 <span class="sig-name descname"><span class="pre">create_issue_from_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jira_project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issue_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sg_jira/jira_session.html#JiraSession.create_issue_from_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sg_jira.jira_session.JiraSession.create_issue_from_data" title="Permalink to this definition"></a></dt>
 <dd><p>Create an Issue from the given data.</p>
@@ -1012,22 +1034,22 @@ to Handlers.</p>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">TaskIssueSyncer</span><span class="p">(</span><span class="n">Syncer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Sync Flow Production Tracking Tasks as Jira Issues.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_type</span><span class="o">=</span><span class="s2">"Task"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Instatiate a new Task/Issue syncer for the given bridge.</span>
 
 <span class="sd">        :param str issue_type: Jira Issue type to use when creating new Issues.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span> <span class="o">=</span> <span class="n">issue_type</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task_issue_handler</span> <span class="o">=</span> <span class="n">TaskIssueHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_note_comment_handler</span> <span class="o">=</span> <span class="n">NoteCommentHandler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1"># A handler combining the Task &lt;-&gt; Issue handler and the Note &lt;-&gt; Comment</span>
-        <span class="c1"># handler. Task syncing to Jira starts if the Task &quot;Sync in Jira&quot; checkbox</span>
+        <span class="c1"># handler. Task syncing to Jira starts if the Task "Sync in Jira" checkbox</span>
         <span class="c1"># is turned on. Notes linked to a Task being actively synced are automatically</span>
         <span class="c1"># synced without having to manually select them. A full sync is performed</span>
         <span class="c1"># when the Task checkbox is turned on.</span>
@@ -1037,9 +1059,9 @@ to Handlers.</p>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a list of :class:`~handlers.SyncHandler` instances.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_enable_syncing_handler</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_task_issue_handler</span><span class="p">,</span>
@@ -1746,6 +1768,13 @@ value for a given field.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.errors.InvalidSyncValue.add_note">
+<span class="sig-name descname"><span class="pre">add_note</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.errors.InvalidSyncValue.add_note" title="Permalink to this definition"></a></dt>
+<dd><p>Exception.add_note(note) –
+add a note to the exception</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="sg_jira.errors.InvalidSyncValue.with_traceback">
 <span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.errors.InvalidSyncValue.with_traceback" title="Permalink to this definition"></a></dt>
 <dd><p>Exception.with_traceback(tb) –
@@ -1767,6 +1796,13 @@ Jira value for a given field.</p>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.errors.InvalidShotgunValue.add_note">
+<span class="sig-name descname"><span class="pre">add_note</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.errors.InvalidShotgunValue.add_note" title="Permalink to this definition"></a></dt>
+<dd><p>Exception.add_note(note) –
+add a note to the exception</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.errors.InvalidShotgunValue.field">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#sg_jira.errors.InvalidShotgunValue.field" title="Permalink to this definition"></a></dt>
@@ -1801,6 +1837,13 @@ Flow Production Tracking value for a given field.</p>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="sg_jira.errors.InvalidJiraValue.add_note">
+<span class="sig-name descname"><span class="pre">add_note</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sg_jira.errors.InvalidJiraValue.add_note" title="Permalink to this definition"></a></dt>
+<dd><p>Exception.add_note(note) –
+add a note to the exception</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="sg_jira.errors.InvalidJiraValue.field">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#sg_jira.errors.InvalidJiraValue.field" title="Permalink to this definition"></a></dt>

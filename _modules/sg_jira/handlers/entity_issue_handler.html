@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sg_jira.handlers.entity_issue_handler &mdash; sg-jira-bridge v0.7.1 documentation</title>
+  <title>sg_jira.handlers.entity_issue_handler &mdash; sg-jira-bridge v0.7.2 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -87,7 +87,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>sg-jira-bridge</b> v0.7.1.<br>
+    <b>sg-jira-bridge</b> v0.7.2.<br>
     
     For more information, please visit
     <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The Flow Production Tracking developer portal.</a>.
@@ -145,32 +145,32 @@
 
 
 <div class="viewcode-block" id="EntityIssueHandler"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">EntityIssueHandler</span><span class="p">(</span><span class="n">SyncHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Base class for handlers syncing a Flow Production Tracking Entity to a Jira Issue.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="c1"># This will match JIRA accounts in the following format</span>
     <span class="c1"># 123456:uuid, e.g. 123456:60e119d8-6a49-4375-95b6-6740fc8e75e0</span>
     <span class="c1"># 24 hexdecimal characters: 5b6a25ab7c14b729f2208297</span>
-    <span class="c1"># We&#39;re only matching the first 20 characters instead of the first 24, since the</span>
-    <span class="c1"># account id format isn&#39;t documented.</span>
+    <span class="c1"># We're only matching the first 20 characters instead of the first 24, since the</span>
+    <span class="c1"># account id format isn't documented.</span>
     <span class="c1"># It could in theory match a very long user name that uses hexadecimal characters</span>
     <span class="c1"># only, but that would be unlikely.</span>
     <span class="c1"># https://regex101.com/r/E1ysHQ/1</span>
-    <span class="n">ACCOUNT_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^[0-9a-f:-]</span><span class="si">{20}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ACCOUNT_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">"^[0-9a-f:-]</span><span class="si">{20}</span><span class="s2">"</span><span class="p">)</span>
 
 <div class="viewcode-block" id="EntityIssueHandler.__init__"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syncer</span><span class="p">,</span> <span class="n">issue_type</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Instantiate an Entity Issue handler for the given syncer.</span>
 
 <span class="sd">        :param syncer: A :class:`~sg_jira.Syncer` instance.</span>
-<span class="sd">        :param str issue_type: A target Issue type, e.g. &#39;Task&#39;, &#39;Story&#39;.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        :param str issue_type: A target Issue type, e.g. 'Task', 'Story'.</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">syncer</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span> <span class="o">=</span> <span class="n">issue_type</span>
 
         <span class="c1"># Due to GDPR, some changes were done to JIRA Cloud which complicates</span>
-        <span class="c1"># matching users by email. So let&#39;s use the right resolver based</span>
+        <span class="c1"># matching users by email. So let's use the right resolver based</span>
         <span class="c1"># on the server type.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">is_jira_cloud</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_cloud_user_to_shotgun</span>
@@ -178,55 +178,55 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_server_user_to_shotgun</span></div>
 
 <div class="viewcode-block" id="EntityIssueHandler.accept_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.accept_jira_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">accept_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Accept or reject the given event for the given Jira resource.</span>
 
 <span class="sd">        :param str resource_type: The type of Jira resource sync, e.g. Issue.</span>
 <span class="sd">        :param str resource_id: The id of the Jira resource to sync.</span>
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
 <span class="sd">        :returns: True if the event is accepted for processing, False otherwise.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">resource_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;issue&quot;</span><span class="p">:</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">resource_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"issue"</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Rejecting event for a </span><span class="si">%s</span><span class="s2"> Jira resource. Handler only &quot;</span>
-                <span class="s2">&quot;accepts Issue resources.&quot;</span> <span class="o">%</span> <span class="n">resource_type</span>
+                <span class="s2">"Rejecting event for a </span><span class="si">%s</span><span class="s2"> Jira resource. Handler only "</span>
+                <span class="s2">"accepts Issue resources."</span> <span class="o">%</span> <span class="n">resource_type</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="c1"># Check the event payload and reject the event if we don&#39;t have what we</span>
+        <span class="c1"># Check the event payload and reject the event if we don't have what we</span>
         <span class="c1"># expect</span>
-        <span class="n">jira_issue</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;issue&quot;</span><span class="p">)</span>
+        <span class="n">jira_issue</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"issue"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_issue</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rejecting event without an issue: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Rejecting event without an issue: </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">webhook_event</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;webhookEvent&quot;</span><span class="p">)</span>
+        <span class="n">webhook_event</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"webhookEvent"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">webhook_event</span> <span class="ow">or</span> <span class="n">webhook_event</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
-            <span class="s2">&quot;jira:issue_updated&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;jira:issue_created&quot;</span><span class="p">,</span>
+            <span class="s2">"jira:issue_updated"</span><span class="p">,</span>
+            <span class="s2">"jira:issue_created"</span><span class="p">,</span>
         <span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Rejecting event with an unsupported webhook event &#39;</span><span class="si">%s</span><span class="s2">&#39;: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Rejecting event with an unsupported webhook event '</span><span class="si">%s</span><span class="s2">': </span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="p">(</span><span class="n">webhook_event</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">changelog</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;changelog&quot;</span><span class="p">)</span>
+        <span class="n">changelog</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"changelog"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">changelog</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rejecting event without a changelog: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Rejecting event without a changelog: </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">fields</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fields&quot;</span><span class="p">)</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fields"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">fields</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rejecting event without issue fields: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Rejecting event without issue fields: </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">issue_type</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;issuetype&quot;</span><span class="p">)</span>
+        <span class="n">issue_type</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"issuetype"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">issue_type</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rejecting event without an issue type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Rejecting event without an issue type: </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">issue_type</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">issue_type</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Rejecting event without a </span><span class="si">%s</span><span class="s2"> issue type: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Rejecting event without a </span><span class="si">%s</span><span class="s2"> issue type: </span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_issue_type</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -235,10 +235,10 @@
         <span class="n">shotgun_type</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_type_field</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_id</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">shotgun_type</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Rejecting event for </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">. It&#39;s not linked to a Shotgun &quot;</span>
-                <span class="s2">&quot;Entity: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Rejecting event for </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">. It's not linked to a Shotgun "</span>
+                <span class="s2">"Entity: </span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">issue_type</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                    <span class="n">issue_type</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
                     <span class="n">resource_id</span><span class="p">,</span>
                     <span class="n">event</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -248,7 +248,7 @@
         <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_issue_and_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue_key</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Load Jira Issue with the given Jira key, validate it exists and is</span>
 <span class="sd">        syncing to the given Flow Production Tracking Entity.</span>
 
@@ -256,16 +256,16 @@
 <span class="sd">        :param dict shotgun_entity: Flow Production Tracking Entity dictionary</span>
 <span class="sd">        :returns: A :class:`jira.Issue` instance if it exists and is valid.</span>
 <span class="sd">            Otherwise ``None``</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">jira_issue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_issue</span><span class="p">(</span><span class="n">jira_issue_key</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_issue</span><span class="p">:</span>
             <span class="c1"># Better to stop now for the time being.</span>
-            <span class="c1"># The Issue could have been deleted, and we don&#39;t want to keep</span>
+            <span class="c1"># The Issue could have been deleted, and we don't want to keep</span>
             <span class="c1"># recreating it. So we play safe until we correctly handle the</span>
             <span class="c1"># deleted case.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Unable to find Jira Issue </span><span class="si">%s</span><span class="s2"> for Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">)&quot;</span>
-                <span class="o">%</span> <span class="p">(</span><span class="n">jira_issue_key</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+                <span class="s2">"Unable to find Jira Issue </span><span class="si">%s</span><span class="s2"> for Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">)"</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">jira_issue_key</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
@@ -273,7 +273,7 @@
         <span class="n">jira_shotgun_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
             <span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_type_field</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">jira_shotgun_type</span> <span class="ow">or</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span>
+        <span class="k">if</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">jira_shotgun_type</span> <span class="ow">or</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span>
             <span class="n">jira_shotgun_id</span>
         <span class="p">):</span>
             <span class="c1"># Shotgun schema requirements should prevent multiple Shotgun</span>
@@ -281,12 +281,12 @@
             <span class="c1"># the Jira Issue has the same Shotgun Entity type and id so we</span>
             <span class="c1"># can prevent data corruption.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Rejecting Jira Issue </span><span class="si">%s</span><span class="s2">. Expected it to be linked to Flow Production Tracking &quot;</span>
-                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) but instead it is linked to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">).&quot;</span>
+                <span class="s2">"Rejecting Jira Issue </span><span class="si">%s</span><span class="s2">. Expected it to be linked to Flow Production Tracking "</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) but instead it is linked to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)."</span>
                 <span class="o">%</span> <span class="p">(</span>
                     <span class="n">jira_issue_key</span><span class="p">,</span>
-                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
                     <span class="n">jira_shotgun_type</span><span class="p">,</span>
                     <span class="n">jira_shotgun_id</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -304,7 +304,7 @@
         <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">properties</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Create a Jira issue linked to the given Shothgun Entity with the given properties</span>
 
 <span class="sd">        :param sg_entity: A Flow Production Tracking Entity dictionary.</span>
@@ -314,21 +314,21 @@
 <span class="sd">        :param str description: An optional description for the Issue.</span>
 <span class="sd">        :param properties: Arbitrary properties to set on the Jira Issue.</span>
 <span class="sd">        :returns: A :class:`jira.Issue` instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Retrieve the reporter, either the user who created the Entity or the</span>
         <span class="c1"># Jira user used to run the syncing.</span>
         <span class="n">reporter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">myself</span><span class="p">()</span>
-        <span class="n">created_by</span> <span class="o">=</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;created_by&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">created_by</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;HumanUser&quot;</span><span class="p">:</span>
+        <span class="n">created_by</span> <span class="o">=</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"created_by"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">created_by</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"HumanUser"</span><span class="p">:</span>
             <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span><span class="n">created_by</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">user</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">):</span>
-                <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_user</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span> <span class="n">jira_project</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">user</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"email"</span><span class="p">):</span>
+                <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jira_user</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">"email"</span><span class="p">],</span> <span class="n">jira_project</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">jira_user</span><span class="p">:</span>
                     <span class="n">reporter</span> <span class="o">=</span> <span class="n">jira_user</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Ignoring created_by &#39;</span><span class="si">%s</span><span class="s2">&#39; since it&#39;s not a HumanUser.&quot;</span> <span class="o">%</span> <span class="n">created_by</span>
+                <span class="s2">"Ignoring created_by '</span><span class="si">%s</span><span class="s2">' since it's not a HumanUser."</span> <span class="o">%</span> <span class="n">created_by</span>
             <span class="p">)</span>
 
         <span class="n">shotgun_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">get_entity_page_url</span><span class="p">(</span><span class="n">sg_entity</span><span class="p">)</span>
@@ -336,22 +336,22 @@
         <span class="c1"># Note that JIRA raises an error if there are new line characters in the</span>
         <span class="c1"># summary for an Issue or if the description field is not set.</span>
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="s2">""</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="n">jira_project</span><span class="o">.</span><span class="n">raw</span><span class="p">,</span>
-            <span class="s2">&quot;summary&quot;</span><span class="p">:</span> <span class="n">summary</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_id_field</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_type_field</span><span class="p">:</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+            <span class="s2">"project"</span><span class="p">:</span> <span class="n">jira_project</span><span class="o">.</span><span class="n">raw</span><span class="p">,</span>
+            <span class="s2">"summary"</span><span class="p">:</span> <span class="n">summary</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\r</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_id_field</span><span class="p">:</span> <span class="s2">"</span><span class="si">%d</span><span class="s2">"</span> <span class="o">%</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_type_field</span><span class="p">:</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_url_field</span><span class="p">:</span> <span class="n">shotgun_url</span><span class="p">,</span>
-            <span class="s2">&quot;reporter&quot;</span><span class="p">:</span> <span class="n">reporter</span><span class="p">,</span>
+            <span class="s2">"reporter"</span><span class="p">:</span> <span class="n">reporter</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="n">properties</span><span class="p">:</span>
             <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Creating Jira Issue in Project </span><span class="si">%s</span><span class="s2"> for Flow Production Tracking </span><span class="si">%s</span><span class="s2"> &#39;</span><span class="si">%s</span><span class="s2">&#39; (</span><span class="si">%d</span><span class="s2">)&quot;</span>
-            <span class="o">%</span> <span class="p">(</span><span class="n">jira_project</span><span class="p">,</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+            <span class="s2">"Creating Jira Issue in Project </span><span class="si">%s</span><span class="s2"> for Flow Production Tracking </span><span class="si">%s</span><span class="s2"> '</span><span class="si">%s</span><span class="s2">' (</span><span class="si">%d</span><span class="s2">)"</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">jira_project</span><span class="p">,</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">create_issue_from_data</span><span class="p">(</span>
@@ -370,7 +370,7 @@
         <span class="n">removed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">new_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Retrieve the Jira Issue field and the value to set from the given Flow Production Tracking</span>
 <span class="sd">        field name and the given changes for the given Flow Production Tracking Entity type.</span>
 
@@ -390,18 +390,18 @@
 <span class="sd">        :returns: A tuple with a Jira field id and a Jira value usable for an</span>
 <span class="sd">                  update. The returned field id is `None` if no valid field or</span>
 <span class="sd">                  value could be retrieved.</span>
-<span class="sd">        :raises InvalidShotgunValue: if the Flow Production Tracking value can&#39;t be translated</span>
+<span class="sd">        :raises InvalidShotgunValue: if the Flow Production Tracking value can't be translated</span>
 <span class="sd">                 into a valid Jira value.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Retrieve the matching Jira field</span>
         <span class="n">jira_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_jira_issue_field_for_shotgun_field</span><span class="p">(</span>
             <span class="n">shotgun_entity_type</span><span class="p">,</span> <span class="n">shotgun_field</span>
         <span class="p">)</span>
-        <span class="c1"># Bail out if we couldn&#39;t find a target Jira field</span>
+        <span class="c1"># Bail out if we couldn't find a target Jira field</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_field</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Not syncing Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> to Jira. No target Jira field &quot;</span>
-                <span class="s2">&quot;is defined&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_entity_type</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">)</span>
+                <span class="s2">"Not syncing Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> to Jira. No target Jira field "</span>
+                <span class="s2">"is defined"</span> <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_entity_type</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
@@ -411,8 +411,8 @@
         <span class="c1"># Bail out if the target Jira field is not editable</span>
         <span class="k">if</span> <span class="n">jira_field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">jira_fields</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Not syncing Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> to Jira. Target Jira </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> field &quot;</span>
-                <span class="s2">&quot;is not editable&quot;</span>
+                <span class="s2">"Not syncing Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> to Jira. Target Jira </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> field "</span>
+                <span class="s2">"is not editable"</span>
                 <span class="o">%</span> <span class="p">(</span>
                     <span class="n">shotgun_entity_type</span><span class="p">,</span>
                     <span class="n">shotgun_field</span><span class="p">,</span>
@@ -425,13 +425,13 @@
         <span class="n">is_array</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">jira_value</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># Option fields with multi-selection are flagged as array</span>
-        <span class="k">if</span> <span class="n">jira_fields</span><span class="p">[</span><span class="n">jira_field</span><span class="p">][</span><span class="s2">&quot;schema&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;array&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">jira_fields</span><span class="p">[</span><span class="n">jira_field</span><span class="p">][</span><span class="s2">"schema"</span><span class="p">][</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"array"</span><span class="p">:</span>
             <span class="n">is_array</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">jira_value</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">if</span> <span class="n">added</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">removed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Processing Flow Production Tracking list change: added </span><span class="si">%s</span><span class="s2">, removed </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Processing Flow Production Tracking list change: added </span><span class="si">%s</span><span class="s2">, removed </span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="p">(</span><span class="n">added</span><span class="p">,</span> <span class="n">removed</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">jira_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_jira_value_for_shotgun_list_changes</span><span class="p">(</span>
@@ -464,12 +464,12 @@
                 <span class="n">shotgun_value</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">jira_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">shotgun_value</span><span class="p">:</span>
-                <span class="c1"># Couldn&#39;t get a Jira value, cancel update</span>
+                <span class="c1"># Couldn't get a Jira value, cancel update</span>
                 <span class="k">raise</span> <span class="n">InvalidShotgunValue</span><span class="p">(</span>
                     <span class="n">jira_field</span><span class="p">,</span>
                     <span class="n">shotgun_value</span><span class="p">,</span>
-                    <span class="s2">&quot;Couldn&#39;t translate Flow Production Tracking value </span><span class="si">%s</span><span class="s2"> to a valid value &quot;</span>
-                    <span class="s2">&quot;for Jira field </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="s2">"Couldn't translate Flow Production Tracking value </span><span class="si">%s</span><span class="s2"> to a valid value "</span>
+                    <span class="s2">"for Jira field </span><span class="si">%s</span><span class="s2">"</span>
                     <span class="o">%</span> <span class="p">(</span>
                         <span class="n">shotgun_value</span><span class="p">,</span>
                         <span class="n">jira_field</span><span class="p">,</span>
@@ -496,12 +496,12 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_issue_field_for_shotgun_field</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity_type</span><span class="p">,</span> <span class="n">shotgun_field</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Needs to be re-implemented in deriving classes and return the Jira Issue</span>
 <span class="sd">        field id to use to sync the given Flow Production Tracking Entity type field.</span>
 
 <span class="sd">        :returns: A string or `None`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_jira_value_for_shotgun_list_changes</span><span class="p">(</span>
@@ -513,7 +513,7 @@
         <span class="n">shotgun_added</span><span class="p">,</span>
         <span class="n">shotgun_removed</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Handle a Flow Production Tracking list value modification and return a Jira value</span>
 <span class="sd">        corresponding to changes for the given Issue field.</span>
 
@@ -524,9 +524,9 @@
 <span class="sd">                                  field.</span>
 <span class="sd">        :param shotgun_added: A list of Flow Production Tracking added values.</span>
 <span class="sd">        :param shotgun_removed: A list of Flow Production Tracking removed values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">current_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">jira_issue</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="n">jira_field</span><span class="p">)</span>
-        <span class="n">is_array</span> <span class="o">=</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;array&quot;</span>
+        <span class="n">is_array</span> <span class="o">=</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">"schema"</span><span class="p">][</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"array"</span>
 
         <span class="k">if</span> <span class="n">is_array</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">current_value</span><span class="p">:</span>
@@ -542,8 +542,8 @@
                         <span class="n">current_value</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                            <span class="s2">&quot;Unable to remove </span><span class="si">%s</span><span class="s2"> from current Jira value </span><span class="si">%s</span><span class="s2">. &quot;</span>
-                            <span class="s2">&quot;Removed Flow Production Tracking value was </span><span class="si">%s</span><span class="s2">&quot;</span>
+                            <span class="s2">"Unable to remove </span><span class="si">%s</span><span class="s2"> from current Jira value </span><span class="si">%s</span><span class="s2">. "</span>
+                            <span class="s2">"Removed Flow Production Tracking value was </span><span class="si">%s</span><span class="s2">"</span>
                             <span class="o">%</span> <span class="p">(</span>
                                 <span class="n">value</span><span class="p">,</span>
                                 <span class="n">current_value</span><span class="p">,</span>
@@ -581,7 +581,7 @@
                         <span class="k">break</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Current Jira value </span><span class="si">%s</span><span class="s2"> unaffected by Flow Production Tracking </span><span class="si">%s</span><span class="s2"> removal.&quot;</span>
+                        <span class="s2">"Current Jira value </span><span class="si">%s</span><span class="s2"> unaffected by Flow Production Tracking </span><span class="si">%s</span><span class="s2"> removal."</span>
                         <span class="o">%</span> <span class="p">(</span>
                             <span class="n">current_value</span><span class="p">,</span>
                             <span class="n">shotgun_removed</span><span class="p">,</span>
@@ -593,7 +593,7 @@
                 <span class="c1"># a single one in Jira, so we have to arbitrarily pick one if we</span>
                 <span class="c1"># have multiple values.</span>
                 <span class="k">for</span> <span class="n">sg_value</span> <span class="ow">in</span> <span class="n">shotgun_added</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Treating </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">sg_value</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Treating </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">sg_value</span><span class="p">)</span>
                     <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_jira_value_for_shotgun_value</span><span class="p">(</span>
                         <span class="n">jira_project</span><span class="p">,</span>
                         <span class="n">jira_issue</span><span class="p">,</span>
@@ -606,9 +606,9 @@
                         <span class="n">added_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shotgun_added</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">added_count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                                <span class="s2">&quot;Only a single value is accepted by Jira for &quot;</span>
-                                <span class="s2">&quot;field </span><span class="si">%s</span><span class="s2">. Flow Production Tracking added </span><span class="si">%d</span><span class="s2"> values. Using </span><span class="si">%s</span><span class="s2"> &quot;</span>
-                                <span class="s2">&quot;translated to Jira value </span><span class="si">%s</span><span class="s2">&quot;</span>
+                                <span class="s2">"Only a single value is accepted by Jira for "</span>
+                                <span class="s2">"field </span><span class="si">%s</span><span class="s2">. Flow Production Tracking added </span><span class="si">%d</span><span class="s2"> values. Using </span><span class="si">%s</span><span class="s2"> "</span>
+                                <span class="s2">"translated to Jira value </span><span class="si">%s</span><span class="s2">"</span>
                                 <span class="o">%</span> <span class="p">(</span><span class="n">jira_field</span><span class="p">,</span> <span class="n">added_count</span><span class="p">,</span> <span class="n">sg_value</span><span class="p">,</span> <span class="n">current_value</span><span class="p">)</span>
                             <span class="p">)</span>
                         <span class="k">break</span>
@@ -623,7 +623,7 @@
         <span class="n">jira_field_schema</span><span class="p">,</span>
         <span class="n">shotgun_value</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a Jira value corresponding to the given Flow Production Tracking value for the</span>
 <span class="sd">        given Issue field.</span>
 
@@ -639,23 +639,23 @@
 <span class="sd">        :param shotgun_value: A single value retrieved from Flow Production Tracking.</span>
 <span class="sd">        :returns: A :class:`jira.resources.Resource` instance, or a dictionary,</span>
 <span class="sd">                  or a string, depending on the field type.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Getting Jira value for Flow Production Tracking value </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">shotgun_value</span>
+            <span class="s2">"Getting Jira value for Flow Production Tracking value </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">shotgun_value</span>
         <span class="p">)</span>
-        <span class="n">jira_type</span> <span class="o">=</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="n">jira_type</span> <span class="o">=</span> <span class="n">jira_field_schema</span><span class="p">[</span><span class="s2">"schema"</span><span class="p">][</span><span class="s2">"type"</span><span class="p">]</span>
         <span class="c1"># Deal with unset or empty value</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_value</span><span class="p">:</span>
             <span class="c1"># Return an empty value suitable for the Jira field type</span>
-            <span class="k">if</span> <span class="n">jira_type</span> <span class="o">==</span> <span class="s2">&quot;string&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s2">&quot;&quot;</span>
-            <span class="k">if</span> <span class="n">jira_type</span> <span class="o">==</span> <span class="s2">&quot;timetracking&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">jira_type</span> <span class="o">==</span> <span class="s2">"string"</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">""</span>
+            <span class="k">if</span> <span class="n">jira_type</span> <span class="o">==</span> <span class="s2">"timetracking"</span><span class="p">:</span>
                 <span class="c1"># We need to provide a null estimate, otherwise Jira will error</span>
                 <span class="c1"># out.</span>
-                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;originalEstimate&quot;</span><span class="p">:</span> <span class="s2">&quot;0 m&quot;</span><span class="p">}</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">"originalEstimate"</span><span class="p">:</span> <span class="s2">"0 m"</span><span class="p">}</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Returning `None` value for Jira </span><span class="si">%s</span><span class="s2"> field type&quot;</span> <span class="o">%</span> <span class="n">jira_type</span>
+                <span class="s2">"Returning `None` value for Jira </span><span class="si">%s</span><span class="s2"> field type"</span> <span class="o">%</span> <span class="n">jira_type</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
@@ -663,56 +663,56 @@
             <span class="c1"># Assume a Shotgun Entity</span>
             <span class="n">shotgun_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span><span class="n">shotgun_value</span><span class="p">)</span>
 
-        <span class="n">allowed_values</span> <span class="o">=</span> <span class="n">jira_field_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;allowedValues&quot;</span><span class="p">)</span>
+        <span class="n">allowed_values</span> <span class="o">=</span> <span class="n">jira_field_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"allowedValues"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">allowed_values</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Allowed values for </span><span class="si">%s</span><span class="s2"> are </span><span class="si">%s</span><span class="s2">, type is </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Allowed values for </span><span class="si">%s</span><span class="s2"> are </span><span class="si">%s</span><span class="s2">, type is </span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="p">(</span>
                     <span class="n">jira_field</span><span class="p">,</span>
                     <span class="n">allowed_values</span><span class="p">,</span>
-                    <span class="n">jira_field_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">),</span>
+                    <span class="n">jira_field_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schema"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shotgun_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="n">sg_value_name</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">sg_value_name</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sg_value_name</span> <span class="o">=</span> <span class="n">shotgun_value</span>
             <span class="n">sg_value_name</span> <span class="o">=</span> <span class="n">sg_value_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">allowed_value</span> <span class="ow">in</span> <span class="n">allowed_values</span><span class="p">:</span>
                 <span class="c1"># TODO: check this code actually works. For our basic implementation</span>
-                <span class="c1"># we don&#39;t update fields with allowedValues restriction.</span>
+                <span class="c1"># we don't update fields with allowedValues restriction.</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">allowed_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>  <span class="c1"># Some kind of Jira Resource</span>
-                    <span class="c1"># Jira can store the &quot;value&quot; with a &quot;value&quot; key, or a &quot;name&quot; key</span>
+                    <span class="c1"># Jira can store the "value" with a "value" key, or a "name" key</span>
                     <span class="k">if</span> <span class="p">(</span>
-                        <span class="s2">&quot;value&quot;</span> <span class="ow">in</span> <span class="n">allowed_value</span>
-                        <span class="ow">and</span> <span class="n">allowed_value</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value_name</span>
+                        <span class="s2">"value"</span> <span class="ow">in</span> <span class="n">allowed_value</span>
+                        <span class="ow">and</span> <span class="n">allowed_value</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value_name</span>
                     <span class="p">):</span>
                         <span class="k">return</span> <span class="n">allowed_value</span>
                     <span class="k">if</span> <span class="p">(</span>
-                        <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">allowed_value</span>
-                        <span class="ow">and</span> <span class="n">allowed_value</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value_name</span>
+                        <span class="s2">"name"</span> <span class="ow">in</span> <span class="n">allowed_value</span>
+                        <span class="ow">and</span> <span class="n">allowed_value</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value_name</span>
                     <span class="p">):</span>
                         <span class="k">return</span> <span class="n">allowed_value</span>
                 <span class="k">else</span><span class="p">:</span>  <span class="c1"># Assume a string</span>
                     <span class="k">if</span> <span class="n">allowed_value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">sg_value_name</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">allowed_value</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Flow Production Tracking value &#39;</span><span class="si">%s</span><span class="s2">&#39; is not in the list of allowed values for &quot;</span>
-                <span class="s2">&quot;Jira field </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_value</span><span class="p">,</span> <span class="n">jira_field</span><span class="p">,</span> <span class="n">allowed_values</span><span class="p">)</span>
+                <span class="s2">"Flow Production Tracking value '</span><span class="si">%s</span><span class="s2">' is not in the list of allowed values for "</span>
+                <span class="s2">"Jira field </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_value</span><span class="p">,</span> <span class="n">jira_field</span><span class="p">,</span> <span class="n">allowed_values</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># In most simple cases the Jira value is the Shotgun value.</span>
             <span class="n">jira_value</span> <span class="o">=</span> <span class="n">shotgun_value</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Special cases for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jira_field</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Special cases for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">jira_field</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">))</span>
             <span class="c1"># Special cases</span>
-            <span class="k">if</span> <span class="n">jira_field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;assignee&quot;</span><span class="p">,</span> <span class="s2">&quot;reporter&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">jira_field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"assignee"</span><span class="p">,</span> <span class="s2">"reporter"</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shotgun_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                    <span class="n">email_address</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+                    <span class="n">email_address</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">email_address</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                            <span class="s2">&quot;Jira field </span><span class="si">%s</span><span class="s2"> requires an email address but Flow Production Tracking &quot;</span>
-                            <span class="s2">&quot;value to sync has no email key </span><span class="si">%s</span><span class="s2">&quot;</span>
+                            <span class="s2">"Jira field </span><span class="si">%s</span><span class="s2"> requires an email address but Flow Production Tracking "</span>
+                            <span class="s2">"value to sync has no email key </span><span class="si">%s</span><span class="s2">"</span>
                             <span class="o">%</span> <span class="p">(</span>
                                 <span class="n">jira_field</span><span class="p">,</span>
                                 <span class="n">shotgun_value</span><span class="p">,</span>
@@ -726,75 +726,75 @@
                     <span class="n">jira_project</span><span class="p">,</span>
                     <span class="n">jira_issue</span><span class="p">,</span>
                 <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">jira_field</span> <span class="o">==</span> <span class="s2">&quot;labels&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">jira_field</span> <span class="o">==</span> <span class="s2">"labels"</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shotgun_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                    <span class="n">jira_value</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                    <span class="n">jira_value</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">jira_value</span> <span class="o">=</span> <span class="n">shotgun_value</span>
                 <span class="c1"># Jira does not accept spaces in labels.</span>
-                <span class="c1"># Note: we could try to sanitize the data with &quot;_&quot; but then we</span>
+                <span class="c1"># Note: we could try to sanitize the data with "_" but then we</span>
                 <span class="c1"># could end up having conflicts when syncing back the sanitized</span>
                 <span class="c1"># value from Jira. Seems safer to just not sync it.</span>
-                <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">jira_value</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">" "</span> <span class="ow">in</span> <span class="n">jira_value</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">InvalidShotgunValue</span><span class="p">(</span>
-                        <span class="n">jira_field</span><span class="p">,</span> <span class="n">shotgun_value</span><span class="p">,</span> <span class="s2">&quot;Jira labels can&#39;t contain spaces&quot;</span>
+                        <span class="n">jira_field</span><span class="p">,</span> <span class="n">shotgun_value</span><span class="p">,</span> <span class="s2">"Jira labels can't contain spaces"</span>
                     <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">jira_field</span> <span class="o">==</span> <span class="s2">&quot;summary&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">jira_field</span> <span class="o">==</span> <span class="s2">"summary"</span><span class="p">:</span>
                 <span class="c1"># JIRA raises an error if there are new line characters in the</span>
                 <span class="c1"># summary for an Issue.</span>
-                <span class="n">jira_value</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">jira_field</span> <span class="o">==</span> <span class="s2">&quot;timetracking&quot;</span><span class="p">:</span>
+                <span class="n">jira_value</span> <span class="o">=</span> <span class="n">shotgun_value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\r</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">jira_field</span> <span class="o">==</span> <span class="s2">"timetracking"</span><span class="p">:</span>
                 <span class="c1"># Note: time tracking needs to be enabled in Jira</span>
                 <span class="c1"># https://confluence.atlassian.com/adminjiracloud/configuring-time-tracking-818578858.html</span>
                 <span class="c1"># And it does not seem that this available with new default</span>
                 <span class="c1"># Kanban board...</span>
-                <span class="n">jira_value</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;originalEstimate&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> m&quot;</span> <span class="o">%</span> <span class="n">shotgun_value</span><span class="p">}</span>
+                <span class="n">jira_value</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"originalEstimate"</span><span class="p">:</span> <span class="s2">"</span><span class="si">%d</span><span class="s2"> m"</span> <span class="o">%</span> <span class="n">shotgun_value</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">jira_value</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_sync_shotgun_status_to_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">shotgun_status</span><span class="p">,</span> <span class="n">comment</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Set the status of the Jira Issue based on the given Flow Production Tracking status.</span>
 
 <span class="sd">        :param jira_issue: A :class:`jira.Issue` instance.</span>
 <span class="sd">        :param shotgun_status: A Flow Production Tracking status short code as a string.</span>
 <span class="sd">        :param comment: A string, a comment to apply to the Jira transition.</span>
 <span class="sd">        :returns: `True` if the status was successfully set, `False` otherwise.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">jira_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_jira_status_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">shotgun_status</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_status</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Unable to find a matching Jira status for Flow Production Tracking &quot;</span>
-                <span class="s2">&quot;status &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">shotgun_status</span>
+                <span class="s2">"Unable to find a matching Jira status for Flow Production Tracking "</span>
+                <span class="s2">"status '</span><span class="si">%s</span><span class="s2">'"</span> <span class="o">%</span> <span class="n">shotgun_status</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">set_jira_issue_status</span><span class="p">(</span><span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_status</span><span class="p">,</span> <span class="n">comment</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_sync_shotgun_cced_changes_to_jira</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">removed</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the given Jira Issue watchers from the given Flow Production Tracking changes.</span>
 
 <span class="sd">        :param jira_issue: A :class:`jira.Issue` instance.</span>
 <span class="sd">        :param added: A list of Flow Production Tracking user dictionaries.</span>
 <span class="sd">        :param removed: A list of Flow Production Tracking user dictionaries.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">removed</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;HumanUser&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"HumanUser"</span><span class="p">:</span>
                 <span class="c1"># Can be a Group, a ScriptUser</span>
                 <span class="k">continue</span>
             <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">sg_user</span><span class="p">:</span>
                 <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">find_jira_user</span><span class="p">(</span>
-                    <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span>
+                    <span class="n">sg_user</span><span class="p">[</span><span class="s2">"email"</span><span class="p">],</span>
                     <span class="n">jira_issue</span><span class="o">=</span><span class="n">jira_issue</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">jira_user</span><span class="p">:</span>
                     <span class="c1"># No need to check if the user is in the current watchers list:</span>
                     <span class="c1"># Jira handles that gracefully.</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Removing </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2"> watchers list.&quot;</span>
+                        <span class="s2">"Removing </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2"> watchers list."</span>
                         <span class="o">%</span> <span class="p">(</span><span class="n">jira_user</span><span class="o">.</span><span class="n">displayName</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">)</span>
                     <span class="p">)</span>
                     <span class="c1"># In older versions of the client (&lt;= 3.0) we used jira_user.user_id</span>
@@ -802,18 +802,18 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">remove_watcher</span><span class="p">(</span><span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">.</span><span class="n">displayName</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">added</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;HumanUser&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"HumanUser"</span><span class="p">:</span>
                 <span class="c1"># Can be a Group, a ScriptUser</span>
                 <span class="k">continue</span>
             <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">sg_user</span><span class="p">:</span>
                 <span class="n">jira_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">find_jira_user</span><span class="p">(</span>
-                    <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span>
+                    <span class="n">sg_user</span><span class="p">[</span><span class="s2">"email"</span><span class="p">],</span>
                     <span class="n">jira_issue</span><span class="o">=</span><span class="n">jira_issue</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">jira_user</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Adding </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> watchers list.&quot;</span>
+                        <span class="s2">"Adding </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> watchers list."</span>
                         <span class="o">%</span> <span class="p">(</span><span class="n">jira_user</span><span class="o">.</span><span class="n">displayName</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">)</span>
                     <span class="p">)</span>
                     <span class="c1"># add_watcher method supports both user_id and accountId properties</span>
@@ -821,74 +821,74 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_supported_shotgun_fields_for_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the list of fields this handler can process for a Jira event.</span>
 
 <span class="sd">        Needs to be re-implemented in deriving classes.</span>
 
 <span class="sd">        :returns: A list of strings.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
 <div class="viewcode-block" id="EntityIssueHandler.process_jira_event"><a class="viewcode-back" href="../../../developer.html#sg_jira.handlers.EntityIssueHandler.process_jira_event">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">process_jira_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_type</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Process the given Jira event for the given Jira resource.</span>
 
 <span class="sd">        :param str resource_type: The type of Jira resource to sync, e.g. Issue.</span>
 <span class="sd">        :param str resource_id: The id of the Jira resource to sync.</span>
 <span class="sd">        :param event: A dictionary with the event meta data for the change.</span>
 <span class="sd">        :returns: True if the event was successfully processed, False if the</span>
-<span class="sd">                  sync didn&#39;t happen for any reason.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">jira_issue</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;issue&quot;</span><span class="p">]</span>
-        <span class="n">fields</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span>
-        <span class="n">issue_type</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s2">&quot;issuetype&quot;</span><span class="p">]</span>
+<span class="sd">                  sync didn't happen for any reason.</span>
+<span class="sd">        """</span>
+        <span class="n">jira_issue</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">"issue"</span><span class="p">]</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">]</span>
+        <span class="n">issue_type</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s2">"issuetype"</span><span class="p">]</span>
 
         <span class="n">shotgun_id</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_id_field</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_id</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Invalid Flow Production Tracking id </span><span class="si">%s</span><span class="s2">, it must be an integer&quot;</span>
+                <span class="s2">"Invalid Flow Production Tracking id </span><span class="si">%s</span><span class="s2">, it must be an integer"</span>
                 <span class="o">%</span> <span class="n">shotgun_id</span>
             <span class="p">)</span>
         <span class="n">shotgun_type</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">jira_shotgun_type_field</span><span class="p">)</span>
         <span class="c1"># Collect the list of fields we might need to process the event</span>
         <span class="n">sg_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supported_shotgun_fields_for_jira_event</span>
         <span class="n">sg_entity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">consolidate_entity</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">shotgun_type</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">shotgun_id</span><span class="p">)},</span>
+            <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="n">shotgun_type</span><span class="p">,</span> <span class="s2">"id"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">shotgun_id</span><span class="p">)},</span>
             <span class="n">fields</span><span class="o">=</span><span class="n">sg_fields</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_entity</span><span class="p">:</span>
-            <span class="c1"># Note: For the time being we don&#39;t allow Jira to create new Shotgun</span>
+            <span class="c1"># Note: For the time being we don't allow Jira to create new Shotgun</span>
             <span class="c1"># Entities.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Unable to find Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span>
+                <span class="s2">"Unable to find Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)"</span>
                 <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_type</span><span class="p">,</span> <span class="n">shotgun_id</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="c1"># The presence of the changelog key has been validated by the accept method.</span>
-        <span class="n">changes</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;changelog&quot;</span><span class="p">][</span><span class="s2">&quot;items&quot;</span><span class="p">]</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">"changelog"</span><span class="p">][</span><span class="s2">"items"</span><span class="p">]</span>
         <span class="n">shotgun_data</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Attempting to sync </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">) to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) for event </span><span class="si">%s</span><span class="s2">&quot;</span>
+            <span class="s2">"Attempting to sync </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">) to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) for event </span><span class="si">%s</span><span class="s2">"</span>
             <span class="o">%</span> <span class="p">(</span>
-                <span class="n">issue_type</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                <span class="n">issue_type</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
                 <span class="n">resource_id</span><span class="p">,</span>
-                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
+                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
                 <span class="n">event</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">:</span>
             <span class="c1"># Depending on the Jira server version, we can get the Jira field id</span>
             <span class="c1"># in the change payload or just the field name.</span>
-            <span class="c1"># If we don&#39;t have the field id, retrieve it from our internal mapping.</span>
-            <span class="n">field_id</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fieldId&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">get_jira_issue_field_id</span><span class="p">(</span>
-                <span class="n">change</span><span class="p">[</span><span class="s2">&quot;field&quot;</span><span class="p">]</span>
+            <span class="c1"># If we don't have the field id, retrieve it from our internal mapping.</span>
+            <span class="n">field_id</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fieldId"</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">get_jira_issue_field_id</span><span class="p">(</span>
+                <span class="n">change</span><span class="p">[</span><span class="s2">"field"</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Treating Jira change </span><span class="si">%s</span><span class="s2"> for field </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">field_id</span><span class="p">)</span>
+                <span class="s2">"Treating Jira change </span><span class="si">%s</span><span class="s2"> for field </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">field_id</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="p">(</span>
@@ -904,42 +904,42 @@
                     <span class="n">shotgun_data</span><span class="p">[</span><span class="n">shotgun_field</span><span class="p">]</span> <span class="o">=</span> <span class="n">shotgun_value</span>
                     <span class="c1"># we definitely have data to sync at this point</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                        <span class="s2">&quot;Syncing Jira </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> &#39;</span><span class="si">%s</span><span class="s2">&#39; to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) as value &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span>
+                        <span class="s2">"Syncing Jira </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> '</span><span class="si">%s</span><span class="s2">' to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) as value '</span><span class="si">%s</span><span class="s2">'"</span>
                         <span class="o">%</span> <span class="p">(</span>
-                            <span class="n">issue_type</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
-                            <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span>
-                            <span class="n">change</span><span class="p">[</span><span class="s2">&quot;field&quot;</span><span class="p">],</span>
-                            <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                            <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                            <span class="n">issue_type</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                            <span class="n">jira_issue</span><span class="p">[</span><span class="s2">"key"</span><span class="p">],</span>
+                            <span class="n">change</span><span class="p">[</span><span class="s2">"field"</span><span class="p">],</span>
+                            <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
+                            <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
                             <span class="n">shotgun_value</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
             <span class="k">except</span> <span class="n">InvalidJiraValue</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;Unable to sync Jira </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> &#39;</span><span class="si">%s</span><span class="s2">&#39; to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">): </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="s2">"Unable to sync Jira </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> '</span><span class="si">%s</span><span class="s2">' to Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">): </span><span class="si">%s</span><span class="s2">"</span>
                     <span class="o">%</span> <span class="p">(</span>
-                        <span class="n">issue_type</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
-                        <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span>
-                        <span class="n">change</span><span class="p">[</span><span class="s2">&quot;field&quot;</span><span class="p">],</span>
-                        <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                        <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                        <span class="n">issue_type</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                        <span class="n">jira_issue</span><span class="p">[</span><span class="s2">"key"</span><span class="p">],</span>
+                        <span class="n">change</span><span class="p">[</span><span class="s2">"field"</span><span class="p">],</span>
+                        <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
+                        <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
                         <span class="n">e</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira event: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Jira event: </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="n">event</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">shotgun_data</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Updating Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) with </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Updating Flow Production Tracking </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">) with </span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                    <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
+                    <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
                     <span class="n">shotgun_data</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
-                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
+                <span class="n">sg_entity</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
                 <span class="n">shotgun_data</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
@@ -949,7 +949,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_shotgun_entity_field_sync_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">jira_field_id</span><span class="p">,</span> <span class="n">change</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Retrieve the Flow Production Tracking Entity field and the value to set from the given Jira</span>
 <span class="sd">        Issue field value.</span>
 
@@ -972,10 +972,10 @@
 <span class="sd">        :returns: A tuple with a Flow Production Tracking field name and a Flow Production Tracking value usable</span>
 <span class="sd">                  for an update. The returned field id is `None` if no valid</span>
 <span class="sd">                  field or value could be retrieved.</span>
-<span class="sd">        :raises InvalidJiraValue: if the Jira value can&#39;t be translated</span>
+<span class="sd">        :raises InvalidJiraValue: if the Jira value can't be translated</span>
 <span class="sd">                 into a valid Flow Production Tracking value.</span>
 <span class="sd">        :raises ValueError: if the target Flow Production Tracking field is not valid.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Retrieve the Shotgun field to update</span>
         <span class="n">shotgun_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shotgun_entity_field_for_issue_field</span><span class="p">(</span>
@@ -983,31 +983,31 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_field</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Unable to find a target Flow Production Tracking field for Jira field </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Unable to find a target Flow Production Tracking field for Jira field </span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="n">jira_field_id</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
         <span class="c1"># TODO: handle Shotgun Project specific fields?</span>
         <span class="n">shotgun_field_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">get_field_schema</span><span class="p">(</span>
-            <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_field</span>
+            <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span> <span class="n">shotgun_field</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_field_schema</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Unknown Flow Production Tracking field </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="s2">"Unknown Flow Production Tracking field </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">"</span>
                 <span class="o">%</span> <span class="p">(</span>
-                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
                     <span class="n">shotgun_field</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">&quot;editable&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">"editable"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Unable to translate Jira field </span><span class="si">%s</span><span class="s2"> value to Flow Production Tracking. Target &quot;</span>
-                <span class="s2">&quot;Flow Production Tracking field </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> is not editable&quot;</span>
+                <span class="s2">"Unable to translate Jira field </span><span class="si">%s</span><span class="s2"> value to Flow Production Tracking. Target "</span>
+                <span class="s2">"Flow Production Tracking field </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> is not editable"</span>
                 <span class="o">%</span> <span class="p">(</span>
                     <span class="n">jira_field_id</span><span class="p">,</span>
-                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                    <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span>
                     <span class="n">shotgun_field</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -1015,7 +1015,7 @@
 
         <span class="c1"># Special cases for some fields where we need to perform some dedicated</span>
         <span class="c1"># logic.</span>
-        <span class="k">if</span> <span class="n">jira_field_id</span> <span class="o">==</span> <span class="s2">&quot;assignee&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">jira_field_id</span> <span class="o">==</span> <span class="s2">"assignee"</span><span class="p">:</span>
             <span class="n">shotgun_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shotgun_assignment_from_jira_issue_change</span><span class="p">(</span>
                 <span class="n">shotgun_entity</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">shotgun_field_schema</span><span class="p">,</span> <span class="n">jira_issue</span><span class="p">,</span> <span class="n">change</span>
             <span class="p">)</span>
@@ -1027,19 +1027,19 @@
             <span class="n">shotgun_field</span><span class="p">,</span>
             <span class="n">shotgun_field_schema</span><span class="p">,</span>
             <span class="n">change</span><span class="p">,</span>
-            <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="n">jira_field_id</span><span class="p">],</span>
+            <span class="n">jira_issue</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">][</span><span class="n">jira_field_id</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">shotgun_value</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_shotgun_entity_field_for_issue_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jira_field_id</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns the Flow Production Tracking field name to use to sync the given Jira Issue field.</span>
 
 <span class="sd">        Must be re-implemented in deriving classes.</span>
 
-<span class="sd">        :param str jira_field_id: A Jira Issue field id, e.g. &#39;summary&#39;.</span>
+<span class="sd">        :param str jira_field_id: A Jira Issue field id, e.g. 'summary'.</span>
 <span class="sd">        :returns: A string or `None`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_shotgun_assignment_from_jira_issue_change</span><span class="p">(</span>
@@ -1050,7 +1050,7 @@
         <span class="n">jira_issue</span><span class="p">,</span>
         <span class="n">change</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Retrieve a Flow Production Tracking assignment value from the given Jira change.</span>
 
 <span class="sd">        This method supports single entity and multi entity Flow Production Tracking fields.</span>
@@ -1063,42 +1063,42 @@
 <span class="sd">        :param str shotgun_field: The Flow Production Tracking Entity field to get a value for.</span>
 <span class="sd">        :param shotgun_field_schema: The Flow Production Tracking Entity field schema.</span>
 <span class="sd">        :param jira_issue: A Jira Issue raw dictionary.</span>
-<span class="sd">        :param change: A Jira event changelog dictionary with &#39;from&#39; and</span>
-<span class="sd">                       &#39;to&#39; keys.</span>
+<span class="sd">        :param change: A Jira event changelog dictionary with 'from' and</span>
+<span class="sd">                       'to' keys.</span>
 
 <span class="sd">        :returns: The updated value to set in Flow Production Tracking for the given field.</span>
 <span class="sd">        :raises ValueError: if the target Flow Production Tracking field is not suitable</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Change log example</span>
         <span class="c1"># {</span>
-        <span class="c1"># u&#39;from&#39;: u&#39;ford.prefect1&#39;,</span>
-        <span class="c1"># u&#39;to&#39;: None,</span>
-        <span class="c1"># u&#39;fromString&#39;: u&#39;Ford Prefect&#39;,</span>
-        <span class="c1"># u&#39;field&#39;: u&#39;assignee&#39;,</span>
-        <span class="c1"># u&#39;toString&#39;: None,</span>
-        <span class="c1"># u&#39;fieldtype&#39;: u&#39;jira&#39;,</span>
-        <span class="c1"># u&#39;fieldId&#39;: u&#39;assignee&#39;</span>
+        <span class="c1"># u'from': u'ford.prefect1',</span>
+        <span class="c1"># u'to': None,</span>
+        <span class="c1"># u'fromString': u'Ford Prefect',</span>
+        <span class="c1"># u'field': u'assignee',</span>
+        <span class="c1"># u'toString': None,</span>
+        <span class="c1"># u'fieldtype': u'jira',</span>
+        <span class="c1"># u'fieldId': u'assignee'</span>
         <span class="c1"># }</span>
 
-        <span class="n">data_type</span> <span class="o">=</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;multi_entity&quot;</span><span class="p">,</span> <span class="s2">&quot;entity&quot;</span><span class="p">]:</span>
+        <span class="n">data_type</span> <span class="o">=</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">"data_type"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"multi_entity"</span><span class="p">,</span> <span class="s2">"entity"</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> field type is not valid for Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> assignments. Expected &quot;</span>
-                <span class="s2">&quot;entity or multi_entity.&quot;</span>
-                <span class="o">%</span> <span class="p">(</span><span class="n">data_type</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_field</span><span class="p">)</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2"> field type is not valid for Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> assignments. Expected "</span>
+                <span class="s2">"entity or multi_entity."</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">data_type</span><span class="p">,</span> <span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span> <span class="n">shotgun_field</span><span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="n">sg_valid_types</span> <span class="o">=</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;valid_types&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s2">&quot;HumanUser&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sg_valid_types</span><span class="p">:</span>
+        <span class="n">sg_valid_types</span> <span class="o">=</span> <span class="n">shotgun_field_schema</span><span class="p">[</span><span class="s2">"properties"</span><span class="p">][</span><span class="s2">"valid_types"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">"HumanUser"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sg_valid_types</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> assignment field must accept HumanUser entities &quot;</span>
-                <span class="s2">&quot;but only accepts </span><span class="si">%s</span><span class="s2">&quot;</span>
-                <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">sg_valid_types</span><span class="p">)</span>
+                <span class="s2">"Flow Production Tracking </span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2"> assignment field must accept HumanUser entities "</span>
+                <span class="s2">"but only accepts </span><span class="si">%s</span><span class="s2">"</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">shotgun_entity</span><span class="p">[</span><span class="s2">"type"</span><span class="p">],</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">sg_valid_types</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="n">current_sg_assignment</span> <span class="o">=</span> <span class="n">shotgun_entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">shotgun_field</span><span class="p">)</span>
-        <span class="n">from_assignee</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span>
-        <span class="n">to_assignee</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;multi_entity&quot;</span><span class="p">:</span>
+        <span class="n">from_assignee</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">"from"</span><span class="p">]</span>
+        <span class="n">to_assignee</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">"to"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">"multi_entity"</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">from_assignee</span><span class="p">:</span>
                 <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span>
                     <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">from_assignee</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">False</span>
@@ -1106,21 +1106,21 @@
                 <span class="k">if</span> <span class="n">sg_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">current_sg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">current_sg_assignment</span><span class="p">):</span>
                         <span class="k">if</span> <span class="p">(</span>
-                            <span class="n">current_sg</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-                            <span class="ow">and</span> <span class="n">current_sg</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                            <span class="n">current_sg</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span>
+                            <span class="ow">and</span> <span class="n">current_sg</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
                         <span class="p">):</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                                <span class="s2">&quot;Removing user </span><span class="si">%s</span><span class="s2"> from Flow Production Tracking assignment&quot;</span>
+                                <span class="s2">"Removing user </span><span class="si">%s</span><span class="s2"> from Flow Production Tracking assignment"</span>
                                 <span class="o">%</span> <span class="p">(</span><span class="n">sg_user</span><span class="p">)</span>
                             <span class="p">)</span>
                             <span class="k">del</span> <span class="n">current_sg_assignment</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                            <span class="c1"># Note: we&#39;re assuming there is no duplicates in the</span>
+                            <span class="c1"># Note: we're assuming there is no duplicates in the</span>
                             <span class="c1"># list. Otherwise we would have to ensure we use an</span>
                             <span class="c1"># iterator allowing the list to be modified while</span>
                             <span class="c1"># iterating</span>
                             <span class="k">break</span>
             <span class="k">if</span> <span class="n">to_assignee</span><span class="p">:</span>
-                <span class="n">jira_user</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;assignee&quot;</span><span class="p">]</span>
+                <span class="n">jira_user</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">][</span><span class="s2">"assignee"</span><span class="p">]</span>
                 <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span>
                     <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">to_assignee</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="n">jira_user</span>
                 <span class="p">)</span>
@@ -1128,28 +1128,28 @@
                 <span class="c1"># Use the Issue assignee value to avoid a Jira user query</span>
                 <span class="k">for</span> <span class="n">current_sg_user</span> <span class="ow">in</span> <span class="n">current_sg_assignment</span><span class="p">:</span>
                     <span class="k">if</span> <span class="p">(</span>
-                        <span class="n">current_sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-                        <span class="ow">and</span> <span class="n">current_sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                        <span class="n">current_sg_user</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span>
+                        <span class="ow">and</span> <span class="n">current_sg_user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
                     <span class="p">):</span>
                         <span class="k">break</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Adding user </span><span class="si">%s</span><span class="s2"> to Flow Production Tracking assignment </span><span class="si">%s</span><span class="s2">&quot;</span>
+                        <span class="s2">"Adding user </span><span class="si">%s</span><span class="s2"> to Flow Production Tracking assignment </span><span class="si">%s</span><span class="s2">"</span>
                         <span class="o">%</span> <span class="p">(</span><span class="n">sg_user</span><span class="p">,</span> <span class="n">current_sg_assignment</span><span class="p">)</span>
                     <span class="p">)</span>
                     <span class="n">current_sg_assignment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sg_user</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># data_type == &quot;entity&quot;:</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># data_type == "entity":</span>
             <span class="k">if</span> <span class="n">from_assignee</span><span class="p">:</span>
                 <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span>
                     <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">from_assignee</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">False</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">sg_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">if</span> <span class="p">(</span>
-                        <span class="n">current_sg_assignment</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-                        <span class="ow">and</span> <span class="n">current_sg_assignment</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                        <span class="n">current_sg_assignment</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span>
+                        <span class="ow">and</span> <span class="n">current_sg_assignment</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span> <span class="o">==</span> <span class="n">sg_user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
                     <span class="p">):</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                            <span class="s2">&quot;Removing user </span><span class="si">%s</span><span class="s2"> from Flow Production Tracking assignment&quot;</span>
+                            <span class="s2">"Removing user </span><span class="si">%s</span><span class="s2"> from Flow Production Tracking assignment"</span>
                             <span class="o">%</span> <span class="p">(</span><span class="n">sg_user</span><span class="p">)</span>
                         <span class="p">)</span>
                         <span class="n">current_sg_assignment</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1159,7 +1159,7 @@
                 <span class="c1"># Use the Issue assignee value to avoid a Jira user query</span>
                 <span class="c1"># Note that we are dealing here with a Jira raw value dict, not</span>
                 <span class="c1"># a jira.resources.Resource instance.</span>
-                <span class="n">jira_user</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;assignee&quot;</span><span class="p">]</span>
+                <span class="n">jira_user</span> <span class="o">=</span> <span class="n">jira_issue</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">][</span><span class="s2">"assignee"</span><span class="p">]</span>
                 <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira_user_to_shotgun</span><span class="p">(</span>
                     <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">to_assignee</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="n">jira_user</span>
                 <span class="p">)</span>
@@ -1169,7 +1169,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_jira_server_user_to_shotgun</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Resolve the Flow Production Tracking user associated to the JIRA user passed in.</span>
 
 <span class="sd">        This method should be called against a JIRA local server.</span>
@@ -1181,31 +1181,31 @@
 
 <span class="sd">        :returns: A Flow Production Tracking user entity dictionary.</span>
 <span class="sd">        :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">emailAddress</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;emailAddress&quot;</span><span class="p">]</span>
+            <span class="n">emailAddress</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">"emailAddress"</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">emailAddress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">emailAddress</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># The code that calls this method should always have a user passed in. If there is not</span>
-            <span class="c1"># user_id or jira_user value, we shouldn&#39;t even be calling this method in the first</span>
+            <span class="c1"># user_id or jira_user value, we shouldn't even be calling this method in the first</span>
             <span class="c1"># place!</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;jira_user or user_id cannot be both None.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"jira_user or user_id cannot be both None."</span><span class="p">)</span>
 
         <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
-            <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span> <span class="p">[[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">emailAddress</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="s2">"HumanUser"</span><span class="p">,</span> <span class="p">[[</span><span class="s2">"email"</span><span class="p">,</span> <span class="s2">"is"</span><span class="p">,</span> <span class="n">emailAddress</span><span class="p">]],</span> <span class="p">[</span><span class="s2">"email"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">raise_on_missing_user</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
                     <span class="n">shotgun_field</span><span class="p">,</span>
                     <span class="n">jira_user</span><span class="p">,</span>
-                    <span class="s2">&quot;Unable to find a Flow Production Tracking user with email address </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="s2">"Unable to find a Flow Production Tracking user with email address </span><span class="si">%s</span><span class="s2">"</span>
                     <span class="o">%</span> <span class="p">(</span><span class="n">emailAddress</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">&quot;Unable to find a Flow Production Tracking user with email address </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="s2">"Unable to find a Flow Production Tracking user with email address </span><span class="si">%s</span><span class="s2">"</span>
                     <span class="o">%</span> <span class="p">(</span><span class="n">emailAddress</span><span class="p">)</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">sg_user</span>
@@ -1213,7 +1213,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_jira_cloud_user_to_shotgun</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shotgun_field</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">jira_user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">raise_on_missing_user</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Resolve the Flow Production Tracking user associated to the JIRA user passed in.</span>
 
 <span class="sd">        This method should be called against a JIRA Cloud server.</span>
@@ -1225,48 +1225,48 @@
 
 <span class="sd">        :returns: A Flow Production Tracking user entity dictionary.</span>
 <span class="sd">        :raises InvalidJiraValue: Raised if the user could not be found and ``raise_on_missing_user`` is True.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># If the jira_user has been passed in, just use the accountId!</span>
         <span class="k">if</span> <span class="n">jira_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">user_id</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">&quot;accountId&quot;</span><span class="p">]</span>
+            <span class="n">user_id</span> <span class="o">=</span> <span class="n">jira_user</span><span class="p">[</span><span class="s2">"accountId"</span><span class="p">]</span>
         <span class="c1"># jira_user is None when the user resolving code is trying to resolve the `from` user in the changelog.</span>
         <span class="c1"># When this happens, we only have a user id in the `from` to indicate what the original value was.</span>
         <span class="c1">#</span>
         <span class="c1"># Interestingly, when the a user field is updated via the JIRA API,</span>
-        <span class="c1"># the username is passed in instead of the account id in the `from` field, so we&#39;ll have to</span>
+        <span class="c1"># the username is passed in instead of the account id in the `from` field, so we'll have to</span>
         <span class="c1"># resolve it.</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ACCOUNT_ID_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;The changelog&#39;s to/from contains a user name. accountId will be retrieved.&quot;</span>
+                <span class="s2">"The changelog's to/from contains a user name. accountId will be retrieved."</span>
             <span class="p">)</span>
-            <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="s2">&quot;key&quot;</span><span class="p">)</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jira</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="s2">"key"</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">raise_on_missing_user</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
                         <span class="n">shotgun_field</span><span class="p">,</span>
                         <span class="n">jira_user</span><span class="p">,</span>
-                        <span class="s2">&quot;Unable to find JIRA user </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
+                        <span class="s2">"Unable to find JIRA user </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Unable to find JIRA user </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Unable to find JIRA user </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">))</span>
                 <span class="k">return</span> <span class="kc">None</span>
             <span class="n">user_id</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">accountId</span>
 
-        <span class="c1"># Now that we have an accountId, let&#39;s find that user in Shotgun.</span>
+        <span class="c1"># Now that we have an accountId, let's find that user in Shotgun.</span>
         <span class="n">sg_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shotgun</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>
-            <span class="s2">&quot;HumanUser&quot;</span><span class="p">,</span> <span class="p">[[</span><span class="s2">&quot;sg_jira_account_id&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="s2">"HumanUser"</span><span class="p">,</span> <span class="p">[[</span><span class="s2">"sg_jira_account_id"</span><span class="p">,</span> <span class="s2">"is"</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]],</span> <span class="p">[</span><span class="s2">"email"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_user</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">raise_on_missing_user</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">InvalidJiraValue</span><span class="p">(</span>
                     <span class="n">shotgun_field</span><span class="p">,</span>
                     <span class="n">jira_user</span><span class="p">,</span>
-                    <span class="s2">&quot;Unable to find a Flow Production Tracking user with JIRA accountId </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="s2">"Unable to find a Flow Production Tracking user with JIRA accountId </span><span class="si">%s</span><span class="s2">"</span>
                     <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">&quot;Unable to find a Flow Production Tracking user with JIRA accountId </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="s2">"Unable to find a Flow Production Tracking user with JIRA accountId </span><span class="si">%s</span><span class="s2">"</span>
                     <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">sg_user</span></div>
