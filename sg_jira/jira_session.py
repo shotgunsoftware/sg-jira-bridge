@@ -696,6 +696,110 @@ class JiraSession(jira.client.JIRA):
 
         return self.create_issue(fields=data)
 
+    def get_latest_issue_changelog(self, issue_key):
+        """
+        Return the newest changelog entry for an Issue in webhook shape.
+
+        Project Automation rules do not receive ``changelog.changedFields``; the
+        bridge uses this when ``sync_changed_only`` is set on the request body.
+
+        :param str issue_key: Jira Issue key or id.
+        :returns: A dict with ``id`` and ``items`` keys, like a Jira webhook.
+        :raises ValueError: if the Issue has no changelog histories.
+        """
+        issue = self.issue(issue_key, expand="changelog")
+        histories = getattr(getattr(issue, "changelog", None), "histories", None)
+        if not histories:
+            raise ValueError(
+                f"No changelog histories found for Jira Issue {issue_key!r}."
+            )
+
+        latest = histories[-1]
+        items = []
+        for item in latest.items:
+            field_id = getattr(item, "fieldId", None)
+            items.append(
+                {
+                    "field": item.field,
+                    "fieldtype": getattr(item, "fieldtype", "jira"),
+                    "fieldId": field_id,
+                    "from": getattr(item, "from", None),
+                    "fromString": getattr(item, "fromString", None),
+                    "to": getattr(item, "to", None),
+                    "toString": getattr(item, "toString", None),
+                }
+            )
+
+        return {"id": str(latest.id), "items": items}
+
+    @staticmethod
+    def _jira_user_to_webhook_dict(user):
+        """Build a minimal user dict like Jira webhook payloads."""
+        if user is None:
+            return {}
+        data = {}
+        for attr in ("accountId", "name", "key", "emailAddress", "displayName"):
+            value = getattr(user, attr, None)
+            if value is not None:
+                data[attr] = value
+        return data
+
+    def comment_as_webhook_entity(self, issue_key, comment_id):
+        """
+        Load a Comment and shape it like a Jira ``comment_*`` webhook payload.
+
+        :param str issue_key: Parent Issue key or id.
+        :param str comment_id: Comment id.
+        :returns: A ``comment`` object dict for :meth:`~handlers.SyncHandler.process_jira_event`.
+        :raises ValueError: if the Comment does not exist.
+        """
+        comment = self.comment(issue_key, comment_id)
+        if comment is None:
+            raise ValueError(
+                f"Jira Comment {comment_id!r} was not found on Issue {issue_key!r}."
+            )
+
+        entity = {
+            "id": str(comment.id),
+            "author": self._jira_user_to_webhook_dict(getattr(comment, "author", None)),
+            "updateAuthor": self._jira_user_to_webhook_dict(
+                getattr(comment, "updateAuthor", None)
+                or getattr(comment, "author", None)
+            ),
+        }
+        parent_id = getattr(comment, "parentId", None)
+        if parent_id is not None:
+            entity["parentId"] = parent_id
+        return entity
+
+    def worklog_as_webhook_entity(self, issue_key, worklog_id):
+        """
+        Load a Worklog and shape it like a Jira ``worklog_*`` webhook payload.
+
+        :param str issue_key: Parent Issue key or id.
+        :param str worklog_id: Worklog id.
+        :returns: A ``worklog`` object dict for :meth:`~handlers.SyncHandler.process_jira_event`.
+        :raises ValueError: if the Worklog does not exist.
+        """
+        worklog = self.worklog(issue_key, worklog_id)
+        if worklog is None:
+            raise ValueError(
+                f"Jira Worklog {worklog_id!r} was not found on Issue {issue_key!r}."
+            )
+
+        issue = getattr(worklog, "issue", None)
+        issue_id = getattr(issue, "id", None) if issue is not None else None
+        entity = {
+            "id": str(worklog.id),
+            "issueId": str(issue_id) if issue_id is not None else str(issue_key),
+            "author": self._jira_user_to_webhook_dict(getattr(worklog, "author", None)),
+            "updateAuthor": self._jira_user_to_webhook_dict(
+                getattr(worklog, "updateAuthor", None)
+                or getattr(worklog, "author", None)
+            ),
+        }
+        return entity
+
     def get_jira_issue_edit_meta(self, jira_issue):
         """
         Return the edit metadata for the given Jira Issue.

@@ -17,6 +17,7 @@ from test_sync_base import TestSyncBase
 
 import sg_jira
 from sg_jira.constants import (
+    JIRA_EVENT_AUTOMATION_FULL_SYNC,
     JIRA_SHOTGUN_ID_FIELD,
     JIRA_SHOTGUN_TYPE_FIELD,
     JIRA_SHOTGUN_URL_FIELD,
@@ -1869,6 +1870,24 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         self.assertFalse(
             bridge.sync_in_shotgun(
                 self.HANDLER_NAME, "Issue", "FAKED-01", mocked_jira_event
+            )
+        )
+
+    def test_jira_to_fptr_forged_automation_full_sync_flag_rejected(self, mocked_sg):
+        """A forged _bridge_automation_full_sync must not waive the changelog check."""
+
+        syncer, bridge = self._get_syncer(mocked_sg, name=self.HANDLER_NAME)
+
+        jira_issue = self._mock_jira_data(bridge)
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
+        del mocked_jira_event["changelog"]
+        mocked_jira_event[JIRA_EVENT_AUTOMATION_FULL_SYNC] = True
+
+        self.assertFalse(
+            bridge.sync_in_shotgun(
+                self.HANDLER_NAME, "Issue", jira_issue.key, mocked_jira_event
             )
         )
 

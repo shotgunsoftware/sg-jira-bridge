@@ -20,6 +20,8 @@ from sg_jira.constants import (
     SHOTGUN_JIRA_URL_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
 )
+from sg_jira.jira_automation_payload import strip_untrusted_automation_flags
+
 from .sync_handler import SyncHandler
 
 # TODO:
@@ -515,6 +517,8 @@ class EntitiesGenericHandler(SyncHandler):
 
         sync_settings = None
 
+        strip_untrusted_automation_flags(event)
+
         self._logger.debug(f"Checking Jira event...\n {event}")
 
         if resource_type.lower() != "issue":
@@ -598,7 +602,8 @@ class EntitiesGenericHandler(SyncHandler):
                 self._logger.debug("Rejecting Jira event without a changelog.")
                 return False
 
-            jira_issue = self.get_jira_issue(jira_entity["id"])
+            issue_ref = jira_entity.get("id") or jira_entity.get("key")
+            jira_issue = self.get_jira_issue(issue_ref)
 
         if not jira_issue:
             self._logger.debug("Rejecting Jira event: couldn't find Jira Issue.")
@@ -679,6 +684,8 @@ class EntitiesGenericHandler(SyncHandler):
         :returns: True if the event was successfully processed, False if the
                   sync didn't happen for any reason.
         """
+
+        strip_untrusted_automation_flags(event)
 
         self._logger.debug(f"Processing Jira event...\n {event}")
 
