@@ -44,10 +44,6 @@ JIRA_SYNC_IN_FPTR_FIELD = "Sync In FPTR"
 # Sentinel in Project Automation POST bodies; normalized server-side only.
 JIRA_PROJECT_AUTOMATION_SOURCE = "jira_project_automation"
 
-# Legacy/internal key — always stripped from inbound bodies. Full automation sync
-# uses a server-built changelog entry (Sync In FPTR), not this flag.
-JIRA_EVENT_AUTOMATION_FULL_SYNC = "_bridge_automation_full_sync"
-
 # Shotgun fields handling multiple values
 SHOTGUN_LIST_FIELDS = ["multi_entity"]
 

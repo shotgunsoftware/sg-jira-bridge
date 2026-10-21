@@ -385,18 +385,18 @@ class Bridge(object):
                   syncing was skipped for any reason.
         """
         synced = False
-        try:
-            syncer = self.get_syncer(settings_name)
-            # See comment in Syncer class: we assume copmlicated logic can be
-            # handled in a single handler, so we don't have to support multiple
-            # handlers.
-            handler = syncer.accept_jira_event(resource_type, resource_id, event)
-            if handler:
-                synced = handler.process_jira_event(resource_type, resource_id, event)
-        except Exception as e:
-            # Catch the exception to log it and let it bubble up
-            logger.exception(e)
-            raise
+        # try:
+        syncer = self.get_syncer(settings_name)
+        # See comment in Syncer class: we assume copmlicated logic can be
+        # handled in a single handler, so we don't have to support multiple
+        # handlers.
+        handler = syncer.accept_jira_event(resource_type, resource_id, event)
+        if handler:
+            synced = handler.process_jira_event(resource_type, resource_id, event)
+        # except Exception as e:
+        #     # Catch the exception to log it and let it bubble up
+        #     logger.exception(e)
+        #     raise
         return synced
 
     @staticmethod

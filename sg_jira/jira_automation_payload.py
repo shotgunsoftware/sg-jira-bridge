@@ -9,27 +9,24 @@
 Normalize Jira Project Automation web-request bodies into webhook-shaped events.
 
 Site webhooks include a native ``changelog`` block; Project Automation does not
-expose ``{{#changelog.changedFields}}``. Callers can send ``field_change``,
-``changed_fields``, or ``sync_changed_only`` instead — see :doc:`jira_automation`.
+expose ``{{#changelog.changedFields}}``. For field rules, send ``field_change``
+with ``{{fieldChange.fromString}}`` / ``{{fieldChange.toString}}`` — see
+:doc:`jira_automation`.
 
-Automation rules send a ``trigger`` (recommended), entity ids, and ``actor``.
-The bridge maps those to internal Jira webhook-shaped events for the Generic
-Syncer — see :doc:`jira_automation`.
+Issue automation is inferred from the body: ``field_change`` / ``changed_fields``
+for partial sync, otherwise full Issue sync. Comment/worklog rules still use
+``trigger``. See :doc:`jira_automation`.
 """
 
 import re
 
 from sg_jira.constants import (
-    JIRA_EVENT_AUTOMATION_FULL_SYNC,
     JIRA_PROJECT_AUTOMATION_SOURCE,
     JIRA_SYNC_IN_FPTR_FIELD,
 )
 
-# Public automation API: one Jira rule → one trigger value.
+# Comment/worklog automation: one Jira rule → one trigger value.
 TRIGGER_TO_WEBHOOK_EVENT = {
-    "issue.created": "jira:issue_created",
-    "issue.updated": "jira:issue_updated",
-    "issue.field_changed": "jira:issue_updated",
     "comment.added": "comment_created",
     "comment.edited": "comment_updated",
     "comment.deleted": "comment_deleted",
@@ -58,10 +55,8 @@ _ENTITY_WEBHOOK_EVENTS = frozenset(
 
 _SUPPORTED_WEBHOOK_EVENTS = _ISSUE_WEBHOOK_EVENTS | _ENTITY_WEBHOOK_EVENTS
 
-# Deprecated ``webhook_event`` values → ``trigger`` (for inference only).
+# Deprecated ``webhook_event`` on comment/worklog bodies → ``trigger`` (inference).
 _LEGACY_WEBHOOK_EVENT_TO_TRIGGER = {
-    "jira:issue_created": "issue.created",
-    "jira:issue_updated": "issue.updated",
     "comment_created": "comment.added",
     "comment_updated": "comment.edited",
     "comment_deleted": "comment.deleted",
@@ -80,31 +75,18 @@ class JiraAutomationPayloadError(ValueError):
     """Raised when a Jira Project Automation request body is invalid."""
 
 
-def strip_untrusted_automation_flags(event):
-    """
-    Remove automation control keys that must never be honored from HTTP JSON.
-
-    Call this on every inbound ``jira2sg`` body and at the start of Jira event
-    handling so a crafted webhook cannot forge a full sync.
-    """
-    if not isinstance(event, dict):
-        return
-    event.pop(JIRA_EVENT_AUTOMATION_FULL_SYNC, None)
-
-
 def normalize_automation_request(payload, resource_type, resource_id, jira=None):
     """
     Convert a Project Automation POST body into an event the Generic Syncer accepts.
 
-    Payloads without ``source: jira_project_automation`` are returned unchanged
-    (after stripping a client-supplied full-sync flag). Real Jira webhooks are
-    unaffected.
+    Payloads without ``source: jira_project_automation`` are returned unchanged.
+    Real Jira webhooks are unaffected.
 
     :param dict payload: Parsed JSON request body.
     :param str resource_type: Jira resource type from the URL path (e.g. ``issue``).
     :param str resource_id: Jira Issue key from the URL path.
     :param jira: Optional :class:`~sg_jira.jira_session.JiraSession` for
-        ``sync_changed_only``, Issue id resolution, and comment/worklog loads.
+        Issue id resolution, and comment/worklog loads.
     :returns: Event dictionary in Jira webhook shape.
     :raises JiraAutomationPayloadError: On invalid automation input.
     """
@@ -112,7 +94,6 @@ def normalize_automation_request(payload, resource_type, resource_id, jira=None)
         raise JiraAutomationPayloadError("Request body must be a JSON object.")
 
     event = dict(payload)
-    strip_untrusted_automation_flags(event)
 
     if event.get("source") != JIRA_PROJECT_AUTOMATION_SOURCE:
         return event
@@ -134,7 +115,9 @@ def normalize_automation_request(payload, resource_type, resource_id, jira=None)
         if trigger is not None:
             webhook_event = None
     trigger = _infer_trigger_if_missing(event, trigger)
-    webhook_event, trigger = _resolve_trigger_and_webhook_event(trigger, webhook_event)
+    webhook_event, _trigger = _resolve_trigger_and_webhook_event(
+        trigger, webhook_event, event
+    )
 
     user = _pop_actor(event)
 
@@ -148,7 +131,7 @@ def normalize_automation_request(payload, resource_type, resource_id, jira=None)
         )
     else:
         normalized = _normalize_issue_automation(
-            webhook_event, issue_ref, event, resource_id, jira, trigger=trigger
+            webhook_event, issue_ref, event, resource_id, jira
         )
 
     if user is not None:
@@ -159,19 +142,13 @@ def normalize_automation_request(payload, resource_type, resource_id, jira=None)
 
 def _infer_trigger_if_missing(event, trigger):
     """
-    Infer ``issue.field_changed`` when the body already names changed fields.
+    Infer comment/worklog triggers from entity ids when missing.
 
-    Comment/worklog rules always need an explicit trigger so it matches the
-    Jira rule (added vs edited vs deleted).
+    Issue create/update/field sync is inferred from ``field_change`` presence,
+    not from ``trigger``.
     """
     if trigger is not None:
         return trigger
-    if (
-        event.get("field_change")
-        or event.get("changed_fields")
-        or event.get("sync_changed_only")
-    ):
-        return "issue.field_changed"
     if event.get("comment_id") is not None or event.get("comment") is not None:
         raise JiraAutomationPayloadError(
             "Comment rules require trigger: comment.added, comment.edited, or "
@@ -185,12 +162,14 @@ def _infer_trigger_if_missing(event, trigger):
     return None
 
 
-def _resolve_trigger_and_webhook_event(trigger, webhook_event):
+def _resolve_trigger_and_webhook_event(trigger, webhook_event, event):
     if trigger is not None:
         if trigger not in TRIGGER_TO_WEBHOOK_EVENT:
             raise JiraAutomationPayloadError(
                 f"Unsupported trigger {trigger!r}. "
-                f"Use one of: {', '.join(sorted(TRIGGER_TO_WEBHOOK_EVENT.keys()))}."
+                f"Issue sync uses field_change or a minimal body (no trigger). "
+                f"Comment/worklog triggers: "
+                f"{', '.join(sorted(TRIGGER_TO_WEBHOOK_EVENT.keys()))}."
             )
         mapped = TRIGGER_TO_WEBHOOK_EVENT[trigger]
         if webhook_event and webhook_event != mapped:
@@ -204,7 +183,7 @@ def _resolve_trigger_and_webhook_event(trigger, webhook_event):
         if webhook_event not in _SUPPORTED_WEBHOOK_EVENTS:
             raise JiraAutomationPayloadError(
                 f"Unsupported webhook_event {webhook_event!r}. "
-                f"Prefer trigger; see docs/jira_automation.rst."
+                f"See docs/jira_automation.rst."
             )
         return webhook_event, None
 
@@ -237,7 +216,7 @@ def _issue_reference(resource_id, jira):
 def _normalize_entity_automation(webhook_event, issue_ref, event, issue_key, jira):
     entity_kind, _action = webhook_event.split("_", 1)
 
-    for key in ("field_change", "changed_fields", "sync_changed_only"):
+    for key in ("field_change", "changed_fields"):
         if key in event:
             raise JiraAutomationPayloadError(
                 f"{key} applies to Issue field rules only, not {webhook_event}."
@@ -333,16 +312,16 @@ def _entity_needs_jira_fetch(entity, action):
     return False
 
 
-def _normalize_issue_automation(
-    webhook_event, issue_ref, event, resource_id, jira, trigger=None
-):
+def _normalize_issue_automation(webhook_event, issue_ref, event, resource_id, jira):
+    if event.pop("sync_changed_only", False):
+        raise JiraAutomationPayloadError(
+            "sync_changed_only is not supported. Use field_change with "
+            "{{fieldChange.fromString}} and {{fieldChange.toString}}."
+        )
+
     field_change = event.pop("field_change", None)
     changed_fields = event.pop("changed_fields", None)
-    sync_changed_only = event.pop("sync_changed_only", False)
-
-    if trigger == "issue.field_changed":
-        if field_change is None and changed_fields is None and not sync_changed_only:
-            sync_changed_only = True
+    partial_sync = field_change is not None or changed_fields is not None
 
     if field_change is not None and changed_fields is not None:
         raise JiraAutomationPayloadError(
@@ -359,13 +338,13 @@ def _normalize_issue_automation(
         "issue": issue_ref,
     }
 
-    if webhook_event == "jira:issue_created":
-        normalized["changelog"] = _automation_full_sync_changelog(jira)
-        return normalized
-
     if field_change is not None:
         normalized["changelog"] = {
-            "items": [_field_spec_to_changelog_item(field_change, jira)],
+            "items": [
+                _field_spec_to_changelog_item(
+                    field_change, jira, require_value_strings=partial_sync
+                )
+            ],
         }
         return normalized
 
@@ -376,20 +355,12 @@ def _normalize_issue_automation(
             )
         normalized["changelog"] = {
             "items": [
-                _field_spec_to_changelog_item(entry, jira) for entry in changed_fields
+                _field_spec_to_changelog_item(
+                    entry, jira, require_value_strings=partial_sync
+                )
+                for entry in changed_fields
             ],
         }
-        return normalized
-
-    if sync_changed_only:
-        if jira is None:
-            raise JiraAutomationPayloadError(
-                "sync_changed_only requires a Jira connection."
-            )
-        try:
-            normalized["changelog"] = jira.get_latest_issue_changelog(resource_id)
-        except ValueError as e:
-            raise JiraAutomationPayloadError(str(e)) from e
         return normalized
 
     normalized["changelog"] = _automation_full_sync_changelog(jira)
@@ -417,23 +388,38 @@ def _automation_full_sync_changelog(jira):
     }
 
 
-def _field_spec_to_changelog_item(field_spec, jira):
+def _field_spec_to_changelog_item(field_spec, jira, require_value_strings=False):
     if not isinstance(field_spec, dict):
         raise JiraAutomationPayloadError("Each field entry must be an object.")
 
-    field_name = field_spec.get("field")
-    field_id = field_spec.get("fieldId")
+    field_name = _normalize_field_text(field_spec.get("field"))
+    field_id = _normalize_field_text(field_spec.get("fieldId"))
 
-    for value in (field_name, field_id):
+    for value in (field_spec.get("field"), field_spec.get("fieldId")):
         if isinstance(value, str) and _looks_like_unexpanded_smart_value(value):
             raise JiraAutomationPayloadError(
                 "field_change contains an unexpanded Jira smart value. "
-                "Check the automation rule Custom data."
+                "Check the automation rule trigger (Field value changed) and "
+                "Custom data. See docs/jira_automation.rst."
             )
+
+    if require_value_strings:
+        for key in ("fromString", "toString"):
+            if key not in field_spec:
+                raise JiraAutomationPayloadError(
+                    f"field_change must include {key} "
+                    f"(use {{{{fieldChange.{key}}}}})."
+                )
+            if isinstance(field_spec[key], str) and _looks_like_unexpanded_smart_value(
+                field_spec[key]
+            ):
+                raise JiraAutomationPayloadError(
+                    f"field_change.{key} is an unexpanded smart value."
+                )
 
     if not field_name and not field_id:
         raise JiraAutomationPayloadError(
-            "Each field entry needs a field name and/or fieldId."
+            "field_change needs fieldId (recommended, hard-code per rule) or field."
         )
 
     if not field_id and field_name and jira is not None:
@@ -446,7 +432,19 @@ def _field_spec_to_changelog_item(field_spec, jira):
         "field": field_name,
         "fieldId": field_id or field_name,
     }
+    for key in ("fromString", "toString", "from", "to"):
+        if key in field_spec:
+            item[key] = field_spec[key]
     return item
+
+
+def _normalize_field_text(value):
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        return value
+    text = value.strip()
+    return text or None
 
 
 def _looks_like_unexpanded_smart_value(value):

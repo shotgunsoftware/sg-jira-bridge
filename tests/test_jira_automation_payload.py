@@ -9,7 +9,6 @@ import unittest
 from unittest import mock
 
 from sg_jira.constants import (
-    JIRA_EVENT_AUTOMATION_FULL_SYNC,
     JIRA_PROJECT_AUTOMATION_SOURCE,
     JIRA_SYNC_IN_FPTR_FIELD,
 )
@@ -23,28 +22,6 @@ class MockJiraIssue:
     id = "10001"
 
 
-class MockChangelogItem:
-    def __init__(self, field, field_id="summary"):
-        self.field = field
-        self.fieldtype = "jira"
-        self.fieldId = field_id
-        self.fromString = "old"
-        self.toString = "new"
-        self.from_ = None
-        self.to = None
-
-
-class MockHistory:
-    def __init__(self):
-        self.id = "999"
-        self.items = [MockChangelogItem("summary")]
-
-
-class MockChangelog:
-    def __init__(self):
-        self.histories = [MockHistory()]
-
-
 class MockJira:
     def __init__(self):
         self._fields_map = {
@@ -55,27 +32,10 @@ class MockJira:
     def issue(self, key, expand=None):
         issue = mock.Mock()
         issue.id = MockJiraIssue.id
-        if expand == "changelog":
-            issue.changelog = MockChangelog()
         return issue
 
     def get_jira_issue_field_id(self, name):
         return self._fields_map.get(name.lower())
-
-    def get_latest_issue_changelog(self, issue_key):
-        issue = self.issue(issue_key, expand="changelog")
-        latest = issue.changelog.histories[-1]
-        return {
-            "id": str(latest.id),
-            "items": [
-                {
-                    "field": item.field,
-                    "fieldtype": item.fieldtype,
-                    "fieldId": item.fieldId,
-                }
-                for item in latest.items
-            ],
-        }
 
     def comment_as_webhook_entity(self, issue_key, comment_id):
         return {
@@ -99,43 +59,34 @@ class NormalizeAutomationRequestTest(unittest.TestCase):
         result = normalize_automation_request(payload, "issue", "KEY-1")
         self.assertEqual(result, payload)
 
-    def test_strips_forged_full_sync_flag_on_webhook(self):
-        payload = {
-            "webhookEvent": "jira:issue_updated",
-            JIRA_EVENT_AUTOMATION_FULL_SYNC: True,
-        }
-        result = normalize_automation_request(payload, "issue", "KEY-1")
-        self.assertNotIn(JIRA_EVENT_AUTOMATION_FULL_SYNC, result)
-
-    def test_trigger_issue_updated_full_sync(self):
+    def test_issue_full_sync_without_trigger(self):
         jira = MockJira()
         result = normalize_automation_request(
             {
                 "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                "trigger": "issue.updated",
                 "actor": {"accountId": "user-1"},
             },
             "issue",
             "KEY-1",
             jira=jira,
         )
-        self.assertNotIn(JIRA_EVENT_AUTOMATION_FULL_SYNC, result)
         self.assertEqual(result["changelog"]["items"][0]["fieldId"], "customfield_sync")
         self.assertEqual(result["user"]["accountId"], "user-1")
 
-    def test_trigger_field_changed_defaults_to_changelog_fetch(self):
+    def test_rejects_issue_triggers(self):
         jira = MockJira()
-        result = normalize_automation_request(
-            {
-                "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                "trigger": "issue.field_changed",
-            },
-            "issue",
-            "KEY-1",
-            jira=jira,
-        )
-        self.assertIn("changelog", result)
-        self.assertNotIn(JIRA_EVENT_AUTOMATION_FULL_SYNC, result)
+        for bad_trigger in ("issue.created", "issue.updated", "issue.field_changed"):
+            with self.subTest(trigger=bad_trigger):
+                with self.assertRaises(JiraAutomationPayloadError):
+                    normalize_automation_request(
+                        {
+                            "source": JIRA_PROJECT_AUTOMATION_SOURCE,
+                            "trigger": bad_trigger,
+                        },
+                        "issue",
+                        "KEY-1",
+                        jira=jira,
+                    )
 
     def test_minimal_automation_body_full_sync(self):
         jira = MockJira()
@@ -151,36 +102,62 @@ class NormalizeAutomationRequestTest(unittest.TestCase):
         self.assertEqual(result["webhookEvent"], "jira:issue_updated")
         self.assertEqual(result["issue"], {"key": "KEY-1", "id": "10001"})
         self.assertEqual(result["user"], {"accountId": "user-1"})
-        self.assertNotIn(JIRA_EVENT_AUTOMATION_FULL_SYNC, result)
         self.assertIn("changelog", result)
 
-    def test_field_change_builds_changelog(self):
+    def test_rejects_empty_field_change_from_blank_smart_values(self):
+        with self.assertRaises(JiraAutomationPayloadError):
+            normalize_automation_request(
+                {
+                    "source": JIRA_PROJECT_AUTOMATION_SOURCE,
+                    "field_change": {
+                        "field": "",
+                        "fieldId": "",
+                        "fromString": "a",
+                        "toString": "b",
+                    },
+                },
+                "issue",
+                "KEY-1",
+            )
+
+    def test_field_change_builds_changelog_with_value_strings(self):
         result = normalize_automation_request(
             {
                 "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                "field_change": {"field": "Summary", "fieldId": "summary"},
+                "field_change": {
+                    "field": "Summary",
+                    "fieldId": "summary",
+                    "fromString": "old title",
+                    "toString": "new title",
+                },
             },
             "issue",
             "KEY-1",
         )
         self.assertEqual(
             result["changelog"]["items"],
-            [{"field": "Summary", "fieldId": "summary"}],
+            [
+                {
+                    "field": "Summary",
+                    "fieldId": "summary",
+                    "fromString": "old title",
+                    "toString": "new title",
+                }
+            ],
         )
 
-    def test_sync_changed_only_fetches_changelog(self):
+    def test_sync_changed_only_rejected(self):
         jira = MockJira()
-        result = normalize_automation_request(
-            {
-                "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                "sync_changed_only": True,
-            },
-            "issue",
-            "KEY-1",
-            jira=jira,
-        )
-        self.assertEqual(len(result["changelog"]["items"]), 1)
-        self.assertEqual(result["changelog"]["items"][0]["field"], "summary")
+        with self.assertRaises(JiraAutomationPayloadError):
+            normalize_automation_request(
+                {
+                    "source": JIRA_PROJECT_AUTOMATION_SOURCE,
+                    "sync_changed_only": True,
+                },
+                "issue",
+                "KEY-1",
+                jira=jira,
+            )
 
     def test_issue_created_sets_full_sync(self):
         result = normalize_automation_request(
@@ -192,23 +169,7 @@ class NormalizeAutomationRequestTest(unittest.TestCase):
             "KEY-1",
         )
         self.assertEqual(result["webhookEvent"], "jira:issue_created")
-        self.assertNotIn(JIRA_EVENT_AUTOMATION_FULL_SYNC, result)
         self.assertIn("changelog", result)
-
-    def test_automation_strips_forged_full_sync_before_applying(self):
-        jira = MockJira()
-        result = normalize_automation_request(
-            {
-                "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                JIRA_EVENT_AUTOMATION_FULL_SYNC: True,
-                "trigger": "issue.updated",
-            },
-            "issue",
-            "KEY-1",
-            jira=jira,
-        )
-        self.assertNotIn(JIRA_EVENT_AUTOMATION_FULL_SYNC, result)
-        self.assertEqual(result["changelog"]["items"][0]["fieldId"], "customfield_sync")
 
     def test_rejects_unexpanded_smart_values(self):
         with self.assertRaises(JiraAutomationPayloadError):
@@ -216,29 +177,6 @@ class NormalizeAutomationRequestTest(unittest.TestCase):
                 {
                     "source": JIRA_PROJECT_AUTOMATION_SOURCE,
                     "field_change": {"field": "{{fieldChange.field.name}}"},
-                },
-                "issue",
-                "KEY-1",
-            )
-
-    def test_rejects_unknown_keys(self):
-        with self.assertRaises(JiraAutomationPayloadError):
-            normalize_automation_request(
-                {
-                    "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                    "extra": True,
-                },
-                "issue",
-                "KEY-1",
-            )
-
-    def test_rejects_automation_api_version_key(self):
-        with self.assertRaises(JiraAutomationPayloadError):
-            normalize_automation_request(
-                {
-                    "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                    "automation_api": 1,
-                    "trigger": "issue.updated",
                 },
                 "issue",
                 "KEY-1",
@@ -262,13 +200,20 @@ class NormalizeAutomationRequestTest(unittest.TestCase):
         result = normalize_automation_request(
             {
                 "source": JIRA_PROJECT_AUTOMATION_SOURCE,
-                "field_change": {"field": "Summary", "fieldId": "summary"},
+                "field_change": {
+                    "fieldId": "summary",
+                    "fromString": "was",
+                    "toString": "now",
+                },
             },
             "issue",
             "KEY-1",
         )
         self.assertEqual(result["webhookEvent"], "jira:issue_updated")
-        self.assertEqual(result["changelog"]["items"][0]["fieldId"], "summary")
+        item = result["changelog"]["items"][0]
+        self.assertEqual(item["fieldId"], "summary")
+        self.assertEqual(item["fromString"], "was")
+        self.assertEqual(item["toString"], "now")
 
     def test_comment_created_loads_comment(self):
         jira = MockJira()

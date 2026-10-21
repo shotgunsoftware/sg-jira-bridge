@@ -13,9 +13,10 @@ How to think about it (for rule authors)
 You configure **two things in Jira**, not in the bridge:
 
 1. **When** — the rule **trigger** (*Field value changed*, *Comment added*, …).
-2. **What to tell the bridge** — **Custom data** JSON with ``trigger`` (must
-   match the intent of that Jira trigger) and **smart values** where Jira fills
-   in ids at run time.
+2. **What to tell the bridge** — **Custom data** JSON: for **Issues**, omit
+   ``field_change`` for full sync or include ``field_change`` for one-field sync;
+   for **comments/worklogs**, set ``trigger`` and entity ids. Use **smart values**
+   where Jira fills in values at run time.
 
 You **never look up** comment or worklog ids in the Jira UI. You paste Jira
 **smart value** placeholders; Jira replaces them when the rule runs.
@@ -29,7 +30,7 @@ You **never look up** comment or worklog ids in the Jira UI. You paste Jira
    * - Rule trigger
      - *When* the web request fires
    * - ``trigger`` in JSON
-     - *What* the bridge should sync (must align with the rule — see table below)
+     - Required for comment/worklog rules only (see tables below)
    * - ``{{issue.key}}`` in the URL
      - Which Issue (always from smart values)
    * - ``{{comment.id}}`` / ``{{worklog.id}}`` in JSON
@@ -52,16 +53,17 @@ Replace ``<settings_name>`` with your Generic Syncer settings key (often
 
 **Recommended condition:** *Issue fields* → *Sync In FPTR* **equals** ``True``.
 
-Minimum JSON (every rule)
-=========================
+Minimum JSON
+============
 
-.. code-block:: json
+**Issue** (full sync — *Issue created*, *Issue updated*, etc.)::
 
-   {
-       "source": "jira_project_automation",
-       "trigger": "<see tables below>",
-       "actor": {"accountId": "{{initiator.accountId}}"}
-   }
+    {
+        "source": "jira_project_automation",
+        "actor": {"accountId": "{{initiator.accountId}}"}
+    }
+
+**Comment / worklog** — add ``trigger`` and ``comment_id`` / ``worklog_id`` (below).
 
 Only the keys documented on this page are allowed. There is no API version field.
 
@@ -71,58 +73,45 @@ Pick a recipe (copy-paste)
 Issue — full sync
 =================
 
-.. list-table::
-   :header-rows: 1
-   :widths: 35 65
+Use Jira triggers such as **Issue created** or **Issue updated**. Custom data
+needs only ``source`` and ``actor`` — **no** ``trigger`` and **no**
+``field_change``. The bridge resyncs all mapped Issue fields.
 
-   * - Jira rule trigger
-     - Custom data
-   * - **Issue created**
-     - ``trigger``: ``issue.created`` (+ ``source``, ``actor``)
-   * - **Issue updated** (resync all mapped fields)
-     - ``trigger``: ``issue.updated`` (+ ``source``, ``actor``)
-
-Example (*Issue created*)::
+Example::
 
     {
         "source": "jira_project_automation",
-        "trigger": "issue.created",
         "actor": {"accountId": "{{initiator.accountId}}"}
     }
+
+Do **not** send ``trigger`` on Issue rules (unsupported values return an error).
 
 Issue — sync only fields that changed (recommended default)
 ===========================================================
 
 Use Jira trigger **Field value changed** (limit to FPTR-mapped fields).
 
-**Simplest body (recommended)** — you do **not** pass field names or ids. The
-bridge reads the latest change from Jira’s API (same fields as in that edit)::
+**Recommended body** — one automation rule per monitored field. Hard-code that
+field’s ``fieldId`` in JSON (Send web request does not reliably expand
+``{{fieldChange.field.name}}`` / ``{{fieldChange.field.id}}``). Pass old and new
+display values with Atlassian’s `fieldChange` smart values
+(`Automation smart values - issues
+<https://support.atlassian.com/cloud-automation/docs/jira-smart-values-issues/>`_)::
 
     {
         "source": "jira_project_automation",
-        "trigger": "issue.field_changed",
-        "actor": {"accountId": "{{initiator.accountId}}"}
-    }
-
-That three-field payload is intentional: ``trigger`` tells the bridge *field-level*
-sync; Jira’s trigger already decided *when*; the bridge discovers *which* fields
-changed.
-
-**Single field from the trigger (optional)** — if you prefer to name the field
-explicitly via ``{{fieldChange}}``::
-
-    {
-        "source": "jira_project_automation",
-        "trigger": "issue.field_changed",
         "actor": {"accountId": "{{initiator.accountId}}"},
         "field_change": {
-            "field": "{{fieldChange.field.name}}",
-            "fieldId": "{{fieldChange.field.id}}"
+            "fieldId": "summary",
+            "fromString": "{{fieldChange.fromString}}",
+            "toString": "{{fieldChange.toString}}"
         }
     }
 
-If you include ``field_change`` but omit ``trigger``, the bridge infers
-``issue.field_changed``.
+Replace ``summary`` with the Jira field id your rule monitors (for example a
+``customfield_…`` id). ``fromString`` / ``toString`` may be empty when a value
+is cleared. The presence of ``field_change`` selects partial sync; no ``trigger``
+is required.
 
 Do **not** use ``{{#changelog.changedFields}}`` in Project Automation — that
 block is empty there.
@@ -253,26 +242,30 @@ Setup checklist
 Advanced — explicit field list
 ******************************
 
-Rare; prefer ``issue.field_changed`` with the minimal body::
+Rare; use when one rule watches several fields and you list each change::
 
     {
         "source": "jira_project_automation",
-        "trigger": "issue.field_changed",
         "actor": {"accountId": "{{initiator.accountId}}"},
         "changed_fields": [
-            {"field": "Summary", "fieldId": "summary"},
-            {"field": "Description", "fieldId": "description"}
+            {
+                "fieldId": "summary",
+                "fromString": "{{fieldChange.fromString}}",
+                "toString": "{{fieldChange.toString}}"
+            }
         ]
     }
+
+Each object needs ``fieldId`` (or ``field``), ``fromString``, and ``toString``.
 
 For developers
 **************
 
 * Normalization: :func:`sg_jira.jira_automation_payload.normalize_automation_request`
-* Trigger map: :data:`sg_jira.jira_automation_payload.TRIGGER_TO_WEBHOOK_EVENT`
-* Full Issue sync uses a server-built changelog entry (*Sync In FPTR*), not a
-  client flag. :func:`~sg_jira.jira_automation_payload.strip_untrusted_automation_flags`
-  runs on every ``jira2sg`` request.
+* Comment/worklog trigger map:
+  :data:`sg_jira.jira_automation_payload.TRIGGER_TO_WEBHOOK_EVENT`
+* Issue sync: no ``trigger``; ``field_change`` → partial sync, otherwise full
+  sync via a server-built changelog entry (*Sync In FPTR*)
 * ``webhook_event`` in JSON is deprecated; use ``trigger``.
 * Handler: :class:`~sg_jira.handlers.entities_generic_handler.EntitiesGenericHandler`
 

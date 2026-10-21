@@ -696,42 +696,6 @@ class JiraSession(jira.client.JIRA):
 
         return self.create_issue(fields=data)
 
-    def get_latest_issue_changelog(self, issue_key):
-        """
-        Return the newest changelog entry for an Issue in webhook shape.
-
-        Project Automation rules do not receive ``changelog.changedFields``; the
-        bridge uses this when ``sync_changed_only`` is set on the request body.
-
-        :param str issue_key: Jira Issue key or id.
-        :returns: A dict with ``id`` and ``items`` keys, like a Jira webhook.
-        :raises ValueError: if the Issue has no changelog histories.
-        """
-        issue = self.issue(issue_key, expand="changelog")
-        histories = getattr(getattr(issue, "changelog", None), "histories", None)
-        if not histories:
-            raise ValueError(
-                f"No changelog histories found for Jira Issue {issue_key!r}."
-            )
-
-        latest = histories[-1]
-        items = []
-        for item in latest.items:
-            field_id = getattr(item, "fieldId", None)
-            items.append(
-                {
-                    "field": item.field,
-                    "fieldtype": getattr(item, "fieldtype", "jira"),
-                    "fieldId": field_id,
-                    "from": getattr(item, "from", None),
-                    "fromString": getattr(item, "fromString", None),
-                    "to": getattr(item, "to", None),
-                    "toString": getattr(item, "toString", None),
-                }
-            )
-
-        return {"id": str(latest.id), "items": items}
-
     @staticmethod
     def _jira_user_to_webhook_dict(user):
         """Build a minimal user dict like Jira webhook payloads."""
