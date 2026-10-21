@@ -20,7 +20,6 @@ from sg_jira.constants import (
     SHOTGUN_JIRA_URL_FIELD,
     SHOTGUN_SYNC_IN_JIRA_FIELD,
 )
-
 from .sync_handler import SyncHandler
 
 # TODO:
@@ -212,8 +211,8 @@ class EntitiesGenericHandler(SyncHandler):
             return False
 
         meta = event["meta"]
-        sync_settings = self.__get_sg_entity_settings(entity_type)
         field = meta["attribute_name"]
+        sync_settings = self.__get_sg_entity_settings(entity_type)
         extra_sg_fields = [SHOTGUN_SYNC_IN_JIRA_FIELD]
 
         if sync_settings.get("sync_direction", "both_way") == "jira_to_sg":
@@ -2089,7 +2088,7 @@ class EntitiesGenericHandler(SyncHandler):
                 sg_value = []
                 for w in self._jira.watchers(jira_issue).watchers:
                     sg_user = self._hook.get_sg_user_from_jira_user(w)
-                    if sg_value:
+                    if sg_user:
                         sg_value.append(sg_user)
 
             elif jira_field == "status":
