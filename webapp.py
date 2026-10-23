@@ -20,6 +20,7 @@ from urllib import parse
 import sg_jira
 from sg_jira.jira_automation_payload import (
     JiraAutomationPayloadError,
+    is_automation_request,
     normalize_automation_request,
 )
 
@@ -160,6 +161,13 @@ class Server(ThreadingMixIn, HTTPServer):
         Return the list of sync settings this server handles.
         """
         return self._sg_jira.sync_settings_names
+
+    @property
+    def jira(self):
+        """
+        Return the connected Jira session used to resolve Project Automation requests.
+        """
+        return self._sg_jira.jira
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -416,15 +424,18 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "type and its key" % self.path
                 )
 
-            try:
-                payload = normalize_automation_request(
-                    payload,
-                    entity_type,
-                    entity_key,
-                    jira=self.server._sg_jira.jira,
-                )
-            except JiraAutomationPayloadError as e:
-                raise SgJiraBridgeBadRequestError(str(e))
+            # Site webhooks are passed through untouched; only Project
+            # Automation bodies are converted to the webhook shape.
+            if is_automation_request(payload):
+                try:
+                    payload = normalize_automation_request(
+                        payload,
+                        entity_type,
+                        entity_key,
+                        jira=self.server.jira,
+                    )
+                except JiraAutomationPayloadError as e:
+                    raise SgJiraBridgeBadRequestError(str(e))
 
             self.server.sync_in_shotgun(
                 settings_name, entity_type, entity_key, event=payload, **parameters

@@ -134,8 +134,8 @@ class ActorTest(AutomationTestCase):
     def test_actor_becomes_event_user(self):
         self.assertEqual(self.normalize(body())["user"], {"accountId": "user-1"})
 
-    def test_actor_is_stripped_to_account_id(self):
-        event = self.normalize(body(actor={"accountId": " user-1 ", "name": "x"}))
+    def test_actor_is_reduced_to_account_id(self):
+        event = self.normalize(body(actor={"accountId": "user-1", "name": "x"}))
         self.assertEqual(event["user"], {"accountId": "user-1"})
 
     def test_actor_is_required(self):
@@ -148,23 +148,14 @@ class ActorTest(AutomationTestCase):
 
     def test_blank_account_id_is_rejected(self):
         # Jira renders {{initiator.accountId}} empty when no user triggered the rule.
-        for account_id in ("", "  ", None):
+        for account_id in ("", None):
             with self.subTest(account_id=account_id):
                 self.assertRejected(
                     body(actor={"accountId": account_id}), "actor.accountId is empty"
                 )
 
-    def test_unexpanded_account_id_is_rejected(self):
-        self.assertRejected(
-            body(actor={"accountId": "{{initiator.accountId}}"}), "unexpanded"
-        )
-
-    def test_non_string_account_id_is_rejected(self):
-        for account_id in (["a"], {"a": 1}, True):
-            with self.subTest(account_id=account_id):
-                self.assertRejected(
-                    body(actor={"accountId": account_id}), "actor.accountId"
-                )
+    def test_missing_account_id_is_rejected(self):
+        self.assertRejected(body(actor={"name": "x"}), "actor.accountId is empty")
 
 
 class IssueLookupTest(AutomationTestCase):
@@ -254,30 +245,16 @@ class IssuePartialSyncTest(AutomationTestCase):
         )
         self.assertEqual(items[0]["toString"], "")
 
-    def test_field_id_is_stripped(self):
-        self.assertEqual(
-            self.changelog_items({"fieldId": " summary "})[0]["fieldId"], "summary"
-        )
-
     def test_field_id_is_required(self):
         for field_change in (
             {},
             {"fieldId": ""},
-            {"fieldId": "  "},
             {"field": "Summary"},
         ):
             with self.subTest(field_change=field_change):
                 self.assertRejected(
                     body(field_change=field_change), "fieldId is required"
                 )
-
-    def test_unexpanded_smart_values_are_rejected(self):
-        for field_change in (
-            {"fieldId": "{{fieldChange.fieldId}}"},
-            {"fieldId": "summary", "field": "{{fieldChange.field}}"},
-        ):
-            with self.subTest(field_change=field_change):
-                self.assertRejected(body(field_change=field_change), "unexpanded")
 
     def test_field_change_must_be_object(self):
         for field_change in (None, "summary", ["summary"], []):
@@ -289,6 +266,18 @@ class IssuePartialSyncTest(AutomationTestCase):
     def test_unknown_field_change_keys_are_rejected(self):
         self.assertRejected(
             body(field_change={"fieldId": "summary", "to": "x"}), "unexpected keys: to"
+        )
+
+
+class EmptyEventTypeTest(AutomationTestCase):
+    def test_empty_event_type_is_not_an_entity_rule(self):
+        """A blank event_type is not a comment/worklog rule, and Issue rules
+        take no event_type, so it is rejected as an unexpected key."""
+        self.assertRejected(body(event_type=""), "unexpected keys: event_type")
+
+    def test_empty_event_type_with_an_id_is_rejected(self):
+        self.assertRejected(
+            body(event_type="", id="5001"), "unexpected keys: event_type, id"
         )
 
 
@@ -309,7 +298,7 @@ class IssueRejectedKeysTest(AutomationTestCase):
                 self.assertRejected(body(**{key: value}), f"unexpected keys: {key}")
 
     def test_issue_rules_do_not_take_an_event_type(self):
-        for event_type in ("jira:issue_created", "issue_created", ""):
+        for event_type in ("jira:issue_created", "issue_created"):
             with self.subTest(event_type=event_type):
                 self.assertRejected(
                     body(event_type=event_type), "Unsupported event_type"
@@ -369,8 +358,8 @@ class EntityEventTest(AutomationTestCase):
         event = self.normalize(self.entity_body("worklog_deleted"))
         self.assertEqual(event["worklog"], {"id": "5001", "issueId": ISSUE_ID})
 
-    def test_event_type_is_normalized(self):
-        for event_type in (" Comment_Created ", "COMMENT_CREATED"):
+    def test_event_type_is_case_insensitive(self):
+        for event_type in ("Comment_Created", "COMMENT_CREATED"):
             with self.subTest(event_type=event_type):
                 event = self.normalize(self.entity_body(event_type))
                 self.assertEqual(event["webhookEvent"], "comment_created")
@@ -406,7 +395,7 @@ class EntityEventTest(AutomationTestCase):
         self.assertEqual(event["comment"]["body"], text)
 
     def test_id_is_required(self):
-        for entity_id in (None, "", "  "):
+        for entity_id in (None, ""):
             with self.subTest(entity_id=entity_id):
                 self.assertRejected(
                     body(event_type="comment_created", id=entity_id),
@@ -418,28 +407,20 @@ class EntityEventTest(AutomationTestCase):
             body(event_type="worklog_created"), '"id": "{{worklog.id}}"'
         )
 
-    def test_unexpanded_id_is_rejected(self):
-        self.assertRejected(self.entity_body(id="{{comment.id}}"), "unexpanded")
+    def test_unexpanded_id_is_not_found_in_jira(self):
+        # No smart value check: Jira simply has no such comment.
+        self.jira.entity_error = ValueError(
+            "Jira Comment '{{comment.id}}' was not found on Issue 'KEY-1'."
+        )
+        self.assertRejected(self.entity_body(id="{{comment.id}}"), "was not found")
 
-    def test_invalid_id_type_is_rejected(self):
-        for entity_id in (["5001"], {"a": 1}, True, 1.5):
-            with self.subTest(entity_id=entity_id):
-                self.assertRejected(
-                    body(event_type="comment_created", id=entity_id), "must be a string"
-                )
-
-    def test_unexpanded_event_type_is_rejected(self):
-        self.assertRejected(self.entity_body("{{eventType}}"), "unexpanded")
+    def test_unexpanded_event_type_is_unsupported(self):
+        self.assertRejected(self.entity_body("{{eventType}}"), "Unsupported event_type")
 
     def test_unsupported_event_type_lists_valid_values(self):
-        for event_type in ("comment_added", "jira:issue_updated", "worklog", ""):
+        for event_type in ("comment_added", "jira:issue_updated", "worklog"):
             with self.subTest(event_type=event_type):
                 self.assertRejected(self.entity_body(event_type), "comment_created")
-
-    def test_non_string_event_type_is_rejected(self):
-        for event_type in (["comment_created"], 3, True):
-            with self.subTest(event_type=event_type):
-                self.assertRejected(self.entity_body(event_type), "event_type")
 
     def test_keys_of_the_other_entity_are_rejected(self):
         for event_type, extra in (
