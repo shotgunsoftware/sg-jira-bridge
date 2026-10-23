@@ -1,435 +1,604 @@
 .. _jira_project_automation:
 
 Jira Project Automation
-#######################
+=======================
 
-Jira Project Automation lets a project administrator sync Jira → Flow Production
-Tracking (FPTR) with **automation rules**, instead of a site-level Jira webhook.
-Each rule sends a small JSON message to the bridge, and the bridge handles it
-exactly like a webhook event.
+**Sync Jira changes to Flow Production Tracking (FPTR) using project-level
+Jira automation rules.**
 
-.. important::
+Jira Project Automation lets a Jira project administrator send issue, comment,
+and worklog changes to the Jira-to-FPTR bridge without configuring a site-wide
+Jira webhook. Each rule sends a small JSON request to the bridge. The bridge
+validates the request, retrieves the relevant Jira data, and passes the event
+to the same Generic Syncer used by Jira webhooks.
 
-   **Automation is an alternative to site webhooks. Use one or the other for a
-   Jira project, never both.** Running both syncs every change twice and can make
-   the two syncs race on the same FPTR entity. If you already set up the
-   :ref:`Jira Webhook <Jira Webhook>`, you don't need anything on this page.
+This guide explains how to prepare the integration, configure each rule, test
+its delivery, and troubleshoot common errors. Start with **full issue sync**;
+add comment and worklog rules only if your project needs them.
 
-Automation and webhooks give the same sync results. Both feed the same Generic
-Syncer, with the same settings, the same *Sync In FPTR* flag and the same loop
-protection. They differ in who sets them up, how many pieces you configure and a
-few trade-offs, which are listed in :ref:`automation_vs_webhooks` so you can pick
-the one that suits you.
+.. warning:: Use either automation or a site webhook
 
-.. contents::
+   Configure **one event-delivery method per Jira project**: Jira Project
+   Automation **or** a site-level Jira webhook, never both. Running both can
+   sync the same change twice and cause competing updates to an FPTR entity.
+   If the project already uses a Jira webhook, no automation rules are needed.
+
+.. contents:: On this page
    :local:
    :depth: 2
 
-Before you start
-****************
 
-Check all of these before you create a rule. Most "nothing happened" problems come
-from one of them.
+How the integration works
+-------------------------
 
-.. list-table::
+When a supported event occurs in Jira, the following sequence runs:
+
+#. A Jira automation trigger detects an issue, comment, or worklog change.
+#. The rule checks its conditions, including **Sync In FPTR = True**.
+#. Its **Send web request** action sends a ``POST`` request to the bridge.
+#. The bridge validates the JSON, retrieves the issue or related entity from
+   Jira when needed, and runs the configured Generic Syncer.
+#. The syncer applies the mapping, direction, deletion, and loop-protection
+   settings already defined for Jira and FPTR.
+
+Automation and webhooks therefore produce the **same supported sync result**.
+The difference is how the event reaches the bridge, not how FPTR is updated.
+
+
+Before you begin
+----------------
+
+Verify the following prerequisites before creating an automation rule.
+
+.. list-table:: Prerequisites
    :header-rows: 1
-   :widths: 35 65
+   :widths: 31 69
 
    * - Requirement
-     - How to check
-   * - The bridge is running
-     - ``webapp.py`` or ``service.py`` is up. See :doc:`quickstart`.
-   * - Jira can reach the bridge URL
-     - Same as for a webhook: see :ref:`Jira Webhook` in the quickstart, and
-       `Network access`_ below.
-   * - The Generic Syncer is configured
-     - ``EntitiesGenericSyncer`` is in ``settings.py``. See :doc:`generic_syncer`.
-   * - The Jira fields exist
-     - *Sync In FPTR* and the Shotgun Type / ID / URL fields exist and are on the
-       Issue screen. See :ref:`Jira Configuration <entity-sync-jira-config>`.
-   * - The Issue is flagged *Sync In FPTR*
-     - On a test Issue, *Sync In FPTR* is ``True``.
-   * - The Jira project is linked to an FPTR project
-     - The FPTR project's *Jira Key* field holds the Jira project key.
-   * - Comments and worklogs are mapped (only if you sync them)
-     - ``Note`` (comments) and ``TimeLog`` (worklogs) have an entry in
-       ``entity_mapping``. Without it, comment or worklog events are rejected.
-   * - Deletions are enabled (only if you sync them)
-     - ``sync_deletion_direction`` is set on the ``Note`` or ``TimeLog`` entry.
+     - What to verify
+   * - Bridge service
+     - ``webapp.py`` or ``service.py`` is running. See :doc:`quickstart`.
+   * - Network access
+     - Jira Cloud can reach the bridge over HTTPS, and the bridge can access
+       the Jira REST API. See `Network and access requirements`_.
+   * - Generic Syncer
+     - ``EntitiesGenericSyncer`` is configured in ``settings.py``.
+       See :doc:`generic_syncer`.
+   * - Jira custom fields
+     - **Sync In FPTR** and the Shotgun Type, Shotgun ID, and Shotgun URL
+       fields exist and appear on the applicable Jira issue screens.
+   * - Test issue
+     - The test issue has **Sync In FPTR** set to ``True``.
+   * - Project association
+     - The corresponding FPTR project's **Jira Key** field contains the
+       Jira project key.
+   * - Comment / worklog mappings
+     - To sync comments or worklogs, ``entity_mapping`` includes ``Note``
+       (comments) or ``TimeLog`` (worklogs), respectively.
+   * - Deletion settings
+     - To sync comment or worklog deletions, ``sync_deletion_direction``
+       is enabled for the corresponding ``Note`` or ``TimeLog`` mapping.
        Deletions are ignored by default.
+   * - Jira permissions
+     - You can manage automation rules in the Jira project, and the Jira
+       account used by the bridge can read the relevant Jira issues,
+       comments, and worklogs.
 
-What is supported
-*****************
+.. tip::
 
-.. list-table::
-   :header-rows: 1
-   :widths: 30 20 50
+   Use a dedicated test issue that is already associated with the correct
+   FPTR project. It makes both rule failures and mapping problems easier to
+   distinguish from connectivity issues.
 
-   * - Jira change
-     - Supported
-     - Notes
-   * - Issue created or updated
-     - Yes
-     - Full sync, or only the field that changed. See :ref:`full_or_partial`.
-   * - Comment created, updated, deleted
-     - Yes
-     - Includes replies (see the deleted replies limitation in the comparison below).
-   * - Worklog created, updated, deleted
-     - Yes
-     -
-   * - Issue deleted
-     - No
-     - Not supported with webhooks either.
-
-.. _automation_vs_webhooks:
-
-Automation or webhooks?
-=======================
-
-For every supported change, automation and webhooks end in the **same FPTR
-result**. The differences are in setup and operations:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 22 39 39
-
-   * -
-     - Jira Project Automation
-     - Site webhook
-   * - Who sets it up
-     - A **project administrator**, per project.
-     - A **Jira administrator**, once for the site.
-   * - What you configure
-     - One rule per Jira trigger (Issue, comment, worklog), each with a short
-       message to copy and paste.
-     - One webhook for all events.
-   * - Which changes are sent
-     - What the rule's trigger and conditions allow. A change with no matching
-       trigger in your Jira cannot be synced.
-     - Every event of the types you ticked, filtered by JQL.
-   * - Field-level sync
-     - Full sync of all mapped fields (default), or a rule per changed field
-       (:ref:`advanced <advanced_partial_sync>`).
-     - Automatic: Jira says which fields changed, and only those are synced.
-   * - Filtering
-     - Rule **conditions** (Sync In FPTR, issue type, status...).
-     - JQL.
-   * - Troubleshooting
-     - Each rule has an **audit log** with the request and the response.
-     - Jira's webhook delivery details, plus the bridge log.
-   * - Extra Jira calls
-     - The bridge reads the Issue, comment or worklog back from Jira on each event.
-     - The event already carries the data.
-   * - Deleted comment replies
-     - **Not recognized as replies**: the reply stays in FPTR. Jira can no longer
-       say which comment it answered.
-     - Recognized and removed.
-   * - Limits
-     - Jira Cloud plans can limit how often automation rules run. Check your
-       plan's automation limits.
-     - None specific to webhooks.
-
-**Choose automation when** you are a project admin without Jira admin rights, you
-want to restrict the sync per project with conditions, or you like seeing every
-request in an audit log.
-
-**Choose a webhook when** you are a Jira admin, many projects should sync the same
-way, or you want per-field syncing without writing a rule per field.
 
 .. _full_or_partial:
 
-Full sync or field change?
-==========================
+Choose which events to sync
+---------------------------
 
-For Issues you pick **what the rule sends**, not just when it fires:
-
-.. list-table::
+.. list-table:: Supported changes
    :header-rows: 1
-   :widths: 20 40 40
+   :widths: 32 16 52
+
+   * - Jira change
+     - Supported
+     - Behavior
+   * - Issue created or updated
+     - Yes
+     - Synchronizes all mapped issue fields by default, or only a selected
+       changed field when partial sync is configured.
+   * - Comment created, updated, or deleted
+     - Yes
+     - Synchronizes the corresponding FPTR ``Note`` when mapped. Deleted
+       replies have an additional limitation described below.
+   * - Worklog created, updated, or deleted
+     - Yes
+     - Synchronizes the corresponding FPTR ``TimeLog`` when mapped.
+   * - Issue deleted
+     - No
+     - Not supported through project automation or the site webhook route.
+
+A Jira automation rule has one trigger. Create a separate rule for each
+required trigger, **unless Jira offers an all-events trigger** that covers
+the operations you need and returns a supported ``event_type``. Avoid
+creating overlapping rules for the same change.
+
+For issues, choose your preferred update strategy:
+
+.. list-table:: Full versus partial issue sync
+   :header-rows: 1
+   :widths: 27 36 37
 
    * -
-     - Full sync (recommended)
-     - Partial sync (*Field value changed*)
-   * - What is synced
-     - **All** mapped fields of the Issue, on every run.
-     - **Only** the field that changed.
-   * - Rules to maintain
-     - One.
-     - One per set of fields you watch.
-   * - Watch out for
-     - A Jira edit overwrites FPTR values for **all** mapped fields, even ones you
-       did not touch in Jira. More API calls on large Issues.
-     - You must keep the rule's field list up to date.
+     - Full sync (**recommended**)
+     - Partial sync (**advanced**)
+   * - What is updated
+     - All mapped fields on the issue.
+     - Only the changed mapped field.
+   * - Jira trigger
+     - **Issue created** and/or **Issue updated**.
+     - **Field value changed**.
+   * - Maintenance
+     - Simple: the rule is independent of the list of mapped fields.
+     - Keep the fields watched by the rule aligned with ``field_mapping``.
+   * - Trade-off
+     - A Jira edit can overwrite FPTR values in other mapped fields.
+     - More configuration, but fewer unrelated field updates.
 
-**Start with full sync.** It is one rule, has nothing to keep in step with your
-field mapping, and it is the right default for most pipelines.
+For most projects, configure the full-sync rules first. Choose partial sync
+when mapped fields are also edited in FPTR and should not be overwritten by
+unrelated Jira edits. See `Optional: partial issue sync`_ for the exact setup.
 
-**Switch to partial sync** if people also edit those fields in FPTR and a Jira edit
-should not overwrite them, or if Issues are large and busy. Partial sync only works
-with the **Field value changed** trigger.
 
-**Do you need both?** Usually not: a full sync rule already covers changes. If you
-want a webhook-like setup, use a full sync rule only for **Issue created**
-(to fill in everything the first time) and a partial rule for **Field value
-changed**. Do not use full sync on *Issue updated* together with a partial rule:
-every edit would sync twice.
+Configure the shared web request
+--------------------------------
 
-Quick setup
-***********
+Every automation rule uses the same endpoint, HTTP method, header, and request
+body type. Only the trigger and JSON payload change between rule types.
 
-This sets up the recommended full sync, plus comments and worklogs. You create one
-rule per row you need. Each rule has the same four parts.
+#. Open the Jira project and select **Project settings > Automation**.
+#. Select **Create rule**, then choose the trigger for the event to sync.
+#. Add **Issue fields condition** and set **Sync In FPTR** to ``True``.
+   This prevents requests for issues that are not opted in to FPTR sync.
+#. Add the **Send web request** action.
+#. Enter the values below, then paste the payload for your chosen rule from
+   the next section.
 
-.. todo::
-
-   Screenshot ``jira_automation_rule_overview.png``: a finished rule in Jira
-   (trigger, *Sync In FPTR* condition and *Send web request* action).
-
-1. Create the rule
-==================
-
-1. In your project open **Project settings → Automation → Create rule**.
-2. Choose the **trigger** from the table below.
-
-.. list-table::
+.. list-table:: Send web request settings
    :header-rows: 1
-   :widths: 40 60
-
-   * - To sync...
-     - Trigger
-   * - A new Issue, or a changed Issue (full sync)
-     - **Issue created** and/or **Issue updated**
-   * - A comment
-     - The comment triggers (added, edited, deleted)
-   * - A worklog
-     - The work log triggers (logged, updated, deleted)
-
-A Jira rule has a single trigger, so you create one rule per trigger.
-
-2. Add the condition
-====================
-
-Add a condition: **Issue fields condition → Sync In FPTR equals True**. This keeps
-Issues that should not be synced from reaching the bridge.
-
-Optionally add a **smart values condition** so the rule does not run for the
-bridge's own Jira user, to avoid sync loops. The bridge also protects against loops
-by itself.
-
-.. todo::
-
-   Screenshot ``jira_automation_condition.png``: the *Sync In FPTR equals True*
-   condition.
-
-3. Add the *Send web request* action
-====================================
-
-Add the action **Send web request** and set:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 25 75
+   :widths: 30 70
 
    * - Setting
      - Value
    * - Web request URL
      - ``https://<bridge-host>/jira2sg/<settings_name>/issue/{{issue.key}}``
    * - HTTP method
-     - **POST**
+     - ``POST``
    * - Headers
      - ``Content-Type: application/json``
    * - Web request body
-     - **Custom data** (not *Issue data*)
+     - **Custom data** (not **Issue data**)
+   * - Custom data
+     - The JSON example for the relevant rule in this guide.
 
-Replace ``<bridge-host>`` with the address of the machine running the bridge, and
-``<settings_name>`` with your Generic Syncer settings name (often ``entities``).
-Leave ``{{issue.key}}`` exactly as written: Jira fills in the Issue key when the
-rule runs.
+For example, if your bridge is hosted at ``bridge.example.com`` and your
+Generic Syncer is named ``entities``, the URL is:
 
-.. todo::
+.. code-block:: text
 
-   Screenshot ``jira_automation_send_web_request.png``: the *Send web request*
-   action with the URL, method and *Custom data* body type.
+   https://bridge.example.com/jira2sg/entities/issue/{{issue.key}}
 
-4. Paste the Custom data
-========================
+Replace ``<bridge-host>`` with the actual bridge host and
+``<settings_name>`` with the Generic Syncer settings name, commonly
+``entities``. Keep ``{{issue.key}}`` unchanged: Jira replaces it with the
+issue key when the rule executes.
 
-Paste the message that matches the rule. Do not change the ``{{...}}`` parts.
+.. important::
 
-**Issue: full sync** (Issue created / Issue updated rules)::
+   In all JSON examples, keep the Jira smart values inside double curly
+   braces exactly as shown. In particular,
+   ``{{initiator.accountId}}`` identifies who caused the change and is
+   **required** for the bridge's loop protection.
 
-    {
-        "source": "jira_project_automation",
-        "actor": {"accountId": "{{initiator.accountId}}"}
-    }
 
-**Comment** (comment rules): ``{{eventType}}`` tells the bridge whether the
-comment was created, updated or deleted::
+Create the event rules
+----------------------
 
-    {
-        "source": "jira_project_automation",
-        "actor": {"accountId": "{{initiator.accountId}}"},
-        "event_type": "{{eventType}}",
-        "id": "{{comment.id}}"
-    }
+Create only the rules relevant to your project. After configuring each rule,
+save it, give it a recognizable name, and enable it when you are ready to
+test. The **Sync In FPTR** condition and web-request settings from the
+previous section apply to **every** example below.
 
-**Worklog** (worklog rules)::
+Full issue sync
+~~~~~~~~~~~~~~~
 
-    {
-        "source": "jira_project_automation",
-        "actor": {"accountId": "{{initiator.accountId}}"},
-        "event_type": "{{eventType}}",
-        "id": "{{worklog.id}}"
-    }
+**Use for:** a new issue or an update to an existing issue.
 
-You never look up an id in Jira. Jira replaces each ``{{...}}`` when the rule runs.
-``{{initiator.accountId}}`` is who made the change; it is how the bridge ignores
-changes it made itself, so it is required.
+Create an **Issue created** rule and, if ongoing updates should sync, a
+separate **Issue updated** rule. Both use the following **Custom data**:
+
+.. code-block:: json
+
+   {
+     "source": "jira_project_automation",
+     "actor": {
+       "accountId": "{{initiator.accountId}}"
+     }
+   }
+
+No ``event_type`` or ``field_change`` property is needed. The bridge reads
+the issue and synchronizes all mapped issue fields according to its settings.
+
+.. figure:: _static/full_sync.png
+   :alt: Jira Send web request action configured for a full issue sync, showing POST, Custom data, and the issue-key URL.
+   :align: center
+   :width: 85%
+
+   **Full issue sync:** configure the shared endpoint and paste the minimal
+   JSON payload above. The screenshot focuses on the web request action;
+   remember to add the **Sync In FPTR** condition to the rule.
 
 .. note::
 
-   Comment rules may also send ``"body": "{{comment.body}}"`` and worklog rules
-   ``"comment"``, ``"timeSpentSeconds"`` and ``"timeSpent"``. They are optional:
-   the bridge always reads the real values from Jira. They are only used when
-   Jira can no longer be asked, that is when a comment or worklog is deleted. On a
-   worklog rule, ``comment`` is the worklog note, not a Jira comment.
+   Do not combine **Issue updated** full sync with a **Field value changed**
+   partial-sync rule for the same edits. That would send overlapping events.
+   A valid hybrid is **Issue created** (full sync) plus **Field value changed**
+   (partial sync) for later edits.
 
-5. Turn it on and test it
-=========================
 
-1. Turn the rule on.
-2. In Jira, change a test Issue that has *Sync In FPTR* set to ``True``.
-3. Open the rule's **audit log**. A successful run shows **HTTP 200**, which means
-   the bridge *received* the request. Whether the sync happened is in the bridge
-   log.
+Comment sync
+~~~~~~~~~~~~
 
-.. todo::
+**Use for:** a comment added, edited, or deleted on an issue.
 
-   Screenshot ``jira_automation_audit_log.png``: the audit log of a successful
-   run, showing the *Send web request* result.
+Select the Jira comment trigger(s) available in your project, such as
+**All comments**, **Work item comment edited**, or **Work item comment
+deleted**. Depending on your Jira version, a broad comment trigger may cover
+several operations; confirm its behavior in the automation audit log.
 
-If it did not work
-------------------
+For a comment rule, paste:
 
-The audit log shows what the bridge said. A message starting with **400** is a
-mistake in the rule; **500** means the bridge could not reach Jira (try again, and
-check the bridge log).
+.. code-block:: json
 
-.. list-table::
-   :header-rows: 1
-   :widths: 45 55
+   {
+     "source": "jira_project_automation",
+     "actor": {
+       "accountId": "{{initiator.accountId}}"
+     },
+     "event_type": "{{eventType}}",
+     "id": "{{comment.id}}"
+   }
 
-   * - Message
-     - What to do
-   * - ``actor is required`` / ``actor.accountId is empty``
-     - Add the ``actor`` line from the message above. The rule must be run by a
-       user, not by a schedule.
-   * - ``... contains an unexpanded Jira smart value``
-     - A ``{{...}}`` was not replaced. Re-check the spelling against this page and
-       the rule's trigger (for example ``{{comment.id}}`` only works in a comment
-       rule).
-   * - ``... has unexpected keys``
-     - The message has a line this page does not list. Remove it.
-   * - ``Unsupported event_type``
-     - ``event_type`` is only for comment and worklog rules. Remove it from Issue
-       rules.
-   * - ``Jira Issue 'X' was not found`` / ``... was not found on Issue``
-     - The URL must end with ``{{issue.key}}``, and the comment or worklog must
-       still exist.
-   * - Bridge log: ``FPTR Note`` / ``FPTR TimeLog is not configured for syncing``
-     - Add a ``Note`` or ``TimeLog`` entry to ``entity_mapping``.
-   * - Bridge log: ``has not been flagged as synced``
-     - Set *Sync In FPTR* to ``True`` on the Issue.
-   * - Bridge log: ``sync direction ... only sync from FPTR to Jira``
-     - Set ``sync_direction`` to ``both_way`` or ``jira_to_sg`` for that entity.
-   * - Bridge log: ``deletion is disabled``
-     - Set ``sync_deletion_direction`` on the ``Note`` or ``TimeLog`` entry.
-   * - Bridge log: ``created by the bridge user``
-     - Expected: the bridge ignores its own changes.
+The bridge accepts these comment event types:
+
+- ``comment_created``
+- ``comment_updated``
+- ``comment_deleted``
+
+``{{comment.id}}`` is the Jira comment ID; you do not have to look it up.
+For non-deletion events, the bridge reads the current comment from Jira.
+
+.. figure:: _static/comments_sync.png
+   :alt: Jira comment trigger choices and a Send web request configuration panel.
+   :align: center
+   :width: 98%
+
+   **Comment rule configuration:** choose the relevant comment trigger, then
+   configure the shared request settings. **Use the comment JSON shown above,**
+   not the worklog-specific fields visible in this reference screenshot.
+
+.. important:: Comment payload field names
+
+   The request key is ``event_type`` (with an underscore), **not**
+   ``eventType``. The **value** can be ``{{eventType}}`` if Jira resolves that
+   smart value to one of the supported names. If it does not, create one
+   rule per event and use the corresponding literal value, for example
+   ``"event_type": "comment_deleted"`` in a comment-deleted rule.
+
+.. note:: Deleted comment replies
+
+   With project automation, Jira may no longer provide a deleted reply's
+   parent-comment relationship. The bridge therefore cannot always identify
+   it as a reply, and that reply can remain in FPTR. Site webhooks preserve
+   the information needed to handle this case.
+
+
+Worklog sync
+~~~~~~~~~~~~
+
+**Use for:** time logged, modified, or deleted on an issue.
+
+Choose **Work logged** (covering **All worklog operations**, if available)
+or create separate event-specific worklog rules. Paste this minimal payload:
+
+.. code-block:: json
+
+   {
+     "source": "jira_project_automation",
+     "actor": {
+       "accountId": "{{initiator.accountId}}"
+     },
+     "event_type": "{{eventType}}",
+     "id": "{{worklog.id}}"
+   }
+
+The bridge accepts these worklog event types:
+
+- ``worklog_created``
+- ``worklog_updated``
+- ``worklog_deleted``
+
+For non-deletion events, the bridge retrieves the authoritative worklog
+from Jira. You may also include accepted worklog snapshot properties,
+``timeSpentSeconds``, ``timeSpent``, and ``comment``, where needed for a
+deleted worklog. Such optional values must be correctly JSON-escaped if
+they contain user-entered text. Here, ``comment`` means the **worklog note**,
+not a separate Jira issue comment.
+
+.. figure:: _static/worklog_sync.png
+   :alt: Jira Work logged trigger and Send web request action for a worklog automation rule.
+   :align: center
+   :width: 98%
+
+   **Worklog rule configuration:** use the Work logged trigger and the
+   common POST endpoint. The screenshot illustrates optional snapshot
+   properties. Use ``event_type`` (underscore) in the actual payload,
+   as shown above, rather than the ``eventType`` key pictured.
+
+.. tip::
+
+   If ``{{eventType}}`` is not expanded to a supported event name in your
+   Jira environment, use a separate rule for each operation and enter its
+   literal event type. An **All worklog operations** rule should be used
+   only when its event type can be distinguished reliably.
+
 
 .. _advanced_partial_sync:
 
-Advanced: partial sync (optional)
-*********************************
+Optional: partial issue sync
+----------------------------
 
-Use this only if you decided on partial sync in :ref:`full_or_partial`. Create a
-rule with the trigger **Field value changed**, choose the fields to watch, and use
-the same condition and *Send web request* action as in `Quick setup`_, with this
-Custom data::
+Partial sync sends a single changed field rather than re-synchronizing all
+mapped fields. It is useful when people edit the same entities in both Jira
+and FPTR, or when issues contain many mapped fields.
 
-    {
-        "source": "jira_project_automation",
-        "actor": {"accountId": "{{initiator.accountId}}"},
-        "field_change": {
-            "fieldId": "{{fieldChange.fieldId}}",
-            "fromString": "{{fieldChange.fromString}}",
-            "toString": "{{fieldChange.toString}}"
-        }
-    }
+#. Create a new automation rule with the **Field value changed** trigger.
+#. Select the Jira fields to watch (for example, Summary, Status, Priority,
+   Labels, or your mapped custom fields).
+#. Add **Issue fields condition > Sync In FPTR = True**.
+#. Add **Send web request** with the same URL, ``POST`` method,
+   ``Content-Type`` header, and **Custom data** body type.
+#. Paste this JSON:
+
+.. code-block:: json
+
+   {
+     "source": "jira_project_automation",
+     "actor": {
+       "accountId": "{{initiator.accountId}}"
+     },
+     "field_change": {
+       "fieldId": "{{fieldChange.fieldId}}",
+       "fromString": "{{fieldChange.fromString}}",
+       "toString": "{{fieldChange.toString}}"
+     }
+   }
+
+``fieldId`` is required. ``fromString`` and ``toString`` are optional,
+informational values; the bridge reads the actual current field value from
+Jira. They can be empty if the user clears a field. You may also specify a
+literal ID, such as ``"fieldId": "summary"``, when a rule watches one field.
+Only fields configured in ``field_mapping`` are synchronized.
+
+.. figure:: _static/field_sync.png
+   :alt: Jira Field value changed automation showing selected fields and a Send web request action with field_change JSON.
+   :align: center
+   :width: 98%
+
+   **Partial field sync:** the Field value changed trigger sends the
+   changed field's ID. Keep the trigger's watched fields aligned with the
+   bridge's ``field_mapping``.
 
 .. warning::
 
-   Partial sync **must** use the **Field value changed** trigger. Do not use
-   *Issue updated* (a work item update): Jira does not guarantee that it provides
-   the information about which field changed, so ``{{fieldChange...}}`` can come
-   out empty and the bridge rejects the request. Use *Issue updated* only for
-   full sync, which does not need that information.
+   **Partial sync requires the Field value changed trigger.** Do not use
+   **Issue updated** with ``{{fieldChange.fieldId}}``: Jira may leave that
+   smart value empty, causing the bridge to reject the request. Also avoid
+   ``{{#changelog.changedFields}}`` in project automation; it is not
+   populated for this workflow.
 
-* ``fieldId`` is required. If a rule watches a single field you can type its id
-  instead, for example ``"fieldId": "summary"``.
-* ``fromString`` and ``toString`` are optional and informational (the bridge reads
-  the new value from Jira). They may be empty when a value is cleared. ``field``,
-  the field's name, is optional too.
-* Do **not** use ``{{#changelog.changedFields}}`` in Project Automation: that block
-  is empty there.
-* Only fields mapped in ``field_mapping`` are synced; a change to any other field
-  is ignored.
 
-.. todo::
+Enable and verify the rules
+---------------------------
 
-   Screenshot ``jira_automation_field_value_changed.png``: the *Field value
-   changed* trigger with the watched fields selected.
+Test the rules before relying on them for production synchronization.
 
-Network access
-**************
+#. **Save and enable** the rule in Jira.
+#. Open a test issue that belongs to the linked project and has
+   **Sync In FPTR = True**.
+#. Make a change matching the rule's trigger: edit an issue, add a comment,
+   log time, or change a watched field.
+#. Open **Project settings > Automation**, select the rule, and inspect its
+   **Audit log**. Verify that the trigger and condition ran and that the
+   web request was sent.
+#. If Jira reports **HTTP 200**, the bridge has received the request.
+   Check the **bridge application log** and the corresponding FPTR entity to
+   confirm that the change was actually applied.
+#. Repeat for update and deletion scenarios when those are enabled, and
+   verify that unflagged issues do not sync.
 
-Same requirements as the :ref:`Jira Webhook <Jira Webhook>`:
+.. important::
 
-* Jira Cloud sends the request from Atlassian's servers, so the bridge URL must be
-  reachable from the internet (or your firewall must allow Atlassian's published IP
-  ranges). Use HTTPS.
-* The bridge must also be able to reach the Jira API, to read back the Issue,
-  comment or worklog.
+   **HTTP 200 confirms request receipt, not completion of the FPTR sync.**
+   The bridge log is the source of truth for mapping, synchronization,
+   ignored events, and downstream errors.
 
-For a local test setup, see the *Testing on a Machine Not Accessible to Jira*
-section of :doc:`debugging`.
+Suggested checks for the first rollout:
 
-For developers
-**************
+.. list-table:: Acceptance checks
+   :header-rows: 1
+   :widths: 37 63
 
-Everything above is enough to use the feature. This section is for people changing
-it.
+   * - Test
+     - Expected result
+   * - Create or edit a flagged issue
+     - Mapped issue fields are created or updated in FPTR.
+   * - Edit a field watched by partial sync
+     - Only that mapped field is synchronized.
+   * - Create or edit a comment
+     - A corresponding FPTR ``Note`` is created or updated.
+   * - Log or edit time
+     - A corresponding FPTR ``TimeLog`` is created or updated.
+   * - Delete a comment or worklog
+     - The mapped entity is deleted only when deletion sync is enabled,
+       subject to the deleted-comment-replies limitation.
+   * - Edit an unflagged issue
+     - The rule's condition prevents synchronization.
+   * - Change Jira as the bridge's own user
+     - The bridge ignores the self-generated event to prevent loops.
 
-* **Flow.** ``webapp.py`` passes any ``jira2sg`` body with
-  ``"source": "jira_project_automation"`` to
-  :func:`sg_jira.jira_automation_payload.normalize_automation_request`, which turns
-  it into the event a site webhook would have sent. Other bodies are untouched.
-  The event then goes through the usual
-  :class:`~sg_jira.handlers.entities_generic_handler.EntitiesGenericHandler`.
-* **Issue rules**: no ``event_type``. With ``field_change`` the event carries one
-  changelog item (partial sync). Without it, the changelog item is the *Sync In FPTR*
-  field, which makes the handler sync every mapped field. Created and updated Issues
-  are handled identically, so the event is always ``jira:issue_updated``.
-* **Comment and worklog rules**: ``event_type`` is one of ``comment_created``,
-  ``comment_updated``, ``comment_deleted``, ``worklog_created``,
-  ``worklog_updated``, ``worklog_deleted`` and ``id`` is required. The entity is
-  read back from Jira
-  (:meth:`~sg_jira.jira_session.JiraSession.comment_as_webhook_entity`,
-  :meth:`~sg_jira.jira_session.JiraSession.worklog_as_webhook_entity`); what the
-  rule sent only fills in what Jira cannot say.
-* **Strict input.** Unknown keys, unexpanded smart values and a missing
-  ``actor.accountId`` are rejected with HTTP 400. Jira errors other than "not
-  found" propagate (HTTP 500).
-* **Tests.** ``tests/test_jira_automation_payload.py`` covers the normalizer;
-  ``tests/test_jira_automation_parity.py`` sends automation bodies through the real
-  handler and expects the same outcome as the webhook tests.
+
+Troubleshooting
+---------------
+
+First check the **Jira automation audit log**, then the **bridge log**.
+An HTTP ``400`` generally means that the JSON or smart values were rejected;
+``500`` indicates a server-side failure and may include problems fetching
+Jira data. A connection failure may prevent Jira from obtaining any HTTP
+response at all.
+
+.. list-table:: Common failures and corrective actions
+   :header-rows: 1
+   :widths: 43 57
+
+   * - Error or symptom
+     - Recommended action
+   * - No request appears in the audit log
+     - Confirm the rule is enabled, its trigger matches the test change,
+       and **Sync In FPTR = True** is satisfied.
+   * - Connection timeout or unreachable URL
+     - Confirm the bridge is running, the public HTTPS address and route
+       are correct, and firewall or ingress rules permit Jira traffic.
+   * - ``actor is required`` or ``actor.accountId is empty``
+     - Include ``"actor": {"accountId": "{{initiator.accountId}}"}``.
+       Use an event caused by an actual user, not an unsupported scheduled
+       context without an initiator.
+   * - ``contains an unexpanded Jira smart value``
+     - Check smart-value spelling and that the trigger exposes the value.
+       For instance, ``{{comment.id}}`` belongs in a comment rule.
+   * - ``has unexpected keys``
+     - Use the exact property names in this guide and remove unsupported
+       fields. In particular, use ``event_type`` rather than ``eventType``.
+   * - ``Unsupported event_type``
+     - Ensure comment rules use ``comment_created``, ``comment_updated``,
+       or ``comment_deleted``; worklog rules use the equivalent
+       ``worklog_*`` values. Issue full-sync rules omit this property.
+   * - Jira issue or related entity not found
+     - Confirm the URL ends with ``{{issue.key}}`` and the issue exists.
+       Deleted comments and worklogs may no longer be retrievable from Jira.
+   * - ``FPTR Note`` or ``FPTR TimeLog is not configured for syncing``
+     - Add ``Note`` or ``TimeLog`` to ``entity_mapping``.
+   * - ``has not been flagged as synced``
+     - Enable **Sync In FPTR** on the issue.
+   * - ``sync direction ... only sync from FPTR to Jira``
+     - Set ``sync_direction`` to ``both_way`` or ``jira_to_sg`` for the
+       relevant entity mapping.
+   * - ``deletion is disabled``
+     - Configure ``sync_deletion_direction`` for ``Note`` or ``TimeLog``.
+   * - ``created by the bridge user``
+     - Expected behavior. The bridge suppresses its own events to avoid
+       synchronization loops.
+   * - HTTP 200, but no change in FPTR
+     - Review bridge logs, **Sync In FPTR**, project linking,
+       ``field_mapping``, ``entity_mapping``, and sync direction.
+
+
+Network and access requirements
+-------------------------------
+
+Jira Cloud runs automation requests from Atlassian's infrastructure, not from
+your browser. Make sure the bridge endpoint is reachable from Jira over
+**HTTPS**. If the service is behind a firewall, use current Atlassian
+outbound IP guidance to configure the appropriate allowlist.
+
+The bridge also needs outbound access to Jira's REST API so it can retrieve
+current issue, comment, and worklog data. Protect the public endpoint using
+the access controls appropriate to your bridge deployment; do not add API
+credentials or secrets to the JSON examples in this guide.
+
+For a bridge running locally or behind a private network, see the
+**Testing on a Machine Not Accessible to Jira** section of :doc:`debugging`.
+
+
+.. _automation_vs_webhooks:
+
+Automation compared with site webhooks
+--------------------------------------
+
+Both methods use the same Generic Syncer and mapping rules, but they differ
+operationally.
+
+.. list-table:: Automation versus site webhooks
+   :header-rows: 1
+   :widths: 25 37 38
+
+   * - Consideration
+     - Jira Project Automation
+     - Jira site webhook
+   * - Setup permissions
+     - Project administrator; configured per project.
+     - Jira administrator; configured at site level.
+   * - Setup effort
+     - One rule per trigger (or a supported combined trigger).
+     - A single webhook can cover selected event types.
+   * - Filtering
+     - Automation triggers and conditions.
+     - Webhook JQL filtering.
+   * - Issue field updates
+     - Full sync by default; optional explicit per-field rule.
+     - Changed fields are supplied automatically by the webhook event.
+   * - Debugging
+     - Per-rule audit log plus the bridge log.
+     - Webhook delivery details plus the bridge log.
+   * - Jira API reads
+     - The bridge fetches current data for each event.
+     - Webhook payloads already include the relevant event data.
+   * - Deleted comment replies
+     - Parent/reply relationship may be unavailable after deletion.
+     - Reply information is available in the webhook event.
+   * - Usage limits
+     - Subject to the automation execution limits of the Jira plan.
+     - Not subject to Jira automation-rule execution quotas.
+
+Choose **automation** if you manage only a project, need rule-level
+conditions, or want a clear audit trail per trigger. Choose a **site webhook**
+if an administrator manages many Jira projects centrally or you need
+out-of-the-box changed-field handling.
+
+
+Implementation notes for maintainers
+------------------------------------
+
+This section is intended for developers maintaining the Jira-to-FPTR bridge.
+Administrators can complete the setup without it.
+
+- **Normalization:** ``webapp.py`` recognizes a request with
+  ``"source": "jira_project_automation"`` on the ``jira2sg`` route.
+  ``sg_jira.jira_automation_payload.normalize_automation_request`` converts
+  it into the event shape produced by a site webhook. Other request bodies
+  are not modified.
+- **Issue events:** issue creation and update use the normalized
+  ``jira:issue_updated`` event. Without ``field_change``, the bridge
+  triggers full mapped-field sync; with ``field_change``, it generates a
+  one-field changelog entry.
+- **Related entities:** comment and worklog events require ``event_type``
+  and ``id``. When available, current data comes from
+  ``JiraSession.comment_as_webhook_entity`` or
+  ``JiraSession.worklog_as_webhook_entity``. Optional request values can
+  supplement data that Jira no longer exposes after deletion.
+- **Validation:** unknown keys, unresolved smart values, and a missing
+  ``actor.accountId`` generate HTTP ``400`` responses. Jira API and other
+  server-side failures can generate HTTP ``500`` responses.
+- **Tests:** ``tests/test_jira_automation_payload.py`` verifies the payload
+  normalizer; ``tests/test_jira_automation_parity.py`` verifies parity with
+  webhook processing through the Generic Syncer handler.
