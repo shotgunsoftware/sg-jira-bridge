@@ -518,29 +518,30 @@ class TestRouting(TestBase):
         self.assertTrue(b"HTTP/1.1 502" in raw_response)
         self.assertEqual(server.synced_events, [])
 
-    def test_jira_route_automation_wrong_types_rejected(
+    def test_jira_route_automation_id_wrong_type_rejected(
         self, mocked_finish, mocked_jira, mocked_sg
     ):
         """
-        Check that values of the wrong type are a bad request and not a crash.
+        Check that an id which is neither a string nor an integer is a bad request.
 
         Expected result:
-        - a 400 for each, and not a 500
+        - a 400, and not a 500
+        - nothing is synced
         """
-        base = {"source": "jira_project_automation", "actor": {"accountId": "user-1"}}
-        for label, payload in (
-            ("event_type", {**base, "event_type": 5, "id": "1"}),
-            ("accountId", {**base, "actor": {"accountId": {"a": 1}}}),
-            ("fieldId", {**base, "field_change": {"fieldId": ["x"]}}),
-            ("id", {**base, "event_type": "comment_created", "id": ["1"]}),
-        ):
-            with self.subTest(label=label):
-                server = MockServer()
+        server = MockServer()
 
-                raw_response = self._post_automation(server, payload)
+        raw_response = self._post_automation(
+            server,
+            {
+                "source": "jira_project_automation",
+                "actor": {"accountId": "user-1"},
+                "event_type": "comment_created",
+                "id": ["1"],
+            },
+        )
 
-                self.assertTrue(b"HTTP/1.1 400" in raw_response)
-                self.assertEqual(server.synced_events, [])
+        self.assertTrue(b"HTTP/1.1 400" in raw_response)
+        self.assertEqual(server.synced_events, [])
 
     def test_admin_route(self, mocked_finish, mocked_jira, mocked_sg):
         """

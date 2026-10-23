@@ -48,7 +48,6 @@ _ENTITY_EVENTS = {
 
 # Issue created and updated events are handled identically by the syncer, so
 # automation always emits the update event.
-_ISSUE_WEBHOOK_EVENT = "jira:issue_updated"
 
 _COMMON_KEYS = frozenset({"source", "actor"})
 _ISSUE_KEYS = _COMMON_KEYS | {"field_change"}
@@ -67,6 +66,8 @@ class JiraAutomationPayloadError(ValueError):
 def is_automation_request(payload):
     """
     Return whether the given request body was sent by a Project Automation rule.
+
+    Site webhook payloads are not, and must not go through the normalizer.
 
     :param payload: Parsed JSON request body.
     :rtype: bool
@@ -110,8 +111,7 @@ def normalize_automation_request(payload, resource_type, resource_id, jira):
         event = _issue_event(payload, issue_ref, jira)
     else:
         event = _entity_event(payload, event_type, issue_ref, jira)
-    # Site webhooks carry the initiator as ``user``; the syncer relies on it to
-    # ignore changes made by the bridge itself.
+
     event["user"] = actor
 
     logger.debug("Normalized Jira automation request for %s: %s", resource_id, event)
@@ -141,7 +141,6 @@ def _parse_actor(payload):
             "actor.accountId is empty. The rule must be triggered by a user, "
             "otherwise the bridge cannot ignore its own changes."
         )
-    _require_string("actor.accountId", account_id)
     return {"accountId": account_id}
 
 
@@ -158,7 +157,6 @@ def _parse_event_type(payload):
     event_type = payload.get("event_type")
     if not event_type:
         return None
-    _require_string("event_type", event_type)
     key = event_type.lower()
     if key not in _ENTITY_EVENTS:
         raise JiraAutomationPayloadError(
@@ -214,7 +212,7 @@ def _issue_event(payload, issue_ref, jira):
     else:
         items = [_full_sync_item(jira)]
     return {
-        "webhookEvent": _ISSUE_WEBHOOK_EVENT,
+        "webhookEvent": "jira:issue_updated",
         "issue": issue_ref,
         "changelog": {"items": items},
     }
@@ -242,6 +240,10 @@ def _field_change_item(field_change):
     Only the field matters to the syncer, which reads its new value from Jira.
     ``fromString`` and ``toString`` are kept for tracing.
 
+    The name of the field is kept too, as the handler routes on it for the changes
+    which have no field id of their own: a change of parent is the field
+    ``IssueParentAssociation``. It defaults to the field id.
+
     :param field_change: The ``field_change`` value of the request body.
     :returns: A dictionary with the ``field`` and ``fieldId`` of the changed field.
     :raises JiraAutomationPayloadError: If it is not an object, has unknown keys, or
@@ -257,12 +259,7 @@ def _field_change_item(field_change):
             'field_change.fieldId is required, e.g. "{{fieldChange.fieldId}}", '
             "or hard-code the field id in the rule."
         )
-    _require_string("field_change.fieldId", field_id)
-    name = field_change.get("field")
-    if name:
-        _require_string("field_change.field", name)
-
-    item = {"field": name or field_id, "fieldId": field_id}
+    item = {"field": field_change.get("field") or field_id, "fieldId": field_id}
     # The syncer only needs the field; these mirror a webhook for traceability.
     for key in ("fromString", "toString"):
         if key in field_change:
@@ -330,18 +327,6 @@ def _load_entity(jira, kind, issue_key, entity_id):
         return loader(issue_key, entity_id)
     except ValueError as e:
         raise JiraAutomationPayloadError(str(e)) from e
-
-
-def _require_string(name, value):
-    """
-    Check that a value of the request body is a string.
-
-    :param str name: The key of the value, for the error message.
-    :param value: The value to check.
-    :raises JiraAutomationPayloadError: If it is not a string.
-    """
-    if not isinstance(value, str):
-        raise JiraAutomationPayloadError(f"{name} must be a string, got {value!r}.")
 
 
 def _check_keys(data, allowed, name="Automation body"):

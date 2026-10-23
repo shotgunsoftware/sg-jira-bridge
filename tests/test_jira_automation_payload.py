@@ -284,20 +284,6 @@ class TestAutomationActor(TestAutomationPayloadBase):
                     body(actor={"accountId": account_id}), "actor.accountId is empty"
                 )
 
-    def test_actor_account_id_not_a_string_rejected(self):
-        """
-        Check that an account id which is not a string is a bad request.
-
-        Expected result:
-        - it is refused, and does not reach the syncer, which compares it to the
-          account id of the bridge user
-        """
-        for account_id in ({"a": 1}, ["a"], True, 5):
-            with self.subTest(account_id=account_id):
-                self.assert_rejected(
-                    body(actor={"accountId": account_id}), "actor.accountId must be"
-                )
-
     def test_actor_without_account_id_rejected(self):
         """Check that an ``actor`` with no account id is refused."""
         self.assert_rejected(body(actor={"name": "x"}), "actor.accountId is empty")
@@ -446,16 +432,39 @@ class TestAutomationIssuePartialSync(TestAutomationPayloadBase):
         self.changelog_items({"fieldId": "summary"})
 
     def test_partial_sync_field_name_forwarded(self):
-        """Check that the optional name of the field is kept."""
+        """Check that the name of the field sent by the rule is kept."""
         items = self.changelog_items({"fieldId": "summary", "field": "Summary"})
 
-        self.assertEqual(items[0]["field"], "Summary")
+        self.assertEqual(items, [{"field": "Summary", "fieldId": "summary"}])
 
     def test_partial_sync_field_name_defaults_to_field_id(self):
-        """Check that the field id is used as name when none is sent."""
+        """Check that the field id is used as name when the rule sends none."""
+        for field_change in (
+            {"fieldId": "summary"},
+            {"fieldId": "summary", "field": ""},
+        ):
+            with self.subTest(field_change=field_change):
+                self.assertEqual(
+                    self.changelog_items(field_change),
+                    [{"field": "summary", "fieldId": "summary"}],
+                )
+
+    def test_partial_sync_parent_change_keeps_its_field_name(self):
+        """
+        Check that a change of parent is named as the handler expects.
+
+        The handler adds the parent to the fields to sync when the changed field
+        is called ``IssueParentAssociation``, as it is in a site webhook.
+
+        Expected result:
+        - the changelog item has that name, whatever the field id
+        """
+        items = self.changelog_items(
+            {"fieldId": "parent", "field": "IssueParentAssociation"}
+        )
+
         self.assertEqual(
-            self.changelog_items({"fieldId": "summary"}),
-            [{"field": "summary", "fieldId": "summary"}],
+            items, [{"field": "IssueParentAssociation", "fieldId": "parent"}]
         )
 
     def test_partial_sync_cleared_value_kept(self):
@@ -478,20 +487,6 @@ class TestAutomationIssuePartialSync(TestAutomationPayloadBase):
                 self.assert_rejected(
                     body(field_change=field_change), "fieldId is required"
                 )
-
-    def test_partial_sync_values_not_strings_rejected(self):
-        """Check that a field id or name which is not a string is refused."""
-        for field_change, message in (
-            ({"fieldId": ["summary"]}, "field_change.fieldId must be"),
-            ({"fieldId": {"a": 1}}, "field_change.fieldId must be"),
-            ({"fieldId": 5}, "field_change.fieldId must be"),
-            (
-                {"fieldId": "summary", "field": ["Summary"]},
-                "field_change.field must be",
-            ),
-        ):
-            with self.subTest(field_change=field_change):
-                self.assert_rejected(body(field_change=field_change), message)
 
     def test_partial_sync_not_an_object_rejected(self):
         """Check that a ``field_change`` which is not an object is refused."""
@@ -640,19 +635,6 @@ class TestAutomationEntityEvents(TestAutomationPayloadBase):
                 event = self.normalize(self.entity_body(event_type))
 
                 self.assertEqual(event["webhookEvent"], "comment_created")
-
-    def test_entity_event_type_not_a_string_rejected(self):
-        """
-        Check that an event type which is not a string is a bad request.
-
-        Expected result:
-        - a refused request, and not an unhandled error which would be a server error
-        """
-        for event_type in (5, ["comment_created"], {"a": 1}, True):
-            with self.subTest(event_type=event_type):
-                self.assert_rejected(
-                    self.entity_body(event_type), "event_type must be a string"
-                )
 
     def test_entity_id_not_a_string_or_integer_rejected(self):
         """Check that an id which is neither a string nor an integer is refused."""

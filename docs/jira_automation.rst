@@ -317,6 +317,21 @@ The optional ``field_change`` values ``fromString`` and ``toString``
 describe the previous and new values. They are not required for
 synchronization.
 
+The optional ``field`` is the name of the changed field, and defaults to
+``fieldId``. It matters for one change only: a change of **parent**. A site
+webhook names that change ``IssueParentAssociation``, and the bridge uses the
+name to sync the parent. For a rule which watches the parent, enter both values
+as fixed text:
+
+.. code-block:: json
+
+   "field_change": {
+     "fieldId": "parent",
+     "field": "IssueParentAssociation"
+   }
+
+The parent must be mapped in ``field_mapping`` to be synced.
+
 .. figure:: _static/field_sync.png
    :alt: Field value changed automation with selected Jira fields and the Send web request action.
    :align: center
@@ -454,9 +469,6 @@ managed.
    * - Jira API requests
      - The bridge retrieves the affected Jira data after each event.
      - The webhook already includes event data.
-   * - Limits
-     - Subject to Jira Automation usage limits for the Jira plan.
-     - No Jira Automation rule execution limit.
 
 Project automation is a good choice when you administer individual projects
 or need conditions specific to a project. Site webhooks are simpler when a
@@ -469,8 +481,6 @@ There are a few limitations to keep in mind:
   used. After Jira deletes a reply, the bridge may no longer be able to
   identify its parent comment. Site webhook events contain the information
   required to recognize deleted replies.
-* **Automation usage limits** depend on the Jira Cloud plan. Check your
-  plan if your projects generate many events.
 
 
 Network access
