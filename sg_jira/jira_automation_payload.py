@@ -8,444 +8,253 @@
 """
 Normalize Jira Project Automation web-request bodies into webhook-shaped events.
 
-Site webhooks include a native ``changelog`` block; Project Automation does not
-expose ``{{#changelog.changedFields}}``. For field rules, send ``field_change``
-with ``{{fieldChange.fromString}}`` / ``{{fieldChange.toString}}`` — see
-:doc:`jira_automation`.
+Site webhooks carry a native ``changelog`` and fully populated ``comment`` /
+``worklog`` blocks; Project Automation sends only what the rule's *Custom data*
+contains. This module converts that small body into the event a site webhook
+would have produced, so the Generic Syncer handles both identically.
 
-Issue automation is inferred from the body: ``field_change`` / ``changed_fields``
-for partial sync, otherwise full Issue sync. Comment/worklog rules still use
-``trigger``. See :doc:`jira_automation`.
+Three body shapes are supported (see :doc:`jira_automation`):
+
+* Issue full sync: ``source`` + ``actor``.
+* Issue partial sync: the above + ``field_change``.
+* Comment / worklog: ``source`` + ``actor`` + ``event_type`` (``{{eventType}}``) + ``id``,
+  with optional ``body`` (comment) or ``comment`` / ``timeSpentSeconds`` /
+  ``timeSpent`` (worklog).
+
+Anything else is rejected, so rule typos surface in the Jira audit log instead
+of silently syncing the wrong thing.
 """
 
-import re
+import logging
+
+from jira import JIRAError
 
 from sg_jira.constants import (
     JIRA_PROJECT_AUTOMATION_SOURCE,
     JIRA_SYNC_IN_FPTR_FIELD,
 )
 
-# Comment/worklog automation: one Jira rule → one trigger value.
-TRIGGER_TO_WEBHOOK_EVENT = {
-    "comment.added": "comment_created",
-    "comment.edited": "comment_updated",
-    "comment.deleted": "comment_deleted",
-    "worklog.added": "worklog_created",
-    "worklog.updated": "worklog_updated",
-    "worklog.deleted": "worklog_deleted",
+logger = logging.getLogger(__name__)
+
+# ``{{eventType}}`` value -> (entity kind, action), named like site webhooks.
+_ENTITY_EVENTS = {
+    "comment_created": ("comment", "created"),
+    "comment_updated": ("comment", "updated"),
+    "comment_deleted": ("comment", "deleted"),
+    "worklog_created": ("worklog", "created"),
+    "worklog_updated": ("worklog", "updated"),
+    "worklog_deleted": ("worklog", "deleted"),
 }
 
-_ISSUE_WEBHOOK_EVENTS = frozenset(
-    {
-        "jira:issue_updated",
-        "jira:issue_created",
-    }
-)
+# Issue created and updated events are handled identically by the syncer, so
+# automation always emits the update event.
+_ISSUE_WEBHOOK_EVENT = "jira:issue_updated"
 
-_ENTITY_WEBHOOK_EVENTS = frozenset(
-    {
-        "comment_created",
-        "comment_updated",
-        "comment_deleted",
-        "worklog_created",
-        "worklog_updated",
-        "worklog_deleted",
-    }
-)
-
-_SUPPORTED_WEBHOOK_EVENTS = _ISSUE_WEBHOOK_EVENTS | _ENTITY_WEBHOOK_EVENTS
-
-# Deprecated ``webhook_event`` on comment/worklog bodies → ``trigger`` (inference).
-_LEGACY_WEBHOOK_EVENT_TO_TRIGGER = {
-    "comment_created": "comment.added",
-    "comment_updated": "comment.edited",
-    "comment_deleted": "comment.deleted",
-    "worklog_created": "worklog.added",
-    "worklog_updated": "worklog.updated",
-    "worklog_deleted": "worklog.deleted",
+_COMMON_KEYS = frozenset({"source", "actor"})
+_ISSUE_KEYS = _COMMON_KEYS | {"field_change"}
+_ENTITY_KEYS = _COMMON_KEYS | {"event_type", "id"}
+_ENTITY_OPTIONAL_KEYS = {
+    "comment": frozenset({"body"}),
+    "worklog": frozenset({"comment", "timeSpentSeconds", "timeSpent"}),
 }
-
-# Smart values left unexpanded in the rule body look like this in audit logs.
-_UNEXPANDED_SMART_VALUE_RE = (
-    r"^\{\{(fieldChange|initiator|issue|changelog|comment|worklog)(\.|\}\})"
-)
+_FIELD_CHANGE_KEYS = frozenset({"fieldId", "field", "fromString", "toString"})
 
 
 class JiraAutomationPayloadError(ValueError):
     """Raised when a Jira Project Automation request body is invalid."""
 
 
-def normalize_automation_request(payload, resource_type, resource_id, jira=None):
+def is_automation_request(payload):
+    """
+    Return whether the given request body was sent by a Project Automation rule.
+
+    :param payload: Parsed JSON request body.
+    :rtype: bool
+    """
+    return (
+        isinstance(payload, dict)
+        and payload.get("source") == JIRA_PROJECT_AUTOMATION_SOURCE
+    )
+
+
+def normalize_automation_request(payload, resource_type, resource_id, jira):
     """
     Convert a Project Automation POST body into an event the Generic Syncer accepts.
 
-    Payloads without ``source: jira_project_automation`` are returned unchanged.
-    Real Jira webhooks are unaffected.
-
-    :param dict payload: Parsed JSON request body.
-    :param str resource_type: Jira resource type from the URL path (e.g. ``issue``).
+    :param dict payload: Parsed JSON request body, see :func:`is_automation_request`.
+    :param str resource_type: Jira resource type from the URL path (``issue``).
     :param str resource_id: Jira Issue key from the URL path.
-    :param jira: Optional :class:`~sg_jira.jira_session.JiraSession` for
-        Issue id resolution, and comment/worklog loads.
+    :param jira: A connected :class:`~sg_jira.jira_session.JiraSession`.
     :returns: Event dictionary in Jira webhook shape.
-    :raises JiraAutomationPayloadError: On invalid automation input.
+    :raises JiraAutomationPayloadError: If the request is invalid.
     """
-    if not isinstance(payload, dict):
-        raise JiraAutomationPayloadError("Request body must be a JSON object.")
-
-    event = dict(payload)
-
-    if event.get("source") != JIRA_PROJECT_AUTOMATION_SOURCE:
-        return event
-
-    if not resource_type or resource_type.lower() != "issue":
+    if not is_automation_request(payload):
+        raise JiraAutomationPayloadError(
+            f'Request body must be a JSON object with "source": '
+            f'"{JIRA_PROJECT_AUTOMATION_SOURCE}".'
+        )
+    if not isinstance(resource_type, str) or resource_type.lower() != "issue":
         raise JiraAutomationPayloadError(
             "Jira Project Automation only supports Issue resources in the URL path."
         )
-
     if not resource_id or not isinstance(resource_id, str):
         raise JiraAutomationPayloadError(
             "The request path must include a Jira Issue key."
         )
 
-    trigger = event.pop("trigger", None)
-    webhook_event = event.pop("webhook_event", None) or event.pop("webhookEvent", None)
-    if trigger is None and webhook_event:
-        trigger = _LEGACY_WEBHOOK_EVENT_TO_TRIGGER.get(webhook_event)
-        if trigger is not None:
-            webhook_event = None
-    trigger = _infer_trigger_if_missing(event, trigger)
-    webhook_event, _trigger = _resolve_trigger_and_webhook_event(
-        trigger, webhook_event, event
-    )
+    actor = _parse_actor(payload)
+    event_type = _parse_event_type(payload)
 
-    user = _pop_actor(event)
-
-    event.pop("source", None)
-
-    issue_ref = _issue_reference(resource_id, jira)
-
-    if webhook_event in _ENTITY_WEBHOOK_EVENTS:
-        normalized = _normalize_entity_automation(
-            webhook_event, issue_ref, event, resource_id, jira
-        )
+    issue_ref = _issue_reference(jira, resource_id)
+    if event_type is None:
+        event = _issue_event(payload, issue_ref, jira)
     else:
-        normalized = _normalize_issue_automation(
-            webhook_event, issue_ref, event, resource_id, jira
-        )
+        event = _entity_event(payload, event_type, issue_ref, jira)
+    # Site webhooks carry the initiator as ``user``; the syncer relies on it to
+    # ignore changes made by the bridge itself.
+    event["user"] = actor
 
-    if user is not None:
-        normalized["user"] = user
-
-    return normalized
+    logger.debug("Normalized Jira automation request for %s: %s", resource_id, event)
+    return event
 
 
-def _infer_trigger_if_missing(event, trigger):
-    """
-    Infer comment/worklog triggers from entity ids when missing.
-
-    Issue create/update/field sync is inferred from ``field_change`` presence,
-    not from ``trigger``.
-    """
-    if trigger is not None:
-        return trigger
-    if event.get("comment_id") is not None or event.get("comment") is not None:
+def _parse_actor(payload):
+    """Return the initiator as a webhook ``user``; it drives loop detection."""
+    actor = payload.get("actor")
+    if not isinstance(actor, dict):
         raise JiraAutomationPayloadError(
-            "Comment rules require trigger: comment.added, comment.edited, or "
-            "comment.deleted (same as your Jira automation trigger)."
+            'actor is required, e.g. "actor": {"accountId": "{{initiator.accountId}}"}.'
         )
-    if event.get("worklog_id") is not None or event.get("worklog") is not None:
+    account_id = actor.get("accountId")
+    if not account_id:
         raise JiraAutomationPayloadError(
-            "Worklog rules require trigger: worklog.added, worklog.updated, or "
-            "worklog.deleted (same as your Jira automation trigger)."
+            "actor.accountId is empty. The rule must be triggered by a user, "
+            "otherwise the bridge cannot ignore its own changes."
         )
-    return None
+    return {"accountId": account_id}
 
 
-def _resolve_trigger_and_webhook_event(trigger, webhook_event, event):
-    if trigger is not None:
-        if trigger not in TRIGGER_TO_WEBHOOK_EVENT:
+def _parse_event_type(payload):
+    """Return the comment/worklog ``event_type``, or None for Issue rules."""
+    event_type = payload.get("event_type")
+    if not event_type:
+        return None
+    key = event_type.lower()
+    if key not in _ENTITY_EVENTS:
+        raise JiraAutomationPayloadError(
+            f"Unsupported event_type {event_type!r}. event_type is only used by "
+            f"comment/worklog rules ({', '.join(sorted(_ENTITY_EVENTS))}); "
+            f"omit it for Issue rules."
+        )
+    return key
+
+
+def _issue_reference(jira, issue_key):
+    """Return the ``issue`` block of a webhook, resolving the Issue id from Jira."""
+    try:
+        issue = jira.issue(issue_key, fields="id")
+    except JIRAError as e:
+        if e.status_code == 404:
             raise JiraAutomationPayloadError(
-                f"Unsupported trigger {trigger!r}. "
-                f"Issue sync uses field_change or a minimal body (no trigger). "
-                f"Comment/worklog triggers: "
-                f"{', '.join(sorted(TRIGGER_TO_WEBHOOK_EVENT.keys()))}."
-            )
-        mapped = TRIGGER_TO_WEBHOOK_EVENT[trigger]
-        if webhook_event and webhook_event != mapped:
-            raise JiraAutomationPayloadError(
-                f"trigger {trigger!r} maps to {mapped!r}, but webhook_event "
-                f"was {webhook_event!r}. Use trigger only."
-            )
-        return mapped, trigger
-
-    if webhook_event:
-        if webhook_event not in _SUPPORTED_WEBHOOK_EVENTS:
-            raise JiraAutomationPayloadError(
-                f"Unsupported webhook_event {webhook_event!r}. "
-                f"See docs/jira_automation.rst."
-            )
-        return webhook_event, None
-
-    return "jira:issue_updated", None
-
-
-def _pop_actor(event):
-    """Return the initiator as ``user`` for loop detection (actor preferred)."""
-    actor = event.pop("actor", None)
-    user = event.pop("user", None)
-    initiator = actor if actor is not None else user
-    if initiator is not None and not isinstance(initiator, dict):
-        raise JiraAutomationPayloadError("actor must be an object.")
-    return initiator
-
-
-def _issue_reference(resource_id, jira):
-    issue_ref = {"key": resource_id}
-    if jira is not None:
-        try:
-            jira_issue = jira.issue(resource_id)
-            issue_ref["id"] = str(jira_issue.id)
-        except Exception as e:
-            raise JiraAutomationPayloadError(
-                f"Unable to load Jira Issue {resource_id!r}."
+                f"Jira Issue {issue_key!r} was not found."
             ) from e
-    return issue_ref
+        # Auth, rate limit or outage: not the caller's fault, let it surface.
+        raise
+    return {"key": issue_key, "id": str(issue.id)}
 
 
-def _normalize_entity_automation(webhook_event, issue_ref, event, issue_key, jira):
-    entity_kind, _action = webhook_event.split("_", 1)
+def _issue_event(payload, issue_ref, jira):
+    """Build an Issue event: partial sync with ``field_change``, else full sync."""
+    _check_keys(payload, _ISSUE_KEYS)
 
-    for key in ("field_change", "changed_fields"):
-        if key in event:
-            raise JiraAutomationPayloadError(
-                f"{key} applies to Issue field rules only, not {webhook_event}."
-            )
-
-    inline_entity = event.pop(entity_kind, None)
-    entity_id = event.pop(f"{entity_kind}_id", None)
-    entity_id = _coalesce_entity_id(entity_kind, inline_entity, entity_id)
-
-    if event:
-        raise JiraAutomationPayloadError(
-            f"Unexpected keys in automation body: {', '.join(sorted(event.keys()))}."
-        )
-
-    entity = _resolve_comment_or_worklog_entity(
-        entity_kind, _action, inline_entity, entity_id, issue_key, jira
-    )
-
+    if "field_change" in payload:
+        items = [_field_change_item(payload["field_change"])]
+    else:
+        items = [_full_sync_item(jira)]
     return {
-        "webhookEvent": webhook_event,
+        "webhookEvent": _ISSUE_WEBHOOK_EVENT,
         "issue": issue_ref,
-        entity_kind: entity,
+        "changelog": {"items": items},
     }
 
 
-def _coalesce_entity_id(entity_kind, inline_entity, entity_id):
-    """Accept ``comment_id`` / ``\"{{comment.id}}\"`` or ``\"comment\": \"{{comment.id}}\"``."""
-    if entity_id is not None:
-        return entity_id
-    if isinstance(inline_entity, str):
-        return inline_entity.strip()
-    if isinstance(inline_entity, (int, float)):
-        return str(int(inline_entity))
-    if isinstance(inline_entity, dict) and inline_entity.get("id") is not None:
-        return inline_entity.get("id")
-    return None
-
-
-def _resolve_comment_or_worklog_entity(
-    entity_kind, action, inline_entity, entity_id, issue_key, jira
-):
-    entity = None
-    if inline_entity is not None and isinstance(inline_entity, dict):
-        entity = dict(inline_entity)
-
-    if entity_id is not None:
-        entity_id = str(entity_id).strip()
-        if _looks_like_unexpanded_smart_value(entity_id):
-            raise JiraAutomationPayloadError(
-                f"{entity_kind}_id contains an unexpanded Jira smart value."
-            )
-        if entity is None:
-            entity = {"id": entity_id}
-        elif not entity.get("id"):
-            entity["id"] = entity_id
-
-    if not entity or not entity.get("id"):
-        raise JiraAutomationPayloadError(
-            f'Paste "{entity_kind}_id": "{{{{{entity_kind}.id}}}}" in Custom data '
-            f"(Jira fills in the id when the rule runs — you never type a number)."
-        )
-
-    entity["id"] = str(entity["id"])
-
-    if action == "deleted":
-        if entity_kind == "worklog" and "issueId" not in entity:
-            entity["issueId"] = issue_key
-        return entity
-
-    if _entity_needs_jira_fetch(entity, action):
-        if jira is None:
-            raise JiraAutomationPayloadError(
-                f"{entity_kind}_id requires a Jira connection to load {entity_kind} data."
-            )
-        try:
-            if entity_kind == "comment":
-                entity = jira.comment_as_webhook_entity(issue_key, entity["id"])
-            else:
-                entity = jira.worklog_as_webhook_entity(issue_key, entity["id"])
-        except ValueError as e:
-            raise JiraAutomationPayloadError(str(e)) from e
-
-    return entity
-
-
-def _entity_needs_jira_fetch(entity, action):
-    if action == "created":
-        author = entity.get("author") or {}
-        return not (author.get("accountId") or author.get("name"))
-    if action == "updated":
-        author = entity.get("updateAuthor") or entity.get("author") or {}
-        return not (author.get("accountId") or author.get("name"))
-    return False
-
-
-def _normalize_issue_automation(webhook_event, issue_ref, event, resource_id, jira):
-    if event.pop("sync_changed_only", False):
-        raise JiraAutomationPayloadError(
-            "sync_changed_only is not supported. Use field_change with "
-            "{{fieldChange.fromString}} and {{fieldChange.toString}}."
-        )
-
-    field_change = event.pop("field_change", None)
-    changed_fields = event.pop("changed_fields", None)
-    partial_sync = field_change is not None or changed_fields is not None
-
-    if field_change is not None and changed_fields is not None:
-        raise JiraAutomationPayloadError(
-            "Use either field_change or changed_fields, not both."
-        )
-
-    if event:
-        raise JiraAutomationPayloadError(
-            f"Unexpected keys in automation body: {', '.join(sorted(event.keys()))}."
-        )
-
-    normalized = {
-        "webhookEvent": webhook_event,
-        "issue": issue_ref,
-    }
-
-    if field_change is not None:
-        normalized["changelog"] = {
-            "items": [
-                _field_spec_to_changelog_item(
-                    field_change, jira, require_value_strings=partial_sync
-                )
-            ],
-        }
-        return normalized
-
-    if changed_fields is not None:
-        if not isinstance(changed_fields, list) or not changed_fields:
-            raise JiraAutomationPayloadError(
-                "changed_fields must be a non-empty array."
-            )
-        normalized["changelog"] = {
-            "items": [
-                _field_spec_to_changelog_item(
-                    entry, jira, require_value_strings=partial_sync
-                )
-                for entry in changed_fields
-            ],
-        }
-        return normalized
-
-    normalized["changelog"] = _automation_full_sync_changelog(jira)
-    return normalized
-
-
-def _automation_full_sync_changelog(jira):
+def _full_sync_item(jira):
     """
-    Changelog shape that makes process_jira_event run a full Issue field sync.
+    Changelog item which makes the handler run a full Issue field sync.
 
-    Uses the Sync In FPTR field id so the existing webhook code path applies.
+    The handler treats a change to the *Sync In FPTR* field as "sync everything".
     """
-    field_id = JIRA_SYNC_IN_FPTR_FIELD.lower()
-    if jira is not None:
-        field_id = (
-            jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower()) or field_id
+    field_id = jira.get_jira_issue_field_id(JIRA_SYNC_IN_FPTR_FIELD.lower())
+    if not field_id:
+        raise RuntimeError(
+            f"Jira field {JIRA_SYNC_IN_FPTR_FIELD!r} was not found. "
+            f"Is it set up in Jira?"
         )
-    return {
-        "items": [
-            {
-                "field": JIRA_SYNC_IN_FPTR_FIELD,
-                "fieldId": field_id,
-            }
-        ]
-    }
+    return {"field": JIRA_SYNC_IN_FPTR_FIELD, "fieldId": field_id}
 
 
-def _field_spec_to_changelog_item(field_spec, jira, require_value_strings=False):
-    if not isinstance(field_spec, dict):
-        raise JiraAutomationPayloadError("Each field entry must be an object.")
+def _field_change_item(field_change):
+    """Build a webhook changelog item from the rule's ``field_change``."""
+    if not isinstance(field_change, dict):
+        raise JiraAutomationPayloadError("field_change must be an object.")
+    _check_keys(field_change, _FIELD_CHANGE_KEYS, "field_change")
 
-    field_name = _normalize_field_text(field_spec.get("field"))
-    field_id = _normalize_field_text(field_spec.get("fieldId"))
-
-    for value in (field_spec.get("field"), field_spec.get("fieldId")):
-        if isinstance(value, str) and _looks_like_unexpanded_smart_value(value):
-            raise JiraAutomationPayloadError(
-                "field_change contains an unexpanded Jira smart value. "
-                "Check the automation rule trigger (Field value changed) and "
-                "Custom data. See docs/jira_automation.rst."
-            )
-
-    if require_value_strings:
-        for key in ("fromString", "toString"):
-            if key not in field_spec:
-                raise JiraAutomationPayloadError(
-                    f"field_change must include {key} "
-                    f"(use {{{{fieldChange.{key}}}}})."
-                )
-            if isinstance(field_spec[key], str) and _looks_like_unexpanded_smart_value(
-                field_spec[key]
-            ):
-                raise JiraAutomationPayloadError(
-                    f"field_change.{key} is an unexpanded smart value."
-                )
-
-    if not field_name and not field_id:
+    field_id = field_change.get("fieldId")
+    if not field_id:
         raise JiraAutomationPayloadError(
-            "field_change needs fieldId (recommended, hard-code per rule) or field."
+            'field_change.fieldId is required, e.g. "{{fieldChange.fieldId}}", '
+            "or hard-code the field id in the rule."
         )
+    name = field_change.get("field")
 
-    if not field_id and field_name and jira is not None:
-        field_id = jira.get_jira_issue_field_id(field_name)
-
-    if not field_name and field_id:
-        field_name = field_id
-
-    item = {
-        "field": field_name,
-        "fieldId": field_id or field_name,
-    }
-    for key in ("fromString", "toString", "from", "to"):
-        if key in field_spec:
-            item[key] = field_spec[key]
+    item = {"field": name or field_id, "fieldId": field_id}
+    # The syncer only needs the field; these mirror a webhook for traceability.
+    for key in ("fromString", "toString"):
+        if key in field_change:
+            item[key] = field_change[key]
     return item
 
 
-def _normalize_field_text(value):
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        return value
-    text = value.strip()
-    return text or None
+def _entity_event(payload, event_type, issue_ref, jira):
+    """Build a comment or worklog event."""
+    kind, action = _ENTITY_EVENTS[event_type]
+    optional_keys = _ENTITY_OPTIONAL_KEYS[kind]
+    _check_keys(payload, _ENTITY_KEYS | optional_keys)
+
+    entity_id = payload.get("id")
+    if not entity_id:
+        raise JiraAutomationPayloadError(
+            f'{event_type} requires "id": "{{{{{kind}.id}}}}".'
+        )
+    # What the rule sent is only a fallback: Jira is the source of truth.
+    entity = {key: payload[key] for key in optional_keys if key in payload}
+    entity["id"] = entity_id
+
+    if action == "deleted":
+        # Nothing left to load. Webhooks only carry the id here, plus the
+        # parent Issue id for worklogs.
+        if kind == "worklog":
+            entity["issueId"] = issue_ref["id"]
+    else:
+        entity.update(_load_entity(jira, kind, issue_ref["key"], entity_id))
+
+    return {"webhookEvent": event_type, "issue": issue_ref, kind: entity}
 
 
-def _looks_like_unexpanded_smart_value(value):
-    return bool(re.match(_UNEXPANDED_SMART_VALUE_RE, value.strip()))
+def _load_entity(jira, kind, issue_key, entity_id):
+    """Load a comment or worklog from Jira, shaped like a webhook entity."""
+    loader = getattr(jira, f"{kind}_as_webhook_entity")
+    try:
+        return loader(issue_key, entity_id)
+    except ValueError as e:
+        raise JiraAutomationPayloadError(str(e)) from e
+
+
+def _check_keys(data, allowed, name="Automation body"):
+    """Reject keys outside ``allowed``."""
+    unexpected = set(data) - allowed
+    if unexpected:
+        raise JiraAutomationPayloadError(
+            f"{name} has unexpected keys: {', '.join(sorted(unexpected))}. "
+            f"Allowed: {', '.join(sorted(allowed))}."
+        )

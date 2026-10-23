@@ -211,8 +211,8 @@ class EntitiesGenericHandler(SyncHandler):
             return False
 
         meta = event["meta"]
-        field = meta["attribute_name"]
         sync_settings = self.__get_sg_entity_settings(entity_type)
+        field = meta["attribute_name"]
         extra_sg_fields = [SHOTGUN_SYNC_IN_JIRA_FIELD]
 
         if sync_settings.get("sync_direction", "both_way") == "jira_to_sg":

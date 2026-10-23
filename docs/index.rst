@@ -26,5 +26,6 @@ is configured  in Jira for your Project.
     developer
     services
     generic_syncer
+    jira_automation
     examples
     known_issues

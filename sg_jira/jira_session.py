@@ -699,14 +699,38 @@ class JiraSession(jira.client.JIRA):
     @staticmethod
     def _jira_user_to_webhook_dict(user):
         """Build a minimal user dict like Jira webhook payloads."""
-        if user is None:
+        if not user:
             return {}
         data = {}
         for attr in ("accountId", "name", "key", "emailAddress", "displayName"):
             value = getattr(user, attr, None)
-            if value is not None:
+            if value:
                 data[attr] = value
         return data
+
+    @staticmethod
+    def _get_existing(getter, kind, issue_key, entity_id):
+        """
+        Call ``getter(issue_key, entity_id)`` and return the Jira resource.
+
+        The Jira library raises a 404 for a missing resource, some wrappers
+        return ``None``; both are reported the same way.
+
+        :param getter: A bound ``comment`` or ``worklog`` method.
+        :param str kind: Resource name used in the error message.
+        :raises ValueError: if the resource does not exist.
+        """
+        try:
+            resource = getter(issue_key, entity_id)
+        except JIRAError as e:
+            if e.status_code != 404:
+                raise
+            resource = None
+        if resource is None:
+            raise ValueError(
+                f"Jira {kind} {entity_id!r} was not found on Issue {issue_key!r}."
+            )
+        return resource
 
     def comment_as_webhook_entity(self, issue_key, comment_id):
         """
@@ -717,14 +741,12 @@ class JiraSession(jira.client.JIRA):
         :returns: A ``comment`` object dict for :meth:`~handlers.SyncHandler.process_jira_event`.
         :raises ValueError: if the Comment does not exist.
         """
-        comment = self.comment(issue_key, comment_id)
-        if comment is None:
-            raise ValueError(
-                f"Jira Comment {comment_id!r} was not found on Issue {issue_key!r}."
-            )
+        comment = self._get_existing(self.comment, "Comment", issue_key, comment_id)
 
         entity = {
             "id": str(comment.id),
+            # Reply sync reads the body of the comment from the event.
+            "body": getattr(comment, "body", ""),
             "author": self._jira_user_to_webhook_dict(getattr(comment, "author", None)),
             "updateAuthor": self._jira_user_to_webhook_dict(
                 getattr(comment, "updateAuthor", None)
@@ -745,11 +767,7 @@ class JiraSession(jira.client.JIRA):
         :returns: A ``worklog`` object dict for :meth:`~handlers.SyncHandler.process_jira_event`.
         :raises ValueError: if the Worklog does not exist.
         """
-        worklog = self.worklog(issue_key, worklog_id)
-        if worklog is None:
-            raise ValueError(
-                f"Jira Worklog {worklog_id!r} was not found on Issue {issue_key!r}."
-            )
+        worklog = self._get_existing(self.worklog, "Worklog", issue_key, worklog_id)
 
         issue = getattr(worklog, "issue", None)
         issue_id = getattr(issue, "id", None) if issue is not None else None
