@@ -196,6 +196,17 @@ SYNC = {
                     # and sync_deletion_direction from this entry.
                     "enable_reply_syncing": True,
                 },
+                {
+                    "sg_entity": "TimeLog",
+                    "sync_direction": "both_way",         # or "jira_to_sg"; omit for the default (both_way)
+                    "sync_deletion_direction": "both_way",  # needed for worklog_deleted to delete the TimeLog
+                    "field_mapping": [
+                        {"sg_field": "date", "jira_field": "started"},
+                        {"sg_field": "duration", "jira_field": "timeSpentSeconds"},
+                        {"sg_field": "description", "jira_field": "comment"},
+                    ],
+                },
+
             ],
         },
     },

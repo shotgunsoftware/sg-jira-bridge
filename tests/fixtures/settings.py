@@ -200,6 +200,26 @@ SYNC = {
 }
 
 
+# Same as "entities_generic" but the Jira watchers are synced to the FPTR reviewers
+# of a Task, to test the Jira to FPTR sync of a list of users.
+SYNC["entities_generic_watchers"] = copy.deepcopy(SYNC["entities_generic"])
+for _entity_mapping in SYNC["entities_generic_watchers"]["settings"]["entity_mapping"]:
+    if _entity_mapping["sg_entity"] == "Task":
+        _entity_mapping["field_mapping"].append(
+            {"sg_field": "task_reviewers", "jira_field": "watches"}
+        )
+
+# Same as "entities_generic" but TimeLog isn't mapped, to test that Jira
+# Worklog events are rejected when FPTR TimeLog isn't configured for syncing.
+SYNC["entities_generic_no_timelog"] = copy.deepcopy(SYNC["entities_generic"])
+SYNC["entities_generic_no_timelog"]["settings"]["entity_mapping"] = [
+    _entity_mapping
+    for _entity_mapping in SYNC["entities_generic_no_timelog"]["settings"][
+        "entity_mapping"
+    ]
+    if _entity_mapping["sg_entity"] != "TimeLog"
+]
+
 # Settings that enable Reply syncing on the Note entry, for reply-sync tests.
 # Reply has no settings of its own - it fully inherits sync_direction and
 # sync_deletion_direction from Note.

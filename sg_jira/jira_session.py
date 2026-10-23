@@ -696,6 +696,92 @@ class JiraSession(jira.client.JIRA):
 
         return self.create_issue(fields=data)
 
+    @staticmethod
+    def _jira_user_to_webhook_dict(user):
+        """Build a minimal user dict like Jira webhook payloads."""
+        if not user:
+            return {}
+        data = {}
+        for attr in ("accountId", "name", "key", "emailAddress", "displayName"):
+            value = getattr(user, attr, None)
+            if value:
+                data[attr] = value
+        return data
+
+    @staticmethod
+    def _get_existing(getter, kind, issue_key, entity_id):
+        """
+        Call ``getter(issue_key, entity_id)`` and return the Jira resource.
+
+        The Jira library raises a 404 for a missing resource, some wrappers
+        return ``None``; both are reported the same way.
+
+        :param getter: A bound ``comment`` or ``worklog`` method.
+        :param str kind: Resource name used in the error message.
+        :raises ValueError: if the resource does not exist.
+        """
+        try:
+            resource = getter(issue_key, entity_id)
+        except JIRAError as e:
+            if e.status_code != 404:
+                raise
+            resource = None
+        if resource is None:
+            raise ValueError(
+                f"Jira {kind} {entity_id!r} was not found on Issue {issue_key!r}."
+            )
+        return resource
+
+    def comment_as_webhook_entity(self, issue_key, comment_id):
+        """
+        Load a Comment and shape it like a Jira ``comment_*`` webhook payload.
+
+        :param str issue_key: Parent Issue key or id.
+        :param str comment_id: Comment id.
+        :returns: A ``comment`` object dict for :meth:`~handlers.SyncHandler.process_jira_event`.
+        :raises ValueError: if the Comment does not exist.
+        """
+        comment = self._get_existing(self.comment, "Comment", issue_key, comment_id)
+
+        entity = {
+            "id": str(comment.id),
+            # Reply sync reads the body of the comment from the event.
+            "body": getattr(comment, "body", ""),
+            "author": self._jira_user_to_webhook_dict(getattr(comment, "author", None)),
+            "updateAuthor": self._jira_user_to_webhook_dict(
+                getattr(comment, "updateAuthor", None)
+                or getattr(comment, "author", None)
+            ),
+        }
+        parent_id = getattr(comment, "parentId", None)
+        if parent_id is not None:
+            entity["parentId"] = parent_id
+        return entity
+
+    def worklog_as_webhook_entity(self, issue_key, worklog_id):
+        """
+        Load a Worklog and shape it like a Jira ``worklog_*`` webhook payload.
+
+        :param str issue_key: Parent Issue key or id.
+        :param str worklog_id: Worklog id.
+        :returns: A ``worklog`` object dict for :meth:`~handlers.SyncHandler.process_jira_event`.
+        :raises ValueError: if the Worklog does not exist.
+        """
+        worklog = self._get_existing(self.worklog, "Worklog", issue_key, worklog_id)
+
+        # A worklog of the Jira library has the id of its Issue as ``issueId``.
+        issue_id = getattr(worklog, "issueId", None)
+        entity = {
+            "id": str(worklog.id),
+            "issueId": str(issue_id) if issue_id is not None else str(issue_key),
+            "author": self._jira_user_to_webhook_dict(getattr(worklog, "author", None)),
+            "updateAuthor": self._jira_user_to_webhook_dict(
+                getattr(worklog, "updateAuthor", None)
+                or getattr(worklog, "author", None)
+            ),
+        }
+        return entity
+
     def get_jira_issue_edit_meta(self, jira_issue):
         """
         Return the edit metadata for the given Jira Issue.
