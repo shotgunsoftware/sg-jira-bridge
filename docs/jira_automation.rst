@@ -278,7 +278,7 @@ The bridge accepts these comment event types:
 ``{{comment.id}}`` is the Jira comment ID; you do not have to look it up.
 For non-deletion events, the bridge reads the current comment from Jira.
 
-.. figure:: _static/comments_sync.png
+.. figure:: _static/comment_sync.png
    :alt: Jira comment trigger choices and a Send web request configuration panel.
    :align: center
    :width: 98%
