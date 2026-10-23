@@ -555,8 +555,8 @@ def main():
 
     keyfile = None
     certfile = None
-    # if args.ssl_context:
-    #     keyfile, certfile = args.ssl_context
+    if args.ssl_context:
+        keyfile, certfile = args.ssl_context
 
     try:
         socket.inet_aton(args.listen_address)
