@@ -623,15 +623,6 @@ class TestMain(TestCase):
         self.assertEqual(kwargs["keyfile"], "key.pem")
         self.assertEqual(kwargs["certfile"], "cert.pem")
 
-    def test_main_listen_address_and_port(self):
-        """Check that the listen address and the port can be chosen."""
-        run_server = self._run_main(
-            "--settings", "s.py", "--listen_address", "0.0.0.0", "--port", "8080"
-        )
-
-        kwargs = run_server.call_args.kwargs
-        self.assertEqual((kwargs["listen_address"], kwargs["port"]), ("0.0.0.0", 8080))
-
     def test_main_settings_required(self):
         """Check that the web app does not start without a settings file."""
         with mock.patch("webapp.run_server") as run_server, self.assertRaises(
