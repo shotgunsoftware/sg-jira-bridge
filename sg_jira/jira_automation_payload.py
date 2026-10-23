@@ -119,7 +119,17 @@ def normalize_automation_request(payload, resource_type, resource_id, jira):
 
 
 def _parse_actor(payload):
-    """Return the initiator as a webhook ``user``; it drives loop detection."""
+    """
+    Return the initiator of the rule as the ``user`` of a webhook event.
+
+    The syncer uses it to ignore the changes made by the bridge itself, so it is
+    required.
+
+    :param dict payload: The request body.
+    :returns: A dictionary with the ``accountId`` of the initiator.
+    :raises JiraAutomationPayloadError: If the actor is missing or has no account
+        id, for instance when Jira had no user to render ``{{initiator.accountId}}``.
+    """
     actor = payload.get("actor")
     if not isinstance(actor, dict):
         raise JiraAutomationPayloadError(
@@ -131,14 +141,24 @@ def _parse_actor(payload):
             "actor.accountId is empty. The rule must be triggered by a user, "
             "otherwise the bridge cannot ignore its own changes."
         )
+    _require_string("actor.accountId", account_id)
     return {"accountId": account_id}
 
 
 def _parse_event_type(payload):
-    """Return the comment/worklog ``event_type``, or None for Issue rules."""
+    """
+    Return the ``event_type`` of a comment or worklog rule.
+
+    :param dict payload: The request body.
+    :returns: The lower case event name, such as ``comment_created``, or None if
+        the body has no ``event_type``, which is the case of Issue rules.
+    :raises JiraAutomationPayloadError: If the event type is not one of
+        comment/worklog ones.
+    """
     event_type = payload.get("event_type")
     if not event_type:
         return None
+    _require_string("event_type", event_type)
     key = event_type.lower()
     if key not in _ENTITY_EVENTS:
         raise JiraAutomationPayloadError(
@@ -150,7 +170,16 @@ def _parse_event_type(payload):
 
 
 def _issue_reference(jira, issue_key):
-    """Return the ``issue`` block of a webhook, resolving the Issue id from Jira."""
+    """
+    Return the ``issue`` block of a webhook, which has the key and the id of the Issue.
+
+    :param jira: A :class:`~sg_jira.jira_session.JiraSession`.
+    :param str issue_key: The key of the Issue, from the request path.
+    :returns: A dictionary with the ``key`` and the ``id`` of the Issue.
+    :raises JiraAutomationPayloadError: If Jira has no such Issue.
+    :raises jira.JIRAError: For any other Jira failure, which is not the fault of
+        the request.
+    """
     try:
         issue = jira.issue(issue_key, fields="id")
     except JIRAError as e:
@@ -160,11 +189,24 @@ def _issue_reference(jira, issue_key):
             ) from e
         # Auth, rate limit or outage: not the caller's fault, let it surface.
         raise
-    return {"key": issue_key, "id": str(issue.id)}
+    # The path may hold the key in another case, or the id: Jira knows the key.
+    return {"key": getattr(issue, "key", None) or issue_key, "id": str(issue.id)}
 
 
 def _issue_event(payload, issue_ref, jira):
-    """Build an Issue event: partial sync with ``field_change``, else full sync."""
+    """
+    Build the event of an Issue rule.
+
+    A ``field_change`` makes it a partial sync of that field, otherwise it is a
+    full sync of the Issue.
+
+    :param dict payload: The request body.
+    :param dict issue_ref: The ``issue`` block of the event.
+    :param jira: A :class:`~sg_jira.jira_session.JiraSession`.
+    :returns: An Issue update event, in the shape of a webhook payload.
+    :raises JiraAutomationPayloadError: If the body has keys Issue rules do not take,
+        or an invalid ``field_change``.
+    """
     _check_keys(payload, _ISSUE_KEYS)
 
     if "field_change" in payload:
@@ -194,7 +236,17 @@ def _full_sync_item(jira):
 
 
 def _field_change_item(field_change):
-    """Build a webhook changelog item from the rule's ``field_change``."""
+    """
+    Build a webhook changelog item from the ``field_change`` of a rule.
+
+    Only the field matters to the syncer, which reads its new value from Jira.
+    ``fromString`` and ``toString`` are kept for tracing.
+
+    :param field_change: The ``field_change`` value of the request body.
+    :returns: A dictionary with the ``field`` and ``fieldId`` of the changed field.
+    :raises JiraAutomationPayloadError: If it is not an object, has unknown keys, or
+        has no ``fieldId``.
+    """
     if not isinstance(field_change, dict):
         raise JiraAutomationPayloadError("field_change must be an object.")
     _check_keys(field_change, _FIELD_CHANGE_KEYS, "field_change")
@@ -205,7 +257,10 @@ def _field_change_item(field_change):
             'field_change.fieldId is required, e.g. "{{fieldChange.fieldId}}", '
             "or hard-code the field id in the rule."
         )
+    _require_string("field_change.fieldId", field_id)
     name = field_change.get("field")
+    if name:
+        _require_string("field_change.field", name)
 
     item = {"field": name or field_id, "fieldId": field_id}
     # The syncer only needs the field; these mirror a webhook for traceability.
@@ -216,7 +271,21 @@ def _field_change_item(field_change):
 
 
 def _entity_event(payload, event_type, issue_ref, jira):
-    """Build a comment or worklog event."""
+    """
+    Build the event of a comment or worklog rule.
+
+    The comment or worklog is read back from Jira, which is the source of truth, so
+    what the rule sent only completes what Jira does not provide. A deleted one
+    cannot be read, so the event has only what the rule sent, like a webhook has.
+
+    :param dict payload: The request body.
+    :param str event_type: A key of ``_ENTITY_EVENTS``.
+    :param dict issue_ref: The ``issue`` block of the event.
+    :param jira: A :class:`~sg_jira.jira_session.JiraSession`.
+    :returns: A ``comment_*`` or ``worklog_*`` event, in the shape of a webhook payload.
+    :raises JiraAutomationPayloadError: If the body has keys these rules do not take,
+        has no ``id``, or refers to a comment or worklog Jira does not have.
+    """
     kind, action = _ENTITY_EVENTS[event_type]
     optional_keys = _ENTITY_OPTIONAL_KEYS[kind]
     _check_keys(payload, _ENTITY_KEYS | optional_keys)
@@ -226,23 +295,36 @@ def _entity_event(payload, event_type, issue_ref, jira):
         raise JiraAutomationPayloadError(
             f'{event_type} requires "id": "{{{{{kind}.id}}}}".'
         )
+    # Jira sends ids as strings, a rule may send a number.
+    if isinstance(entity_id, bool) or not isinstance(entity_id, (str, int)):
+        raise JiraAutomationPayloadError(
+            f"id must be a string or an integer, got {entity_id!r}."
+        )
     # What the rule sent is only a fallback: Jira is the source of truth.
     entity = {key: payload[key] for key in optional_keys if key in payload}
     entity["id"] = entity_id
 
-    if action == "deleted":
-        # Nothing left to load. Webhooks only carry the id here, plus the
-        # parent Issue id for worklogs.
-        if kind == "worklog":
-            entity["issueId"] = issue_ref["id"]
-    else:
+    # A deleted comment or worklog cannot be read: a webhook only carries its id.
+    if action != "deleted":
         entity.update(_load_entity(jira, kind, issue_ref["key"], entity_id))
+    if kind == "worklog":
+        # Always the numeric id of the Issue, whatever the action, like a webhook.
+        entity["issueId"] = issue_ref["id"]
 
     return {"webhookEvent": event_type, "issue": issue_ref, kind: entity}
 
 
 def _load_entity(jira, kind, issue_key, entity_id):
-    """Load a comment or worklog from Jira, shaped like a webhook entity."""
+    """
+    Read a comment or worklog from Jira, shaped like the one of a webhook.
+
+    :param jira: A :class:`~sg_jira.jira_session.JiraSession`.
+    :param str kind: ``comment`` or ``worklog``.
+    :param str issue_key: The key of the Issue it belongs to.
+    :param entity_id: The id of the comment or worklog.
+    :returns: The ``comment`` or ``worklog`` block of the event.
+    :raises JiraAutomationPayloadError: If Jira has no such comment or worklog.
+    """
     loader = getattr(jira, f"{kind}_as_webhook_entity")
     try:
         return loader(issue_key, entity_id)
@@ -250,8 +332,27 @@ def _load_entity(jira, kind, issue_key, entity_id):
         raise JiraAutomationPayloadError(str(e)) from e
 
 
+def _require_string(name, value):
+    """
+    Check that a value of the request body is a string.
+
+    :param str name: The key of the value, for the error message.
+    :param value: The value to check.
+    :raises JiraAutomationPayloadError: If it is not a string.
+    """
+    if not isinstance(value, str):
+        raise JiraAutomationPayloadError(f"{name} must be a string, got {value!r}.")
+
+
 def _check_keys(data, allowed, name="Automation body"):
-    """Reject keys outside ``allowed``."""
+    """
+    Reject keys which are not allowed, so that a typo in a rule is reported.
+
+    :param dict data: The dictionary to check.
+    :param allowed: The keys it may have.
+    :param str name: What the dictionary is, for the error message.
+    :raises JiraAutomationPayloadError: If there are other keys.
+    """
     unexpected = set(data) - allowed
     if unexpected:
         raise JiraAutomationPayloadError(

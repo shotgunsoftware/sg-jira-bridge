@@ -41,7 +41,9 @@ SHOTGUN_JIRA_REPLY_IDS_FIELD = "sg_jira_reply_ids"
 # A Jira check box field used to specify which entities should be synced.
 JIRA_SYNC_IN_FPTR_FIELD = "Sync In FPTR"
 
-# Sentinel in Project Automation POST bodies; normalized server-side only.
+# Value of the ``source`` key which tells a Jira Project Automation POST body from
+# the payload of a Jira site webhook. Such bodies are converted to the shape of a
+# webhook payload by the bridge, see sg_jira/jira_automation_payload.py.
 JIRA_PROJECT_AUTOMATION_SOURCE = "jira_project_automation"
 
 # Shotgun fields handling multiple values

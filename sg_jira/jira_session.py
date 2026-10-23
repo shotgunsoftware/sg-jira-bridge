@@ -769,8 +769,8 @@ class JiraSession(jira.client.JIRA):
         """
         worklog = self._get_existing(self.worklog, "Worklog", issue_key, worklog_id)
 
-        issue = getattr(worklog, "issue", None)
-        issue_id = getattr(issue, "id", None) if issue is not None else None
+        # A worklog of the Jira library has the id of its Issue as ``issueId``.
+        issue_id = getattr(worklog, "issueId", None)
         entity = {
             "id": str(worklog.id),
             "issueId": str(issue_id) if issue_id is not None else str(issue_key),

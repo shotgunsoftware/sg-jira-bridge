@@ -2160,6 +2160,57 @@ class TestEntitiesGenericHandlerJiraToFPTR(TestEntitiesGenericHandler):
         self.assertNotEqual(jira_issue.fields.summary, sg_task["content"])
         self.assertEqual(jira_issue.fields.description, sg_task["sg_description"])
 
+    def test_jira_to_fptr_sync_watchers_without_fptr_user(self, mocked_sg):
+        """
+        Check that a Jira watcher who is not an FPTR user is left out of the list.
+
+        Test environment:
+        - the Jira watchers are mapped to the FPTR reviewers of the Task
+        - the Issue has two watchers: one is an FPTR user, the other is not
+        Expected result:
+        - the reviewers of the Task are the FPTR user only
+        - the watcher without an FPTR user does not make the sync fail
+        """
+
+        name = "entities_generic_watchers"
+        syncer, bridge = self._get_syncer(mocked_sg, name=name)
+
+        jira_issue = self._mock_jira_data(bridge, sg_entity=mock_shotgun.SG_TASK)
+        self._mock_sg_data(bridge.shotgun, jira_issue=jira_issue)
+        self.add_to_sg_mock_db(bridge.shotgun, mock_shotgun.SG_USER_2)
+
+        mocked_jira_event = self._mock_jira_event(
+            jira_issue, mock_jira.ISSUE_UPDATED_PAYLOAD
+        )
+        mocked_jira_event["changelog"]["items"][0] = {
+            "field": "Watchers",
+            "fieldId": "watches",
+        }
+        watchers = mock.Mock(
+            watchers=[
+                mock.Mock(accountId=mock_jira.JIRA_USER_2["accountId"]),
+                mock.Mock(accountId="has-no-fptr-user"),
+            ]
+        )
+
+        # The Jira mock has no watchers.
+        with mock.patch.object(
+            bridge.jira, "watchers", create=True, return_value=watchers
+        ):
+            self.assertTrue(
+                bridge.sync_in_shotgun(name, "Issue", jira_issue.key, mocked_jira_event)
+            )
+
+        sg_task = bridge.shotgun.find_one(
+            "Task",
+            [[SHOTGUN_JIRA_ID_FIELD, "is", jira_issue.key]],
+            ["task_reviewers"],
+        )
+        self.assertEqual(
+            [user["id"] for user in sg_task["task_reviewers"]],
+            [mock_shotgun.SG_USER_2["id"]],
+        )
+
     def test_jira_to_fptr_sync_existing_entity_all_fields(self, mocked_sg):
         """
         When the "Sync to FPTR" field is checked in Jira, a full sync of the entity is done to FPTR.

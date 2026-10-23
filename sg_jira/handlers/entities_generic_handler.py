@@ -598,6 +598,9 @@ class EntitiesGenericHandler(SyncHandler):
                 self._logger.debug("Rejecting Jira event without a changelog.")
                 return False
 
+            # Jira webhooks identify the Issue by its id. Events built from a
+            # Jira Project Automation request carry the key as well, so either
+            # is good to find it.
             issue_ref = jira_entity.get("id") or jira_entity.get("key")
             jira_issue = self.get_jira_issue(issue_ref)
 

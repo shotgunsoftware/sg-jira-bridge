@@ -11,7 +11,7 @@ import json
 import logging
 import os
 from io import BytesIO
-from unittest import mock
+from unittest import TestCase, mock
 
 from jira import JIRAError
 from test_base import TestBase
@@ -36,7 +36,19 @@ UNICODE_STRING = "unicode_îéö_😀"
 class MockServer(object):
     """
     Mock some of the web server methods.
+
+    Events sent to :meth:`sync_in_shotgun` are kept in ``synced_events``, and
+    :attr:`jira` is a mock of the Jira session the automation requests are
+    resolved with.
     """
+
+    def __init__(self):
+        """Initialize the mock server."""
+        self.synced_events = []
+        self._jira = mock.Mock()
+        self._jira.issue.return_value.id = "10001"
+        self._jira.issue.return_value.key = "KEY-1"
+        self._jira.get_jira_issue_field_id.return_value = "customfield_sync"
 
     @property
     def sync_settings_names(self):
@@ -54,13 +66,8 @@ class MockServer(object):
 
     @property
     def jira(self):
+        """The mock Jira session."""
         return self._jira
-
-    def __init__(self):
-        self.synced_events = []
-        self._jira = mock.Mock()
-        self._jira.issue.return_value.id = "10001"
-        self._jira.get_jira_issue_field_id.return_value = "customfield_sync"
 
 
 class MockRequest(object):
@@ -316,59 +323,22 @@ class TestRouting(TestBase):
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"200 POST request successful" in raw_response)
 
-    def test_jira_route_webhook_payload_is_untouched(
-        self, mocked_finish, mocked_jira, mocked_sg
-    ):
-        """Site webhooks never go through the automation normalizer."""
-        server = MockServer()
-        payload = {"webhookEvent": "jira:issue_updated", "changelog": {"items": []}}
-        handler = webapp.RequestHandler(
-            MockRequest("/jira2sg/valid/issue/KEY-1", payload),
-            ("localhost", -1),
-            server,
-        )
-        self.assertTrue(b"200 POST" in handler.wfile.getvalue())
-        self.assertEqual(server.synced_events, [payload])
-        server.jira.issue.assert_not_called()
+    # -------------------------------------------------------------------------------
+    # Jira to FPTR - Project Automation
+    # -------------------------------------------------------------------------------
 
-    def test_jira_route_automation_payload_is_normalized(
-        self, mocked_finish, mocked_jira, mocked_sg
-    ):
-        """Project Automation bodies reach the syncer in webhook shape."""
-        server = MockServer()
-        payload = {
-            "source": "jira_project_automation",
-            "actor": {"accountId": "user-1"},
-        }
-        handler = webapp.RequestHandler(
-            MockRequest("/jira2sg/valid/issue/KEY-1", payload),
-            ("localhost", -1),
-            server,
-        )
-        self.assertTrue(b"200 POST request successful" in handler.wfile.getvalue())
-        (event,) = server.synced_events
-        self.assertEqual(event["webhookEvent"], "jira:issue_updated")
-        self.assertEqual(event["issue"], {"key": "KEY-1", "id": "10001"})
-        self.assertEqual(event["user"], {"accountId": "user-1"})
+    def _post_automation(self, server, payload=None, path="/jira2sg/valid/issue/KEY-1"):
+        """
+        Send a Project Automation request to the web app and return its response.
 
-    def test_jira_route_invalid_automation_payload_is_a_bad_request(
-        self, mocked_finish, mocked_jira, mocked_sg
-    ):
-        server = MockServer()
-        payload = {"source": "jira_project_automation"}  # no actor
-        handler = webapp.RequestHandler(
-            MockRequest("/jira2sg/valid/issue/KEY-1", payload),
-            ("localhost", -1),
-            server,
-        )
-        raw_response = handler.wfile.getvalue()
-        self.assertTrue(b"400 actor is required" in raw_response)
-        self.assertEqual(server.synced_events, [])
-
-    def _post_automation(self, server, payload=None):
+        :param server: The mock server the request is handled with.
+        :param dict payload: The body of the request, a full sync of an Issue by default.
+        :param str path: The path of the request.
+        :returns: The raw bytes of the response.
+        """
         handler = webapp.RequestHandler(
             MockRequest(
-                "/jira2sg/valid/issue/KEY-1",
+                path,
                 payload
                 or {
                     "source": "jira_project_automation",
@@ -380,32 +350,55 @@ class TestRouting(TestBase):
         )
         return handler.wfile.getvalue()
 
-    def test_jira_route_automation_unknown_issue_is_a_bad_request(
+    def test_jira_route_webhook_payload_untouched(
         self, mocked_finish, mocked_jira, mocked_sg
     ):
+        """
+        Check that a payload sent by a Jira site webhook is passed on as is.
+
+        Expected result:
+        - the syncer receives the very payload which was posted
+        - Jira is not asked anything, as only automation requests are resolved
+        """
         server = MockServer()
-        server.jira.issue.side_effect = JIRAError(status_code=404)
+        payload = {"webhookEvent": "jira:issue_updated", "changelog": {"items": []}}
+
+        raw_response = self._post_automation(server, payload)
+
+        self.assertTrue(b"200 POST" in raw_response)
+        self.assertEqual(server.synced_events, [payload])
+        server.jira.issue.assert_not_called()
+
+    def test_jira_route_automation_issue_payload_normalized(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """
+        Check that a Project Automation body reaches the syncer as a webhook event.
+
+        Expected result:
+        - the syncer receives an Issue update event, for the Issue of the path
+        - the actor of the rule is the user of the event
+        """
+        server = MockServer()
 
         raw_response = self._post_automation(server)
 
-        self.assertTrue(b"400 Jira Issue 'KEY-1' was not found" in raw_response)
-        self.assertEqual(server.synced_events, [])
+        self.assertTrue(b"200 POST request successful" in raw_response)
+        (event,) = server.synced_events
+        self.assertEqual(event["webhookEvent"], "jira:issue_updated")
+        self.assertEqual(event["issue"], {"key": "KEY-1", "id": "10001"})
+        self.assertEqual(event["user"], {"accountId": "user-1"})
 
-    def test_jira_route_automation_jira_outage_is_a_server_error(
+    def test_jira_route_automation_comment_payload_normalized(
         self, mocked_finish, mocked_jira, mocked_sg
     ):
-        """Jira failing is not a mistake in the rule, so it must not be a 400."""
-        server = MockServer()
-        server.jira.issue.side_effect = JIRAError(status_code=503)
+        """
+        Check that a comment rule is read back from Jira before it is synced.
 
-        raw_response = self._post_automation(server)
-
-        self.assertTrue(b"HTTP/1.1 500" in raw_response)
-        self.assertEqual(server.synced_events, [])
-
-    def test_jira_route_automation_comment_payload_is_normalized(
-        self, mocked_finish, mocked_jira, mocked_sg
-    ):
+        Expected result:
+        - the comment is read for the Issue of the path and the id of the rule
+        - the syncer receives the comment as Jira has it
+        """
         server = MockServer()
         server.jira.comment_as_webhook_entity.return_value = {
             "id": "5001",
@@ -427,6 +420,127 @@ class TestRouting(TestBase):
         self.assertEqual(event["webhookEvent"], "comment_created")
         self.assertEqual(event["comment"]["author"], {"accountId": "human-1"})
         server.jira.comment_as_webhook_entity.assert_called_once_with("KEY-1", "5001")
+
+    def test_jira_route_automation_invalid_payload_rejected(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """
+        Check that a mistake in a rule is a bad request, with a message to fix it.
+
+        Expected result:
+        - a 400 whose message names the problem, shown in the Jira audit log
+        - nothing is synced
+        """
+        server = MockServer()
+
+        raw_response = self._post_automation(
+            server, {"source": "jira_project_automation"}  # no actor
+        )
+
+        self.assertTrue(b"400 actor is required" in raw_response)
+        self.assertEqual(server.synced_events, [])
+
+    def test_jira_route_automation_resource_not_an_issue_rejected(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """Check that an automation request can only be for an Issue resource."""
+        server = MockServer()
+
+        raw_response = self._post_automation(
+            server, path="/jira2sg/valid/project/KEY-1"
+        )
+
+        self.assertTrue(
+            b"400 Jira Project Automation only supports Issue" in raw_response
+        )
+        self.assertEqual(server.synced_events, [])
+
+    def test_jira_route_automation_unknown_issue_rejected(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """
+        Check that an Issue which does not exist is a bad request.
+
+        Expected result:
+        - a 400 saying which Issue was not found
+        - nothing is synced
+        """
+        server = MockServer()
+        server.jira.issue.side_effect = JIRAError(status_code=404)
+
+        raw_response = self._post_automation(server)
+
+        self.assertTrue(b"400 Jira Issue 'KEY-1' was not found" in raw_response)
+        self.assertEqual(server.synced_events, [])
+
+    def test_jira_route_automation_jira_failure_is_bad_gateway(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """
+        Check that Jira failing is not reported as a mistake in the rule.
+
+        Expected result:
+        - a 502, so that nobody looks for a problem in the rule or the bridge
+        - the status of Jira is in the message, the text of its error is not
+        - nothing is synced
+        """
+        for status in (401, 403, 429, 500, 503):
+            with self.subTest(status=status):
+                server = MockServer()
+                server.jira.issue.side_effect = JIRAError(
+                    status_code=status, text="secret detail of the Jira error"
+                )
+
+                raw_response = self._post_automation(server)
+
+                self.assertTrue(b"HTTP/1.1 502" in raw_response)
+                self.assertIn(b"HTTP %d" % status, raw_response)
+                self.assertNotIn(b"secret detail", raw_response)
+                self.assertEqual(server.synced_events, [])
+
+    def test_jira_route_automation_comment_read_failure_is_bad_gateway(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """Check that Jira failing while reading a comment is a 502 as well."""
+        server = MockServer()
+        server.jira.comment_as_webhook_entity.side_effect = JIRAError(status_code=503)
+
+        raw_response = self._post_automation(
+            server,
+            {
+                "source": "jira_project_automation",
+                "actor": {"accountId": "user-1"},
+                "event_type": "comment_updated",
+                "id": "5001",
+            },
+        )
+
+        self.assertTrue(b"HTTP/1.1 502" in raw_response)
+        self.assertEqual(server.synced_events, [])
+
+    def test_jira_route_automation_wrong_types_rejected(
+        self, mocked_finish, mocked_jira, mocked_sg
+    ):
+        """
+        Check that values of the wrong type are a bad request and not a crash.
+
+        Expected result:
+        - a 400 for each, and not a 500
+        """
+        base = {"source": "jira_project_automation", "actor": {"accountId": "user-1"}}
+        for label, payload in (
+            ("event_type", {**base, "event_type": 5, "id": "1"}),
+            ("accountId", {**base, "actor": {"accountId": {"a": 1}}}),
+            ("fieldId", {**base, "field_change": {"fieldId": ["x"]}}),
+            ("id", {**base, "event_type": "comment_created", "id": ["1"]}),
+        ):
+            with self.subTest(label=label):
+                server = MockServer()
+
+                raw_response = self._post_automation(server, payload)
+
+                self.assertTrue(b"HTTP/1.1 400" in raw_response)
+                self.assertEqual(server.synced_events, [])
 
     def test_admin_route(self, mocked_finish, mocked_jira, mocked_sg):
         """
@@ -465,3 +579,69 @@ class TestRouting(TestBase):
         )
         raw_response = handler.wfile.getvalue()
         self.assertTrue(b"200 POST request successful" in raw_response)
+
+
+class TestMain(TestCase):
+    """The command line of the web app."""
+
+    def _run_main(self, *args):
+        """
+        Run ``webapp.main()`` with the given arguments, without serving anything.
+
+        :returns: The mock which stands for ``webapp.run_server``.
+        """
+        with mock.patch("sys.argv", ["webapp.py", *args]), mock.patch(
+            "webapp.run_server"
+        ) as run_server:
+            webapp.main()
+        return run_server
+
+    def test_main_settings_file_passed_to_the_server(self):
+        """
+        Check that the settings file of the command line is the one which is used.
+
+        Expected result:
+        - the server is run with that file, and in HTTP mode
+        """
+        run_server = self._run_main("--settings", "/some/settings.py")
+
+        run_server.assert_called_once_with(
+            listen_address="127.0.0.1",
+            port=9090,
+            settings="/some/settings.py",
+            keyfile=None,
+            certfile=None,
+        )
+
+    def test_main_ssl_context_enables_https(self):
+        """Check that a key and a certificate file run the server in HTTPS mode."""
+        run_server = self._run_main(
+            "--settings", "s.py", "--ssl_context", "key.pem", "cert.pem"
+        )
+
+        kwargs = run_server.call_args.kwargs
+        self.assertEqual(kwargs["keyfile"], "key.pem")
+        self.assertEqual(kwargs["certfile"], "cert.pem")
+
+    def test_main_listen_address_and_port(self):
+        """Check that the listen address and the port can be chosen."""
+        run_server = self._run_main(
+            "--settings", "s.py", "--listen_address", "0.0.0.0", "--port", "8080"
+        )
+
+        kwargs = run_server.call_args.kwargs
+        self.assertEqual((kwargs["listen_address"], kwargs["port"]), ("0.0.0.0", 8080))
+
+    def test_main_settings_required(self):
+        """Check that the web app does not start without a settings file."""
+        with mock.patch("webapp.run_server") as run_server, self.assertRaises(
+            SystemExit
+        ):
+            self._run_main()
+
+        run_server.assert_not_called()
+
+    def test_main_invalid_listen_address_rejected(self):
+        """Check that an address which is not an IPv4 one is refused."""
+        with self.assertRaises(SystemExit):
+            self._run_main("--settings", "s.py", "--listen_address", "not-an-ip")
