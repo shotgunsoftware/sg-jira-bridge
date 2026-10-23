@@ -21,7 +21,6 @@ import sg_jira
 from sg_jira.jira_automation_payload import (
     JiraAutomationPayloadError,
     normalize_automation_request,
-    strip_untrusted_automation_flags,
 )
 
 DESCRIPTION = """
@@ -417,7 +416,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "type and its key" % self.path
                 )
 
-            strip_untrusted_automation_flags(payload)
             try:
                 payload = normalize_automation_request(
                     payload,
@@ -535,12 +533,12 @@ def main():
         default=9090,
         help="The port number to listen to.",
     )
-    # parser.add_argument("--settings", help="Full path to settings file.", required=True)
-    # parser.add_argument(
-    #     "--ssl_context",
-    #     help="A key and certificate file pair to run the server in HTTPS mode.",
-    #     nargs=2,
-    # )
+    parser.add_argument("--settings", help="Full path to settings file.", required=True)
+    parser.add_argument(
+        "--ssl_context",
+        help="A key and certificate file pair to run the server in HTTPS mode.",
+        nargs=2,
+    )
 
     args = parser.parse_args()
 
@@ -558,7 +556,7 @@ def main():
     run_server(
         listen_address=args.listen_address,
         port=args.port,
-        settings="/Users/gudekak/projects/sg-jira-bridge/settings.py",
+        settings=args.settings,
         keyfile=keyfile,
         certfile=certfile,
     )
