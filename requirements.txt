@@ -17,4 +17,4 @@ jira==3.8.0;  python_version <  '3.10'
 jira==3.10.5; python_version >= '3.10'
 
 # Allows defining env vars in a .env file that can be loaded at runtime
-python-dotenv==1.2.1
+python-dotenv==1.2.2
