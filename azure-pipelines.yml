@@ -42,6 +42,7 @@ jobs:
 
     has_ui_resources: false
 
-    extra_test_dependencies:
-    - -r requirements.txt
-    - -r tests/requirements.txt
+    run_tests_extra_parameters:
+      extra_test_dependencies:
+      - -r requirements.txt
+      - -r tests/requirements.txt
