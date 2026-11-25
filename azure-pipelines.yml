@@ -47,5 +47,5 @@ jobs:
       toolkit: false
 
       dependencies:
-      - -r requirements.txt
-      - -r tests/requirements.txt
+      - --requirement=requirements.txt
+      - --requirement=tests/requirements.txt
