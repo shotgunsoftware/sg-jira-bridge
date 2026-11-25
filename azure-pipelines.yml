@@ -13,7 +13,7 @@ resources:
     - repository: templates
       type: github
       name: shotgunsoftware/tk-ci-tools
-      ref: refs/heads/master
+      ref: refs/heads/ticket/SG-47353-toolkit-flag
       endpoint: shotgunsoftware
       # Despite using the "tk-" prefix, tk-ci-tools is not a Toolkit only tool.
       # We use it to avoid duplicating and maintaining CI pipeline code.
@@ -37,12 +37,15 @@ jobs:
     # of default behavior (Python versions, Qt wrappers, operating systems and
     # runner images), defined in internal/run-tests.yml of tk-ci-tools. Review
     # those defaults when they change, and override them with
-    # run_tests_extra_parameters if this repository needs something else.
+    # run_tests_parameters if this repository needs something else.
     has_unit_tests: true
 
     has_ui_resources: false
 
-    run_tests_extra_parameters:
-      extra_test_dependencies:
+    run_tests_parameters:
+      # Not a Toolkit component: no Qt wrapper, tk-toolchain or tk-core.
+      toolkit: false
+
+      dependencies:
       - -r requirements.txt
       - -r tests/requirements.txt
