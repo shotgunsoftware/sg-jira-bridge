@@ -46,6 +46,6 @@ jobs:
       # Not a Toolkit component: no Qt wrapper, tk-toolchain or tk-core.
       toolkit: false
 
-      dependencies:
+      pip_requirements:
       - --requirement=requirements.txt
       - --requirement=tests/requirements.txt
