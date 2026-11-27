@@ -17,7 +17,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from urllib import parse
 
+from jira import JIRAError
+
 import sg_jira
+from sg_jira.jira_automation_payload import (
+    JiraAutomationPayloadError,
+    is_automation_request,
+    normalize_automation_request,
+)
 
 DESCRIPTION = """
 A simple web app frontend to the PTR Jira bridge.
@@ -122,6 +129,15 @@ class SgJiraBridgeBadRequestError(Exception):
     pass
 
 
+class SgJiraBridgeUpstreamError(Exception):
+    """
+    Custom exception for requests which could not be handled because Jira failed,
+    and not because of the request. They return a 502 error code.
+    """
+
+    pass
+
+
 class Server(ThreadingMixIn, HTTPServer):
     """
     Basic server with threading functionality mixed in. This will help the server
@@ -156,6 +172,13 @@ class Server(ThreadingMixIn, HTTPServer):
         Return the list of sync settings this server handles.
         """
         return self._sg_jira.sync_settings_names
+
+    @property
+    def jira(self):
+        """
+        Return the connected Jira session used to resolve Project Automation requests.
+        """
+        return self._sg_jira.jira
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -306,6 +329,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         except SgJiraBridgeBadRequestError as e:
             self.send_error(400, str(e))
+        except SgJiraBridgeUpstreamError as e:
+            self.send_error(502, str(e))
         except Exception as e:
             self.send_error(500, str(e))
             logger.debug(e, exc_info=True)
@@ -349,13 +374,20 @@ class RequestHandler(BaseHTTPRequestHandler):
         If the PTR Entity is not specified in the path, it must be present in
         the loaded payload.
 
+        For ``jira2sg`` requests, a payload sent by a Jira Project Automation rule
+        (its ``source`` is ``jira_project_automation``) is first converted to the
+        event a Jira site webhook would have sent, see
+        :func:`sg_jira.jira_automation_payload.normalize_automation_request`. Any
+        other payload, that is one sent by a site webhook, is passed on untouched.
+
         :param list path_parts: List of strings representing each part of the
             URL path that this request accessed. For example,
             ``["sg2jira", "default", "Task", "123"]``.
         :param dict parameters: Optional additional parameters that were extracted
             from the url.
         :raises SgJiraBridgeBadRequestError: If there is any problem we detect with the
-            path, or payload.
+            path, or payload. This includes a Project Automation rule which is wrong
+            or which refers to an Issue, comment or worklog Jira does not have.
         """
         entity_type = None
         entity_key = None
@@ -411,6 +443,32 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "Invalid request path %s, it must include a Jira resource "
                     "type and its key" % self.path
                 )
+
+            # Site webhooks are passed through untouched; only Project
+            # Automation bodies are converted to the webhook shape.
+            if is_automation_request(payload):
+                try:
+                    payload = normalize_automation_request(
+                        payload,
+                        entity_type,
+                        entity_key,
+                        jira=self.server.jira,
+                    )
+                except JiraAutomationPayloadError as e:
+                    raise SgJiraBridgeBadRequestError(str(e))
+                except JIRAError as e:
+                    # Authentication, rate limit or outage: not a mistake in the
+                    # rule. The details stay in the log, not in the response.
+                    logger.error(
+                        "Jira failed while reading the data of an automation "
+                        "request: %s",
+                        e,
+                        exc_info=True,
+                    )
+                    raise SgJiraBridgeUpstreamError(
+                        "Jira returned an error (HTTP %s) while reading the data of "
+                        "the request. See the bridge log." % (e.status_code or "?")
+                    )
 
             self.server.sync_in_shotgun(
                 settings_name, entity_type, entity_key, event=payload, **parameters

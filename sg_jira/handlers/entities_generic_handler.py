@@ -598,7 +598,11 @@ class EntitiesGenericHandler(SyncHandler):
                 self._logger.debug("Rejecting Jira event without a changelog.")
                 return False
 
-            jira_issue = self.get_jira_issue(jira_entity["id"])
+            # Jira webhooks identify the Issue by its id. Events built from a
+            # Jira Project Automation request carry the key as well, so either
+            # is good to find it.
+            issue_ref = jira_entity.get("id") or jira_entity.get("key")
+            jira_issue = self.get_jira_issue(issue_ref)
 
         if not jira_issue:
             self._logger.debug("Rejecting Jira event: couldn't find Jira Issue.")
@@ -2087,7 +2091,8 @@ class EntitiesGenericHandler(SyncHandler):
                 sg_value = []
                 for w in self._jira.watchers(jira_issue).watchers:
                     sg_user = self._hook.get_sg_user_from_jira_user(w)
-                    sg_value.append(sg_user)
+                    if sg_user:
+                        sg_value.append(sg_user)
 
             elif jira_field == "status":
                 sg_value = (

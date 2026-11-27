@@ -1781,6 +1781,11 @@ class MockedJira(object):
         if isinstance(issue_key, jira.resources.Issue):
             issue_key = issue_key.key
         if issue_key not in self._issues:
+            # Like Jira, also accept the numeric Issue id.
+            for issue in self._issues.values():
+                if str(issue.id) == str(issue_key):
+                    return issue
+        if issue_key not in self._issues:
             raise jira.JIRAError(
                 text="Unable to find Issue %s" % issue_key, status_code=404
             )
